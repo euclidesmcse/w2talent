@@ -261,8 +261,8 @@ Em camadas, da mais simples à mais cara (não começamos treinando modelo):
 |---|-------|---------|--------|
 | 1 | Fechar a visão do produto | Este documento (spec v2) | ✅ aprovado 2026-11-08 |
 | 2 | Arquitetura na Cloudflare + IA de RH | `2026-11-08-w2talent-arquitetura-v2.md` | ✅ aprovado 2026-11-08 |
-| 3 | UX e protótipo navegável | Design system + telas-chave clicáveis | 🟡 aguardando aprovação do visual |
-| 4 | Backlog por fases + "onde parou" | Plano executável (fases 1.5 → 3) + AGENTS.md atualizado | ⏳ |
+| 3 | UX e protótipo navegável | Design system + telas-chave clicáveis (canvas privado) | ✅ aprovado 2026-11-08 |
+| 4 | Backlog por fases + "onde parou" | `../plans/2026-11-08-w2talent-backlog-v2.md` + AGENTS.md | 🟡 aguardando aprovação |
 
 ### 12.1 Fases de produto propostas (detalhadas no passo 4)
 - **Fase 1.5 — Fundação v2:** novo visual, login Google/Microsoft + TOTP, aprovar-antes-de-enviar, ficha mínima, Ficha W2, AI Gateway + cadastro de provedores, PT/EN/ES. *(Inclui os itens de segurança pendentes da Fase 1.1: `timingSafeEqual` no webhook e correção de IDOR em `GET /api/applications/batch`.)*
