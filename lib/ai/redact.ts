@@ -12,8 +12,8 @@ const RULES: [RegExp, string][] = [
   [/\b\d{5}-\d{3}\b/g, "[CEP]"],
   // perfis pessoais (LinkedIn, GitHub)
   [/\b(?:https?:\/\/)?(?:www\.)?(?:linkedin\.com\/in|github\.com)\/[A-Za-z0-9_-]+\/?/gi, "[PERFIL]"],
-  // telefone: +55 (11) 98765-4321, (11) 3456-7890, 11987654321, +1 415 555 0100
-  [/(?:\+\d{1,3}[\s.-]?)?(?:\(\d{2,3}\)|\d{2,3})[\s.-]?\d{4,5}[\s.-]?\d{4}\b/g, "[TELEFONE]"],
+  // telefone: +55 (11) 98765-4321, (11) 3456-7890, 11987654321, +1 415 555 0100, (415) 555-0100
+  [/(?<!\d)(?:\+\d{1,3}[\s.-]?)?(?:\(\d{2,3}\)|\d{2,3})[\s.-]?\d{3,5}[\s.-]?\d{4}\b/g, "[TELEFONE]"],
   // endereço: "Rua X, 123", "Av. Paulista 1000", "Avenida …, nº 45"
   [
     /\b(?:Rua|R\.|Avenida|Av\.?|Alameda|Al\.|Travessa|Tv\.|Rodovia|Estrada|Praça|Largo)\s+[^\n,;]{2,60}?,?\s*(?:n[º°o]\.?\s*)?\d{1,6}\b/gi,

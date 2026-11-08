@@ -32,7 +32,10 @@ export function prismaAiStore(db: PrismaClient, now: () => number = Date.now): A
   return {
     async route(task): Promise<RouteConfig> {
       const route = await db.taskRoute.findUnique({ where: { tarefa: task } });
-      if (!route || route.modelos.length === 0) return { mode: "automatico", candidates: [defaultCandidate(task)] };
+      if (!route) return { mode: "automatico", candidates: [defaultCandidate(task)] };
+      // Rota sem modelos escolhidos: usa o padrão, mas mantém o orçamento da tarefa.
+      if (route.modelos.length === 0)
+        return { mode: "automatico", candidates: [defaultCandidate(task)], dailyBudgetUsd: route.orcamentoDiarioUsd };
       const models = await db.aiModel.findMany({
         where: { id: { in: route.modelos }, ativo: true, provider: { ativo: true } },
         include: { provider: true },

@@ -3,7 +3,7 @@ import { createRouter, resetBreaker, AiBudgetError, AiUnavailableError, type AiS
 import { callChat, callEmbed } from "../lib/ai/providers";
 import { encryptApiKey, decryptApiKey, keyHint } from "../lib/ai/keys";
 import { redactContacts } from "../lib/ai/redact";
-import { defaultCandidate, startOfUtcDay } from "../lib/ai/store";
+import { defaultCandidate, prismaAiStore, startOfUtcDay } from "../lib/ai/store";
 import { TASKS } from "../lib/ai/tasks";
 import type { CallContext } from "../lib/ai/types";
 
@@ -215,6 +215,26 @@ describe("roteador", () => {
     expect(out.model).toBe("@cf/baai/bge-m3");
   });
 
+  it("erro do fornecedor que ecoa o pedido não vai para o histórico nem para as tentativas", async () => {
+    const f = fakeFetch(() => ({ status: 400, body: { error: { type: "invalid_request_error", message: "Ana Lima, 10 anos na Empresa X: entrada inválida" } } }));
+    const { store, records } = memStore({ mode: "automatico", candidates: [cand({})] });
+    const r = createRouter(store, { fetch: f.fn, gateway: GW, globalDailyBudgetUsd: 1, master: MASTER });
+    const e = await r.chat("extract_cv", { messages: [{ role: "user", content: "Ana Lima" }] }).catch((x) => x);
+    expect(e).toBeInstanceOf(AiUnavailableError);
+    expect(records[0].erro).toBe("HTTP 400 (invalid_request_error)");
+    expect(JSON.stringify(records) + JSON.stringify(e.attempts)).not.toMatch(/Ana|Empresa/);
+  });
+
+  it("exceção do binding do Workers AI grava só o tipo do erro", async () => {
+    const run = jest.fn(async () => {
+      throw new TypeError("entrada inválida: Ana Lima, ana@x.com");
+    });
+    const { store, records } = memStore({ mode: "automatico", candidates: [defaultCandidate("extract_cv")] });
+    const r = createRouter(store, { ai: { run }, fetch: fetch, gateway: GW, globalDailyBudgetUsd: 1, master: MASTER });
+    await r.chat("extract_cv", { messages: [{ role: "user", content: "Ana Lima" }] }).catch(() => null);
+    expect(records[0].erro).toBe("TypeError (detalhe omitido)");
+  });
+
   it("falha ao gravar o histórico não derruba a chamada", async () => {
     const run = jest.fn(async () => ({ response: "ok" }));
     const store: AiStore = { route: async () => ({ mode: "automatico", candidates: [defaultCandidate("translate_ui")] }), spentTodayUsd: async () => 0, record: async () => { throw new Error("db fora"); } };
@@ -261,12 +281,34 @@ describe("filtro de contatos", () => {
     expect(out).toContain("AWS, Terraform, 5 anos de experiência, salário 13000");
     expect(out).toContain("Ana Lima — Analista Cloud");
   });
+
+  it("tira telefones dos EUA com prefixo de 3 dígitos e não mexe em anos e valores", () => {
+    for (const tel of ["+1 415 555 0100", "(415) 555-0100", "415-555-0100", "415.555.0100"]) {
+      expect(redactContacts(`Fone: ${tel}.`)).toBe("Fone: [TELEFONE].");
+    }
+    expect(redactContacts("2019 - 2023, R$ 9.000, 120 horas")).toBe("2019 - 2023, R$ 9.000, 120 horas");
+  });
+
+  it("telefone dos EUA não chega ao fornecedor externo", async () => {
+    const c = cand({ providerId: "y", providerName: "ComDPA", gatewayPath: "anthropic", kind: "ANTHROPIC", encryptedKey: await encryptApiKey("sk-ant-1", MASTER) });
+    const f = fakeFetch(() => ({ body: { content: [{ type: "text", text: "{}" }] } }));
+    const { store } = memStore({ mode: "automatico", candidates: [c] });
+    const r = createRouter(store, { fetch: f.fn, gateway: GW, globalDailyBudgetUsd: 1, master: MASTER });
+    await r.chat("extract_cv", { messages: [{ role: "user", content: "Tel +1 415 555 0100 ou (415) 555-0100" }] });
+    expect(String(f.calls[0].init.body)).not.toMatch(/555/);
+  });
 });
 
 describe("rotas padrão", () => {
   it("toda tarefa tem um modelo padrão no Workers AI e o embed é o bge-m3 de 1024", () => {
     for (const t of Object.keys(TASKS) as (keyof typeof TASKS)[]) expect(defaultCandidate(t).kind).toBe("WORKERS_AI");
     expect(defaultCandidate("embed").model).toBe("@cf/baai/bge-m3");
+  });
+  it("rota sem modelos usa o padrão e mantém o orçamento da tarefa", async () => {
+    const db = { taskRoute: { findUnique: async () => ({ tarefa: "extract_cv", modo: "automatico", modelos: [], orcamentoDiarioUsd: 0.2 }) } };
+    const cfg = await prismaAiStore(db as never).route("extract_cv");
+    expect(cfg.dailyBudgetUsd).toBe(0.2);
+    expect(cfg.candidates.map((c) => c.providerId)).toEqual(["workers-ai-padrao"]);
   });
   it("o dia do orçamento começa à meia-noite UTC", () => {
     expect(startOfUtcDay(Date.UTC(2026, 10, 8, 23, 59)).toISOString()).toBe("2026-11-08T00:00:00.000Z");

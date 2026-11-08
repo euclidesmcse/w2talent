@@ -25,12 +25,32 @@ export async function postJson(ctx: CallContext, url: string, body: unknown, hea
   });
   const text = await res.text();
   if (!res.ok) {
-    // Só o começo da resposta: mensagens de erro podem ecoar o pedido.
-    throw new AiProviderError(`HTTP ${res.status}: ${text.slice(0, 200)}`, res.status);
+    // Nunca o corpo da resposta: mensagens de erro podem ecoar o pedido (nome, histórico do CV).
+    const code = errorCode(text);
+    throw new AiProviderError(`HTTP ${res.status}${code ? ` (${code})` : ""}`, res.status);
   }
   try {
     return JSON.parse(text);
   } catch {
     throw new AiProviderError("resposta do fornecedor não é JSON");
   }
+}
+
+/**
+ * Só o código de erro do fornecedor (ex.: "rate_limit_exceeded", "invalid_api_key", "RESOURCE_EXHAUSTED"),
+ * e só se parecer um identificador. Texto livre nunca sai daqui.
+ */
+export function errorCode(body: string): string | null {
+  let parsed: any;
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    return null;
+  }
+  const err = parsed?.error;
+  const candidates = [err?.code, err?.type, err?.status, parsed?.type];
+  for (const c of candidates) {
+    if (typeof c === "string" && /^[A-Za-z][A-Za-z0-9_.-]{0,63}$/.test(c)) return c;
+  }
+  return null;
 }

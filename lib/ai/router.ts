@@ -8,9 +8,9 @@
  * 6. grava cada tentativa no histórico (sem o texto).
  */
 import { TASKS, type TaskName } from "./tasks";
-import type { CallContext, ChatRequest, ChatResult, EmbedResult, ProviderKind, WorkersAiBinding } from "./types";
+import { AiProviderError, type CallContext, type ChatRequest, type ChatResult, type EmbedResult, type ProviderKind, type WorkersAiBinding } from "./types";
 import { callChat, callEmbed, supportsEmbeddings } from "./providers";
-import { decryptApiKey } from "./keys";
+import { AiKeysError, decryptApiKey } from "./keys";
 import { redactContacts } from "./redact";
 
 export type RouteCandidate = {
@@ -60,6 +60,17 @@ export type RouterEnv = {
 };
 
 export type CallOptions = { userId?: string };
+
+/**
+ * Texto do erro que pode ir para o histórico e para a resposta da API.
+ * Só mensagens escritas pelo próprio app; de outros erros (ex.: exceção do binding do Workers AI,
+ * que pode ecoar o pedido) fica só o nome do tipo.
+ */
+export function safeErrorText(e: unknown): string {
+  if (e instanceof AiProviderError || e instanceof AiKeysError) return e.message;
+  if (e instanceof Error) return `${e.name || "Error"} (detalhe omitido)`;
+  return "erro desconhecido (detalhe omitido)";
+}
 
 export class AiBudgetError extends Error {
   constructor(message: string) {
@@ -186,7 +197,7 @@ export function createRouter(store: AiStore, env: RouterEnv) {
         });
         return { ...result, model: c.model, provider: c.providerName };
       } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = safeErrorText(e);
         noteFailure(c.providerId, now());
         attempts.push({ model: label, error: msg });
         await safeRecord(store, {
