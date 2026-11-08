@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     const t1 = Date.now();
     const c = await router.chat("translate_ui", {
       messages: [{ role: "user", content: "Responda só com a palavra: ok" }],
-      maxTokens: 5,
+      maxTokens: 300,
       temperature: 0,
     });
     out.chat = { model: c.model, text: c.text.slice(0, 20), ms: Date.now() - t1 };
