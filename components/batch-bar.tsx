@@ -115,10 +115,9 @@ export function BatchBar({ variant = "vagas", onAction }: BatchBarProps) {
       data-count={count}
       data-lote-id={loteId}
       onKeyDown={onKeyDown}
-      tabIndex={0}
+      tabIndex={count === 0 ? -1 : 0}
       // sticky bottom safe-area; z-40 abaixo do modal z-50
-      className={`batch-bar fixed bottom-0 left-0 right-0 z-40 border-t border-line bg-surface shadow-[0_-4px_16px_rgba(17,24,39,0.06)] transition-transform ${count === 0 ? "translate-y-full" : "translate-y-0"}`}
-      aria-hidden={count === 0 ? true : undefined}
+      className={`batch-bar fixed bottom-0 left-0 right-0 z-40 border-t border-line bg-surface shadow-[0_-4px_16px_rgba(17,24,39,0.06)] transition-transform ${count === 0 ? "invisible translate-y-full" : "visible translate-y-0"}`}
       style={{
         zIndex: 40,
         bottom: 0,

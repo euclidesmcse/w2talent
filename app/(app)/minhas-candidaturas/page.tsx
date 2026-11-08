@@ -27,6 +27,7 @@ const STATUS_ORDER: Record<string, number> = { enviado: 0, visualizado: 1, respo
 export default function MinhasCandidaturasPage() {
   const [items, setItems] = React.useState<AppRow[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [needsLogin, setNeedsLogin] = React.useState(false);
   const [candidateId, setCandidateId] = React.useState<string>("");
 
   React.useEffect(() => {
@@ -47,6 +48,7 @@ export default function MinhasCandidaturasPage() {
       // tenta api batch listing; fallback para mock
       const res = await fetch(`/api/applications/batch${qs}`, { method: "GET" }).catch(() => null as any);
       let data: any = null;
+      setNeedsLogin(res?.status === 401);
       if (res && res.ok) data = await res.json().catch(() => null);
       if (data?.applications?.length) {
         setItems(data.applications);
@@ -61,16 +63,7 @@ export default function MinhasCandidaturasPage() {
           }))
         );
       } else {
-        // fallback in-memory via lib/proxy client? usa fetch dedicado se existir GET /api/applications
-        const res2 = await fetch(`/api/applications${qs}`).catch(() => null as any);
-        if (res2 && res2.ok) {
-          const d2: any = await res2.json().catch(() => null);
-          if (Array.isArray(d2?.items)) setItems(d2.items);
-          else if (Array.isArray(d2?.applications)) setItems(d2.applications);
-          else setItems([]);
-        } else {
-          setItems([]);
-        }
+        setItems([]);
       }
     } catch {
       setItems([]);
@@ -107,7 +100,15 @@ export default function MinhasCandidaturasPage() {
             Acompanhe cada envio: enviada, vista pela empresa e respondida. {items.length} candidatura{items.length === 1 ? "" : "s"}.
           </p>
         </div>
-        {items.length === 0 ? (
+        {needsLogin ? (
+          <div role="status" className="rounded-card border border-line bg-surface px-6 py-10 text-center">
+            <p className="font-semibold">Entre na sua conta para ver suas candidaturas.</p>
+            <p className="mt-1 text-sm text-muted">O login com Google ou Microsoft chega em breve. Enquanto isso, explore as vagas.</p>
+            <Link href="/vagas" className={buttonClasses("primary", "md", "mt-4 hover:no-underline hover:text-white")}>
+              Ver vagas
+            </Link>
+          </div>
+        ) : items.length === 0 ? (
           <div role="status" className="empty rounded-card border border-line bg-surface px-6 py-10 text-center">
             <p className="font-semibold">Nenhuma candidatura ainda.</p>
             <p className="mt-1 text-sm text-muted">Busque vagas, aprove as que fazem sentido e envie em lote.</p>

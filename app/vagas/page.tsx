@@ -19,6 +19,7 @@ export default function VagasPage() {
   const [totalPages, setTotalPages] = React.useState(1);
   const [suggestion, setSuggestion] = React.useState<string | null>(null);
   const [emptyCTA, setEmptyCTA] = React.useState<string | null>(null);
+  const [loaded, setLoaded] = React.useState(false);
   const [selected, setSelected] = React.useState<string[]>(() => {
     try { return selectionStore.getState().selectedIds ?? []; } catch { return []; }
   });
@@ -53,9 +54,10 @@ export default function VagasPage() {
     setTotalPages(data.totalPages ?? 1);
     setSuggestion(data.suggestion ?? null);
     setEmptyCTA(data.emptyCTA ?? null);
+    setLoaded(true);
   }, []);
 
-  React.useEffect(() => { fetchPage(q, page); }, [q, page, fetchPage]);
+  React.useEffect(() => { fetchPage(q, page).catch(() => {}).finally(() => setLoaded(true)); }, [q, page, fetchPage]);
 
   const handleClearFilters = () => { setQ(""); setPage(1); fetchPage("", 1); };
   const handleUseSuggestion = (s: string) => { setQ(s); setPage(1); fetchPage(s, 1); };
@@ -68,11 +70,12 @@ export default function VagasPage() {
   };
   const closeModal = () => setModalOpen(false);
   const selectedSet = React.useMemo(() => new Set(selected), [selected]);
-  const isEmpty = items.length === 0;
+  const isEmpty = loaded && items.length === 0;
 
   return (
     <div>
       <AppHeader nav={[{ href: "/vagas", label: "Vagas", active: true }, { href: "/candidatos", label: "Candidatos", active: false }, { href: "/minhas-candidaturas", label: "Minhas candidaturas" }]} />
+      <main>
       <div className="mx-auto max-w-page px-6 pt-6">
         <h1 className="text-xl font-bold">Vagas</h1>
         <p className="mt-1 text-sm text-muted">Busque do seu jeito, abra cada vaga e selecione as que fazem sentido.</p>
@@ -93,12 +96,26 @@ export default function VagasPage() {
         {suggestion ? <div role="status" aria-label="sugestao" className="mb-3 rounded-card border border-line bg-brand-soft px-3.5 py-2.5 text-[13px] text-brand-ink">Você quis dizer &quot;{suggestion}&quot;? <Button variant="ghost" size="sm" onClick={() => handleUseSuggestion(suggestion)}>Ver sugestão</Button></div> : null}
         {emptyCTA ? <div role="status" aria-label="empty-cta" className="mb-2 text-xs text-muted">{emptyCTA}</div> : null}
         {isEmpty ? <EmptyState query={q} suggestion={suggestion} emptyCTA={emptyCTA} variant="vagas" onClearFilters={handleClearFilters} onUseSuggestion={handleUseSuggestion} /> : null}
-        <div className="hidden md:block">
-          <div className="overflow-hidden rounded-card border border-line bg-surface">
-            <VacancyTable items={items} selectedIds={selectedSet} onToggle={toggle} onOpenDetail={openDetail} />
+        {!loaded ? (
+          <div aria-busy="true" aria-label="carregando" className="flex min-h-[640px] flex-col gap-px overflow-hidden rounded-card border border-line bg-line-soft">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex h-[70px] items-center gap-4 bg-surface px-4">
+                <span className="h-4 w-4 rounded bg-line" />
+                <span className="h-3 w-1/3 animate-pulse rounded bg-line" />
+                <span className="h-3 w-1/6 animate-pulse rounded bg-line-soft" />
+              </div>
+            ))}
           </div>
-        </div>
-        <div className="md:hidden"><VacancyCards items={items} selectedIds={selectedSet} onToggle={toggle} onOpenDetail={openDetail} /></div>
+        ) : (
+          <>
+          <div className="hidden md:block">
+            <div className="overflow-hidden rounded-card border border-line bg-surface">
+              <VacancyTable items={items} selectedIds={selectedSet} onToggle={toggle} onOpenDetail={openDetail} />
+            </div>
+          </div>
+          <div className="md:hidden"><VacancyCards items={items} selectedIds={selectedSet} onToggle={toggle} onOpenDetail={openDetail} /></div>
+          </>
+        )}
         <div aria-label="paginacao" className="mt-3.5 flex items-center justify-between gap-2 text-[13px] text-muted">
           <span>Página {page} de {totalPages} — {total} vagas</span>
           <div className="flex gap-2">
@@ -110,6 +127,7 @@ export default function VagasPage() {
         <BatchBar variant="vagas" onAction={(ids) => { void ids; }} />
         <span aria-hidden className="hidden">{items.map((it) => <button key={it.id} ref={(el) => { if (el) triggerRefs.current.set(it.id, el); }} aria-label={`lupa-${it.id}`} onClick={() => openDetail(it.id)} />)}</span>
       </div>
+      </main>
     </div>
   );
 }

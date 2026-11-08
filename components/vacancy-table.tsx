@@ -51,7 +51,7 @@ export function VacancyTable({
     <table aria-label="Lista de vagas" className="vacancy-table w-full min-w-[760px] border-collapse text-sm">
       <thead>
         <tr className="text-left text-xs uppercase tracking-[0.04em] text-muted [&>th]:px-2 [&>th]:py-2.5 [&>th]:font-semibold [&>th:first-child]:pl-4 [&>th:last-child]:pr-4">
-          <th scope="col" aria-label="Seleção"></th>
+          <th scope="col"><span className="sr-only">Seleção</span></th>
           <th scope="col">Vaga</th>
           <th scope="col">Competências</th>
           <th scope="col">Modelo · regime</th>
