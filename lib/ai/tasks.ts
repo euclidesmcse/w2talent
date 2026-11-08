@@ -17,17 +17,23 @@ export type TaskSpec = {
   defaultWorkersModel: string;
 };
 
+/**
+ * Modelo padrão de texto do Workers AI. O llama-3.1-8b-instruct foi desativado pela Cloudflare
+ * em 30/05/2026; o GLM-4.7 Flash é o substituto recomendado (multilíngue, 131k de contexto).
+ */
+export const TEXT_MODEL = "@cf/zai-org/glm-4.7-flash";
+
 export const TASKS = {
-  extract_cv: { kind: "chat", json: true, minContext: 32_000, personalData: true, defaultWorkersModel: "@cf/meta/llama-3.1-8b-instruct" },
-  extract_vacancy: { kind: "chat", json: true, minContext: 16_000, defaultWorkersModel: "@cf/meta/llama-3.1-8b-instruct" },
-  ficha_w2: { kind: "chat", json: true, minContext: 32_000, personalData: true, defaultWorkersModel: "@cf/meta/llama-3.1-8b-instruct" },
-  match_explain: { kind: "chat", json: true, minContext: 16_000, personalData: true, defaultWorkersModel: "@cf/meta/llama-3.1-8b-instruct" },
-  coach_candidate: { kind: "chat", minContext: 32_000, personalData: true, defaultWorkersModel: "@cf/meta/llama-3.1-8b-instruct" },
-  coach_recruiter: { kind: "chat", minContext: 32_000, defaultWorkersModel: "@cf/meta/llama-3.1-8b-instruct" },
-  support_chat: { kind: "chat", minContext: 32_000, defaultWorkersModel: "@cf/meta/llama-3.1-8b-instruct" },
-  compose_message: { kind: "chat", minContext: 8_000, personalData: true, defaultWorkersModel: "@cf/meta/llama-3.1-8b-instruct" },
-  translate_ui: { kind: "chat", minContext: 8_000, defaultWorkersModel: "@cf/meta/llama-3.1-8b-instruct" },
-  translate_content: { kind: "chat", minContext: 8_000, defaultWorkersModel: "@cf/meta/llama-3.1-8b-instruct" },
+  extract_cv: { kind: "chat", json: true, minContext: 32_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
+  extract_vacancy: { kind: "chat", json: true, minContext: 16_000, defaultWorkersModel: TEXT_MODEL },
+  ficha_w2: { kind: "chat", json: true, minContext: 32_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
+  match_explain: { kind: "chat", json: true, minContext: 16_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
+  coach_candidate: { kind: "chat", minContext: 32_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
+  coach_recruiter: { kind: "chat", minContext: 32_000, defaultWorkersModel: TEXT_MODEL },
+  support_chat: { kind: "chat", minContext: 32_000, defaultWorkersModel: TEXT_MODEL },
+  compose_message: { kind: "chat", minContext: 8_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
+  translate_ui: { kind: "chat", minContext: 8_000, defaultWorkersModel: TEXT_MODEL },
+  translate_content: { kind: "chat", minContext: 8_000, defaultWorkersModel: TEXT_MODEL },
   embed: { kind: "embed", defaultWorkersModel: "@cf/baai/bge-m3" },
 } as const satisfies Record<string, TaskSpec>;
 
@@ -43,6 +49,6 @@ export function isTaskName(v: unknown): v is TaskName {
  * então o orçamento fica do lado seguro.
  */
 export const WORKERS_AI_PRICES: Record<string, { in: number; out: number; dim?: number }> = {
-  "@cf/meta/llama-3.1-8b-instruct": { in: 0.28, out: 0.83 },
+  [TEXT_MODEL]: { in: 0.0605, out: 0.4 },
   "@cf/baai/bge-m3": { in: 0.012, out: 0, dim: 1024 },
 };

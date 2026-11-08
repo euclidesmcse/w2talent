@@ -81,6 +81,18 @@ describe("adaptadores", () => {
     expect(r.vectors).toEqual([[0.1, 0.2]]);
   });
 
+  it("Workers AI: aceita a resposta no formato do OpenAI (modelos novos)", async () => {
+    const run = jest.fn(async () => ({ choices: [{ message: { content: "ok" } }], usage: { prompt_tokens: 4, completion_tokens: 1 } }));
+    const r = await callChat(ctx({ kind: "WORKERS_AI", model: "@cf/zai-org/glm-4.7-flash", ai: { run } }), { messages: [{ role: "user", content: "oi" }] });
+    expect(r).toEqual({ text: "ok", tokensIn: 4, tokensOut: 1 });
+  });
+
+  it("Workers AI: ainda aceita o formato antigo { response }", async () => {
+    const run = jest.fn(async () => ({ response: "ok" }));
+    const r = await callChat(ctx({ kind: "WORKERS_AI", model: "x", ai: { run } }), { messages: [{ role: "user", content: "oi" }] });
+    expect(r.text).toBe("ok");
+  });
+
   it("erro HTTP vira AiProviderError com o status", async () => {
     const f = fakeFetch(() => ({ status: 401, body: { error: "bad key" } }));
     await expect(callChat(ctx({ fetch: f.fn }), { messages: [{ role: "user", content: "oi" }] })).rejects.toMatchObject({ status: 401 });
@@ -225,14 +237,27 @@ describe("roteador", () => {
     expect(JSON.stringify(records) + JSON.stringify(e.attempts)).not.toMatch(/Ana|Empresa/);
   });
 
-  it("exceção do binding do Workers AI grava só o tipo do erro", async () => {
+  it("exceção do binding do Workers AI grava só o código do erro", async () => {
+    class AiError extends Error {
+      name = "AiError";
+    }
+    const run = jest.fn(async () => {
+      throw new AiError("5007: entrada inválida para Ana Lima, ana@x.com");
+    });
+    const { store, records } = memStore({ mode: "automatico", candidates: [defaultCandidate("extract_cv")] });
+    const r = createRouter(store, { ai: { run }, fetch: fetch, gateway: GW, globalDailyBudgetUsd: 1, master: MASTER });
+    await r.chat("extract_cv", { messages: [{ role: "user", content: "Ana Lima" }] }).catch(() => null);
+    expect(records[0].erro).toBe("Workers AI 5007 (AiError)");
+  });
+
+  it("exceção sem código do Workers AI não vaza o texto", async () => {
     const run = jest.fn(async () => {
       throw new TypeError("entrada inválida: Ana Lima, ana@x.com");
     });
     const { store, records } = memStore({ mode: "automatico", candidates: [defaultCandidate("extract_cv")] });
     const r = createRouter(store, { ai: { run }, fetch: fetch, gateway: GW, globalDailyBudgetUsd: 1, master: MASTER });
     await r.chat("extract_cv", { messages: [{ role: "user", content: "Ana Lima" }] }).catch(() => null);
-    expect(records[0].erro).toBe("TypeError (detalhe omitido)");
+    expect(records[0].erro).toBe("Workers AI erro (TypeError)");
   });
 
   it("falha ao gravar o histórico não derruba a chamada", async () => {
@@ -303,6 +328,11 @@ describe("rotas padrão", () => {
   it("toda tarefa tem um modelo padrão no Workers AI e o embed é o bge-m3 de 1024", () => {
     for (const t of Object.keys(TASKS) as (keyof typeof TASKS)[]) expect(defaultCandidate(t).kind).toBe("WORKERS_AI");
     expect(defaultCandidate("embed").model).toBe("@cf/baai/bge-m3");
+  });
+  it("nenhuma tarefa usa modelo desativado pela Cloudflare em 30/05/2026", () => {
+    const desativados = ["@cf/meta/llama-3.1-8b-instruct", "@cf/meta/llama-3-8b-instruct", "@cf/meta/llama-3.1-8b-instruct-awq", "@cf/meta/llama-3-8b-instruct-awq", "@cf/meta/llama-3.1-70b-instruct", "@cf/mistral/mistral-7b-instruct-v0.1", "@cf/google/gemma-3-12b-it"];
+    for (const t of Object.values(TASKS)) expect(desativados).not.toContain(t.defaultWorkersModel);
+    expect(defaultCandidate("extract_cv").priceIn).not.toBeNull();
   });
   it("rota sem modelos usa o padrão e mantém o orçamento da tarefa", async () => {
     const db = { taskRoute: { findUnique: async () => ({ tarefa: "extract_cv", modo: "automatico", modelos: [], orcamentoDiarioUsd: 0.2 }) } };
