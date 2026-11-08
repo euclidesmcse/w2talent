@@ -1,5 +1,8 @@
 "use client";
 import * as React from "react";
+import { buttonClasses } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
+import { formatFaixa, formatTempo } from "@/lib/format";
 
 /**
  * DetailModal — modal desktop / bottom sheet mobile (Task 6)
@@ -132,13 +135,52 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef }
     }
   };
 
+  const skills: string[] = item?.stack && Array.isArray(item.stack) ? item.stack.map((x: any) => x?.skillId ?? x).filter(Boolean) : [];
+  const faixa = item
+    ? formatFaixa(item.faixaDe ?? item.pretensaoDe ?? null, item.faixaAte ?? item.pretensaoAte ?? null, item.faixaMoeda ?? item.pretensaoMoeda ?? "BRL")
+    : "";
+  const regime = item ? (Array.isArray(item.regimePreferido) ? item.regimePreferido.join(", ") : item.regime ?? item.regimePreferido) : null;
+  const fields: Array<[string, React.ReactNode]> = item
+    ? ([
+        ["Cargo", item.nome ? item.titulo : null],
+        ["Empresa", item.company?.nome],
+        ["Nível", item.nivel],
+        ["Local", item.localidade ?? item.modo],
+        ["Regime", regime],
+        [item.nome ? "Pretensão" : "Faixa", faixa],
+        ["Atualizada", formatTempo((item.updatedAt ?? item.createdAt) as any)],
+      ].filter(([, v]) => v && v !== "—") as Array<[string, React.ReactNode]>)
+    : [];
+
   const content = item ? (
-    <div className="detail-content">
-      <h2>{item.titulo ?? item.nome ?? title ?? "Detalhes"}</h2>
-      {item.descricaoBullets ? (
-        <ul>{(Array.isArray(item.descricaoBullets) ? item.descricaoBullets : [item.descricaoBullets]).map((b: string, i: number) => <li key={i}>{b}</li>)}</ul>
+    <div className="detail-content flex flex-col gap-5 text-sm">
+      {fields.length ? (
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
+          {fields.map(([k, v]) => (
+            <React.Fragment key={k}>
+              <dt className="text-muted">{k}</dt>
+              <dd className="text-ink">{v}</dd>
+            </React.Fragment>
+          ))}
+        </dl>
       ) : null}
-      {item.stack ? <div aria-label="skills">{Array.isArray(item.stack) ? item.stack.map((s: any) => s.skillId ?? s).join(", ") : ""}</div> : null}
+      {skills.length ? (
+        <div className="flex flex-col gap-2">
+          <span className="text-[13px] font-medium text-ink">Competências</span>
+          <div aria-label="skills" className="flex flex-wrap gap-2">
+            {skills.map((sk) => (
+              <Chip key={sk}>{sk}</Chip>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {item.descricaoBullets ? (
+        <ul className="list-disc space-y-1 pl-5 text-ink-soft">
+          {(Array.isArray(item.descricaoBullets) ? item.descricaoBullets : [item.descricaoBullets]).map((b: string, i: number) => (
+            <li key={i}>{b}</li>
+          ))}
+        </ul>
+      ) : null}
       {children}
     </div>
   ) : (
@@ -152,7 +194,7 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef }
       ref={overlayRef}
       aria-hidden={false}
       onClick={handleOverlayClick}
-      className="detail-overlay fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center"
+      className="detail-overlay fixed inset-0 z-50 flex items-end justify-center bg-ink/40 md:items-center"
       style={{ zIndex: 50 }}
       data-testid="detail-overlay"
     >
@@ -165,8 +207,8 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef }
         tabIndex={-1}
         className={
           isMobile
-            ? "detail-sheet vaul bottom-sheet bg-white w-full max-h-[85vh] rounded-t-2xl p-4 overflow-auto shadow-xl"
-            : "detail-modal bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-auto shadow-xl"
+            ? "detail-sheet vaul bottom-sheet w-full max-h-[85vh] overflow-auto rounded-t-card bg-surface p-5 shadow-xl"
+            : "detail-modal mx-4 max-h-[90vh] w-full max-w-xl overflow-auto rounded-card border border-line bg-surface p-6 shadow-xl"
         }
         style={isMobile ? { paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" } : undefined}
         onClick={(e) => e.stopPropagation()}
@@ -178,7 +220,7 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef }
         }}
       >
         <div className="flex justify-between items-start gap-4">
-          <h2 id="detail-title" className="text-lg font-semibold">
+          <h2 id="detail-title" className="text-xl font-semibold leading-snug">
             {title ?? item?.titulo ?? item?.nome ?? "Detalhes"}
           </h2>
           <button
@@ -186,14 +228,14 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef }
             aria-label="Fechar modal"
             onClick={onClose}
             tabIndex={0}
-            className="shrink-0 rounded p-2 hover:bg-zinc-100"
+            className="shrink-0 rounded-control px-2 py-1 text-muted hover:bg-canvas hover:text-ink"
           >
             ✕
           </button>
         </div>
-        <div className="mt-4">{content}</div>
-        <div className="mt-4 flex gap-2">
-          <button type="button" tabIndex={0} onClick={onClose} className="rounded border px-4 py-2">
+        <div className="mt-5">{content}</div>
+        <div className="mt-6 flex justify-end gap-2 border-t border-line-soft pt-4">
+          <button type="button" tabIndex={0} onClick={onClose} className={buttonClasses("secondary", "md")}>
             Fechar
           </button>
         </div>

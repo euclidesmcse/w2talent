@@ -2,6 +2,7 @@
 import * as React from "react";
 import { useLocale } from "next-intl";
 import { t } from "@/i18n";
+import { buttonClasses } from "@/components/ui/button";
 
 /**
  * EmptyState — empty state busca 0 mostra sugestão IA + CTA
@@ -36,10 +37,10 @@ export function EmptyState({ query, suggestion, emptyCTA, variant = "vagas", onC
   const tryAdjust = t(locale, "empty.tryAdjust");
 
   return (
-    <div role="status" aria-live="polite" aria-label="empty-state" data-testid="empty-state" className="empty-state py-8 text-center">
-      <h3 className="text-lg font-semibold">{title}</h3>
-      <p className="mt-2 text-sm text-zinc-600">{body}</p>
-      {query ? <p className="mt-1 text-sm text-zinc-600">Nenhum resultado para &quot;{query}&quot;.</p> : null}
+    <div role="status" aria-live="polite" aria-label="empty-state" data-testid="empty-state" className="empty-state mb-4 rounded-card border border-line bg-surface px-6 py-10 text-center">
+      <h3 className="text-[17px] font-semibold">{title}</h3>
+      <p className="mt-2 text-sm text-muted">{body}</p>
+      {query ? <p className="mt-1 text-sm text-muted">Nenhum resultado para &quot;{query}&quot;.</p> : null}
       {suggestion ? (
         <div className="mt-3">
           <p aria-label="sugestao" className="text-sm">
@@ -49,18 +50,18 @@ export function EmptyState({ query, suggestion, emptyCTA, variant = "vagas", onC
             type="button"
             aria-label="usar sugestão IA"
             onClick={() => onUseSuggestion?.(suggestion)}
-            className="mt-2 rounded border px-3 py-1 text-sm"
+            className={buttonClasses("secondary", "sm", "mt-2")}
           >
             Ver &quot;{suggestion}&quot;
           </button>
         </div>
       ) : null}
-      <p className="mt-2 text-sm text-zinc-500">{emptyCTA ?? tryAdjust}</p>
+      <p className="mt-2 text-sm text-muted">{emptyCTA ?? tryAdjust}</p>
       <button
         type="button"
         aria-label="limpar filtros"
         onClick={() => onClearFilters?.()}
-        className="mt-4 rounded bg-black px-4 py-2 text-sm text-white"
+        className={buttonClasses("primary", "md", "mt-4")}
       >
         {ctaLabel}
       </button>
