@@ -1,7 +1,8 @@
 "use client";
 import * as React from "react";
-import { formatFaixa, formatTempo, skillsDisplay, maskEmail, maskPhone } from "@/lib/format";
+import { formatFaixa, formatTempo, maskEmail, maskPhone } from "@/lib/format";
 import { buttonClasses } from "@/components/ui/button";
+import { SkillChips } from "@/components/skill-chips";
 
 export type CandidateRow = {
   id: string;
@@ -63,7 +64,6 @@ export function CandidateTable({
       <tbody>
         {items.map((row) => {
           const skillIds = getSkillIds(row);
-          const skillsLabel = skillIds.length ? skillsDisplay(skillIds, 3) : "—";
           const faixa = formatFaixa(row.pretensaoDe ?? row.faixaDe ?? null, row.pretensaoAte ?? row.faixaAte ?? null, row.pretensaoMoeda ?? "BRL");
           const tempo = formatTempo((row.updatedAt ?? row.createdAt) as any);
           // a busca às vezes devolve só userId (sem id)
@@ -77,10 +77,11 @@ export function CandidateTable({
             <tr
               key={rid}
               data-candidate-id={rid}
-              className={`border-t border-line-soft ${isSelected ? "selected bg-[#F5F8FF]" : "bg-surface hover:bg-canvas"}`}
+              onClick={(e) => { if ((e.target as HTMLElement).closest("button, a, input, label")) return; onToggle?.(rid); }}
+              className={`cursor-pointer border-t border-line-soft ${isSelected ? "selected bg-[#F5F8FF]" : "bg-surface hover:bg-canvas"}`}
             >
               <td className="py-3.5 pl-4 pr-2 align-top">
-                <input type="checkbox" aria-label={`selecionar-${rid}`} checked={isSelected} onChange={() => onToggle?.(rid)} className="mt-2 h-4 w-4 cursor-pointer accent-brand" />
+                <input type="checkbox" aria-label={`selecionar-${rid}`} checked={isSelected} onChange={() => onToggle?.(rid)} className="mt-1.5 h-5 w-5 cursor-pointer accent-brand" />
               </td>
               <td className="px-2 py-3.5 align-top">
                 <div className="cand-identidade flex items-center gap-3">
@@ -105,9 +106,7 @@ export function CandidateTable({
                 </div>
               </td>
               <td className="px-2 py-3.5 align-top text-ink-soft">
-                <span aria-label="skills" title={skillIds.join(", ")}>
-                  {skillsLabel}
-                </span>
+                <SkillChips ids={skillIds} limit={3} />
               </td>
               <td className="px-2 py-3.5 align-top text-ink-soft">{[row.localidade ?? row.modo, regime].filter(Boolean).join(" · ") || "—"}</td>
               <td className="whitespace-nowrap px-2 py-3.5 align-top text-ink-soft">{faixa}</td>

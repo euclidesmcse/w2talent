@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: "W2Talent",
   description: "Encontre vagas, confira cada uma e envie em lote só as que você aprovou.",
   manifest: "/manifest.json",
-  icons: { icon: "/icons/icon-192.png", apple: "/icons/icon-192.png" },
+  icons: { icon: [{ url: "/icons/icon.svg", type: "image/svg+xml" }, { url: "/icons/icon-192.png", sizes: "192x192" }], apple: "/icons/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {
@@ -38,6 +38,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet"
         />
+        {/* Fonte do logo: só as letras de "W2Talent" (arquivo de poucos KB) */}
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&text=W2Talent&display=swap" rel="stylesheet" />
       </head>
       <body className="bg-canvas font-sans text-ink antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>

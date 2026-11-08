@@ -89,7 +89,7 @@ export default function DesignPage() {
               <Field label="Buscar vagas" hint="Escreva como falaria.">
                 <Input type="search" defaultValue="DevOps remoto PJ 15k" />
               </Field>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Regime">
                   <Select defaultValue="PJ">
                     <option>CLT</option>

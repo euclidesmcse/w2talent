@@ -1,7 +1,8 @@
 "use client";
 import * as React from "react";
-import { formatFaixa, formatTempo, skillsDisplay, maskEmail, maskPhone } from "@/lib/format";
+import { formatFaixa, formatTempo, maskEmail, maskPhone } from "@/lib/format";
 import { buttonClasses } from "@/components/ui/button";
+import { SkillChips } from "@/components/skill-chips";
 // breakpoints: 360 / 768 / 1024 / 1280 — Tailwind screens xs/md/lg/xl (see tailwind.config.js)
 // next-intl: colunas via messages/pt-BR.json, en.json — fallback PT-BR (i18n.ts t())
 // PWA: manifest.json linked in layout.tsx
@@ -63,7 +64,6 @@ export function VacancyTable({
       <tbody>
         {items.map((row) => {
           const skillIds = getSkillIds(row);
-          const skillsLabel = skillIds.length ? skillsDisplay(skillIds, 3) : "—";
           const faixa = formatFaixa(row.faixaDe, row.faixaAte, row.faixaMoeda ?? "BRL");
           const tempo = formatTempo((row.updatedAt ?? row.createdAt) as any);
           const isSelected = selectedSet.has(row.id);
@@ -75,7 +75,8 @@ export function VacancyTable({
             <tr
               key={row.id}
               data-vacancy-id={row.id}
-              className={`border-t border-line-soft ${isSelected ? "selected bg-[#F5F8FF]" : "bg-surface hover:bg-canvas"}`}
+              onClick={(e) => { if ((e.target as HTMLElement).closest("button, a, input, label")) return; onToggle?.(row.id); }}
+              className={`cursor-pointer border-t border-line-soft ${isSelected ? "selected bg-[#F5F8FF]" : "bg-surface hover:bg-canvas"}`}
             >
               <td className="py-3.5 pl-4 pr-2 align-top">
                 <input
@@ -83,7 +84,7 @@ export function VacancyTable({
                   aria-label={`selecionar-${row.id}`}
                   checked={isSelected}
                   onChange={() => onToggle?.(row.id)}
-                  className="mt-0.5 h-4 w-4 cursor-pointer accent-brand"
+                  className="h-5 w-5 cursor-pointer accent-brand"
                 />
               </td>
               <td className="px-2 py-3.5 align-top">
@@ -100,9 +101,7 @@ export function VacancyTable({
                 </div>
               </td>
               <td className="px-2 py-3.5 align-top text-ink-soft">
-                <span aria-label="skills" title={skillIds.join(", ")}>
-                  {skillsLabel}
-                </span>
+                <SkillChips ids={skillIds} limit={3} />
               </td>
               <td className="px-2 py-3.5 align-top text-ink-soft">
                 {[row.localidade ?? "Remoto", row.regime].filter(Boolean).join(" · ")}

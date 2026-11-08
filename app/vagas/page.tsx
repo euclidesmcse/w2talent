@@ -13,6 +13,8 @@ type Item = any;
 
 export default function VagasPage() {
   const [q, setQ] = React.useState("");
+  const [draft, setDraft] = React.useState("");
+  const [searching, setSearching] = React.useState(false);
   const [items, setItems] = React.useState<Item[]>([]);
   const [total, setTotal] = React.useState(0);
   const [page, setPage] = React.useState(1);
@@ -44,6 +46,14 @@ export default function VagasPage() {
     } catch { return "pt-BR"; }
   };
 
+  // digitar busca sozinho após uma pausa curta; Enter ou "Buscar" buscam na hora
+  React.useEffect(() => {
+    if (draft === q) return;
+    const t = setTimeout(() => { setQ(draft); setPage(1); }, 400);
+    return () => clearTimeout(t);
+  }, [draft, q]);
+  const submitSearch = (e: React.FormEvent) => { e.preventDefault(); setQ(draft); setPage(1); };
+
   const fetchPage = React.useCallback(async (query: string, p: number) => {
     const lang = getLang();
     const params = new URLSearchParams({ q: query, page: String(p), pageSize: "20", lang });
@@ -57,11 +67,11 @@ export default function VagasPage() {
     setLoaded(true);
   }, []);
 
-  React.useEffect(() => { fetchPage(q, page).catch(() => {}).finally(() => setLoaded(true)); }, [q, page, fetchPage]);
+  React.useEffect(() => { setSearching(true); fetchPage(q, page).catch(() => {}).finally(() => { setLoaded(true); setSearching(false); }); }, [q, page, fetchPage]);
 
-  const handleClearFilters = () => { setQ(""); setPage(1); fetchPage("", 1); };
-  const handleUseSuggestion = (s: string) => { setQ(s); setPage(1); fetchPage(s, 1); };
-  const toggle = (id: string) => { const res = selectionStore.toggle(id); setSelected([...selectionStore.getState().selectedIds]); void res; };
+  const handleClearFilters = () => { setDraft(""); setQ(""); setPage(1); };
+  const handleUseSuggestion = (s: string) => { setDraft(s); setQ(s); setPage(1); };
+  const toggle = (id: string) => { const it = items.find((x) => String(x.id ?? x.userId) === id); if (it) selectionStore.rememberLabel(id, it.titulo); const res = selectionStore.toggle(id); setSelected([...selectionStore.getState().selectedIds]); void res; };
   const openDetail = (id: string) => {
     const item = items.find((x) => x.id === id) ?? null;
     setModalItem(item); setModalOpen(true);
@@ -79,17 +89,18 @@ export default function VagasPage() {
       <div className="mx-auto max-w-page px-6 pt-6">
         <h1 className="text-xl font-bold">Vagas</h1>
         <p className="mt-1 text-sm text-muted">Busque do seu jeito, abra cada vaga e selecione as que fazem sentido.</p>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
+        <form role="search" onSubmit={submitSearch} className="mt-4 flex flex-wrap items-center gap-3">
           <Input
             type="search"
             aria-label="busca-vagas"
             placeholder="Analista Cloud remoto"
-            value={q}
-            onChange={(e) => { setQ(e.target.value); setPage(1); }}
-            className="max-w-[560px] flex-[1_1_340px]"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            className="min-w-0 max-w-[560px] flex-[1_1_220px]"
           />
-          <span className="text-[13px] text-muted">{total} vagas</span>
-        </div>
+          <Button type="submit" variant="primary" size="md">Buscar</Button>
+          <span aria-live="polite" className="text-[13px] text-muted">{searching && loaded ? "Buscando…" : `${total} vagas`}</span>
+        </form>
       </div>
 
       <div className="mx-auto max-w-page px-6 pt-4 pb-24">
@@ -107,14 +118,14 @@ export default function VagasPage() {
             ))}
           </div>
         ) : (
-          <>
+          <div aria-busy={searching} className={`transition-opacity ${searching ? "opacity-60" : ""}`}>
           <div className="hidden md:block">
             <div className="overflow-hidden rounded-card border border-line bg-surface">
               <VacancyTable items={items} selectedIds={selectedSet} onToggle={toggle} onOpenDetail={openDetail} />
             </div>
           </div>
           <div className="md:hidden"><VacancyCards items={items} selectedIds={selectedSet} onToggle={toggle} onOpenDetail={openDetail} /></div>
-          </>
+          </div>
         )}
         <div aria-label="paginacao" className="mt-3.5 flex items-center justify-between gap-2 text-[13px] text-muted">
           <span>Página {page} de {totalPages} — {total} vagas</span>
