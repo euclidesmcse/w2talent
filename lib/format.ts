@@ -2,6 +2,7 @@
  * Formatação pura (sem banco): usada por componentes "use client" e por lib/search.ts.
  * Fica separada para o bundle do navegador não puxar o Prisma/pg.
  */
+import { formatMoney } from "./locale";
 
 // ── Helpers: mascaramento ─────────────────────────────────────────────
 export function maskEmail(email: string): string {
@@ -25,26 +26,59 @@ export function maskPhone(phone: string): string {
   return `${ddd.slice(0, 4)}***${last2} 🔒`;
 }
 
-// ── Helpers: faixa / tempo ───────────────────────────────────────────
-export function formatFaixa(faixaDe: number | null | undefined, faixaAte: number | null | undefined, moeda = "BRL"): string {
+// ── Helpers: faixa / tempo (por idioma: pt-BR, en, es) ──────────────
+const RANGE_WORDS: Record<string, { from: string; upTo: string }> = {
+  "pt-BR": { from: "a partir de", upTo: "até" },
+  en: { from: "from", upTo: "up to" },
+  es: { from: "desde", upTo: "hasta" },
+};
+
+export function formatFaixa(
+  faixaDe: number | null | undefined,
+  faixaAte: number | null | undefined,
+  moeda = "BRL",
+  locale: string = "pt-BR"
+): string {
   if (faixaDe == null && faixaAte == null) return "—";
-  const fmt = (n: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: moeda, maximumFractionDigits: 0 }).format(n);
+  const fmt = (n: number) => formatMoney(n, locale, moeda);
+  const words = RANGE_WORDS[locale] ?? RANGE_WORDS["pt-BR"];
   if (faixaDe != null && faixaAte != null) return `${fmt(faixaDe)} – ${fmt(faixaAte)}`;
-  if (faixaDe != null) return `a partir de ${fmt(faixaDe)}`;
-  return `até ${fmt(faixaAte!)}`;
+  if (faixaDe != null) return `${words.from} ${fmt(faixaDe)}`;
+  return `${words.upTo} ${fmt(faixaAte!)}`;
 }
 
-export function formatTempo(date: Date | string | null | undefined): string {
+type TempoWords = { today: string; day: (n: number) => string; week: (n: number) => string; month: (n: number) => string };
+const TEMPO_WORDS: Record<string, TempoWords> = {
+  "pt-BR": {
+    today: "hoje",
+    day: (n) => (n === 1 ? "há 1 dia" : `há ${n} dias`),
+    week: (n) => (n === 1 ? "há 1 semana" : `há ${n} semanas`),
+    month: (n) => (n === 1 ? "há 1 mês" : `há ${n} meses`),
+  },
+  en: {
+    today: "today",
+    day: (n) => (n === 1 ? "1 day ago" : `${n} days ago`),
+    week: (n) => (n === 1 ? "1 week ago" : `${n} weeks ago`),
+    month: (n) => (n === 1 ? "1 month ago" : `${n} months ago`),
+  },
+  es: {
+    today: "hoy",
+    day: (n) => (n === 1 ? "hace 1 día" : `hace ${n} días`),
+    week: (n) => (n === 1 ? "hace 1 semana" : `hace ${n} semanas`),
+    month: (n) => (n === 1 ? "hace 1 mes" : `hace ${n} meses`),
+  },
+};
+
+export function formatTempo(date: Date | string | null | undefined, locale: string = "pt-BR"): string {
   if (!date) return "—";
   const d = date instanceof Date ? date : new Date(date);
-  const diffMs = Date.now() - d.getTime();
-  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-  if (diffDays <= 0) return "hoje";
-  if (diffDays === 1) return "há 1 dia";
-  if (diffDays < 7) return `há ${diffDays} dias`;
-  if (diffDays < 30) return `há ${Math.floor(diffDays / 7)} sem`;
-  return `há ${Math.floor(diffDays / 30)} meses`;
+  if (isNaN(d.getTime())) return "—";
+  const w = TEMPO_WORDS[locale] ?? TEMPO_WORDS["pt-BR"];
+  const diffDays = Math.floor((Date.now() - d.getTime()) / (24 * 60 * 60 * 1000));
+  if (diffDays <= 0) return w.today;
+  if (diffDays < 7) return w.day(diffDays);
+  if (diffDays < 30) return w.week(Math.floor(diffDays / 7));
+  return w.month(Math.max(1, Math.floor(diffDays / 30)));
 }
 
 // ── Helpers: truncamento skills +2 ───────────────────────────────────

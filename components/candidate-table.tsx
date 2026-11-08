@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { formatFaixa, formatTempo, maskEmail, maskPhone } from "@/lib/format";
 import { buttonClasses } from "@/components/ui/button";
 import { SkillChips } from "@/components/skill-chips";
@@ -47,25 +48,27 @@ export function CandidateTable({
     if (!selectedIds) return new Set<string>();
     return selectedIds instanceof Set ? selectedIds : new Set(selectedIds);
   }, [selectedIds]);
+  const t = useTranslations();
+  const locale = useLocale();
 
   return (
-    <table aria-label="Lista de candidatos" className="candidate-table w-full min-w-[760px] border-collapse text-sm">
+    <table aria-label={t("candidatos.tableLabel")} className="candidate-table w-full min-w-[760px] border-collapse text-sm">
       <thead>
         <tr className="text-left text-xs uppercase tracking-[0.04em] text-muted [&>th]:px-2 [&>th]:py-2.5 [&>th]:font-semibold [&>th:first-child]:pl-4 [&>th:last-child]:pr-4">
-          <th scope="col"><span className="sr-only">Seleção</span></th>
-          <th scope="col">Candidato</th>
-          <th scope="col">Competências</th>
-          <th scope="col">Modelo · regime</th>
-          <th scope="col">Pretensão</th>
-          <th scope="col">Atualizado</th>
-          <th scope="col"><span className="sr-only">Ação</span></th>
+          <th scope="col"><span className="sr-only">{t("table.selection")}</span></th>
+          <th scope="col">{t("candidatos.colCandidato")}</th>
+          <th scope="col">{t("table.skills")}</th>
+          <th scope="col">{t("table.modelo")}</th>
+          <th scope="col">{t("candidatos.colPretensao")}</th>
+          <th scope="col">{t("candidatos.colAtualizado")}</th>
+          <th scope="col"><span className="sr-only">{t("table.action")}</span></th>
         </tr>
       </thead>
       <tbody>
         {items.map((row) => {
           const skillIds = getSkillIds(row);
-          const faixa = formatFaixa(row.pretensaoDe ?? row.faixaDe ?? null, row.pretensaoAte ?? row.faixaAte ?? null, row.pretensaoMoeda ?? "BRL");
-          const tempo = formatTempo((row.updatedAt ?? row.createdAt) as any);
+          const faixa = formatFaixa(row.pretensaoDe ?? row.faixaDe ?? null, row.pretensaoAte ?? row.faixaAte ?? null, row.pretensaoMoeda ?? "BRL", locale);
+          const tempo = formatTempo((row.updatedAt ?? row.createdAt) as any, locale);
           // a busca às vezes devolve só userId (sem id)
           const rid = String(row.id ?? (row as any).userId ?? "");
           const isSelected = selectedSet.has(rid);
@@ -81,7 +84,8 @@ export function CandidateTable({
               className={`cursor-pointer border-t border-line-soft ${isSelected ? "selected bg-[#F5F8FF]" : "bg-surface hover:bg-canvas"}`}
             >
               <td className="py-3.5 pl-4 pr-2 align-top">
-                <input type="checkbox" aria-label={`selecionar-${rid}`} checked={isSelected} onChange={() => onToggle?.(rid)} className="mt-1.5 h-5 w-5 cursor-pointer accent-brand" />
+                <input type="checkbox" aria-label={t("table.selectItem", { name: row.nome })}
+                  data-select-id={rid} checked={isSelected} onChange={() => onToggle?.(rid)} className="mt-1.5 h-5 w-5 cursor-pointer accent-brand" />
               </td>
               <td className="px-2 py-3.5 align-top">
                 <div className="cand-identidade flex items-center gap-3">
@@ -99,7 +103,7 @@ export function CandidateTable({
                     <div className="text-[13px] text-muted">
                       {row.titulo}
                       {contatoMascarado ? (
-                        <span aria-label="contato mascarado" title={`Contato protegido até o candidato responder: ${contatoMascarado}`}> · contato protegido</span>
+                        <span aria-label="contato mascarado" title={t("candidatos.contactHint", { contact: contatoMascarado })}> · {t("table.contatoProtegido")}</span>
                       ) : null}
                     </div>
                   </div>
@@ -112,8 +116,8 @@ export function CandidateTable({
               <td className="whitespace-nowrap px-2 py-3.5 align-top text-ink-soft">{faixa}</td>
               <td className="whitespace-nowrap px-2 py-3.5 align-top text-[13px] text-muted">{tempo}</td>
               <td className="py-3 pl-2 pr-4 text-right align-top">
-                <button type="button" aria-label={`lupa-${rid}`} onClick={() => onOpenDetail?.(rid)} className={buttonClasses("secondary", "sm")}>
-                  Ver
+                <button type="button" data-detail-id={rid} onClick={() => onOpenDetail?.(rid)} className={buttonClasses("secondary", "sm")}>
+                  {t("common.view")}
                 </button>
               </td>
             </tr>
@@ -122,7 +126,7 @@ export function CandidateTable({
         {items.length === 0 ? (
           <tr>
             <td colSpan={7} className="empty px-4 py-8 text-center text-muted">
-              Nenhum candidato encontrado. Tente ajustar os filtros.
+              {t("candidatos.empty")}
             </td>
           </tr>
         ) : null}

@@ -54,7 +54,7 @@ export function StatusBadge({ status, children }: { status: ApplicationStatus; c
 }
 
 /** Barra de match (0–100). Verde ≥ 75, âmbar ≥ 50, cinza abaixo. */
-export function MatchBar({ value }: { value: number }) {
+export function MatchBar({ value, label = "match" }: { value: number; label?: string }) {
   const v = Math.max(0, Math.min(100, Math.round(value)));
   const color = v >= 75 ? "bg-success" : v >= 50 ? "bg-warning" : "bg-muted-soft";
   return (
@@ -62,7 +62,7 @@ export function MatchBar({ value }: { value: number }) {
       <span className="inline-block h-1.5 w-20 overflow-hidden rounded-[3px] bg-line" aria-hidden>
         <span className={cn("block h-1.5", color)} style={{ width: `${v}%` }} />
       </span>
-      <strong className="font-semibold text-ink">{v}%</strong> match
+      <strong className="font-semibold text-ink">{v}%</strong> {label}
     </span>
   );
 }

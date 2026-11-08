@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { formatFaixa, formatTempo, maskEmail, maskPhone } from "@/lib/format";
 import { buttonClasses } from "@/components/ui/button";
 import { SkillChips } from "@/components/skill-chips";
@@ -47,25 +48,27 @@ export function VacancyTable({
     if (!selectedIds) return new Set<string>();
     return selectedIds instanceof Set ? selectedIds : new Set(selectedIds);
   }, [selectedIds]);
+  const t = useTranslations();
+  const locale = useLocale();
 
   return (
-    <table aria-label="Lista de vagas" className="vacancy-table w-full min-w-[760px] border-collapse text-sm">
+    <table aria-label={t("vagas.tableLabel")} className="vacancy-table w-full min-w-[760px] border-collapse text-sm">
       <thead>
         <tr className="text-left text-xs uppercase tracking-[0.04em] text-muted [&>th]:px-2 [&>th]:py-2.5 [&>th]:font-semibold [&>th:first-child]:pl-4 [&>th:last-child]:pr-4">
-          <th scope="col"><span className="sr-only">Seleção</span></th>
-          <th scope="col">Vaga</th>
-          <th scope="col">Competências</th>
-          <th scope="col">Modelo · regime</th>
-          <th scope="col">Faixa</th>
-          <th scope="col">Atualizada</th>
-          <th scope="col"><span className="sr-only">Ação</span></th>
+          <th scope="col"><span className="sr-only">{t("table.selection")}</span></th>
+          <th scope="col">{t("vagas.colVaga")}</th>
+          <th scope="col">{t("table.skills")}</th>
+          <th scope="col">{t("table.modelo")}</th>
+          <th scope="col">{t("vagas.colFaixa")}</th>
+          <th scope="col">{t("vagas.colAtualizada")}</th>
+          <th scope="col"><span className="sr-only">{t("table.action")}</span></th>
         </tr>
       </thead>
       <tbody>
         {items.map((row) => {
           const skillIds = getSkillIds(row);
-          const faixa = formatFaixa(row.faixaDe, row.faixaAte, row.faixaMoeda ?? "BRL");
-          const tempo = formatTempo((row.updatedAt ?? row.createdAt) as any);
+          const faixa = formatFaixa(row.faixaDe, row.faixaAte, row.faixaMoeda ?? "BRL", locale);
+          const tempo = formatTempo((row.updatedAt ?? row.createdAt) as any, locale);
           const isSelected = selectedSet.has(row.id);
           const emailRaw = row.email ?? row.contato?.email ?? "";
           const telRaw = row.telefone ?? row.contato?.telefone ?? "";
@@ -81,7 +84,8 @@ export function VacancyTable({
               <td className="py-3.5 pl-4 pr-2 align-top">
                 <input
                   type="checkbox"
-                  aria-label={`selecionar-${row.id}`}
+                  aria-label={t("table.selectItem", { name: row.titulo })}
+                  data-select-id={row.id}
                   checked={isSelected}
                   onChange={() => onToggle?.(row.id)}
                   className="h-5 w-5 cursor-pointer accent-brand"
@@ -94,8 +98,8 @@ export function VacancyTable({
                 <div className="mt-0.5 text-[13px] text-muted">
                   {subtitulo}
                   {contatoMascarado ? (
-                    <span aria-label="contato mascarado" title={`Contato protegido até a empresa responder: ${contatoMascarado}`}>
-                      {subtitulo ? " · " : ""}contato protegido
+                    <span aria-label="contato mascarado" title={t("vagas.contactHint", { contact: contatoMascarado })}>
+                      {subtitulo ? " · " : ""}{t("table.contatoProtegido")}
                     </span>
                   ) : null}
                 </div>
@@ -104,18 +108,18 @@ export function VacancyTable({
                 <SkillChips ids={skillIds} limit={3} />
               </td>
               <td className="px-2 py-3.5 align-top text-ink-soft">
-                {[row.localidade ?? "Remoto", row.regime].filter(Boolean).join(" · ")}
+                {[row.localidade ?? t("table.remoto"), row.regime].filter(Boolean).join(" · ")}
               </td>
               <td className="whitespace-nowrap px-2 py-3.5 align-top text-ink-soft">{faixa}</td>
               <td className="whitespace-nowrap px-2 py-3.5 align-top text-[13px] text-muted">{tempo}</td>
               <td className="py-3 pl-2 pr-4 text-right align-top">
                 <button
                   type="button"
-                  aria-label={`lupa-${row.id}`}
+                  data-detail-id={row.id}
                   onClick={() => onOpenDetail?.(row.id)}
                   className={buttonClasses("secondary", "sm")}
                 >
-                  Ver
+                  {t("common.view")}
                 </button>
               </td>
             </tr>
@@ -124,7 +128,7 @@ export function VacancyTable({
         {items.length === 0 ? (
           <tr>
             <td colSpan={7} className="empty px-4 py-8 text-center text-muted">
-              Nenhuma vaga encontrada. Tente ajustar os filtros ou buscar por outro termo.
+              {t("vagas.empty")}
             </td>
           </tr>
         ) : null}

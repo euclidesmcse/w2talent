@@ -1,18 +1,21 @@
 import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages, getLocale } from "next-intl/server";
+import { getMessages, getLocale, getTranslations } from "next-intl/server";
 import { defaultLocale } from "@/i18n";
 import { ToastProvider } from "@/components/ui/toast";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "W2Talent",
-  description: "Encontre vagas, confira cada uma e envie em lote só as que você aprovou.",
-  manifest: "/manifest.json",
-  icons: { icon: [{ url: "/icons/icon.svg", type: "image/svg+xml" }, { url: "/icons/icon-192.png", sizes: "192x192" }], apple: "/icons/apple-touch-icon.png" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("meta").catch(() => null);
+  return {
+    title: "W2Talent",
+    description: t ? t("description") : "Encontre vagas, confira cada uma e envie em lote só as que você aprovou.",
+    manifest: "/manifest.json",
+    icons: { icon: [{ url: "/icons/icon.svg", type: "image/svg+xml" }, { url: "/icons/icon-192.png", sizes: "192x192" }], apple: "/icons/apple-touch-icon.png" },
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
