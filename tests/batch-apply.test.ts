@@ -4,6 +4,10 @@ import * as path from "path";
 import { NextRequest } from "next/server";
 
 describe("Candidatura em Lote 1-clique — Task 7", () => {
+  // webhook "respondido" grava consentimento em background; espera terminar antes do Jest encerrar
+  afterAll(async () => {
+    await require("../lib/proxy").flushContactConsentWrites?.();
+  });
   const candidateId = "cand_test_001";
   let mod: any;
   let routeMod: any;
