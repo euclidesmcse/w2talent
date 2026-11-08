@@ -20,6 +20,10 @@
 			"service": "w2talent"
 		}
 	],
+	"ai": {
+		// Workers AI: toMarkdown lê os CVs (PDF/DOCX) — ver lib/doc-to-text.ts
+		"binding": "AI"
+	},
 	"images": {
 		// Enable image optimization
 		// see https://opennext.js.org/cloudflare/howtos/image

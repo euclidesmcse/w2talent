@@ -3,7 +3,7 @@
  * - parse texto bruto (PDF/DOCX/LinkedIn -> raw string já extraído)
  * - normalização via taxonomy + heuristics
  * - validação objetivoCrescimento, estado draft→ativo, embedding + tsvector no publish
- * Obs: parsing binário PDF/DOCX (pdf-parse/mammoth) fica no route ingest — aqui recebe raw text.
+ * Obs: leitura de PDF/DOCX (Workers AI toMarkdown, lib/doc-to-text) fica no ingest — aqui recebe raw text.
  */
 import { normalizeSkill, getSkill, SKILLS } from "./taxonomy";
 import { generateEmbedding, EMBEDDING_DIM } from "./embeddings";

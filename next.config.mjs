@@ -9,4 +9,8 @@ const nextConfig = {
 
 export default withNextIntl(nextConfig);
 
-import('@opennextjs/cloudflare').then(m => m.initOpenNextCloudflareForDev());
+// Bindings da Cloudflare só no `next dev`. No build não precisa, e o binding AI
+// (remoto) exigiria CLOUDFLARE_API_TOKEN no CI.
+if (process.argv.includes("dev")) {
+  import('@opennextjs/cloudflare').then(m => m.initOpenNextCloudflareForDev());
+}
