@@ -20,6 +20,15 @@
 			"service": "w2talent"
 		}
 	],
+	// Banco: Hyperdrive na frente do Neon (São Paulo). O ID não é segredo; a senha fica só na Cloudflare.
+	// localConnectionString = banco local do `next dev`/`wrangler dev` (w2talent-db, ver docs/INFRA_TEMPORARIA.md).
+	"hyperdrive": [
+		{
+			"binding": "HYPERDRIVE",
+			"id": "f30dd85213154074a6cc8d30dad79e44",
+			"localConnectionString": "postgresql://w2talent:w2talent@localhost:5437/w2talent"
+		}
+	],
 	"ai": {
 		// Workers AI: toMarkdown lê os CVs (PDF/DOCX) — ver lib/doc-to-text.ts
 		"binding": "AI"
@@ -32,6 +41,7 @@
 	// Worker Previews (`wrangler preview`, usado nos PRs): só os bindings que o preview aceita.
 	// O WORKER_SELF_REFERENCE (service binding) fica de fora — limitação dos previews.
 	"previews": {
+		"hyperdrive": [{ "binding": "HYPERDRIVE", "id": "f30dd85213154074a6cc8d30dad79e44" }],
 		"ai": { "binding": "AI" },
 		"images": { "binding": "IMAGES" }
 	}
