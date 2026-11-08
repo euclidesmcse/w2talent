@@ -224,3 +224,75 @@ model HygieneEvent {
   @@unique([userId, marco, date])
   @@index([userId])
 }
+
+// ── IA (1.5.7): fornecedores, modelos, rotas por tarefa e histórico ──
+// Toda chamada de IA passa por lib/ai/router.ts e pelo Cloudflare AI Gateway.
+
+enum AiProviderKind {
+  WORKERS_AI
+  OPENAI_COMPATIBLE
+  ANTHROPIC
+  GOOGLE
+}
+
+model AiProvider {
+  id                  String         @id @default(cuid())
+  nome                String         @unique
+  tipo                AiProviderKind
+  // Caminho do fornecedor dentro do AI Gateway (ex.: "openai", "anthropic", "google-ai-studio").
+  // Vazio = chamada direta para baseUrl (fornecedor que o gateway não conhece).
+  gatewayPath         String?
+  baseUrl             String?
+  // Chave de API cifrada com AES-GCM (lib/ai/keys.ts, chave mestra AI_KEYS_MASTER). Nunca em texto puro.
+  chaveCifrada        String?        @db.Text
+  chaveFinal          String? // 4 últimos caracteres, para o painel
+  ativo               Boolean        @default(false)
+  aceitaDadosPessoais Boolean        @default(false)
+  notaPrivacidade     String?
+  modelos             AiModel[]
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+model AiModel {
+  id                    String     @id @default(cuid())
+  providerId            String
+  provider              AiProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  modelo                String // id no fornecedor, ex.: "@cf/baai/bge-m3", "gpt-4o-mini"
+  contexto              Int?
+  precoEntradaUsdMilhao Float? // US$ por milhão de tokens de entrada
+  precoSaidaUsdMilhao   Float?
+  embeddingDim          Int?
+  ativo                 Boolean    @default(true)
+  createdAt             DateTime   @default(now())
+
+  @@unique([providerId, modelo])
+}
+
+model TaskRoute {
+  tarefa             String   @id // ver lib/ai/tasks.ts
+  modo               String   @default("automatico") // automatico | fixo
+  // Modelos na ordem de preferência (ids de AiModel). No modo automático o mais barato vai primeiro.
+  modelos            String[]
+  orcamentoDiarioUsd Float?
+  updatedAt          DateTime @updatedAt
+}
+
+// Histórico de chamadas. Nunca guarda o texto enviado nem o recebido (LGPD).
+model AiInteraction {
+  id            String   @id @default(cuid())
+  tarefa        String
+  fornecedor    String
+  modelo        String
+  ok            Boolean
+  erro          String?
+  tokensEntrada Int?
+  tokensSaida   Int?
+  custoUsd      Float    @default(0)
+  latenciaMs    Int
+  userId        String?
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([tarefa, createdAt])
+}

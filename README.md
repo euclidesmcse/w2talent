@@ -96,6 +96,13 @@ export JWT_SECRET="local-dev-jwt-change-me"
 export CRON_SECRET="local-dev-cron-change-me"
 ```
 
+IA (opcional no local; no Worker vêm do `wrangler.jsonc` e dos Secrets):
+
+```bash
+export AI_KEYS_MASTER="$(openssl rand -base64 32)"   # cifra as chaves de API cadastradas (1.5.7)
+# AI_GATEWAY_ACCOUNT_ID / AI_GATEWAY_ID / AI_DAILY_BUDGET_USD já estão no wrangler.jsonc
+```
+
 Ou crie `~/.env` / use `direnv` — o repo ignora `.env*` (ver `docs/INFRA_TEMPORARIA.md` para o que é temporário).
 
 ### 3) Migrar e semear
