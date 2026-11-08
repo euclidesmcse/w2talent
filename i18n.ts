@@ -1,29 +1,54 @@
 /**
  * i18n.ts — Task 10
  * next-intl provider, middleware locale, chaves por namespace, fallback PT-BR, formatação locale
- * Routing: /en/* => EN, default PT-BR. fallback PT-BR quando chave falta.
+ * Idiomas pt-BR, en, es no mesmo endereço (cookie NEXT_LOCALE ou idioma do navegador). fallback PT-BR quando chave falta.
  * Embeddings multilíngues já no MVP: lang passado para generateEmbedding.
  */
 import { getRequestConfig } from "next-intl/server";
+import type { AbstractIntlMessages } from "next-intl";
+import { cookies, headers } from "next/headers";
+import { LOCALES, DEFAULT_LOCALE, LOCALE_COOKIE, intlTag, formatMoney, resolveLocale, isAppLocale } from "./lib/locale";
+import { formatFaixa, formatTempo } from "./lib/format";
 
-export const locales = ["pt-BR", "en"] as const;
+export const locales = LOCALES;
 export type Locale = (typeof locales)[number];
-export const defaultLocale: Locale = "pt-BR";
-export const localePrefix = "as-needed" as const;
+export const defaultLocale: Locale = DEFAULT_LOCALE;
+/** Mesmo endereço nos três idiomas (decisão de 08/11): sem prefixo /en ou /es. */
+export const localePrefix = "never" as const;
 
 // ── next-intl request config (App Router) ─────────────────────────────
-export default getRequestConfig(async ({ locale }: any) => {
-  const reqLocale = (locale ?? defaultLocale) as string;
-  const awaited: string = typeof (reqLocale as any)?.then === "function" ? await (reqLocale as any) : reqLocale;
-  const resolved = (locales as readonly string[]).includes(awaited as string) ? (awaited as string) : defaultLocale;
-  let messages: any;
+// Idioma: escolha salva (cookie NEXT_LOCALE) → idioma do navegador → pt-BR.
+// Mensagens: catálogo do idioma com fallback pt-BR para chave que faltar.
+export default getRequestConfig(async () => {
+  let resolved: Locale = defaultLocale;
   try {
-    messages = (await import(`./messages/${resolved}.json`)).default;
+    const [c, h] = await Promise.all([cookies(), headers()]);
+    const fromHeader = h.get("x-next-intl-locale");
+    resolved = isAppLocale(fromHeader) ? fromHeader : resolveLocale(c.get(LOCALE_COOKIE)?.value, h.get("accept-language"));
   } catch {
-    messages = (await import(`./messages/pt-BR.json`)).default;
+    resolved = defaultLocale;
   }
-  return { locale: resolved, messages } as any;
+  const base = (await import("./messages/pt-BR.json")).default as Record<string, unknown>;
+  let messages: Record<string, unknown> = base;
+  if (resolved !== defaultLocale) {
+    try {
+      const own = (await import(`./messages/${resolved}.json`)).default as Record<string, unknown>;
+      messages = deepMerge(base, own);
+    } catch {
+      messages = base;
+    }
+  }
+  return { locale: resolved, messages: messages as AbstractIntlMessages };
 });
+
+function deepMerge(base: Record<string, unknown>, over: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...base };
+  for (const [k, v] of Object.entries(over)) {
+    const b = out[k];
+    out[k] = v && typeof v === "object" && b && typeof b === "object" ? deepMerge(b as Record<string, unknown>, v as Record<string, unknown>) : v;
+  }
+  return out;
+}
 
 // ── helpers usados por testes e por lib/search ───────────────────────
 export function isValidLocale(loc: string | null | undefined): loc is Locale {
@@ -34,13 +59,14 @@ export function getLocaleFromPath(pathname: string): Locale {
   if (!pathname) return defaultLocale;
   const seg = pathname.split("/").filter(Boolean)[0];
   if (seg === "en" || seg === "en-US") return "en";
+  if (seg === "es") return "es";
   if (seg === "pt-BR" || seg === "pt") return "pt-BR";
   return defaultLocale;
 }
 
 export function stripLocale(pathname: string): string {
   const seg = pathname.split("/").filter(Boolean)[0];
-  if (seg === "en" || seg === "pt-BR") {
+  if (seg === "en" || seg === "es" || seg === "pt-BR") {
     const rest = "/" + pathname.split("/").filter(Boolean).slice(1).join("/");
     return rest === "/" ? "/" : rest;
   }
@@ -48,29 +74,17 @@ export function stripLocale(pathname: string): string {
 }
 
 // mensagens carregadas sync para testes (Node, sem import dinâmico async)
-let _ptBR: Record<string, unknown> | null = null;
-let _en: Record<string, unknown> | null = null;
+const _cache: Partial<Record<Locale, Record<string, unknown>>> = {};
 function loadSync(locale: Locale): Record<string, unknown> {
-  if (locale === "pt-BR") {
-    if (!_ptBR) {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        _ptBR = require("./messages/pt-BR.json");
-      } catch {
-        _ptBR = {};
-      }
-    }
-    return _ptBR!;
-  }
-  if (!_en) {
+  if (!_cache[locale]) {
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      _en = require("./messages/en.json");
+      _cache[locale] = locale === "en" ? require("./messages/en.json") : locale === "es" ? require("./messages/es.json") : require("./messages/pt-BR.json");
     } catch {
-      _en = {};
+      _cache[locale] = {};
     }
   }
-  return _en!;
+  return _cache[locale]!;
 }
 
 function getNested(obj: Record<string, unknown>, path: string): unknown {
@@ -118,9 +132,7 @@ export function hasFallback(keyPath: string): boolean {
 
 // ── formatação moeda/data por locale ─────────────────────────────────
 export function formatCurrency(value: number, locale: string = defaultLocale, currency = "BRL"): string {
-  const loc = isValidLocale(locale) ? locale : defaultLocale;
-  const intlLocale = loc === "en" ? "en-US" : "pt-BR";
-  return new Intl.NumberFormat(intlLocale, { style: "currency", currency, maximumFractionDigits: 0 }).format(value);
+  return formatMoney(value, locale, currency);
 }
 
 export function formatCurrencyWithLocale(
@@ -129,34 +141,19 @@ export function formatCurrencyWithLocale(
   locale: string = defaultLocale,
   currency = "BRL"
 ): string {
-  if (faixaDe == null && faixaAte == null) return "—";
-  if (faixaDe != null && faixaAte != null)
-    return `${formatCurrency(faixaDe, locale, currency)} – ${formatCurrency(faixaAte, locale, currency)}`;
-  if (faixaDe != null) return `a partir de ${formatCurrency(faixaDe, locale, currency)}`;
-  return `até ${formatCurrency(faixaAte!, locale, currency)}`;
+  return formatFaixa(faixaDe, faixaAte, currency, locale);
 }
 
 export function formatDateByLocale(date: Date | string | null | undefined, locale: string = defaultLocale): string {
   if (!date) return "—";
   const d = date instanceof Date ? date : new Date(date);
   if (isNaN(d.getTime())) return "—";
-  const loc = isValidLocale(locale) ? locale : defaultLocale;
-  const intlLocale = loc === "en" ? "en-US" : "pt-BR";
-  // PT-BR: dd/mm/yyyy, EN: mm/dd/yyyy
-  return new Intl.DateTimeFormat(intlLocale, { day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
+  // pt-BR e es: dd/mm/aaaa; en: mm/dd/aaaa
+  return new Intl.DateTimeFormat(intlTag(locale), { day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
 }
 
 export function formatTempoByLocale(date: Date | string | null | undefined, locale: string = defaultLocale): string {
-  if (!date) return "—";
-  const d = date instanceof Date ? date : new Date(date);
-  const diffMs = Date.now() - d.getTime();
-  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-  const isEn = locale === "en";
-  if (diffDays <= 0) return isEn ? "today" : "hoje";
-  if (diffDays === 1) return isEn ? "1 day ago" : "há 1 dia";
-  if (diffDays < 7) return isEn ? `${diffDays} days ago` : `há ${diffDays} dias`;
-  if (diffDays < 30) return isEn ? `${Math.floor(diffDays / 7)} weeks ago` : `há ${Math.floor(diffDays / 7)} sem`;
-  return isEn ? `${Math.floor(diffDays / 30)} months ago` : `há ${Math.floor(diffDays / 30)} meses`;
+  return formatTempo(date, locale);
 }
 
 // next-intl routing config export for middleware

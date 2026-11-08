@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { selectionStore, SELECTION_LIMIT } from "@/lib/selection-store";
 import { buttonClasses } from "@/components/ui/button";
 
@@ -20,6 +21,9 @@ export type BatchBarProps = {
 };
 
 export function BatchBar({ variant = "vagas", onAction }: BatchBarProps) {
+  const t = useTranslations("batch");
+  const tc = useTranslations();
+  const isCand = variant === "candidatos";
   const [count, setCount] = React.useState(() => {
     try { return selectionStore.getCount(); } catch { return 0; }
   });
@@ -76,8 +80,8 @@ export function BatchBar({ variant = "vagas", onAction }: BatchBarProps) {
     };
   }, []);
 
-  const label = variant === "candidatos" ? "Contatar" : "Candidatar";
-  const countLabel = `${label} (${count})`;
+  const label = isCand ? "Contatar" : "Candidatar";
+  const actionText = isCand ? t("contact", { count }) : t("apply", { count });
   const drawerLabel = `${count} selecionados — limpar`;
 
   const handleClear = () => {
@@ -88,7 +92,7 @@ export function BatchBar({ variant = "vagas", onAction }: BatchBarProps) {
   const handleAction = () => {
     if (count === 0) return;
     if (count > SELECTION_LIMIT) {
-      setError(`Limite de 10 por lote atingido — máximo ${SELECTION_LIMIT} por lote`);
+      setError(t("limitReached", { max: SELECTION_LIMIT }));
       return;
     }
     onAction?.(ids);
@@ -110,7 +114,7 @@ export function BatchBar({ variant = "vagas", onAction }: BatchBarProps) {
     <div
       ref={barRef}
       role="toolbar"
-      aria-label={`Barra de lote — ${countLabel} — lote ${loteId}`}
+      aria-label={t("toolbarLabel")}
       data-testid="batch-bar"
       data-count={count}
       data-lote-id={loteId}
@@ -128,8 +132,8 @@ export function BatchBar({ variant = "vagas", onAction }: BatchBarProps) {
     >
       <div className="mx-auto flex max-w-page flex-wrap items-center justify-between gap-2 px-4 py-3 md:px-6" style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}>
         <div className="flex items-center gap-2">
-          <span aria-label="contador de seleção" className="text-sm font-medium">
-            {count} {count === 1 ? "selecionada" : "selecionadas"} · máx. {SELECTION_LIMIT} por envio
+          <span data-testid="batch-count" className="text-sm font-medium">
+            {t(isCand ? "selectedCountCandidatos" : "selectedCount", { count, max: SELECTION_LIMIT })}
           </span>
           {error ? (
             <span role="alert" aria-live="polite" className="text-sm text-danger">
@@ -142,22 +146,23 @@ export function BatchBar({ variant = "vagas", onAction }: BatchBarProps) {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            aria-label="abrir drawer de seleção"
+            data-action="abrir-selecao"
+            aria-expanded={drawerOpen}
             onClick={() => setDrawerOpen((v) => !v)}
             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setDrawerOpen(v=>!v); } }}
             className={buttonClasses("secondary", "md")}
           >
-            Ver seleção
+            {t("viewSelection")}
           </button>
           <button
             type="button"
-            aria-label={`${label} lote`}
+            data-action="enviar-lote"
             onClick={handleAction}
             onKeyDown={(e) => { if (e.key === "Enter") handleAction(); }}
             disabled={count === 0}
             className={buttonClasses("primary", "md")}
           >
-            {label} ({count})
+            {actionText}
           </button>
         </div>
       </div>
@@ -170,31 +175,31 @@ export function BatchBar({ variant = "vagas", onAction }: BatchBarProps) {
         <div
           role="dialog"
           aria-modal="false"
-          aria-label="drawer de seleção"
+          aria-label={t("viewSelection")}
           data-testid="batch-drawer"
           className="drawer absolute bottom-full left-0 right-0 mx-auto max-h-72 max-w-page overflow-auto rounded-t-card border border-b-0 border-line bg-surface p-4 shadow-[0_-4px_16px_rgba(17,24,39,0.08)]"
           tabIndex={-1}
           onKeyDown={(e) => { if (e.key === "Escape") setDrawerOpen(false); }}
         >
           <div className="flex items-center justify-between">
-            <strong>{count} {variant === "candidatos" ? (count === 1 ? "selecionado" : "selecionados") : (count === 1 ? "selecionada" : "selecionadas")}</strong>
-            <button type="button" aria-label="fechar drawer" onClick={() => setDrawerOpen(false)} className={buttonClasses("ghost", "sm")}>
+            <strong>{t(isCand ? "drawerTitleCandidatos" : "drawerTitle", { count })}</strong>
+            <button type="button" aria-label={t("closeDrawer")} onClick={() => setDrawerOpen(false)} className={buttonClasses("ghost", "sm")}>
               ✕
             </button>
           </div>
           <ul className="mt-2 divide-y divide-line-soft">
             {ids.map((id) => {
-              const nome = selectionStore.getLabel(id) ?? (variant === "candidatos" ? "Candidato" : "Vaga") + " sem título";
+              const nome = selectionStore.getLabel(id) ?? (isCand ? tc("candidatos.untitled") : tc("vagas.untitled"));
               return (
               <li key={id} className="flex items-center justify-between gap-3 py-2 text-sm">
                 <span className="min-w-0 truncate font-medium" title={nome}>{nome}</span>
                 <button
                   type="button"
-                  aria-label={`Remover ${nome} da seleção`}
+                  aria-label={t("removeItem", { name: nome })}
                   onClick={() => selectionStore.remove(id)}
                   className={buttonClasses("ghost", "sm")}
                 >
-                  remover
+                  {tc("common.remove")}
                 </button>
               </li>
               );
@@ -202,14 +207,14 @@ export function BatchBar({ variant = "vagas", onAction }: BatchBarProps) {
           </ul>
           <button
             type="button"
-            aria-label="limpar seleção"
+            data-action="limpar-selecao"
             onClick={handleClear}
             onKeyDown={(e) => { if (e.key === "Enter") handleClear(); }}
             className={buttonClasses("secondary", "md", "mt-3 w-full")}
           >
-            Limpar seleção ({count})
+            {t("clear", { count })}
           </button>
-          <div className="mt-2 text-xs text-muted">Até {SELECTION_LIMIT} por envio.</div>
+          <div className="mt-2 text-xs text-muted">{t("limitNote", { max: SELECTION_LIMIT })}</div>
         </div>
       ) : null}
 

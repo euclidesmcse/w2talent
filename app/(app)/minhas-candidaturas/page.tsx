@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
 import { buttonClasses } from "@/components/ui/button";
 
@@ -15,16 +16,14 @@ type AppRow = {
   createdAt?: string;
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  enviado: "Enviada",
-  visualizado: "Vista",
-  respondido: "Respondida",
-  arquivado: "Arquivada",
-};
-
 const STATUS_ORDER: Record<string, number> = { enviado: 0, visualizado: 1, respondido: 2, arquivado: 3 };
 
+const STATUS_KEYS = ["enviado", "visualizado", "respondido", "arquivado"] as const;
+
 export default function MinhasCandidaturasPage() {
+  const t = useTranslations("minhas");
+  const tn = useTranslations("nav");
+  const statusLabel = (s: string) => ((STATUS_KEYS as readonly string[]).includes(s) ? t(s as (typeof STATUS_KEYS)[number]) : s);
   const [items, setItems] = React.useState<AppRow[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [needsLogin, setNeedsLogin] = React.useState(false);
@@ -77,53 +76,53 @@ export default function MinhasCandidaturasPage() {
   }, [fetchApps, candidateId]);
 
   const nav = [
-    { href: "/vagas", label: "Vagas" },
-    { href: "/candidatos", label: "Candidatos" },
-    { href: "/minhas-candidaturas", label: "Minhas candidaturas", active: true },
+    { href: "/vagas", label: tn("vagas") },
+    { href: "/candidatos", label: tn("candidatos") },
+    { href: "/minhas-candidaturas", label: tn("minhasCandidaturas"), short: tn("minhasCandidaturasCurto"), active: true },
   ];
 
   if (loading)
     return (
       <div className="min-h-screen">
-        <AppHeader nav={nav} />
-        <main className="mx-auto max-w-page px-6 py-6 text-muted">Carregando candidaturas…</main>
+        <AppHeader nav={nav} navLabel={tn("main")} />
+        <main className="mx-auto max-w-page px-6 py-6 text-muted">{t("loading")}</main>
       </div>
     );
 
   return (
     <div className="min-h-screen">
-      <AppHeader nav={nav} />
+      <AppHeader nav={nav} navLabel={tn("main")} />
       <main className="minhas-candidaturas mx-auto flex max-w-page flex-col gap-4 px-6 py-6">
         <div>
-          <h1 className="text-xl font-bold">Minhas candidaturas</h1>
+          <h1 className="text-xl font-bold">{t("title")}</h1>
           <p className="mt-1 text-sm text-muted">
-            Acompanhe cada envio: enviada, vista pela empresa e respondida. {items.length} candidatura{items.length === 1 ? "" : "s"}.
+            {t("subtitle", { count: items.length })}
           </p>
         </div>
         {needsLogin ? (
           <div role="status" className="rounded-card border border-line bg-surface px-6 py-10 text-center">
-            <p className="font-semibold">Entre na sua conta para ver suas candidaturas.</p>
-            <p className="mt-1 text-sm text-muted">O login com Google ou Microsoft chega em breve. Enquanto isso, explore as vagas.</p>
+            <p className="font-semibold">{t("loginTitle")}</p>
+            <p className="mt-1 text-sm text-muted">{t("loginBody")}</p>
             <Link href="/vagas" className={buttonClasses("primary", "md", "mt-4 hover:no-underline hover:text-white")}>
-              Ver vagas
+              {t("loginCta")}
             </Link>
           </div>
         ) : items.length === 0 ? (
           <div role="status" className="empty rounded-card border border-line bg-surface px-6 py-10 text-center">
-            <p className="font-semibold">Nenhuma candidatura ainda.</p>
-            <p className="mt-1 text-sm text-muted">Busque vagas, aprove as que fazem sentido e envie em lote.</p>
+            <p className="font-semibold">{t("emptyTitle")}</p>
+            <p className="mt-1 text-sm text-muted">{t("emptyBody")}</p>
             <Link href="/vagas" className={buttonClasses("primary", "md", "mt-4 hover:no-underline hover:text-white")}>
-              Buscar vagas
+              {t("emptyCta")}
             </Link>
           </div>
         ) : (
           <div className="overflow-x-auto rounded-card border border-line bg-surface">
-            <table aria-label="minhas candidaturas" className="w-full min-w-[560px] border-collapse text-sm">
+            <table aria-label={t("tableLabel")} className="w-full min-w-[560px] border-collapse text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-[0.04em] text-muted [&>th]:px-2 [&>th]:py-2.5 [&>th]:font-semibold [&>th:first-child]:pl-4 [&>th:last-child]:pr-4">
-                  <th scope="col">Vaga</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Andamento</th>
+                  <th scope="col">{t("colVaga")}</th>
+                  <th scope="col">{t("colStatus")}</th>
+                  <th scope="col">{t("colAndamento")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -131,28 +130,28 @@ export default function MinhasCandidaturasPage() {
                   <tr key={app.id} data-testid={`app-${app.id}`} data-status={app.status} data-proxy={app.proxyThreadId} className="border-t border-line-soft">
                     <td className="py-3.5 pl-4 pr-2">
                       <div className="font-semibold">{app.titulo ?? app.vacancyId ?? "—"}</div>
-                      <div className="font-mono text-xs text-muted" title="Endereço protegido da conversa">{app.proxyThreadId}</div>
+                      <div className="font-mono text-xs text-muted" title={t("proxyHint")}>{app.proxyThreadId}</div>
                     </td>
                     <td className="px-2 py-3.5">
                       <span
-                        aria-label={`status-${app.status}`}
+                        data-status-badge={app.status}
                         className={`badge badge-${app.status} inline-flex h-[26px] items-center rounded-control px-2.5 text-[13px] font-medium ${
                           app.status === "respondido" ? "bg-success-soft text-success-ink" : app.status === "visualizado" ? "bg-brand-soft text-brand-ink" : "bg-neutral-soft text-ink-soft"
                         }`}
                       >
-                        {STATUS_LABEL[app.status] ?? app.status}
+                        {statusLabel(app.status)}
                       </span>
                     </td>
-                    <td aria-label={`progresso-${app.status}`} className="py-3.5 pl-2 pr-4">
+                    <td data-progress={app.status} className="py-3.5 pl-2 pr-4">
                       <ol className="flex items-center gap-2 text-[13px]">
                         {["enviado", "visualizado", "respondido"].map((s, i) => {
                           const done = STATUS_ORDER[app.status] >= STATUS_ORDER[s];
                           return (
                             <li key={s} className="flex items-center gap-2">
                               {i > 0 ? <span aria-hidden className={`h-px w-5 ${done ? "bg-brand" : "bg-line-strong"}`} /> : null}
-                              <span data-active={done ? "true" : "false"} aria-label={`etapa-${s}`} className={done ? "font-medium text-ink" : "text-muted-soft"}>
+                              <span data-active={done ? "true" : "false"} data-step={s} className={done ? "font-medium text-ink" : "text-muted-soft"}>
                                 <span aria-hidden className={`mr-1 inline-block h-2 w-2 rounded-full ${done ? "bg-brand" : "bg-line-strong"}`} />
-                                {STATUS_LABEL[s] ?? s}
+                                {statusLabel(s)}
                               </span>
                             </li>
                           );
@@ -165,7 +164,7 @@ export default function MinhasCandidaturasPage() {
             </table>
           </div>
         )}
-        <p className="text-xs text-muted">Seu contato fica protegido: a empresa fala com você por um endereço do W2Talent até você responder.</p>
+        <p className="text-xs text-muted">{t("footnote")}</p>
       </main>
     </div>
   );

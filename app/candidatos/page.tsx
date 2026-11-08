@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
 import { Button, Input } from "@/components/ui";
 import { CandidateTable } from "@/components/candidate-table";
@@ -12,6 +13,8 @@ import { selectionStore } from "@/lib/selection-store";
 type Item = any;
 
 export default function CandidatosPage() {
+  const tr = useTranslations();
+  const locale = useLocale();
   const [q, setQ] = React.useState("");
   const [draft, setDraft] = React.useState("");
   const [searching, setSearching] = React.useState(false);
@@ -27,7 +30,6 @@ export default function CandidatosPage() {
   });
   const [modalItem, setModalItem] = React.useState<Item | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
-  const triggerRefs = React.useRef<Map<string, HTMLButtonElement>>(new Map());
   const [activeTrigger, setActiveTrigger] = React.useState<React.RefObject<HTMLElement | null> | undefined>(undefined);
 
   React.useEffect(() => {
@@ -37,13 +39,6 @@ export default function CandidatosPage() {
     return () => { try { (unsub as any)?.(); } catch {} };
   }, []);
 
-  const getLang = () => {
-    try {
-      const seg = window.location.pathname.split("/").filter(Boolean)[0];
-      if (seg === "en") return "en";
-      return new URLSearchParams(window.location.search).get("lang") ?? "pt-BR";
-    } catch { return "pt-BR"; }
-  };
 
   // digitar busca sozinho após uma pausa curta; Enter ou "Buscar" buscam na hora
   React.useEffect(() => {
@@ -54,7 +49,7 @@ export default function CandidatosPage() {
   const submitSearch = (e: React.FormEvent) => { e.preventDefault(); setQ(draft); setPage(1); };
 
   const fetchPage = React.useCallback(async (query: string, p: number) => {
-    const lang = getLang();
+    const lang = locale;
     const params = new URLSearchParams({ q: query, page: String(p), pageSize: "20", lang });
     const res = await fetch(`/api/search/candidates?${params.toString()}`);
     const data = await res.json();
@@ -64,7 +59,7 @@ export default function CandidatosPage() {
     setSuggestion(data.suggestion ?? null);
     setEmptyCTA(data.emptyCTA ?? null);
     setLoaded(true);
-  }, []);
+  }, [locale]);
 
   React.useEffect(() => { setSearching(true); fetchPage(q, page).catch(() => {}).finally(() => { setLoaded(true); setSearching(false); }); }, [q, page, fetchPage]);
 
@@ -74,8 +69,9 @@ export default function CandidatosPage() {
   const openDetail = (id: string) => {
     const item = items.find((x) => x.id === id || x.userId === id) ?? null;
     setModalItem(item); setModalOpen(true);
-    const btn = triggerRefs.current.get(id);
-    if (btn) setActiveTrigger({ current: btn } as any);
+    // devolve o foco ao botão "Ver" visível (tabela no computador, cartão no celular)
+    const btn = Array.from(document.querySelectorAll<HTMLElement>(`[data-detail-id="${CSS.escape(id)}"]`)).find((el) => el.offsetParent !== null);
+    if (btn) setActiveTrigger({ current: btn });
   };
   const closeModal = () => setModalOpen(false);
   const selectedSet = React.useMemo(() => new Set(selected), [selected]);
@@ -83,31 +79,30 @@ export default function CandidatosPage() {
 
   return (
     <div>
-      <AppHeader nav={[{ href: "/vagas", label: "Vagas", active: false }, { href: "/candidatos", label: "Candidatos", active: true }, { href: "/minhas-candidaturas", label: "Minhas candidaturas" }]} />
+      <AppHeader navLabel={tr("nav.main")} nav={[{ href: "/vagas", label: tr("nav.vagas"), active: false }, { href: "/candidatos", label: tr("nav.candidatos"), active: true }, { href: "/minhas-candidaturas", label: tr("nav.minhasCandidaturas"), short: tr("nav.minhasCandidaturasCurto") }]} />
       <main>
       <div className="mx-auto max-w-page px-6 pt-6">
-        <h1 className="text-xl font-bold">Candidatos</h1>
-        <p className="mt-1 text-sm text-muted">A busca entende sinônimos: AWS e Cloud aparecem juntos.</p>
+        <h1 className="text-xl font-bold">{tr("candidatos.title")}</h1>
+        <p className="mt-1 text-sm text-muted">{tr("candidatos.subtitle")}</p>
         <form role="search" onSubmit={submitSearch} className="mt-4 flex flex-wrap items-center gap-3">
           <Input
             type="search"
-            aria-label="busca-candidatos"
-            placeholder="Analista Cloud"
+            aria-label={tr("candidatos.searchLabel")}
+            placeholder={tr("candidatos.searchPlaceholder")}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             className="min-w-0 max-w-[560px] flex-[1_1_220px]"
           />
-          <Button type="submit" variant="primary" size="md">Buscar</Button>
-          <span aria-live="polite" className="text-[13px] text-muted">{searching && loaded ? "Buscando…" : `${total} candidatos`}</span>
+          <Button type="submit" variant="primary" size="md">{tr("common.search")}</Button>
+          <span aria-live="polite" className="basis-full text-[13px] text-muted md:basis-auto">{searching && loaded ? tr("common.searching") : tr("candidatos.count", { count: total })}</span>
         </form>
       </div>
 
       <div className="mx-auto max-w-page px-6 pt-4 pb-24">
-        {suggestion ? <div role="status" aria-label="sugestao" className="mb-3 rounded-card border border-line bg-brand-soft px-3.5 py-2.5 text-[13px] text-brand-ink">Você quis dizer &quot;{suggestion}&quot;? <Button variant="ghost" size="sm" onClick={() => handleUseSuggestion(suggestion)}>Ver sugestão</Button></div> : null}
-        {emptyCTA ? <div role="status" aria-label="empty-cta" className="mb-2 text-xs text-muted">{emptyCTA}</div> : null}
+        {suggestion ? <div role="status" data-testid="sugestao" className="mb-3 rounded-card border border-line bg-brand-soft px-3.5 py-2.5 text-[13px] text-brand-ink">{tr("empty.didYouMean", { suggestion })} <Button variant="ghost" size="sm" onClick={() => handleUseSuggestion(suggestion)}>{tr("empty.viewSuggestion")}</Button></div> : null}
         {isEmpty ? <EmptyState query={q} suggestion={suggestion} emptyCTA={emptyCTA} variant="candidatos" onClearFilters={handleClearFilters} onUseSuggestion={handleUseSuggestion} /> : null}
         {!loaded ? (
-          <div aria-busy="true" aria-label="carregando" className="flex min-h-[640px] flex-col gap-px overflow-hidden rounded-card border border-line bg-line-soft">
+          <div aria-busy="true" aria-label={tr("common.loading")} className="flex min-h-[640px] flex-col gap-px overflow-hidden rounded-card border border-line bg-line-soft">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="flex h-[70px] items-center gap-4 bg-surface px-4">
                 <span className="h-4 w-4 rounded bg-line" />
@@ -126,16 +121,15 @@ export default function CandidatosPage() {
           <div className="md:hidden"><CandidateCards items={items} selectedIds={selectedSet} onToggle={toggle} onOpenDetail={openDetail} /></div>
           </div>
         )}
-        <div aria-label="paginacao" className="mt-3.5 flex items-center justify-between gap-2 text-[13px] text-muted">
-          <span>Página {page} de {totalPages} — {total} candidatos</span>
+        <nav aria-label={tr("common.pageOf", { page, total: totalPages })} className="mt-3.5 flex items-center justify-between gap-2 text-[13px] text-muted">
+          <span>{tr("candidatos.pageSummary", { page, totalPages, count: total })}</span>
           <div className="flex gap-2">
-            <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Anterior</Button>
-            <Button variant="secondary" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Próxima</Button>
+            <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>{tr("common.previous")}</Button>
+            <Button variant="secondary" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>{tr("common.next")}</Button>
           </div>
-        </div>
-        <DetailModal open={modalOpen} onClose={closeModal} item={modalItem} triggerRef={activeTrigger} title={modalItem?.nome ?? modalItem?.titulo ?? "Detalhes do candidato"} />
+        </nav>
+        <DetailModal open={modalOpen} onClose={closeModal} item={modalItem} triggerRef={activeTrigger} title={modalItem?.nome ?? modalItem?.titulo ?? tr("detail.title")} />
         <BatchBar variant="candidatos" onAction={(ids) => { void ids; }} />
-        <span aria-hidden className="hidden">{items.map((it) => <button key={it.id ?? it.userId} ref={(el) => { if (el) triggerRefs.current.set(it.id ?? it.userId, el); }} aria-label={`lupa-${it.id ?? it.userId}`} onClick={() => openDetail(it.id ?? it.userId)} />)}</span>
       </div>
       </main>
     </div>

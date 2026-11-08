@@ -1,5 +1,7 @@
 "use client";
 import * as React from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { skillName } from "@/components/skill-chips";
 import { buttonClasses } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { formatFaixa, formatTempo } from "@/lib/format";
@@ -31,6 +33,9 @@ function getFocusable(container: HTMLElement): HTMLElement[] {
 }
 
 export function DetailModal({ open, onClose, title, children, item, triggerRef }: DetailModalProps) {
+  const t = useTranslations("detail");
+  const tc = useTranslations("common");
+  const locale = useLocale();
   const overlayRef = React.useRef<HTMLDivElement | null>(null);
   const dialogRef = React.useRef<HTMLDivElement | null>(null);
   const previouslyFocused = React.useRef<HTMLElement | null>(null);
@@ -137,18 +142,18 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef }
 
   const skills: string[] = item?.stack && Array.isArray(item.stack) ? item.stack.map((x: any) => x?.skillId ?? x).filter(Boolean) : [];
   const faixa = item
-    ? formatFaixa(item.faixaDe ?? item.pretensaoDe ?? null, item.faixaAte ?? item.pretensaoAte ?? null, item.faixaMoeda ?? item.pretensaoMoeda ?? "BRL")
+    ? formatFaixa(item.faixaDe ?? item.pretensaoDe ?? null, item.faixaAte ?? item.pretensaoAte ?? null, item.faixaMoeda ?? item.pretensaoMoeda ?? "BRL", locale)
     : "";
   const regime = item ? (Array.isArray(item.regimePreferido) ? item.regimePreferido.join(", ") : item.regime ?? item.regimePreferido) : null;
   const fields: Array<[string, React.ReactNode]> = item
     ? ([
-        ["Cargo", item.nome ? item.titulo : null],
-        ["Empresa", item.company?.nome],
-        ["Nível", item.nivel],
-        ["Local", item.localidade ?? item.modo],
-        ["Regime", regime],
-        [item.nome ? "Pretensão" : "Faixa", faixa],
-        ["Atualizada", formatTempo((item.updatedAt ?? item.createdAt) as any)],
+        [t("cargo"), item.nome ? item.titulo : null],
+        [t("empresa"), item.company?.nome],
+        [t("nivel"), item.nivel],
+        [t("local"), item.localidade ?? item.modo],
+        [t("regime"), regime],
+        [item.nome ? t("pretensao") : t("faixa"), faixa],
+        [t("atualizada"), formatTempo((item.updatedAt ?? item.createdAt) as any, locale)],
       ].filter(([, v]) => v && v !== "—") as Array<[string, React.ReactNode]>)
     : [];
 
@@ -166,10 +171,10 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef }
       ) : null}
       {skills.length ? (
         <div className="flex flex-col gap-2">
-          <span className="text-[13px] font-medium text-ink">Competências</span>
+          <span className="text-[13px] font-medium text-ink">{t("skills")}</span>
           <div aria-label="skills" className="flex flex-wrap gap-2">
             {skills.map((sk) => (
-              <Chip key={sk}>{sk}</Chip>
+              <Chip key={sk}>{skillName(sk)}</Chip>
             ))}
           </div>
         </div>
@@ -184,7 +189,7 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef }
       {children}
     </div>
   ) : (
-    children ?? <div>{title ?? "Detalhes"}</div>
+    children ?? <div>{title ?? t("title")}</div>
   );
 
   // bottom sheet mobile vs modal desktop — same component, CSS switches position
@@ -203,7 +208,7 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef }
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label={title ?? "Detalhes da vaga"}
+        aria-labelledby="detail-title"
         tabIndex={-1}
         className={
           isMobile
@@ -221,11 +226,11 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef }
       >
         <div className="flex justify-between items-start gap-4">
           <h2 id="detail-title" className="text-xl font-semibold leading-snug">
-            {title ?? item?.titulo ?? item?.nome ?? "Detalhes"}
+            {title ?? item?.titulo ?? item?.nome ?? t("title")}
           </h2>
           <button
             type="button"
-            aria-label="Fechar modal"
+            aria-label={t("closeLabel")}
             onClick={onClose}
             tabIndex={0}
             className="shrink-0 rounded-control px-2 py-1 text-muted hover:bg-canvas hover:text-ink"
@@ -236,7 +241,7 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef }
         <div className="mt-5">{content}</div>
         <div className="mt-6 flex justify-end gap-2 border-t border-line-soft pt-4">
           <button type="button" tabIndex={0} onClick={onClose} className={buttonClasses("secondary", "md")}>
-            Fechar
+            {tc("close")}
           </button>
         </div>
       </div>

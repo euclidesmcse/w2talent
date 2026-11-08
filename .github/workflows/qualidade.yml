@@ -30,6 +30,18 @@ jobs:
       - run: npm install --no-save @lhci/cli@0.15.1 @axe-core/playwright@4.14.0 playwright-core@1.63.0
       - name: Lighthouse CI
         run: npx lhci autorun
+      - name: Resumo do Lighthouse (métricas por execução)
+        if: always()
+        run: |
+          node -e '
+          const fs = require("fs");
+          for (const f of fs.readdirSync(".lighthouseci").filter((f) => f.startsWith("lhr-") && f.endsWith(".json"))) {
+            const r = JSON.parse(fs.readFileSync(".lighthouseci/" + f));
+            const a = r.audits, m = (k) => a[k]?.displayValue ?? "-";
+            const lcp = a["largest-contentful-paint-element"]?.details?.items?.[0]?.items?.[0]?.node?.snippet ?? "";
+            console.log(`${r.finalUrl} perf=${Math.round(r.categories.performance.score * 100)} FCP=${m("first-contentful-paint")} LCP=${m("largest-contentful-paint")} TBT=${m("total-blocking-time")} CLS=${m("cumulative-layout-shift")} SI=${m("speed-index")} LCP-el=${lcp.slice(0, 100)}`);
+            for (const i of a["layout-shifts"]?.details?.items ?? []) console.log(`    deslocamento ${i.score?.toFixed?.(3)} ${(i.node?.snippet ?? "").slice(0, 160)} ${i.node?.selector ?? ""}`);
+          }'
       - name: axe
         run: |
           npx next start -p 3999 &
@@ -41,4 +53,6 @@ jobs:
         with:
           name: lighthouse
           path: .lighthouseci/
+          # a pasta começa com ponto; sem isto o upload-artifact ignora os relatórios
+          include-hidden-files: true
           retention-days: 14

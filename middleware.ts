@@ -1,69 +1,48 @@
 /**
- * middleware — next-intl locale routing (Task 10)
- * - /en/* => locale en
- * - default pt-BR
- * - lang no embedding query já via search routes
+ * middleware — idioma da interface (1.5.6)
+ * - mesmo endereço nos três idiomas (pt-BR, en, es); sem prefixo na URL
+ * - idioma: cookie NEXT_LOCALE (escolha salva) → Accept-Language → pt-BR
+ * - links antigos /en/... e /es/... salvam o idioma no cookie e redirecionam para o endereço sem prefixo
+ * - ?lang= numa página faz o mesmo (salva e tira da URL), para o seletor continuar valendo depois;
+ *   nas APIs, ?lang= só vale para aquela chamada
+ * - repassa o idioma ao servidor pelo cabeçalho x-next-intl-locale (e x-locale para as APIs)
  */
 import { NextRequest, NextResponse } from "next/server";
-import { locales, defaultLocale } from "./i18n";
-
-function getLocaleFromRequest(req: NextRequest): string {
-  const pathname = req.nextUrl.pathname;
-  // 1) path prefix
-  const seg = pathname.split("/").filter(Boolean)[0];
-  if (seg && (locales as readonly string[]).includes(seg)) return seg;
-  // 2) accept-language header
-  const al = req.headers.get("accept-language") ?? "";
-  if (al.toLowerCase().startsWith("en")) return "en";
-  // 3) cookie
-  const cookieLocale = req.cookies.get("NEXT_LOCALE")?.value;
-  if (cookieLocale && (locales as readonly string[]).includes(cookieLocale)) return cookieLocale;
-  // 4) query ?lang=
-  const lang = req.nextUrl.searchParams.get("lang");
-  if (lang && (locales as readonly string[]).includes(lang)) return lang;
-  return defaultLocale;
-}
+import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE, normalizeLocale, resolveLocale } from "./lib/locale";
 
 export function middleware(req: NextRequest): NextResponse {
-  const pathname = req.nextUrl.pathname;
-  // skip api, _next, static
-  if (
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/_next") ||
-    pathname.includes(".") ||
-    pathname.startsWith("/favicon")
-  ) {
-    // still set x-locale header for API lang passthrough
-    const locale = req.nextUrl.searchParams.get("lang") ?? getLocaleFromRequest(req);
-    const res = NextResponse.next();
-    res.headers.set("x-locale", locale);
-    res.headers.set("x-next-intl-locale", locale);
-    return res;
-  }
+  const { pathname } = req.nextUrl;
 
-  const locale = getLocaleFromRequest(req);
-
-  // if pathname starts with /en, strip for internal routing (as-needed prefix)
+  // /en/vagas → /vagas com o idioma salvo
   const seg = pathname.split("/").filter(Boolean)[0];
-  const hasLocalePrefix = seg && (locales as readonly string[]).includes(seg);
-  if (hasLocalePrefix && seg !== defaultLocale) {
-    // keep URL as-is for client routing, but set header
-    const res = NextResponse.next();
-    res.headers.set("x-locale", locale);
-    res.headers.set("x-next-intl-locale", locale);
-    // cookie
-    res.cookies.set("NEXT_LOCALE", locale, { path: "/", maxAge: 60 * 60 * 24 * 365 });
+  const prefixed = seg === "en" || seg === "es" || seg === "pt-BR" ? normalizeLocale(seg) : null;
+  if (prefixed) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/" + pathname.split("/").filter(Boolean).slice(1).join("/");
+    const res = NextResponse.redirect(url);
+    res.cookies.set(LOCALE_COOKIE, prefixed, { path: "/", maxAge: LOCALE_COOKIE_MAX_AGE, sameSite: "lax" });
     return res;
   }
 
-  // for default locale, also set header
-  const res = NextResponse.next();
+  const lang = normalizeLocale(req.nextUrl.searchParams.get("lang"));
+  if (lang && !pathname.startsWith("/api/")) {
+    const url = req.nextUrl.clone();
+    url.searchParams.delete("lang");
+    const res = NextResponse.redirect(url);
+    res.cookies.set(LOCALE_COOKIE, lang, { path: "/", maxAge: LOCALE_COOKIE_MAX_AGE, sameSite: "lax" });
+    return res;
+  }
+  const locale = lang ?? resolveLocale(req.cookies.get(LOCALE_COOKIE)?.value, req.headers.get("accept-language"));
+
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-next-intl-locale", locale);
+  requestHeaders.set("x-locale", locale);
+  const res = NextResponse.next({ request: { headers: requestHeaders } });
   res.headers.set("x-locale", locale);
-  res.headers.set("x-next-intl-locale", locale);
-  res.cookies.set("NEXT_LOCALE", locale, { path: "/", maxAge: 60 * 60 * 24 * 365 });
   return res;
 }
 
 export const config = {
+  // páginas e APIs; fora arquivos estáticos e _next
   matcher: ["/((?!_next|.*\\..*).*)"],
 };

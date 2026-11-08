@@ -1,7 +1,6 @@
 "use client";
 import * as React from "react";
-import { useLocale } from "next-intl";
-import { t } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { buttonClasses } from "@/components/ui/button";
 
 /**
@@ -22,52 +21,29 @@ export type EmptyStateProps = {
 };
 
 export function EmptyState({ query, suggestion, emptyCTA, variant = "vagas", onClearFilters, onUseSuggestion }: EmptyStateProps) {
-  const locale = (() => {
-    try { return useLocale(); } catch { return "pt-BR"; }
-  })() as string;
-
-  // next-intl t com fallback pt-BR
-  const titleKey = variant === "candidatos" ? "candidatos.emptyTitle" : "vagas.emptyTitle";
-  const bodyKey = variant === "candidatos" ? "candidatos.emptyBody" : "vagas.emptyBody";
-  const title = t(locale, titleKey);
-  const body = t(locale, bodyKey);
-  const ctaLabel = t(locale, variant === "candidatos" ? "empty.ctaCandidatos" : "empty.ctaVagas");
-  const suggestionPrefix = t(locale, "empty.suggestion", suggestion ? { suggestion } : undefined);
-  const noResults = query ? t(locale, "empty.noResults", { query }) : "";
-  const tryAdjust = t(locale, "empty.tryAdjust");
+  // next-intl com fallback pt-BR (i18n.ts junta o catálogo do idioma ao pt-BR)
+  const t = useTranslations();
+  const ns = variant === "candidatos" ? "candidatos" : "vagas";
+  void emptyCTA; // o texto que vem da API é só em português; aqui usamos o catálogo do idioma
 
   return (
-    <div role="status" aria-live="polite" aria-label="empty-state" data-testid="empty-state" className="empty-state mb-4 rounded-card border border-line bg-surface px-6 py-10 text-center">
-      <h3 className="text-[17px] font-semibold">{title}</h3>
-      <p className="mt-2 text-sm text-muted">{body}</p>
-      {query ? <p className="mt-1 text-sm text-muted">Nenhum resultado para &quot;{query}&quot;.</p> : null}
+    <div role="status" aria-live="polite" data-testid="empty-state" className="empty-state mb-4 rounded-card border border-line bg-surface px-6 py-10 text-center">
+      <h2 className="text-[17px] font-semibold">{t(`${ns}.emptyTitle`)}</h2>
+      {query ? <p className="mt-2 text-sm text-muted">{t("empty.noResults", { query })}</p> : null}
+      <p className="mt-1 text-sm text-muted">{t(`${ns}.emptyBody`)}</p>
       {suggestion ? (
         <div className="mt-3">
-          <p aria-label="sugestao" className="text-sm">
-            <span aria-label="sugestão IA" className="font-medium">Sugestão IA:</span> {suggestionPrefix}
-          </p>
-          <button
-            type="button"
-            aria-label="usar sugestão IA"
-            onClick={() => onUseSuggestion?.(suggestion)}
-            className={buttonClasses("secondary", "sm", "mt-2")}
-          >
-            Ver &quot;{suggestion}&quot;
+          {/* Sugestão IA: correção do termo buscado */}
+          <p data-testid="sugestao" className="text-sm">{t("empty.didYouMean", { suggestion })}</p>
+          <button type="button" onClick={() => onUseSuggestion?.(suggestion)} className={buttonClasses("secondary", "sm", "mt-2")}>
+            {t("empty.useSuggestion", { suggestion })}
           </button>
         </div>
       ) : null}
-      <p className="mt-2 text-sm text-muted">{emptyCTA ?? tryAdjust}</p>
-      <button
-        type="button"
-        aria-label="limpar filtros"
-        onClick={() => onClearFilters?.()}
-        className={buttonClasses("primary", "md", "mt-4")}
-      >
-        {ctaLabel}
+      {/* CTA: limpar filtros */}
+      <button type="button" data-action="limpar-filtros" onClick={() => onClearFilters?.()} className={buttonClasses("primary", "md", "mt-4")}>
+        {t(`${ns}.emptyCta`)}
       </button>
-      {/* hidden CTA text for test: emptyCTA presence */}
-      {emptyCTA ? <span data-testid="empty-cta" className="sr-only">{emptyCTA}</span> : null}
-      {suggestion ? <span data-testid="suggestion" className="sr-only">{suggestion}</span> : null}
       <style>{`@media (max-width: 360px) { .empty-state { padding: 1rem; } }`}</style>
     </div>
   );
