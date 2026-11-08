@@ -16,8 +16,10 @@
 
 ## Checklist de Migração para Produção
 
-- [ ] Criar Postgres com pgvector em produção (Neon/Supabase)
-- [ ] Rodar `prisma migrate deploy` + `seed-w2talent` na produção
+> O `w2talent-db` local continua útil para desenvolvimento no servidor da LAN; a remoção fica para o final do projeto, por decisão do Euclides.
+
+- [x] Criar Postgres com pgvector em produção — Neon (sa-east-1) + Hyperdrive, 2026-11-08 (PR #5)
+- [x] Rodar `prisma migrate deploy` + `seed-w2talent` na produção — workflow `migrate-neon.yml`, 2026-11-08
 - [ ] Remover `w2talent-db` local (`./scripts/db.sh down` + `docker rm -f w2talent-db`)
 - [ ] Atualizar README para remover referência a `localhost:5437`
 - [ ] Revogar/remover este arquivo ou marcar como ✅ concluído

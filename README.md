@@ -126,7 +126,7 @@ Sem Postgres, o app ainda sobe e lista o demo estático — ideal para o `worker
 
 | Key | Local (dummy) | Produção (obrigatório) |
 |-----|---------------|------------------------|
-| `DATABASE_URL` | `postgresql://w2talent:w2talent@localhost:5437/w2talent` | Neon/Supabase com `CREATE EXTENSION vector` |
+| `DATABASE_URL` | `postgresql://w2talent:w2talent@localhost:5437/w2talent` | Não usada: o Worker conecta no Neon pelo binding `HYPERDRIVE` (`wrangler.jsonc`); migrations pelo segredo `NEON_DATABASE_URL` no GitHub |
 | `JWT_SECRET` | `local-dev-jwt-*` | `openssl rand -base64 32` (throw em prod se ausente; build permite `NEXT_PHASE=phase-production-build`) |
 | `CRON_SECRET` | `local-dev-cron-*` | `openssl rand -base64 32` (protege `GET /api/cron/hygiene` + `PATCH` webhooks) |
 | `WEBHOOK_SECRET` | — | opcional, fallback para `CRON_SECRET` |
