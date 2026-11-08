@@ -1,0 +1,44 @@
+name: Qualidade — Lighthouse + axe
+
+# Roda a cada PR nas quatro telas (início, Vagas, Candidatos, Minhas candidaturas).
+# Falha se acessibilidade < 100 ou desempenho < 90 (Lighthouse, mediana de 3 execuções),
+# ou se o axe encontrar qualquer violação de acessibilidade.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  auditoria:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      JWT_SECRET: dummy-ci-jwt
+      CRON_SECRET: dummy-ci-cron
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run build:next
+      # Ferramentas só deste job, sem alterar o package.json do app
+      - run: npm install --no-save @lhci/cli@0.15.1 @axe-core/playwright@4.14.0 playwright-core@1.63.0
+      - name: Lighthouse CI
+        run: npx lhci autorun
+      - name: axe
+        run: |
+          npx next start -p 3999 &
+          for i in $(seq 1 30); do curl -sf http://localhost:3999/ >/dev/null && break; sleep 2; done
+          node scripts/axe-check.mjs
+      - name: Relatórios do Lighthouse
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse
+          path: .lighthouseci/
+          retention-days: 14
