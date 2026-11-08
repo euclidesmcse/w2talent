@@ -6,6 +6,8 @@
 // zustand create persist — interface compatível (usa zustand quando disponível)
 export const STORAGE_KEY = "w2talent:selection";
 export const LOTE_KEY = "w2talent:loteId";
+/** Nomes legíveis dos itens selecionados (título da vaga ou nome do candidato), para a gaveta da seleção. */
+export const LABELS_KEY = "w2talent:selectionLabels";
 export const SELECTION_LIMIT = 10;
 export const LIMIT = SELECTION_LIMIT;
 export const MAX = SELECTION_LIMIT;
@@ -130,6 +132,31 @@ function toggle(id: string): { ok: boolean; error?: string } {
 
 function add(id: string) { return select(id); }
 
+// ── Nomes legíveis ──────────────────────────────────────────────────
+function readLabels(): Record<string, string> {
+  const s = getStorage();
+  if (!s) return {};
+  try {
+    const parsed = JSON.parse(s.getItem(LABELS_KEY) ?? "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch { return {}; }
+}
+
+/** Guarda o nome legível de um item; mantém só os itens ainda selecionados para não crescer sem limite. */
+function rememberLabel(id: string, label: string) {
+  const s = getStorage();
+  if (!s || !id || !label) return;
+  const keep = new Set([...state.selectedIds, id]);
+  const next: Record<string, string> = {};
+  for (const [k, v] of Object.entries(readLabels())) if (keep.has(k)) next[k] = v;
+  next[id] = label;
+  try { s.setItem(LABELS_KEY, JSON.stringify(next)); } catch {}
+}
+
+function getLabel(id: string): string | undefined {
+  return readLabels()[id];
+}
+
 function clear() {
   const nextLote = genLoteId();
   setState({ selectedIds: [], loteId: nextLote, error: null, lastError: null });
@@ -152,6 +179,8 @@ export const selectionStore = {
   remove,
   clear,
   clearAll,
+  rememberLabel,
+  getLabel,
   removeAll,
   subscribe(fn: () => void) {
     listeners.add(fn);

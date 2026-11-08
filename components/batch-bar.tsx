@@ -177,25 +177,28 @@ export function BatchBar({ variant = "vagas", onAction }: BatchBarProps) {
           onKeyDown={(e) => { if (e.key === "Escape") setDrawerOpen(false); }}
         >
           <div className="flex items-center justify-between">
-            <strong>{count} selecionados</strong>
+            <strong>{count} {variant === "candidatos" ? (count === 1 ? "selecionado" : "selecionados") : (count === 1 ? "selecionada" : "selecionadas")}</strong>
             <button type="button" aria-label="fechar drawer" onClick={() => setDrawerOpen(false)} className={buttonClasses("ghost", "sm")}>
               ✕
             </button>
           </div>
           <ul className="mt-2 divide-y divide-line-soft">
-            {ids.map((id) => (
-              <li key={id} className="flex items-center justify-between py-2 text-sm">
-                <span>{id}</span>
+            {ids.map((id) => {
+              const nome = selectionStore.getLabel(id) ?? (variant === "candidatos" ? "Candidato" : "Vaga") + " sem título";
+              return (
+              <li key={id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                <span className="min-w-0 truncate font-medium" title={nome}>{nome}</span>
                 <button
                   type="button"
-                  aria-label={`remover ${id}`}
+                  aria-label={`Remover ${nome} da seleção`}
                   onClick={() => selectionStore.remove(id)}
                   className={buttonClasses("ghost", "sm")}
                 >
                   remover
                 </button>
               </li>
-            ))}
+              );
+            })}
           </ul>
           <button
             type="button"

@@ -101,3 +101,38 @@ describe("componentes base", () => {
     expect(html).toContain('aria-live="polite"');
   });
 });
+
+// Melhorias de 08/11: nomes legíveis nas competências e títulos na gaveta da seleção.
+import { SkillChips, skillName } from "../components/skill-chips";
+import { selectionStore } from "../lib/selection-store";
+
+describe("melhorias de leitura", () => {
+  it("competências aparecem com o nome da taxonomia e +N acima do limite", () => {
+    expect(skillName("csharp")).toBe("C#");
+    expect(skillName("nao-existe")).toBe("nao-existe");
+    const html = renderToStaticMarkup(<SkillChips ids={["typescript", "csharp", "python", "go", "rust"]} limit={3} />);
+    expect(html).toContain("TypeScript");
+    expect(html).toContain("C#");
+    expect(html).toContain("+2");
+    expect(html).not.toContain(">go<");
+  });
+
+  it("seleção guarda o título legível só dos itens ainda selecionados", () => {
+    const mem = new Map<string, string>();
+    (globalThis as any).localStorage = {
+      getItem: (k: string) => mem.get(k) ?? null,
+      setItem: (k: string, v: string) => void mem.set(k, v),
+      removeItem: (k: string) => void mem.delete(k),
+    };
+    selectionStore.clear();
+    selectionStore.rememberLabel("v1", "DevOps Sênior");
+    selectionStore.toggle("v1");
+    expect(selectionStore.getLabel("v1")).toBe("DevOps Sênior");
+    selectionStore.remove("v1");
+    selectionStore.rememberLabel("v2", "SRE Pleno");
+    expect(selectionStore.getLabel("v1")).toBeUndefined();
+    expect(selectionStore.getLabel("v2")).toBe("SRE Pleno");
+    selectionStore.clear();
+    delete (globalThis as any).localStorage;
+  });
+});

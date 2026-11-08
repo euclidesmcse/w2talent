@@ -1,8 +1,9 @@
 "use client";
 import * as React from "react";
-import { formatFaixa, formatTempo, skillsDisplay, maskEmail, maskPhone } from "@/lib/format";
+import { formatFaixa, formatTempo, maskEmail, maskPhone } from "@/lib/format";
 import type { VacancyRow } from "./vacancy-table";
 import { buttonClasses } from "@/components/ui/button";
+import { SkillChips } from "@/components/skill-chips";
 // breakpoints 360/768/1024/1280 — Tailwind xs/md/lg/xl; cards <ul><li aria-label> WCAG 2.1 AA
 
 function getSkillIds(row: VacancyRow): string[] {
@@ -38,7 +39,6 @@ export function VacancyCards({
     <ul aria-label="Lista de vagas em cards" className="vacancy-cards flex flex-col gap-3">
       {items.map((row) => {
         const skillIds = getSkillIds(row);
-        const skillsLabel = skillIds.length ? skillsDisplay(skillIds, 3) : "—";
         const faixa = formatFaixa(row.faixaDe, row.faixaAte, row.faixaMoeda ?? "BRL");
         const tempo = formatTempo((row.updatedAt ?? row.createdAt) as any);
         const isSelected = selectedSet.has(row.id);
@@ -50,7 +50,8 @@ export function VacancyCards({
             key={row.id}
             data-vacancy-id={row.id}
             aria-label={`vaga ${row.titulo}`}
-            className={`vacancy-card rounded-card border p-4 ${isSelected ? "selected border-brand bg-[#F5F8FF]" : "border-line bg-surface"}`}
+            onClick={(e) => { if ((e.target as HTMLElement).closest("button, a, input, label")) return; onToggle?.(row.id); }}
+            className={`cursor-pointer vacancy-card rounded-card border p-4 ${isSelected ? "selected border-brand bg-[#F5F8FF]" : "border-line bg-surface"}`}
           >
             <div className="card-header flex items-start gap-3">
               <input
@@ -70,7 +71,7 @@ export function VacancyCards({
             </div>
             <dl className="card-body mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13px]">
               <dt className="text-muted">Competências</dt>
-              <dd aria-label="skills" title={skillIds.join(", ")}>{skillsLabel}</dd>
+              <dd><SkillChips ids={skillIds} limit={3} /></dd>
               <dt className="text-muted">Modelo</dt>
               <dd>{[row.localidade ?? "Remoto", row.regime].filter(Boolean).join(" · ")}</dd>
               <dt className="text-muted">Faixa</dt>

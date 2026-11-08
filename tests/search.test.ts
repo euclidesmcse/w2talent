@@ -278,10 +278,10 @@ describe("Busca Semântica + Lista Limpa — Task 5", () => {
       expect(vacCards).toMatch(/aria-label/);
       expect(candCards).toMatch(/<ul/);
       // truncamento +2 presente
-      expect(vacTable).toMatch(/skillsDisplay|\+/);
-      expect(vacCards).toMatch(/skillsDisplay|\+/);
-      expect(candTable).toMatch(/skillsDisplay/);
-      expect(candCards).toMatch(/skillsDisplay/);
+      expect(vacTable).toMatch(/skillsDisplay|SkillChips/);
+      expect(vacCards).toMatch(/skillsDisplay|SkillChips/);
+      expect(candTable).toMatch(/skillsDisplay|SkillChips/);
+      expect(candCards).toMatch(/skillsDisplay|SkillChips/);
       // páginas vagas/candidatos existem
       expect(fs.existsSync(path.join(__dirname, "../app/vagas/page.tsx"))).toBe(true);
       expect(fs.existsSync(path.join(__dirname, "../app/candidatos/page.tsx"))).toBe(true);

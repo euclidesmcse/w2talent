@@ -84,7 +84,7 @@ export default function HomePage() {
           <h2 id="como-funciona" className="text-xl font-semibold">
             Como funciona
           </h2>
-          <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <ol className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
             {PASSOS.map((p) => (
               <li key={p.n}>
                 <Card className="flex h-full flex-col gap-2 p-5">
