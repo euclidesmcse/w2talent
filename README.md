@@ -222,7 +222,7 @@ git add -A && git commit -m "feat: ..." && git push origin main
 - **Fase 1.1 polish:** PWA icons reais, `vaul` drawer, `timingSafeEqual` no webhook secret, `purge vacancy 30d`, embeddings OmniRoute reais, `GET /api/applications/batch` IDOR hardening.
 - **Fase 2:** Coach IA `objetivoCrescimento`, ranking `94% match` explicado, dashboard RH, alertas n8n top 20, swipe mobile, ATS feeder.
 - **Fase 3:** Auto-piloto conversacional (opt-in).
-- **Visão v2 (em revisão, 2026-11-08):** reorganiza as fases em 1.5 Fundação v2 → 2 Recrutador completo → 3 Inteligência e escala. Ver `docs/superpowers/specs/2026-11-08-w2talent-design-v2.md` §12.
+- **Visão v2 + arquitetura v2 (aprovadas, 2026-11-08):** reorganiza as fases em 1.5 Fundação v2 → 2 Recrutador completo → 3 Inteligência e escala. Ver `docs/superpowers/specs/2026-11-08-w2talent-design-v2.md` §12.
 
 ---
 

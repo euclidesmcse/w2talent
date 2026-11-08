@@ -2,7 +2,7 @@
 
 **Data:** 2026-11-08
 **Autor:** Euclides + Claude (thread "Planejar a nova versão do W2Talent")
-**Status:** 📝 RASCUNHO PARA REVISÃO — nada de código muda até o Euclides aprovar este documento
+**Status:** ✅ APROVADO por Euclides em 2026-11-08 (Q1–Q6 pela recomendação)
 **Base:** `docs/superpowers/specs/2026-11-07-w2talent-design.md` (v1). Tudo da v1 continua valendo, **exceto onde esta v2 diz o contrário** (ver §2).
 
 ---
@@ -259,9 +259,9 @@ Em camadas, da mais simples à mais cara (não começamos treinando modelo):
 
 | # | Passo | Entrega | Status |
 |---|-------|---------|--------|
-| 1 | Fechar a visão do produto | Este documento (spec v2) | 📝 em revisão |
-| 2 | Arquitetura na Cloudflare + IA de RH | `2026-11-08-w2talent-arquitetura-v2.md` | 📝 em revisão |
-| 3 | UX e protótipo navegável | Design system + telas-chave clicáveis | ⏳ |
+| 1 | Fechar a visão do produto | Este documento (spec v2) | ✅ aprovado 2026-11-08 |
+| 2 | Arquitetura na Cloudflare + IA de RH | `2026-11-08-w2talent-arquitetura-v2.md` | ✅ aprovado 2026-11-08 |
+| 3 | UX e protótipo navegável | Design system + telas-chave clicáveis | 🔄 em andamento |
 | 4 | Backlog por fases + "onde parou" | Plano executável (fases 1.5 → 3) + AGENTS.md atualizado | ⏳ |
 
 ### 12.1 Fases de produto propostas (detalhadas no passo 4)
@@ -271,4 +271,4 @@ Em camadas, da mais simples à mais cara (não começamos treinando modelo):
 
 ---
 
-**Aprovação:** pendente. Ao aprovar, este documento passa a ser a fonte da verdade junto com a v1 (a v2 prevalece onde houver conflito).
+**Aprovação:** ✅ Euclides, 2026-11-08. Fonte da verdade junto com a v1 (a v2 prevalece onde houver conflito).

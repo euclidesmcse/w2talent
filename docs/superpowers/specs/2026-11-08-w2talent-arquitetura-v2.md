@@ -2,7 +2,7 @@
 
 **Data:** 2026-11-08
 **Autor:** Euclides + Claude (thread "Planejar a nova versão do W2Talent")
-**Status:** 📝 RASCUNHO PARA REVISÃO. É o passo 2 de 4 do plano (ver `2026-11-08-w2talent-design-v2.md` §12). Nada de código muda até a aprovação.
+**Status:** ✅ APROVADO por Euclides em 2026-11-08. Passo 2 de 4 do plano (ver `2026-11-08-w2talent-design-v2.md` §12).
 **Depende de:** `2026-11-08-w2talent-design-v2.md` (o *quê*). Este documento é o *como*.
 
 > **Premissas:** Q1–Q6 da spec v2 §11 foram assumidas conforme a recomendação, por escolha do Euclides em 2026-11-08 ("sigo com suas recomendações"). Cada uma aparece marcada **[Q#]** onde influencia uma decisão. Se alguma mudar, só a seção marcada precisa ser revista.
@@ -253,4 +253,4 @@ Chaves criptografadas com AES-GCM. A chave mestra fica em um **Worker Secret** (
 
 ---
 
-**Aprovação:** pendente. Depois de aprovado, segue para o passo 3 (design system + protótipo navegável).
+**Aprovação:** ✅ Euclides, 2026-11-08. Próximo: passo 3 (design system + protótipo navegável).
