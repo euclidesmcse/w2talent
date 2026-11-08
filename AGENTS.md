@@ -58,7 +58,7 @@ Tests: `npm test -- --runInBand` — 11 suítes, 129 pass, 3 skipped (DATABASE_U
 
 - **Framework preset:** Next.js
 - **Build command:** `npx prisma generate && npm run build`
-- **Painel Cloudflare → w2talent → Settings → Build (desde 2026-11-08):** Build command `npx opennextjs-cloudflare build` · Deploy command `npx opennextjs-cloudflare deploy` · Non-production branch deploy command `npx opennextjs-cloudflare upload` (preview dos PRs). Localmente, `npm run deploy` faz build + deploy juntos. Plano **Workers Free**: Worker até 3 MiB gzip — medir com `npx wrangler deploy --dry-run --outdir /tmp/x` após o build. Config versionada no repo: `wrangler.jsonc`, `open-next.config.ts`, `public/_headers`; `wrangler` e `@opennextjs/cloudflare` com versão fixa no `package.json`. **Não** usar `npx wrangler deploy` puro: sem config no repo ele baixa a última versão e regenera tudo a cada build (causa de falhas intermitentes até 2026-11-08).
+- **Build na Cloudflare (desde 2026-11-08):** `npm run build` = build do OpenNext (gera `.open-next/worker.js`; o `next build` puro é `npm run build:next`, chamado pelo OpenNext via `open-next.config.ts`). Produção: deploy `npx opennextjs-cloudflare deploy` (ou `npm run deploy`, que faz build+deploy). PRs: `npx wrangler preview`, que usa o bloco `previews` do `wrangler.jsonc` (sem service binding — limitação dos previews). Plano **Workers Free**: Worker até 3 MiB gzip — medir com `npx wrangler deploy --dry-run --outdir /tmp/x` após o build.
 - **Output directory:** `.open-next` (gerenciado pelo OpenNext, não `.next`)
 - **Node version:** 22 (detectado `nodejs@24.22.1` no build, mas alvo é Next 15.5)
 - **Compatibility date:** `2026-11-04` (em `wrangler.jsonc`)

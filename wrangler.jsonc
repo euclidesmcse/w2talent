@@ -28,5 +28,11 @@
 		// Enable image optimization
 		// see https://opennext.js.org/cloudflare/howtos/image
 		"binding": "IMAGES"
+	},
+	// Worker Previews (`wrangler preview`, usado nos PRs): só os bindings que o preview aceita.
+	// O WORKER_SELF_REFERENCE (service binding) fica de fora — limitação dos previews.
+	"previews": {
+		"ai": { "binding": "AI" },
+		"images": { "binding": "IMAGES" }
 	}
 }
