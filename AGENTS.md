@@ -51,7 +51,7 @@ Tests: `npm test -- --runInBand` — 11 suítes, 129 pass, 3 skipped (DATABASE_U
 
 - **Framework preset:** Next.js
 - **Build command:** `npx prisma generate && npm run build`
-- **Deploy command (injetado pelo OpenNext):** `opennextjs-cloudflare build && opennextjs-cloudflare deploy`
+- **Deploy command:** `npm run deploy` (= `opennextjs-cloudflare build && opennextjs-cloudflare deploy`). Config versionada no repo: `wrangler.jsonc`, `open-next.config.ts`, `public/_headers`; `wrangler` e `@opennextjs/cloudflare` com versão fixa no `package.json`. **Não** usar `npx wrangler deploy` puro: sem config no repo ele baixa a última versão e regenera tudo a cada build (causa de falhas intermitentes até 2026-11-08).
 - **Output directory:** `.open-next` (gerenciado pelo OpenNext, não `.next`)
 - **Node version:** 22 (detectado `nodejs@24.22.1` no build, mas alvo é Next 15.5)
 - **Compatibility date:** `2026-11-04` (em `wrangler.jsonc`)
