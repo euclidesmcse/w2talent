@@ -35,7 +35,7 @@ jobs:
         run: |
           node -e '
           const fs = require("fs");
-          for (const f of fs.readdirSync(".lighthouseci").filter((f) => f.startsWith("lhr-"))) {
+          for (const f of fs.readdirSync(".lighthouseci").filter((f) => f.startsWith("lhr-") && f.endsWith(".json"))) {
             const r = JSON.parse(fs.readFileSync(".lighthouseci/" + f));
             const a = r.audits, m = (k) => a[k]?.displayValue ?? "-";
             const lcp = a["largest-contentful-paint-element"]?.details?.items?.[0]?.items?.[0]?.node?.snippet ?? "";
