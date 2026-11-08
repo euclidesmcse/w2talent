@@ -2,6 +2,7 @@
 import * as React from "react";
 import { formatFaixa, formatTempo, skillsDisplay, maskEmail, maskPhone } from "@/lib/format";
 import type { VacancyRow } from "./vacancy-table";
+import { buttonClasses } from "@/components/ui/button";
 // breakpoints 360/768/1024/1280 — Tailwind xs/md/lg/xl; cards <ul><li aria-label> WCAG 2.1 AA
 
 function getSkillIds(row: VacancyRow): string[] {
@@ -27,14 +28,14 @@ export function VacancyCards({
 
   if (items.length === 0) {
     return (
-      <div className="vacancy-cards empty" role="status">
+      <div className="vacancy-cards empty rounded-card border border-line bg-surface p-6 text-center text-muted" role="status">
         Nenhuma vaga encontrada. Tente ajustar os filtros ou buscar por outro termo.
       </div>
     );
   }
 
   return (
-    <ul aria-label="Lista de vagas em cards" className="vacancy-cards">
+    <ul aria-label="Lista de vagas em cards" className="vacancy-cards flex flex-col gap-3">
       {items.map((row) => {
         const skillIds = getSkillIds(row);
         const skillsLabel = skillIds.length ? skillsDisplay(skillIds, 3) : "—";
@@ -43,34 +44,46 @@ export function VacancyCards({
         const isSelected = selectedSet.has(row.id);
         const emailRaw = row.email ?? row.contato?.email ?? "";
         const telRaw = row.telefone ?? row.contato?.telefone ?? "";
-        const emailMasked = emailRaw ? maskEmail(emailRaw) : "—";
-        const telMasked = telRaw ? maskPhone(telRaw) : "—";
+        const contatoMascarado = [emailRaw ? maskEmail(emailRaw) : "", telRaw ? maskPhone(telRaw) : ""].filter(Boolean).join(" · ");
         return (
           <li
             key={row.id}
             data-vacancy-id={row.id}
             aria-label={`vaga ${row.titulo}`}
-            className={`vacancy-card ${isSelected ? "selected" : ""}`}
+            className={`vacancy-card rounded-card border p-4 ${isSelected ? "selected border-brand bg-[#F5F8FF]" : "border-line bg-surface"}`}
           >
-            <div className="card-header">
-              <input type="checkbox" aria-label={`selecionar-${row.id}`} checked={isSelected} onChange={() => onToggle?.(row.id)} />
-              <strong>{row.titulo}</strong>
-              <button type="button" aria-label={`lupa-${row.id}`} onClick={() => onOpenDetail?.(row.id)}>
-                🔍
+            <div className="card-header flex items-start gap-3">
+              <input
+                type="checkbox"
+                aria-label={`selecionar-${row.id}`}
+                checked={isSelected}
+                onChange={() => onToggle?.(row.id)}
+                className="mt-1 h-5 w-5 shrink-0 cursor-pointer accent-brand"
+              />
+              <div className="min-w-0 flex-1">
+                <strong className="block font-semibold leading-snug">{row.titulo}</strong>
+                <span className="text-[13px] text-muted">{[row.company?.nome, row.nivel].filter(Boolean).join(" · ")}</span>
+              </div>
+              <button type="button" aria-label={`lupa-${row.id}`} onClick={() => onOpenDetail?.(row.id)} className={buttonClasses("secondary", "sm")}>
+                Ver
               </button>
             </div>
-            <div className="card-body">
-              <div aria-label="skills" title={skillIds.join(", ")}>
-                Skills: {skillsLabel}
-              </div>
-              <div>Local: {row.localidade ?? "remoto"}</div>
-              <div>Regime: {row.regime ?? "—"}</div>
-              <div>Faixa: {faixa}</div>
-              <div>Atualização: {tempo}</div>
-              <div aria-label="contato mascarado" title="Contato mascarado — LGPD">
-                Contato: {emailMasked} {telMasked !== "—" ? `· ${telMasked}` : ""} 🔒
-              </div>
-            </div>
+            <dl className="card-body mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13px]">
+              <dt className="text-muted">Competências</dt>
+              <dd aria-label="skills" title={skillIds.join(", ")}>{skillsLabel}</dd>
+              <dt className="text-muted">Modelo</dt>
+              <dd>{[row.localidade ?? "Remoto", row.regime].filter(Boolean).join(" · ")}</dd>
+              <dt className="text-muted">Faixa</dt>
+              <dd>{faixa}</dd>
+              <dt className="text-muted">Atualizada</dt>
+              <dd>{tempo}</dd>
+              {contatoMascarado ? (
+                <>
+                  <dt className="text-muted">Contato</dt>
+                  <dd aria-label="contato mascarado" title="Contato protegido até a empresa responder">protegido</dd>
+                </>
+              ) : null}
+            </dl>
           </li>
         );
       })}

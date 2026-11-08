@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { formatFaixa, formatTempo, skillsDisplay, maskEmail, maskPhone } from "@/lib/format";
-import { formatCurrencyWithLocale, formatDateByLocale } from "@/i18n";
+import { buttonClasses } from "@/components/ui/button";
 // breakpoints: 360 / 768 / 1024 / 1280 — Tailwind screens xs/md/lg/xl (see tailwind.config.js)
 // next-intl: colunas via messages/pt-BR.json, en.json — fallback PT-BR (i18n.ts t())
 // PWA: manifest.json linked in layout.tsx
@@ -48,18 +48,16 @@ export function VacancyTable({
   }, [selectedIds]);
 
   return (
-    <table aria-label="Lista de vagas" className="vacancy-table w-full text-sm">
+    <table aria-label="Lista de vagas" className="vacancy-table w-full min-w-[760px] border-collapse text-sm">
       <thead>
-        <tr>
-          <th scope="col"><span aria-label="seleção">☐</span></th>
+        <tr className="text-left text-xs uppercase tracking-[0.04em] text-muted [&>th]:px-2 [&>th]:py-2.5 [&>th]:font-semibold [&>th:first-child]:pl-4 [&>th:last-child]:pr-4">
+          <th scope="col" aria-label="Seleção"></th>
           <th scope="col">Vaga</th>
-          <th scope="col">Skills</th>
-          <th scope="col">Local / Remoto</th>
-          <th scope="col">Regime</th>
+          <th scope="col">Competências</th>
+          <th scope="col">Modelo · regime</th>
           <th scope="col">Faixa</th>
-          <th scope="col">Atualização</th>
-          <th scope="col">Contato</th>
-          <th scope="col">Ação</th>
+          <th scope="col">Atualizada</th>
+          <th scope="col"><span className="sr-only">Ação</span></th>
         </tr>
       </thead>
       <tbody>
@@ -71,42 +69,54 @@ export function VacancyTable({
           const isSelected = selectedSet.has(row.id);
           const emailRaw = row.email ?? row.contato?.email ?? "";
           const telRaw = row.telefone ?? row.contato?.telefone ?? "";
-          const emailMasked = emailRaw ? maskEmail(emailRaw) : "—";
-          const telMasked = telRaw ? maskPhone(telRaw) : "—";
+          const contatoMascarado = [emailRaw ? maskEmail(emailRaw) : "", telRaw ? maskPhone(telRaw) : ""].filter(Boolean).join(" · ");
+          const subtitulo = [row.company?.nome, row.nivel].filter(Boolean).join(" · ");
           return (
-            <tr key={row.id} data-vacancy-id={row.id} className={isSelected ? "selected" : ""}>
-              <td>
+            <tr
+              key={row.id}
+              data-vacancy-id={row.id}
+              className={`border-t border-line-soft ${isSelected ? "selected bg-[#F5F8FF]" : "bg-surface hover:bg-canvas"}`}
+            >
+              <td className="py-3.5 pl-4 pr-2 align-top">
                 <input
                   type="checkbox"
                   aria-label={`selecionar-${row.id}`}
                   checked={isSelected}
                   onChange={() => onToggle?.(row.id)}
+                  className="mt-0.5 h-4 w-4 cursor-pointer accent-brand"
                 />
               </td>
-              <td>
-                <div className="vacancy-identidade">
-                  <strong>{row.titulo}</strong>
-                  {row.company?.nome ? <span className="company"> — {row.company.nome}</span> : null}
-                  {row.nivel ? <span className="nivel"> · {row.nivel}</span> : null}
+              <td className="px-2 py-3.5 align-top">
+                <button type="button" onClick={() => onOpenDetail?.(row.id)} className="vacancy-identidade text-left font-semibold text-ink hover:text-brand">
+                  {row.titulo}
+                </button>
+                <div className="mt-0.5 text-[13px] text-muted">
+                  {subtitulo}
+                  {contatoMascarado ? (
+                    <span aria-label="contato mascarado" title={`Contato protegido até a empresa responder: ${contatoMascarado}`}>
+                      {subtitulo ? " · " : ""}contato protegido
+                    </span>
+                  ) : null}
                 </div>
               </td>
-              <td>
+              <td className="px-2 py-3.5 align-top text-ink-soft">
                 <span aria-label="skills" title={skillIds.join(", ")}>
                   {skillsLabel}
                 </span>
               </td>
-              <td>{row.localidade ?? "remoto"}</td>
-              <td>{row.regime ?? "—"}</td>
-              <td>{faixa}</td>
-              <td>{tempo}</td>
-              <td>
-                <span title="Contato mascarado — LGPD (liberado ao responder no proxy)" aria-label="contato mascarado">
-                  {emailMasked} {telMasked !== "—" ? `· ${telMasked}` : ""} 🔒
-                </span>
+              <td className="px-2 py-3.5 align-top text-ink-soft">
+                {[row.localidade ?? "Remoto", row.regime].filter(Boolean).join(" · ")}
               </td>
-              <td>
-                <button type="button" aria-label={`lupa-${row.id}`} onClick={() => onOpenDetail?.(row.id)}>
-                  🔍
+              <td className="whitespace-nowrap px-2 py-3.5 align-top text-ink-soft">{faixa}</td>
+              <td className="whitespace-nowrap px-2 py-3.5 align-top text-[13px] text-muted">{tempo}</td>
+              <td className="py-3 pl-2 pr-4 text-right align-top">
+                <button
+                  type="button"
+                  aria-label={`lupa-${row.id}`}
+                  onClick={() => onOpenDetail?.(row.id)}
+                  className={buttonClasses("secondary", "sm")}
+                >
+                  Ver
                 </button>
               </td>
             </tr>
@@ -114,7 +124,7 @@ export function VacancyTable({
         })}
         {items.length === 0 ? (
           <tr>
-            <td colSpan={9} className="empty">
+            <td colSpan={7} className="empty px-4 py-8 text-center text-muted">
               Nenhuma vaga encontrada. Tente ajustar os filtros ou buscar por outro termo.
             </td>
           </tr>

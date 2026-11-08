@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import { formatFaixa, formatTempo, skillsDisplay, maskEmail, maskPhone } from "@/lib/format";
+import { buttonClasses } from "@/components/ui/button";
 
 export type CandidateRow = {
   id: string;
@@ -47,19 +48,16 @@ export function CandidateTable({
   }, [selectedIds]);
 
   return (
-    <table aria-label="Lista de candidatos" className="candidate-table w-full text-sm">
+    <table aria-label="Lista de candidatos" className="candidate-table w-full min-w-[760px] border-collapse text-sm">
       <thead>
-        <tr>
-          <th scope="col">☐</th>
+        <tr className="text-left text-xs uppercase tracking-[0.04em] text-muted [&>th]:px-2 [&>th]:py-2.5 [&>th]:font-semibold [&>th:first-child]:pl-4 [&>th:last-child]:pr-4">
+          <th scope="col" aria-label="Seleção"></th>
           <th scope="col">Candidato</th>
-          <th scope="col">Cargo</th>
-          <th scope="col">Skills</th>
-          <th scope="col">Local / Remoto</th>
-          <th scope="col">Regime</th>
-          <th scope="col">Faixa / Pretensão</th>
-          <th scope="col">Atualização</th>
-          <th scope="col">Contato</th>
-          <th scope="col">Ação</th>
+          <th scope="col">Competências</th>
+          <th scope="col">Modelo · regime</th>
+          <th scope="col">Pretensão</th>
+          <th scope="col">Atualizado</th>
+          <th scope="col"><span className="sr-only">Ação</span></th>
         </tr>
       </thead>
       <tbody>
@@ -68,41 +66,55 @@ export function CandidateTable({
           const skillsLabel = skillIds.length ? skillsDisplay(skillIds, 3) : "—";
           const faixa = formatFaixa(row.pretensaoDe ?? row.faixaDe ?? null, row.pretensaoAte ?? row.faixaAte ?? null, row.pretensaoMoeda ?? "BRL");
           const tempo = formatTempo((row.updatedAt ?? row.createdAt) as any);
-          const isSelected = selectedSet.has(row.id);
+          // a busca às vezes devolve só userId (sem id)
+          const rid = String(row.id ?? (row as any).userId ?? "");
+          const isSelected = selectedSet.has(rid);
           const emailRaw = row.email ?? row.contato?.email ?? "";
           const telRaw = row.celular ?? row.telefone ?? row.contato?.celular ?? row.contato?.telefone ?? "";
-          const emailMasked = emailRaw ? maskEmail(emailRaw) : "—";
-          const telMasked = telRaw ? maskPhone(telRaw) : "—";
-          const regime = Array.isArray(row.regimePreferido) ? row.regimePreferido.join(", ") : row.regimePreferido ?? "—";
+          const contatoMascarado = [emailRaw ? maskEmail(emailRaw) : "", telRaw ? maskPhone(telRaw) : ""].filter(Boolean).join(" · ");
+          const regime = Array.isArray(row.regimePreferido) ? row.regimePreferido.join(", ") : row.regimePreferido ?? "";
           return (
-            <tr key={row.id} data-candidate-id={row.id} className={isSelected ? "selected" : ""}>
-              <td>
-                <input type="checkbox" aria-label={`selecionar-${row.id}`} checked={isSelected} onChange={() => onToggle?.(row.id)} />
+            <tr
+              key={rid}
+              data-candidate-id={rid}
+              className={`border-t border-line-soft ${isSelected ? "selected bg-[#F5F8FF]" : "bg-surface hover:bg-canvas"}`}
+            >
+              <td className="py-3.5 pl-4 pr-2 align-top">
+                <input type="checkbox" aria-label={`selecionar-${rid}`} checked={isSelected} onChange={() => onToggle?.(rid)} className="mt-2 h-4 w-4 cursor-pointer accent-brand" />
               </td>
-              <td>
-                <div className="cand-identidade">
-                  {row.fotoUrl ? <img src={row.fotoUrl} alt={row.nome} width={32} height={32} /> : <span aria-hidden>{row.nome.slice(0, 2).toUpperCase()}</span>}
-                  <strong>{row.nome}</strong>
+              <td className="px-2 py-3.5 align-top">
+                <div className="cand-identidade flex items-center gap-3">
+                  {row.fotoUrl ? (
+                    <img src={row.fotoUrl} alt={row.nome} width={32} height={32} className="h-8 w-8 rounded-full object-cover" />
+                  ) : (
+                    <span aria-hidden className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-line text-xs font-semibold text-ink-soft">
+                      {row.nome.slice(0, 2).toUpperCase()}
+                    </span>
+                  )}
+                  <div className="min-w-0">
+                    <button type="button" onClick={() => onOpenDetail?.(rid)} className="text-left font-semibold text-ink hover:text-brand">
+                      {row.nome}
+                    </button>
+                    <div className="text-[13px] text-muted">
+                      {row.titulo}
+                      {contatoMascarado ? (
+                        <span aria-label="contato mascarado" title={`Contato protegido até o candidato responder: ${contatoMascarado}`}> · contato protegido</span>
+                      ) : null}
+                    </div>
+                  </div>
                 </div>
               </td>
-              <td>{row.titulo}</td>
-              <td>
+              <td className="px-2 py-3.5 align-top text-ink-soft">
                 <span aria-label="skills" title={skillIds.join(", ")}>
                   {skillsLabel}
                 </span>
               </td>
-              <td>{row.localidade ?? row.modo ?? "—"}</td>
-              <td>{regime}</td>
-              <td>{faixa}</td>
-              <td>{tempo}</td>
-              <td>
-                <span aria-label="contato mascarado" title="Contato mascarado — LGPD">
-                  {emailMasked} {telMasked !== "—" ? `· ${telMasked}` : ""} 🔒
-                </span>
-              </td>
-              <td>
-                <button type="button" aria-label={`lupa-${row.id}`} onClick={() => onOpenDetail?.(row.id)}>
-                  🔍
+              <td className="px-2 py-3.5 align-top text-ink-soft">{[row.localidade ?? row.modo, regime].filter(Boolean).join(" · ") || "—"}</td>
+              <td className="whitespace-nowrap px-2 py-3.5 align-top text-ink-soft">{faixa}</td>
+              <td className="whitespace-nowrap px-2 py-3.5 align-top text-[13px] text-muted">{tempo}</td>
+              <td className="py-3 pl-2 pr-4 text-right align-top">
+                <button type="button" aria-label={`lupa-${rid}`} onClick={() => onOpenDetail?.(rid)} className={buttonClasses("secondary", "sm")}>
+                  Ver
                 </button>
               </td>
             </tr>
@@ -110,7 +122,7 @@ export function CandidateTable({
         })}
         {items.length === 0 ? (
           <tr>
-            <td colSpan={10} className="empty">
+            <td colSpan={7} className="empty px-4 py-8 text-center text-muted">
               Nenhum candidato encontrado. Tente ajustar os filtros.
             </td>
           </tr>

@@ -2,6 +2,7 @@
 import * as React from "react";
 import { formatFaixa, formatTempo, skillsDisplay, maskEmail, maskPhone } from "@/lib/format";
 import type { CandidateRow } from "./candidate-table";
+import { buttonClasses } from "@/components/ui/button";
 
 function getSkillIds(row: CandidateRow): string[] {
   if (!Array.isArray(row.stack)) return [];
@@ -26,44 +27,59 @@ export function CandidateCards({
 
   if (items.length === 0) {
     return (
-      <div className="candidate-cards empty" role="status">
+      <div className="candidate-cards empty rounded-card border border-line bg-surface p-6 text-center text-muted" role="status">
         Nenhum candidato encontrado. Tente ajustar os filtros.
       </div>
     );
   }
 
   return (
-    <ul aria-label="Lista de candidatos em cards" className="candidate-cards">
+    <ul aria-label="Lista de candidatos em cards" className="candidate-cards flex flex-col gap-3">
       {items.map((row) => {
         const skillIds = getSkillIds(row);
         const skillsLabel = skillIds.length ? skillsDisplay(skillIds, 3) : "—";
         const faixa = formatFaixa(row.pretensaoDe ?? row.faixaDe ?? null, row.pretensaoAte ?? row.faixaAte ?? null, row.pretensaoMoeda ?? "BRL");
         const tempo = formatTempo((row.updatedAt ?? row.createdAt) as any);
-        const isSelected = selectedSet.has(row.id);
+        // a busca às vezes devolve só userId (sem id)
+          const rid = String(row.id ?? (row as any).userId ?? "");
+          const isSelected = selectedSet.has(rid);
         const emailRaw = row.email ?? row.contato?.email ?? "";
         const telRaw = row.celular ?? row.telefone ?? row.contato?.celular ?? "";
-        const emailMasked = emailRaw ? maskEmail(emailRaw) : "—";
-        const telMasked = telRaw ? maskPhone(telRaw) : "—";
-        const regime = Array.isArray(row.regimePreferido) ? row.regimePreferido.join(", ") : row.regimePreferido ?? "—";
+        const contatoMascarado = [emailRaw ? maskEmail(emailRaw) : "", telRaw ? maskPhone(telRaw) : ""].filter(Boolean).join(" · ");
+        const regime = Array.isArray(row.regimePreferido) ? row.regimePreferido.join(", ") : row.regimePreferido ?? "";
         return (
-          <li key={row.id} data-candidate-id={row.id} aria-label={`candidato ${row.nome}`} className={`candidate-card ${isSelected ? "selected" : ""}`}>
-            <div className="card-header">
-              <input type="checkbox" aria-label={`selecionar-${row.id}`} checked={isSelected} onChange={() => onToggle?.(row.id)} />
-              <strong>{row.nome}</strong> — {row.titulo}
-              <button type="button" aria-label={`lupa-${row.id}`} onClick={() => onOpenDetail?.(row.id)}>
-                🔍
+          <li
+            key={rid}
+            data-candidate-id={rid}
+            aria-label={`candidato ${row.nome}`}
+            className={`candidate-card rounded-card border p-4 ${isSelected ? "selected border-brand bg-[#F5F8FF]" : "border-line bg-surface"}`}
+          >
+            <div className="card-header flex items-start gap-3">
+              <input type="checkbox" aria-label={`selecionar-${rid}`} checked={isSelected} onChange={() => onToggle?.(rid)} className="mt-1 h-5 w-5 shrink-0 cursor-pointer accent-brand" />
+              <div className="min-w-0 flex-1">
+                <strong className="block font-semibold leading-snug">{row.nome}</strong>
+                <span className="text-[13px] text-muted">{row.titulo}</span>
+              </div>
+              <button type="button" aria-label={`lupa-${rid}`} onClick={() => onOpenDetail?.(rid)} className={buttonClasses("secondary", "sm")}>
+                Ver
               </button>
             </div>
-            <div className="card-body">
-              <div aria-label="skills" title={skillIds.join(", ")}>
-                Skills: {skillsLabel}
-              </div>
-              <div>Local: {row.localidade ?? row.modo ?? "—"}</div>
-              <div>Regime: {regime}</div>
-              <div>Faixa: {faixa}</div>
-              <div>Atualização: {tempo}</div>
-              <div aria-label="contato mascarado">Contato: {emailMasked} {telMasked !== "—" ? `· ${telMasked}` : ""} 🔒</div>
-            </div>
+            <dl className="card-body mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13px]">
+              <dt className="text-muted">Competências</dt>
+              <dd aria-label="skills" title={skillIds.join(", ")}>{skillsLabel}</dd>
+              <dt className="text-muted">Modelo</dt>
+              <dd>{[row.localidade ?? row.modo, regime].filter(Boolean).join(" · ") || "—"}</dd>
+              <dt className="text-muted">Pretensão</dt>
+              <dd>{faixa}</dd>
+              <dt className="text-muted">Atualizado</dt>
+              <dd>{tempo}</dd>
+              {contatoMascarado ? (
+                <>
+                  <dt className="text-muted">Contato</dt>
+                  <dd aria-label="contato mascarado" title="Contato protegido até o candidato responder">protegido</dd>
+                </>
+              ) : null}
+            </dl>
           </li>
         );
       })}
