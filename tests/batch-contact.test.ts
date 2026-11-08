@@ -4,6 +4,10 @@ import * as path from "path";
 import { NextRequest } from "next/server";
 
 describe("Contato RH em Lote — Task 8 (1 Template + Preview)", () => {
+  // logContactConsent grava em background; espera terminar antes do Jest encerrar
+  afterAll(async () => {
+    await require("../lib/proxy").flushContactConsentWrites?.();
+  });
   const rhId = "rh_test_001";
   const companyId = "comp_test_001";
   let mod: any;
