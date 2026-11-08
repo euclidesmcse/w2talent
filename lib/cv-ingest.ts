@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractToCanonical } from "./cv-extract";
+import { docToText } from "./doc-to-text";
 
 /**
  * Helper compartilhado para POST /api/candidates e /api/candidates/ingest.
  * Evita duplicação de ~120 linhas entre as duas rotas (I1).
  * Aceita JSON {linkedinText|text|raw, consent:{iaReescritaV}} ou FormData {file, linkedinText}
- * Parse binário PDF/DOCX via pdf-parse/mammoth dynamic import com fallback utf-8.
+ * PDF/DOCX viram texto pelo toMarkdown do Workers AI (lib/doc-to-text), com fallback utf-8.
  */
 export async function handleIngestPOST(req: NextRequest) {
   try {
@@ -36,37 +37,12 @@ export async function handleIngestPOST(req: NextRequest) {
       if (linkedinText) rawText = String(linkedinText);
       if (file) {
         fileName = (file as any).name ?? "upload";
-        const buf = Buffer.from(await file.arrayBuffer());
+        const bytes = await file.arrayBuffer();
         let extracted = "";
         try {
-          const lowerName = (fileName ?? "upload").toLowerCase();
-          if (lowerName.endsWith(".pdf")) {
-            // @ts-ignore — optional dep, types may be missing until installed
-            const pdfParse = await import("pdf-parse").then((m: any) => m.default ?? m).catch(() => null);
-            if (pdfParse) {
-              const data = await pdfParse(buf);
-              extracted = data.text ?? "";
-            } else {
-              // eslint-disable-next-line no-console
-              console.warn("[cv-ingest] pdf-parse não instalado, fallback utf-8 — instale com: npm i pdf-parse");
-              extracted = buf.toString("utf-8");
-            }
-          } else if (lowerName.endsWith(".docx")) {
-            // @ts-ignore — optional dep, types may be missing until installed
-            const mammoth = await import("mammoth").then((m: any) => m).catch(() => null);
-            if (mammoth) {
-              const result = await mammoth.extractRawText({ buffer: buf });
-              extracted = result.value ?? "";
-            } else {
-              // eslint-disable-next-line no-console
-              console.warn("[cv-ingest] mammoth não instalado, fallback utf-8 — instale com: npm i mammoth");
-              extracted = buf.toString("utf-8");
-            }
-          } else {
-            extracted = buf.toString("utf-8");
-          }
+          extracted = await docToText(bytes, fileName ?? "upload");
         } catch {
-          extracted = buf.toString("utf-8");
+          extracted = new TextDecoder().decode(bytes);
         }
         if (!rawText) rawText = extracted;
         else rawText = `${rawText}\n${extracted}`;

@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { formatFaixa, formatTempo, skillsDisplay, maskEmail, maskPhone } from "@/lib/search";
+import { formatFaixa, formatTempo, skillsDisplay, maskEmail, maskPhone } from "@/lib/format";
 import type { CandidateRow } from "./candidate-table";
 
 function getSkillIds(row: CandidateRow): string[] {

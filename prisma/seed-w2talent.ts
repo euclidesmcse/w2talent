@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
+import { PrismaPg } from "@prisma/adapter-pg";
+// engineType = "client": todo PrismaClient precisa de driver adapter.
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
 
 async function main() {
   const company = await prisma.companyProfile.upsert({

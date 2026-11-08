@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { formatFaixa, formatTempo, skillsDisplay, maskEmail, maskPhone } from "@/lib/search";
+import { formatFaixa, formatTempo, skillsDisplay, maskEmail, maskPhone } from "@/lib/format";
 import { formatCurrencyWithLocale, formatDateByLocale } from "@/i18n";
 // breakpoints: 360 / 768 / 1024 / 1280 — Tailwind screens xs/md/lg/xl (see tailwind.config.js)
 // next-intl: colunas via messages/pt-BR.json, en.json — fallback PT-BR (i18n.ts t())

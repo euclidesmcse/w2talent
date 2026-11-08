@@ -28,11 +28,12 @@ Tests: `npm test -- --runInBand` — 11 suítes, 129 pass, 3 skipped (DATABASE_U
 - **2026-11-06 — DB local:** `w2talent-db` (Docker `pgvector:pg16` porta **5437**) migrado + seed `demo-company` 10 vagas/5 candidatos. Gerenciado por `scripts/db.sh` (ver `docs/INFRA_TEMPORARIA.md` — remover ao final, migrar para Neon/Supabase com pgvector em produção).
 - **2026-11-06 — Visual:** Landing split-stage (taste-skill, Bodoni Moda/Jost, slate/sage/blush/olive) + headers olive/sage em `/vagas` e `/candidatos`. Tela branca sem CSS corrigida (a097ba0). `/` 404 corrigida (f6f2071).
 - **2026-11-08 — Visão v2 APROVADA:** `docs/superpowers/specs/2026-11-08-w2talent-design-v2.md` (login Google/Microsoft + TOTP, aprovar-antes-de-enviar, Ficha W2 por IA, dashboard RH + agenda, LLM de RH com AI Gateway + cadastro de qualquer API, PT/EN/ES + tradução automática, visual estilo Cloudflare). Decisões fechadas: evoluir código atual, PWA primeiro, AI Gateway + APIs cadastráveis, PT/EN/ES.
-- **2026-11-08 — Infra:** PR #3 merged — config Cloudflare versionada (`npm run deploy`), CI com Postgres+pgvector verde. Preview de PR ainda falha (comando de não-produção no painel; aguardando log/print do Euclides).
+- **2026-11-08 — Infra:** PR #3 merged — config Cloudflare versionada (`npm run deploy`), CI com Postgres+pgvector verde. Preview de PR falhava; Euclides ajustou os comandos de build no painel em 2026-11-08 (ver seção Deploy).
 - **2026-11-08 — Arquitetura v2 APROVADA:** `docs/superpowers/specs/2026-11-08-w2talent-arquitetura-v2.md` (Q1–Q6 assumidas pela recomendação; Neon+Hyperdrive, Better Auth+TOTP, AI Router via AI Gateway, Queues/Cron, bge-m3).
 - **2026-11-08 — Passo 3 (protótipo) APROVADO:** canvas privado https://claude.ai/artifact/Sr4RAnTcV9Cs3N88YmeUMs com 9 telas: design system, Login (Google/Microsoft + autenticador), Vagas (seleção), Selecionadas (abrir → conferir → aprovar → enviar em lote), Celular/PWA com assistente, Candidatos + Ficha W2, Publicar vaga (aviso de duplicada), Painel RH + agenda, Admin de IA (cadastro de API + compatibilidade por tarefa). Visual: Inter, azul #1F4FD8, fundo #F7F8FA, sem enfeites.
 - **2026-11-08 — Passo 4:** backlog v2 em `docs/superpowers/plans/2026-11-08-w2talent-backlog-v2.md` (Fase 1.5 com 15 itens, Fase 2, Fase 3), APROVADO.
-- **Próximo:** item 1.5.1 (spike Neon+Hyperdrive+Prisma driver adapter). **Não alterar código antes da aprovação.**
+- **2026-11-08 — Item 1.5.1 (spike banco):** código pronto no PR #5 (Prisma 6.19 sem binário + adapter pg, cliente por requisição no Worker, `GET /api/health/db`). Testado local com Hyperdrive simulado. Plano **Free**: leitura de CV trocada de pdf-parse/mammoth para Workers AI `toMarkdown`, Worker ficou em 1,9 MiB gzip (limite 3 MiB). Notas: `docs/spikes/2026-11-08-neon-hyperdrive-prisma.md`.
+- **Próximo:** Euclides cria Neon + Hyperdrive (passos no doc do spike) → adicionar ID do Hyperdrive no `wrangler.jsonc`, merge do PR #5, conferir `/api/health/db` em staging → item 1.5.2.
 
 ## Fontes da verdade (ler nesta ordem ao abrir o projeto)
 
@@ -57,7 +58,7 @@ Tests: `npm test -- --runInBand` — 11 suítes, 129 pass, 3 skipped (DATABASE_U
 
 - **Framework preset:** Next.js
 - **Build command:** `npx prisma generate && npm run build`
-- **Deploy command:** `npm run deploy` (= `opennextjs-cloudflare build && opennextjs-cloudflare deploy`). Config versionada no repo: `wrangler.jsonc`, `open-next.config.ts`, `public/_headers`; `wrangler` e `@opennextjs/cloudflare` com versão fixa no `package.json`. **Não** usar `npx wrangler deploy` puro: sem config no repo ele baixa a última versão e regenera tudo a cada build (causa de falhas intermitentes até 2026-11-08).
+- **Build na Cloudflare (desde 2026-11-08):** `npm run build` = build do OpenNext (gera `.open-next/worker.js`; o `next build` puro é `npm run build:next`, chamado pelo OpenNext via `open-next.config.ts`). Produção: deploy `npx opennextjs-cloudflare deploy` (ou `npm run deploy`, que faz build+deploy). PRs: `npx wrangler preview`, que usa o bloco `previews` do `wrangler.jsonc` (sem service binding — limitação dos previews). Plano **Workers Free**: Worker até 3 MiB gzip — medir com `npx wrangler deploy --dry-run --outdir /tmp/x` após o build.
 - **Output directory:** `.open-next` (gerenciado pelo OpenNext, não `.next`)
 - **Node version:** 22 (detectado `nodejs@24.22.1` no build, mas alvo é Next 15.5)
 - **Compatibility date:** `2026-11-04` (em `wrangler.jsonc`)

@@ -1,0 +1,44 @@
+name: Banco — migrations no Neon
+
+# Aplica as migrations do Prisma no Neon (produção).
+# A connection string fica só no segredo NEON_DATABASE_URL do GitHub.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "prisma/migrations/**"
+      - "prisma/schema.prisma"
+  workflow_dispatch:
+    inputs:
+      seed_demo:
+        description: "Também carregar os dados de exemplo (10 vagas, 5 candidatos)?"
+        type: boolean
+        default: false
+
+concurrency:
+  group: migrate-neon
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+    steps:
+      - name: Conferir segredo
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Segredo NEON_DATABASE_URL não configurado (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx prisma migrate deploy
+      - name: Dados de exemplo
+        if: ${{ inputs.seed_demo }}
+        run: npx ts-node --compiler-options '{"module":"CommonJS"}' prisma/seed-w2talent.ts

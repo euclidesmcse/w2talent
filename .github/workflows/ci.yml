@@ -38,6 +38,5 @@ jobs:
       - run: npx prisma generate
       - run: npx prisma migrate deploy
       - run: npm test -- --runInBand
+      # build do OpenNext (next build + .open-next), o mesmo bundle que a Cloudflare publica
       - run: npm run build
-      # mesmo bundle que a Cloudflare publica (sem deploy)
-      - run: npx opennextjs-cloudflare build
