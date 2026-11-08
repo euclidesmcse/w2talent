@@ -35,7 +35,8 @@ async function main() {
   try {
     // dynamic import para não quebrar se prisma client não gerado
     const { PrismaClient } = await import("@prisma/client");
-    const prisma = new PrismaClient();
+    const { PrismaPg } = await import("@prisma/adapter-pg");
+    const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
     // @ts-ignore — Skill model pode não existir ainda
     if (prisma.skill) {
       console.log("[seed] Populando tabela Skill...");
