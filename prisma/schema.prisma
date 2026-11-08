@@ -1,6 +1,8 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
+  // Sem binário Rust: roda no Cloudflare Worker via driver adapter (pg + Hyperdrive).
+  engineType      = "client"
 }
 
 datasource db {

@@ -145,8 +145,9 @@ describe("Prisma schema — estrutura canônica", () => {
 
 describe("Prisma Client — models gerados", () => {
   it("PrismaClient expõe prisma.companyProfile/candidateProfile/vacancy/application/otpCode/consentLog", async () => {
-    const { PrismaClient } = await import("@prisma/client");
-    const prisma: any = new PrismaClient();
+    const { createPrismaClient } = await import("@/lib/prisma");
+    // Não conecta: o adapter só abre conexão na primeira query.
+    const prisma: any = createPrismaClient("postgresql://u:p@localhost:5432/none");
     // Models são lowercased: companyProfile, candidateProfile etc (ou company etc se mapped)
     // Verifica pelo menos um dos padrões
     const hasCandidate =

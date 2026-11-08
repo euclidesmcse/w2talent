@@ -16,7 +16,7 @@
 
 | # | Item | Entrega / critério de pronto | Depende de | Status |
 |---|------|------------------------------|------------|--------|
-| 1.5.1 | 🧪 Spike banco | Neon + Hyperdrive + Prisma driver adapter no Worker; uma rota lê do banco real em staging; medir tamanho do bundle. Se falhar: decidir Drizzle (plano B) com o Euclides. | — | ⏳ |
+| 1.5.1 | 🧪 Spike banco | Neon + Hyperdrive + Prisma driver adapter no Worker; uma rota lê do banco real em staging; medir tamanho do bundle. Se falhar: decidir Drizzle (plano B) com o Euclides. | — | 🔄 código pronto (PR #5); falta Neon + Hyperdrive reais. Ver `docs/spikes/2026-11-08-neon-hyperdrive-prisma.md` |
 | 1.5.2 | Migração de dados | Schema atual no Neon (pgvector); `DATABASE_URL` só via Hyperdrive; seed demo; CI continua com Postgres local. | 1.5.1 | ⏳ |
 | 1.5.3 | Segurança pendente da Fase 1.1 | `timingSafeEqual` no webhook; correção do IDOR em `GET /api/applications/batch`; testes. | — | ⏳ |
 | 1.5.4 | Design system no código | Tokens (Inter, #1F4FD8, #F7F8FA, bordas #E5E7EB), componentes base (botão, input, tabela, chip, cartão, toast) iguais ao protótipo; remove o visual antigo da landing. | — | ⏳ |

@@ -32,7 +32,8 @@ Tests: `npm test -- --runInBand` — 11 suítes, 129 pass, 3 skipped (DATABASE_U
 - **2026-11-08 — Arquitetura v2 APROVADA:** `docs/superpowers/specs/2026-11-08-w2talent-arquitetura-v2.md` (Q1–Q6 assumidas pela recomendação; Neon+Hyperdrive, Better Auth+TOTP, AI Router via AI Gateway, Queues/Cron, bge-m3).
 - **2026-11-08 — Passo 3 (protótipo) APROVADO:** canvas privado https://claude.ai/artifact/Sr4RAnTcV9Cs3N88YmeUMs com 9 telas: design system, Login (Google/Microsoft + autenticador), Vagas (seleção), Selecionadas (abrir → conferir → aprovar → enviar em lote), Celular/PWA com assistente, Candidatos + Ficha W2, Publicar vaga (aviso de duplicada), Painel RH + agenda, Admin de IA (cadastro de API + compatibilidade por tarefa). Visual: Inter, azul #1F4FD8, fundo #F7F8FA, sem enfeites.
 - **2026-11-08 — Passo 4:** backlog v2 em `docs/superpowers/plans/2026-11-08-w2talent-backlog-v2.md` (Fase 1.5 com 15 itens, Fase 2, Fase 3), APROVADO.
-- **Próximo:** item 1.5.1 (spike Neon+Hyperdrive+Prisma driver adapter). **Não alterar código antes da aprovação.**
+- **2026-11-08 — Item 1.5.1 (spike banco):** código pronto no PR #5 (Prisma 6.19 sem binário + adapter pg, cliente por requisição no Worker, `GET /api/health/db`). Testado local com Hyperdrive simulado. Worker foi de 2,6 para 3,4 MiB gzip (limite Free 3 MiB). Notas: `docs/spikes/2026-11-08-neon-hyperdrive-prisma.md`.
+- **Próximo:** Euclides confirma o plano Workers (Free/Paid) e cria Neon + Hyperdrive (passos no doc do spike) → adicionar ID do Hyperdrive no `wrangler.jsonc`, merge do PR #5, conferir `/api/health/db` em staging → item 1.5.2.
 
 ## Fontes da verdade (ler nesta ordem ao abrir o projeto)
 

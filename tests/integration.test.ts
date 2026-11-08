@@ -14,8 +14,8 @@ describeIntegration("Integration — Postgres (guarded by DATABASE_URL)", () => 
   });
 
   it("Prisma migrate + seed + hygiene queries funcionam (requer DB)", async () => {
-    const { PrismaClient } = await import("@prisma/client");
-    const prisma = new PrismaClient();
+    const { createPrismaClient } = await import("@/lib/prisma");
+    const prisma = createPrismaClient(process.env.DATABASE_URL!);
     try {
       // Verifica conexão
       await prisma.$queryRaw`SELECT 1 as ok`;
@@ -29,8 +29,8 @@ describeIntegration("Integration — Postgres (guarded by DATABASE_URL)", () => 
   });
 
   it("Índice único (candidateId, vacancyId) existe para Application (C1) — verifica via pg_indexes", async () => {
-    const { PrismaClient } = await import("@prisma/client");
-    const prisma = new PrismaClient();
+    const { createPrismaClient } = await import("@/lib/prisma");
+    const prisma = createPrismaClient(process.env.DATABASE_URL!);
     try {
       // C1: bloquear candidatura duplicada na mesma vaga. A migration init cria
       // UNIQUE ("candidateId", "vacancyId"); como vacancyId é nullable e o Postgres
