@@ -1,6 +1,6 @@
 # W2Talent — Backlog v2 por fases (passo 4)
 
-**Data:** 2026-11-08 · **Status:** 🟡 aguardando aprovação do Euclides
+**Data:** 2026-11-08 · **Status:** ✅ aprovado pelo Euclides em 2026-11-08
 **Base:** spec v2 (`../specs/2026-11-08-w2talent-design-v2.md`), arquitetura v2 (`../specs/2026-11-08-w2talent-arquitetura-v2.md`), protótipo aprovado (canvas privado https://claude.ai/artifact/Sr4RAnTcV9Cs3N88YmeUMs).
 
 ## Como usar
