@@ -220,10 +220,23 @@ export function logContactConsent(
   consentLogs.push(entry);
   // best-effort prisma persist (ignore if no DB)
   try {
-    import("./prisma").then(({ prisma }) => {
-      (prisma as any).consentLog?.create?.({ data: { userId, tipo, versao, texto, baseLegal: entry.baseLegal } }).catch(() => {});
-    }).catch(() => {});
+    const p: Promise<unknown> = import("./prisma")
+      .then(({ prisma }) =>
+        (prisma as any).consentLog?.create?.({ data: { userId, tipo, versao, texto, baseLegal: entry.baseLegal } })
+      )
+      .catch(() => {});
+    pendingContactConsentWrites.add(p);
+    p.finally(() => pendingContactConsentWrites.delete(p));
   } catch {}
+}
+
+// em globalThis para sobreviver a jest.resetModules() (cada require cria uma cópia do módulo)
+const pendingContactConsentWrites: Set<Promise<unknown>> = ((globalThis as any).__w2PendingContactConsent ??=
+  new Set<Promise<unknown>>());
+
+/** Aguarda as gravações de consentimento de contato ainda em andamento (usado em testes e shutdown). */
+export async function flushContactConsentWrites(): Promise<void> {
+  await Promise.all([...pendingContactConsentWrites]);
 }
 
 export function getConsentLogs(filter?: { userId?: string; proxyThreadId?: string }) {

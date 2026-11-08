@@ -15,6 +15,7 @@ import {
   requestOtp,
   verifyOtp,
   logConsent,
+  flushConsentWrites,
   clearOtpStore,
   CONSENT_TYPES,
   JWT_COOKIE_NAME,
@@ -22,6 +23,10 @@ import {
 import { otpExpiresAt } from "../lib/hygiene";
 
 describe("Auth — OTP 5min + bloqueio + cooldown + LGPD + JWT", () => {
+  // verifyOtp grava consentimentos em background; espera terminar antes do Jest encerrar
+  afterAll(async () => {
+    await flushConsentWrites();
+  });
   beforeEach(() => {
     clearOtpStore();
     jest.useFakeTimers().setSystemTime(new Date("2026-11-07T10:00:00Z"));

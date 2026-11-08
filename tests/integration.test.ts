@@ -28,15 +28,20 @@ describeIntegration("Integration — Postgres (guarded by DATABASE_URL)", () => 
     }
   });
 
-  it("Partial unique index existe para Application (C1) — verifica via pg_indexes", async () => {
+  it("Índice único (candidateId, vacancyId) existe para Application (C1) — verifica via pg_indexes", async () => {
     const { PrismaClient } = await import("@prisma/client");
     const prisma = new PrismaClient();
     try {
+      // C1: bloquear candidatura duplicada na mesma vaga. A migration init cria
+      // UNIQUE ("candidateId", "vacancyId"); como vacancyId é nullable e o Postgres
+      // trata NULLs como distintos, ela equivale ao índice parcial WHERE vacancyId IS NOT NULL.
       const rows = (await prisma.$queryRaw`
-        SELECT indexname FROM pg_indexes WHERE tablename = 'Application' AND indexname = 'Application_candidateId_vacancyId_partial_unique'
-      `) as Array<{ indexname: string }>;
-      // Se migration foi aplicada, índice existe; se ainda não, falha indica que migration precisa rodar
-      expect(rows.length).toBe(1);
+        SELECT indexdef FROM pg_indexes WHERE tablename = 'Application'
+      `) as Array<{ indexdef: string }>;
+      const unique = rows.filter(
+        (r) => /CREATE UNIQUE INDEX/.test(r.indexdef) && /\("candidateId", "vacancyId"\)/.test(r.indexdef),
+      );
+      expect(unique.length).toBe(1);
     } finally {
       await prisma.$disconnect().catch(() => {});
     }

@@ -118,6 +118,15 @@ export function clearOtpStore(): void {
 }
 
 // ── LGPD consent ────────────────────────────────────────────────────
+// em globalThis para sobreviver a jest.resetModules() (cada require cria uma cópia do módulo)
+const pendingConsentWrites: Set<Promise<unknown>> = ((globalThis as any).__w2PendingConsent ??=
+  new Set<Promise<unknown>>());
+
+/** Aguarda as gravações de consentimento ainda em andamento (usado em testes e shutdown). */
+export async function flushConsentWrites(): Promise<void> {
+  await Promise.all([...pendingConsentWrites]);
+}
+
 export async function logConsent(
   userId: string,
   tipo: string,
@@ -319,8 +328,10 @@ export function verifyOtp(
   for (let i = 0; i < CONSENT_TYPES.length; i++) {
     const tipo = CONSENT_TYPES[i];
     const texto = textos[i] ?? `Consentimento ${tipo} v${versao} — LGPD granular`;
-    // fire-and-forget (sync push já; async DB)
-    logConsent(celular, tipo, versao, texto).catch(() => {});
+    // fire-and-forget (sync push já; async DB) — rastreado para flushConsentWrites()
+    const p: Promise<unknown> = logConsent(celular, tipo, versao, texto).catch(() => {});
+    pendingConsentWrites.add(p);
+    p.finally(() => pendingConsentWrites.delete(p));
   }
 
   otpStore.delete(celular);

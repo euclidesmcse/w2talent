@@ -2,3 +2,11 @@ node_modules/
 .next/
 dist/
 .superpowers/
+
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example

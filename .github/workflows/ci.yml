@@ -9,9 +9,23 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # grátis para repo público — zero custo
+    # Postgres + pgvector efêmero só para os testes de integração (tests/integration.test.ts)
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: w2talent
+          POSTGRES_PASSWORD: w2talent
+          POSTGRES_DB: w2talent
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U w2talent"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://dummy:dummy@localhost:5432/w2talent?sslmode=disable' }}
+      DATABASE_URL: postgresql://w2talent:w2talent@localhost:5432/w2talent?sslmode=disable
       JWT_SECRET: dummy-ci-jwt
       CRON_SECRET: dummy-ci-cron
     steps:
@@ -22,6 +36,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx prisma generate
+      - run: npx prisma migrate deploy
       - run: npm test -- --runInBand
       - run: npm run build
-      # preview URL só aparece se Vercel estiver conectado — sem custo extra
+      # mesmo bundle que a Cloudflare publica (sem deploy)
+      - run: npx opennextjs-cloudflare build
