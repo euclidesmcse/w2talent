@@ -30,11 +30,13 @@ Tests: `npm test -- --runInBand` — 11 suítes, 129 pass, 3 skipped (DATABASE_U
 - **2026-11-08 — Visão v2 APROVADA:** `docs/superpowers/specs/2026-11-08-w2talent-design-v2.md` (login Google/Microsoft + TOTP, aprovar-antes-de-enviar, Ficha W2 por IA, dashboard RH + agenda, LLM de RH com AI Gateway + cadastro de qualquer API, PT/EN/ES + tradução automática, visual estilo Cloudflare). Decisões fechadas: evoluir código atual, PWA primeiro, AI Gateway + APIs cadastráveis, PT/EN/ES.
 - **2026-11-08 — Infra:** PR #3 merged — config Cloudflare versionada (`npm run deploy`), CI com Postgres+pgvector verde. Preview de PR ainda falha (comando de não-produção no painel; aguardando log/print do Euclides).
 - **2026-11-08 — Arquitetura v2 APROVADA:** `docs/superpowers/specs/2026-11-08-w2talent-arquitetura-v2.md` (Q1–Q6 assumidas pela recomendação; Neon+Hyperdrive, Better Auth+TOTP, AI Router via AI Gateway, Queues/Cron, bge-m3).
-- **Próximo:** passo 3 em andamento (design system + protótipo navegável das telas-chave; Euclides aprova o visual antes do código). Primeiro item de código quando liberado: spike Neon+Hyperdrive+Prisma driver adapter (arquitetura §12). **Não alterar código antes da aprovação.**
+- **2026-11-08 — Passo 3 (protótipo) APROVADO:** canvas privado https://claude.ai/artifact/Sr4RAnTcV9Cs3N88YmeUMs com 9 telas: design system, Login (Google/Microsoft + autenticador), Vagas (seleção), Selecionadas (abrir → conferir → aprovar → enviar em lote), Celular/PWA com assistente, Candidatos + Ficha W2, Publicar vaga (aviso de duplicada), Painel RH + agenda, Admin de IA (cadastro de API + compatibilidade por tarefa). Visual: Inter, azul #1F4FD8, fundo #F7F8FA, sem enfeites.
+- **2026-11-08 — Passo 4:** backlog v2 em `docs/superpowers/plans/2026-11-08-w2talent-backlog-v2.md` (Fase 1.5 com 15 itens, Fase 2, Fase 3), APROVADO.
+- **Próximo:** item 1.5.1 (spike Neon+Hyperdrive+Prisma driver adapter). **Não alterar código antes da aprovação.**
 
 ## Fontes da verdade (ler nesta ordem ao abrir o projeto)
 
-0. `docs/superpowers/specs/2026-11-08-w2talent-design-v2.md` + `2026-11-08-w2talent-arquitetura-v2.md` — visão e arquitetura v2 (prevalece sobre a v1 onde houver conflito; status no topo do doc).
+0. `docs/superpowers/plans/2026-11-08-w2talent-backlog-v2.md` (o que fazer agora) + `docs/superpowers/specs/2026-11-08-w2talent-design-v2.md` + `2026-11-08-w2talent-arquitetura-v2.md` — visão e arquitetura v2 (prevalece sobre a v1 onde houver conflito; status no topo do doc).
 1. `docs/superpowers/specs/2026-11-07-w2talent-design.md` — design aprovado (intent, fases, schema canônico, fluxos lote 10/30, hygiene 180d/14d, LGPD decisão B).
 2. `docs/superpowers/plans/2026-11-07-w2talent-fase1-mvp.md` — plano 10 tasks (file structure, interfaces, review focus).
 3. `.superpowers/sdd/2026-11-07-w2talent-fase1-mvp/progress.md` — ledger (tasks 1..10 complete, deferred minors, rulings, adjudications).
