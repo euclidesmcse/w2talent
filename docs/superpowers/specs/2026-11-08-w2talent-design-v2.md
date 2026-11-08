@@ -261,7 +261,7 @@ Em camadas, da mais simples à mais cara (não começamos treinando modelo):
 |---|-------|---------|--------|
 | 1 | Fechar a visão do produto | Este documento (spec v2) | ✅ aprovado 2026-11-08 |
 | 2 | Arquitetura na Cloudflare + IA de RH | `2026-11-08-w2talent-arquitetura-v2.md` | ✅ aprovado 2026-11-08 |
-| 3 | UX e protótipo navegável | Design system + telas-chave clicáveis | 🔄 em andamento |
+| 3 | UX e protótipo navegável | Design system + telas-chave clicáveis | 🟡 aguardando aprovação do visual |
 | 4 | Backlog por fases + "onde parou" | Plano executável (fases 1.5 → 3) + AGENTS.md atualizado | ⏳ |
 
 ### 12.1 Fases de produto propostas (detalhadas no passo 4)
