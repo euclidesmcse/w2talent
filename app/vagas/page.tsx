@@ -94,7 +94,7 @@ export default function VagasPage() {
             className="min-w-0 max-w-[560px] flex-[1_1_220px]"
           />
           <Button type="submit" variant="primary" size="md">{tr("common.search")}</Button>
-          <span aria-live="polite" className="text-[13px] text-muted">{searching && loaded ? tr("common.searching") : tr("vagas.count", { count: total })}</span>
+          <span aria-live="polite" className="basis-full text-[13px] text-muted md:basis-auto">{searching && loaded ? tr("common.searching") : tr("vagas.count", { count: total })}</span>
         </form>
       </div>
 
