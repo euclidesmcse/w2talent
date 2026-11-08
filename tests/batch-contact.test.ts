@@ -3,6 +3,10 @@ import * as fs from "fs";
 import * as path from "path";
 import { NextRequest } from "next/server";
 
+// Os webhooks exigem o segredo também nos testes (sem atalho por NODE_ENV).
+const WEBHOOK_TEST_SECRET = "test-webhook-secret";
+process.env.CRON_SECRET = WEBHOOK_TEST_SECRET;
+
 describe("Contato RH em Lote — Task 8 (1 Template + Preview)", () => {
   // logContactConsent grava em background; espera terminar antes do Jest encerrar
   afterAll(async () => {
@@ -231,7 +235,7 @@ describe("Contato RH em Lote — Task 8 (1 Template + Preview)", () => {
       expect(typeof PATCH).toBe("function");
       const reqReply = new NextRequest("http://localhost/api/contacts/batch", {
         method: "PATCH",
-        headers: { "content-type":"application/json" },
+        headers: { "content-type":"application/json", "x-webhook-secret": WEBHOOK_TEST_SECRET },
         body: JSON.stringify({ proxyThreadId: thread, event: "reply" }),
       });
       const resReply = await PATCH(reqReply);

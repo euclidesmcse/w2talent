@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requestHasSecret, webhookSecret } from "@/lib/secret";
 import {
   BATCH_LIMIT,
   DAILY_LIMIT,
@@ -33,7 +34,8 @@ export async function POST(req: NextRequest) {
       const { requireAuth } = require("@/lib/auth");
       const user = requireAuth(req);
       if (user?.userId) rhId = String(user.userId);
-      if (user?.companyId) companyId = companyId ?? String(user.companyId);
+      // a empresa do login vence a do corpo (não dá para agir em nome de outra empresa)
+      if (user?.companyId) companyId = String(user.companyId);
       if (user?.celular) rhId = rhId ?? String(user.celular);
       authOk = true;
     } catch {}
@@ -118,19 +120,7 @@ export async function POST(req: NextRequest) {
 }
 
 function isWebhookAuthorized(req: NextRequest): boolean {
-  if (process.env.NODE_ENV === "test") return true;
-  const secret = process.env.CRON_SECRET || process.env.WEBHOOK_SECRET;
-  if (!secret) return false;
-  const auth = req.headers.get("authorization") ?? "";
-  const xCron = req.headers.get("x-cron-secret") ?? "";
-  const xWebhook = req.headers.get("x-webhook-secret") ?? "";
-  const qSecret = req.nextUrl.searchParams.get("cron_secret") ?? "";
-  if (auth === `Bearer ${secret}`) return true;
-  if (auth === secret) return true;
-  if (xCron === secret) return true;
-  if (xWebhook === secret) return true;
-  if (qSecret === secret) return true;
-  return false;
+  return requestHasSecret(req, webhookSecret());
 }
 
 // PATCH webhook: resposta do candidato no proxy libera contato direto (B) e loga consentimento
