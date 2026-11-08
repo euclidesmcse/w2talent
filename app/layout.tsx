@@ -2,13 +2,14 @@ import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getLocale } from "next-intl/server";
 import { defaultLocale } from "@/i18n";
+import { ToastProvider } from "@/components/ui/toast";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "W2Talent",
-  description: "Conector simples Candidatos <-> Empresas",
+  description: "Encontre vagas, confira cada uma e envie em lote só as que você aprovou.",
   manifest: "/manifest.json",
   icons: { icon: "/icons/icon-192.png", apple: "/icons/icon-192.png" },
 };
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0a0a0a",
+  themeColor: "#F7F8FA",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -30,11 +31,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={locale}>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#0a0a0a" />
+        <meta name="theme-color" content="#F7F8FA" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+          rel="stylesheet"
+        />
       </head>
-      <body>
+      <body className="bg-canvas font-sans text-ink antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
+          <ToastProvider>{children}</ToastProvider>
         </NextIntlClientProvider>
       </body>
     </html>

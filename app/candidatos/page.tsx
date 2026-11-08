@@ -1,5 +1,7 @@
 "use client";
 import * as React from "react";
+import { AppHeader } from "@/components/app-header";
+import { Button, Input } from "@/components/ui";
 import { CandidateTable } from "@/components/candidate-table";
 import { CandidateCards } from "@/components/candidate-cards";
 import { DetailModal } from "@/components/detail-modal";
@@ -68,41 +70,39 @@ export default function CandidatosPage() {
   const isEmpty = items.length === 0;
 
   return (
-    <div style={{ fontFamily: "'Jost', sans-serif" }}>
-      {/* HEADER SAGE */}
-      <div style={{ background: "#b7c8be", color: "#1c1c1c", padding: "28px 24px 22px" }}>
-        <div className="mx-auto max-w-6xl">
-          <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", opacity: 0.6 }}>W²Talent • talentos</div>
-          <h1 style={{ fontFamily: '"Bodoni Moda", serif', fontSize: "clamp(30px, 3.4vw, 48px)", fontWeight: 500, marginTop: 6, lineHeight: 1 }}>Candidatos</h1>
-          <p style={{ marginTop: 8, opacity: 0.7, maxWidth: 44 + "ch" }}>Mesmo vocabulário, mesmo lugar. Busca semântica entende AWS = Cloud.</p>
-          <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <input
-              aria-label="busca-candidatos"
-              placeholder="Analista Cloud"
-              value={q}
-              onChange={(e) => { setQ(e.target.value); setPage(1); }}
-              style={{ flex: "1 1 340px", maxWidth: 560, background: "#fff", color: "#1c1c1c", borderRadius: 999, padding: "12px 18px", border: "1px solid rgba(28,28,28,0.12)", outline: "none", fontSize: 15 }}
-            />
-            <span style={{ alignSelf: "center", fontSize: 12, opacity: 0.6 }}>{total} candidatos • via.w2talent.com 🔒</span>
-          </div>
+    <div>
+      <AppHeader nav={[{ href: "/vagas", label: "Vagas", active: false }, { href: "/candidatos", label: "Candidatos", active: true }, { href: "/minhas-candidaturas", label: "Minhas candidaturas" }]} />
+      <div className="mx-auto max-w-page px-6 pt-6">
+        <h1 className="text-xl font-bold">Candidatos</h1>
+        <p className="mt-1 text-sm text-muted">A busca entende sinônimos: AWS e Cloud aparecem juntos.</p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Input
+            type="search"
+            aria-label="busca-candidatos"
+            placeholder="Analista Cloud"
+            value={q}
+            onChange={(e) => { setQ(e.target.value); setPage(1); }}
+            className="max-w-[560px] flex-[1_1_340px]"
+          />
+          <span className="text-[13px] text-muted">{total} candidatos</span>
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl p-4 pb-24">
-        {suggestion ? <div role="status" aria-label="sugestao" style={{ background: "#d6c4b8", borderRadius: 8, padding: "10px 14px", fontSize: 13, marginBottom: 12 }}>Você quis dizer &quot;{suggestion}&quot;? <button onClick={() => handleUseSuggestion(suggestion)} style={{ textDecoration: "underline", fontWeight: 500 }}>Ver sugestão</button></div> : null}
-        {emptyCTA ? <div role="status" aria-label="empty-cta" style={{ fontSize: 12, color: "#38424a", marginBottom: 8 }}>{emptyCTA}</div> : null}
+      <div className="mx-auto max-w-page px-6 pt-4 pb-24">
+        {suggestion ? <div role="status" aria-label="sugestao" className="mb-3 rounded-card border border-line bg-brand-soft px-3.5 py-2.5 text-[13px] text-brand-ink">Você quis dizer &quot;{suggestion}&quot;? <Button variant="ghost" size="sm" onClick={() => handleUseSuggestion(suggestion)}>Ver sugestão</Button></div> : null}
+        {emptyCTA ? <div role="status" aria-label="empty-cta" className="mb-2 text-xs text-muted">{emptyCTA}</div> : null}
         {isEmpty ? <EmptyState query={q} suggestion={suggestion} emptyCTA={emptyCTA} variant="candidatos" onClearFilters={handleClearFilters} onUseSuggestion={handleUseSuggestion} /> : null}
         <div className="hidden md:block">
-          <div style={{ background: "#fff", borderRadius: 12, border: "1px solid rgba(28,28,28,0.08)", overflow: "hidden" }}>
+          <div className="overflow-hidden rounded-card border border-line bg-surface">
             <CandidateTable items={items} selectedIds={selectedSet} onToggle={toggle} onOpenDetail={openDetail} />
           </div>
         </div>
         <div className="md:hidden"><CandidateCards items={items} selectedIds={selectedSet} onToggle={toggle} onOpenDetail={openDetail} /></div>
-        <div aria-label="paginacao" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "space-between", marginTop: 14, fontSize: 13, color: "#38424a" }}>
+        <div aria-label="paginacao" className="mt-3.5 flex items-center justify-between gap-2 text-[13px] text-muted">
           <span>Página {page} de {totalPages} — {total} candidatos</span>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} style={{ border: "1px solid #1c1c1c", borderRadius: 999, padding: "6px 14px", opacity: page <= 1 ? 0.4 : 1 }}>Anterior</button>
-            <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} style={{ background: "#1c1c1c", color: "#fff", borderRadius: 999, padding: "6px 14px", opacity: page >= totalPages ? 0.4 : 1 }}>Próxima</button>
+          <div className="flex gap-2">
+            <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Anterior</Button>
+            <Button variant="secondary" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Próxima</Button>
           </div>
         </div>
         <DetailModal open={modalOpen} onClose={closeModal} item={modalItem} triggerRef={activeTrigger} title={modalItem?.nome ?? modalItem?.titulo ?? "Detalhes do candidato"} />

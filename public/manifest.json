@@ -1,12 +1,12 @@
 {
   "name": "W2Talent",
   "short_name": "W2Talent",
-  "description": "Conector simples Candidatos <-> Empresas",
+  "description": "Encontre vagas, confira cada uma e envie em lote só as que você aprovou.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#0a0a0a",
+  "background_color": "#F7F8FA",
+  "theme_color": "#F7F8FA",
   "lang": "pt-BR",
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
