@@ -22,8 +22,8 @@
 ⚠️ O `toMarkdown` real só roda na Cloudflare (o binding AI é remoto); localmente foi testado com um AI falso nos testes e com o fallback utf-8 no `wrangler dev`. Conferir um upload de PDF em staging depois do merge.
 
 ## Para ligar o Neon (passos do Euclides; nenhuma senha vai para o repositório)
-1. Criar o projeto no Neon (região `aws-sa-east-1`, São Paulo), banco `w2talent`.
-2. Do seu computador: `DATABASE_URL="<url direta do Neon>" npx prisma migrate deploy` (a migration já cria a extensão `vector`).
+1. Criar o projeto no Neon (plano gratuito; região `aws-sa-east-1`, São Paulo), Postgres 17. Copiar a connection string **sem pooling**.
+2. Guardar a connection string no segredo `NEON_DATABASE_URL` do GitHub (Settings → Secrets and variables → Actions). O workflow `.github/workflows/migrate-neon.yml` aplica as migrations a cada push na `main` que mude `prisma/`, ou manualmente em Actions → "Banco — migrations no Neon" → Run workflow (com opção de carregar os dados de exemplo). A migration já cria a extensão `vector`.
 3. Criar o Hyperdrive: `npx wrangler hyperdrive create w2talent-db --connection-string="<url do Neon>"` (ou pelo painel: Storage & Databases → Hyperdrive).
 4. Mandar o **ID** do Hyperdrive (não é segredo). Eu adiciono em `wrangler.jsonc`:
    `"hyperdrive": [{ "binding": "HYPERDRIVE", "id": "<ID>" }]`
