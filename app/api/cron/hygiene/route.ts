@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requestHasSecret } from "@/lib/secret";
 import { runHygieneCron } from "@/lib/hygiene";
 
 function isAuthorized(req: NextRequest): boolean {
@@ -8,15 +9,8 @@ function isAuthorized(req: NextRequest): boolean {
     if (process.env.NODE_ENV === "test" || process.env.ALLOW_CRON_WITHOUT_SECRET === "true") return true;
     return false;
   }
-  const auth = req.headers.get("authorization") ?? "";
-  const xCron = req.headers.get("x-cron-secret") ?? "";
-  const qSecret = req.nextUrl.searchParams.get("cron_secret") ?? "";
-  // Bearer <secret> | plain secret | x-cron-secret | ?cron_secret=
-  if (auth === `Bearer ${secret}`) return true;
-  if (auth === secret) return true;
-  if (xCron === secret) return true;
-  if (qSecret === secret) return true;
-  return false;
+  // Bearer <secret> | plain secret | x-cron-secret | ?cron_secret= (comparação em tempo constante)
+  return requestHasSecret(req, secret);
 }
 
 export async function GET(req: NextRequest) {

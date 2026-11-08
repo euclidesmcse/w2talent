@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth";
+import { requestHasSecret, webhookSecret } from "@/lib/secret";
 import {
   BATCH_LIMIT,
   DAILY_LIMIT,
@@ -18,36 +20,22 @@ function httpError(message: string, status: number) {
 }
 
 function isWebhookAuthorized(req: NextRequest): boolean {
-  if (process.env.NODE_ENV === "test") return true;
-  const secret = process.env.CRON_SECRET || process.env.WEBHOOK_SECRET;
-  if (!secret) return false;
-  const auth = req.headers.get("authorization") ?? "";
-  const xCron = req.headers.get("x-cron-secret") ?? "";
-  const xWebhook = req.headers.get("x-webhook-secret") ?? "";
-  const qSecret = req.nextUrl.searchParams.get("cron_secret") ?? "";
-  if (auth === `Bearer ${secret}`) return true;
-  if (auth === secret) return true;
-  if (xCron === secret) return true;
-  if (xWebhook === secret) return true;
-  if (qSecret === secret) return true;
-  return false;
+  return requestHasSecret(req, webhookSecret());
 }
 
-function resolveCandidateId(req: NextRequest, body: any): string | null {
-  // 1. try JWT auth
+/**
+ * Quem está pedindo: só o login (JWT) vale em produção. `candidateId` no corpo ou na
+ * query é ignorado — senão qualquer pessoa enviaria candidaturas ou leria as de outra
+ * (IDOR). Em teste (NODE_ENV=test) aceita o cabeçalho x-candidate-id para os testes TDD.
+ */
+function authenticatedCandidateId(req: NextRequest): string | null {
   try {
-    const { requireAuth } = require("@/lib/auth");
     const user = requireAuth(req);
-    if (user?.userId) return String(user.userId);
-    if (user?.celular) return String(user.celular);
+    const id = user?.userId ?? user?.celular;
+    if (id) return String(id);
   } catch {}
-  // 2. body candidateId
-  if (body?.candidateId && typeof body.candidateId === "string") return body.candidateId;
-  if (body?.userId && typeof body.userId === "string") return body.userId;
-  // 3. headers fallback only in test
   if (process.env.NODE_ENV === "test") {
-    const hCandidate = req.headers.get("x-candidate-id") ?? req.headers.get("x-user-id");
-    if (hCandidate) return hCandidate;
+    return req.headers.get("x-candidate-id") ?? req.headers.get("x-user-id") ?? null;
   }
   return null;
 }
@@ -67,14 +55,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `limite de ${BATCH_LIMIT} por lote`, code: 400 }, { status: 400 });
     }
 
-    let candidateId = resolveCandidateId(req, body);
-    // se ainda null e está em test env, usa fallback para não quebrar
+    const candidateId = authenticatedCandidateId(req);
     if (!candidateId) {
-      if (process.env.NODE_ENV === "test") {
-        candidateId = body.candidateId ?? "test-candidate";
-      } else {
-        return NextResponse.json({ error: "não autorizado" }, { status: 401 });
-      }
+      return NextResponse.json({ error: "não autorizado" }, { status: 401 });
     }
 
     const loteId: string | null = body.loteId ?? body.batchId ?? null;
@@ -165,36 +148,16 @@ export async function PATCH(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const url = new URL(req.url);
-    // try JWT auth — authoritative in prod
-    let resolvedId: string | null = null;
-    try {
-      const { requireAuth } = require("@/lib/auth");
-      const user = requireAuth(req);
-      resolvedId = String(user.userId ?? user.celular ?? "");
-    } catch {}
-    // query param allowed, but in prod requires JWT (IDOR fix)
-    let candidateId: string | null = url.searchParams.get("candidateId") ?? url.searchParams.get("userId");
-    // header spoof only in test
-    if (process.env.NODE_ENV === "test") {
-      candidateId = candidateId ?? req.headers.get("x-candidate-id") ?? req.headers.get("x-user-id");
-    }
-    // prod: must be authenticated — query/header alone is not enough
-    if (process.env.NODE_ENV !== "test" && !resolvedId) {
-      return NextResponse.json({ error: "não autorizado" }, { status: 401 });
-    }
-    // test: allow unauthenticated query/header for TDD
-    const filterId = resolvedId || candidateId;
+    // Só as candidaturas de quem está logado; ?candidateId= de outra pessoa é ignorado (IDOR).
+    const filterId = authenticatedCandidateId(req);
     if (!filterId) {
-      if (process.env.NODE_ENV !== "test") {
-        return NextResponse.json({ error: "não autorizado" }, { status: 401 });
-      }
+      return NextResponse.json({ error: "não autorizado" }, { status: 401 });
     }
     const { applicationStore } = await import("@/lib/proxy");
     let apps = [...applicationStore.values()];
-    if (filterId) apps = apps.filter((a: any) => String(a.candidateId) === String(filterId));
+    apps = apps.filter((a: any) => String(a.candidateId) === String(filterId));
     // also try DB if empty and prisma available
-    if (apps.length === 0 && filterId) {
+    if (apps.length === 0) {
       try {
         const { prisma } = await import("@/lib/prisma");
         const dbApps = await (prisma as any).application.findMany({ where: { candidateId: filterId } }).catch(() => []);

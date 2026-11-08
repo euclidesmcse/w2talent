@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requestHasSecret, timingSafeEqualStr } from "@/lib/secret";
 import { vacancyStore, candidateStore, seedVacancy, seedCandidate, clearAllForTests } from "@/lib/proxy";
 
 // GET explica, POST semeia. Sem auth em staging (dummy secrets), em prod exige CRON_SECRET.
@@ -7,10 +8,9 @@ function isAuthorized(req: NextRequest): boolean {
   const secret = process.env.CRON_SECRET || process.env.WEBHOOK_SECRET;
   // staging com dummy secrets -> libera
   if (!secret || secret.startsWith("dummy")) return true;
-  const auth = req.headers.get("authorization") ?? "";
-  const xCron = req.headers.get("x-cron-secret") ?? req.headers.get("x-webhook-secret") ?? "";
-  const q = req.nextUrl.searchParams.get("secret") ?? req.nextUrl.searchParams.get("cron_secret") ?? "";
-  if (auth === `Bearer ${secret}` || auth === secret || xCron === secret || q === secret) return true;
+  if (requestHasSecret(req, secret)) return true;
+  const q = req.nextUrl.searchParams.get("secret");
+  if (q && timingSafeEqualStr(q, secret)) return true;
   // permite sem secret se explicitamente ?demo=1 e estamos sem secret real (staging)
   return false;
 }
