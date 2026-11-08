@@ -242,7 +242,9 @@ Em camadas, da mais simples à mais cara (não começamos treinando modelo):
 
 ---
 
-## 11. Perguntas abertas (preciso das respostas do Euclides)
+## 11. Perguntas abertas
+
+> **2026-11-08:** o Euclides escolheu seguir com as recomendações abaixo como premissa. Elas valem até ele mudar alguma; ver `2026-11-08-w2talent-arquitetura-v2.md` (topo).
 
 - **Q1. Celular:** pode deixar de ser obrigatório (ficar opcional para notificações), já que o login passa a ser Google/Microsoft? *(Recomendo: sim.)*
 - **Q2. Quem cadastra APIs de IA:** só você (admin da plataforma) ou também cada empresa com a própria chave? *(Recomendo: só admin agora; empresa com chave própria vira recurso pago depois.)*
@@ -258,7 +260,7 @@ Em camadas, da mais simples à mais cara (não começamos treinando modelo):
 | # | Passo | Entrega | Status |
 |---|-------|---------|--------|
 | 1 | Fechar a visão do produto | Este documento (spec v2) | 📝 em revisão |
-| 2 | Arquitetura na Cloudflare + IA de RH | Spec técnica: auth, banco, filas, AI Gateway, registro de provedores, aprendizado | ⏳ aguarda passo 1 |
+| 2 | Arquitetura na Cloudflare + IA de RH | `2026-11-08-w2talent-arquitetura-v2.md` | 📝 em revisão |
 | 3 | UX e protótipo navegável | Design system + telas-chave clicáveis | ⏳ |
 | 4 | Backlog por fases + "onde parou" | Plano executável (fases 1.5 → 3) + AGENTS.md atualizado | ⏳ |
 
