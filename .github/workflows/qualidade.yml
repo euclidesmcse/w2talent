@@ -41,4 +41,6 @@ jobs:
         with:
           name: lighthouse
           path: .lighthouseci/
+          # a pasta começa com ponto; sem isto o upload-artifact ignora os relatórios
+          include-hidden-files: true
           retention-days: 14
