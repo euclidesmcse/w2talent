@@ -537,7 +537,7 @@ function PriceCell({ model, reload }: { model: Model; reload: () => Promise<void
           {i ? <span className="text-muted">/</span> : null}
           <Input
             inputMode="decimal"
-            className="h-8 !w-[72px] px-2 text-[13px]"
+            className="h-8 !w-[84px] px-2 text-[13px]"
             aria-label={p.label}
             value={p.v}
             onChange={(e) => p.setV(e.target.value)}
