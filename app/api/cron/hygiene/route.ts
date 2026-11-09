@@ -1,35 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requestHasSecret } from "@/lib/secret";
-import { runHygieneCron } from "@/lib/hygiene";
+import { runHygiene } from "@/lib/hygiene";
+import { prisma } from "@/lib/prisma";
+import { enqueueEmail } from "@/lib/notifications";
 
-function isAuthorized(req: NextRequest): boolean {
+/**
+ * Higiene diária (1.5.15). Chamada pelo Cron Trigger do Worker (custom-worker.ts) às 9h de Brasília,
+ * ou à mão com o `CRON_SECRET` no cabeçalho (`x-cron-secret` ou `Authorization: Bearer`).
+ * O segredo na URL (`?cron_secret=`) não é aceito aqui.
+ */
+export async function POST(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    // Secret not configured: deny in prod, allow only in test or explicit flag
-    if (process.env.NODE_ENV === "test" || process.env.ALLOW_CRON_WITHOUT_SECRET === "true") return true;
-    return false;
+  if (!secret) return NextResponse.json({ error: "cron_secret_not_configured" }, { status: 503 });
+  if (!requestHasSecret(req, secret, { headerOnly: true })) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  // Bearer <secret> | plain secret | x-cron-secret | ?cron_secret= (comparação em tempo constante)
-  return requestHasSecret(req, secret);
+  const appUrl = process.env.APP_URL || req.nextUrl.origin;
+  try {
+    const summary = await runHygiene(prisma, { enqueue: enqueueEmail, appUrl, renewSecret: process.env.RENEW_LINK_SECRET });
+    console.log("[higiene]", JSON.stringify(summary));
+    return NextResponse.json({ ok: true, ...summary }, { status: 200 });
+  } catch (e) {
+    console.error("[higiene] falhou:", e instanceof Error ? `${e.name}: ${e.message}` : e);
+    return NextResponse.json({ error: "hygiene_failed" }, { status: 500 });
+  }
 }
 
 export async function GET(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret && process.env.NODE_ENV !== "test" && process.env.ALLOW_CRON_WITHOUT_SECRET !== "true") {
-    return NextResponse.json({ error: "cron_secret_not_configured" }, { status: 503 });
-  }
-  if (!isAuthorized(req)) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
-  const nowParam = req.nextUrl.searchParams.get("now");
-  const now = nowParam ? new Date(nowParam) : new Date();
-  const summary = await runHygieneCron(now);
-  return NextResponse.json({ ok: true, ...summary }, { status: 200 });
-}
-
-// n8n pode usar POST também
-export async function POST(req: NextRequest) {
-  return GET(req);
+  return POST(req);
 }
 
 export const dynamic = "force-dynamic";

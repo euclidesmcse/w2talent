@@ -1,6 +1,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"main": ".open-next/worker.js",
+	// custom-worker.ts = app do OpenNext + Cron diário + consumidor da fila (1.5.15)
+	"main": "custom-worker.ts",
 	"name": "w2talent",
 	"observability": { "enabled": true },
 	// IA (1.5.7): toda chamada passa pelo AI Gateway "w2talent" (não são segredos).
@@ -8,7 +9,19 @@
 	"vars": {
 		"AI_GATEWAY_ACCOUNT_ID": "8ec1a59d6df85f5a8702e3843cbf83ef",
 		"AI_GATEWAY_ID": "w2talent",
-		"AI_DAILY_BUDGET_USD": "1"
+		"AI_DAILY_BUDGET_USD": "1",
+		// E-mails (1.5.15): "teste" manda tudo só para EMAIL_TEST_TO (Secret); "real" só depois de verificar o domínio no Resend.
+		"EMAIL_MODE": "teste",
+		"EMAIL_FROM": "W2Talent <avisos@w2talent.com>",
+		// Endereço usado nos links dos e-mails ("Continuo procurando").
+		"APP_URL": "https://w2talent.euclidespns.workers.dev"
+	},
+	// Higiene diária às 12:00 UTC = 9h de Brasília (custom-worker.ts → /api/cron/hygiene).
+	"triggers": { "crons": ["0 12 * * *"] },
+	// Fila dos e-mails: o Cron produz, o próprio Worker consome e envia pelo Resend.
+	"queues": {
+		"producers": [{ "binding": "NOTIFICACOES", "queue": "notificacoes" }],
+		"consumers": [{ "queue": "notificacoes", "max_batch_size": 10, "max_batch_timeout": 30, "max_retries": 10 }]
 	},
 	// Não apaga as variáveis criadas no painel quando o deploy publica as de cima.
 	"keep_vars": true,
