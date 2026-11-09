@@ -19,6 +19,10 @@ export type Embedder = (texts: string[]) => Promise<number[][]>;
 export const routerEmbedder: Embedder = async (texts) => {
   const { getAiRouter } = await import("./ai");
   const out = await getAiRouter().embed("embed", texts);
+  // Os vetores guardados e o cache são do bge-m3; outro modelo (rota ou fallback) não é comparável.
+  if (out.model !== EMBEDDING_MODEL) {
+    throw new Error(`embedding veio de ${out.model}; a busca só aceita ${EMBEDDING_MODEL}`);
+  }
   return out.vectors;
 };
 

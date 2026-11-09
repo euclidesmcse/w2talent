@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { renewIdempotent, validateVacancy, normalizeVacancyStack, normalizeDescricaoBullets } from "@/lib/vacancy";
 import { vacancyExpiresAt } from "@/lib/hygiene";
 import { runInBackground } from "@/lib/background";
-import { indexVacancy } from "@/lib/indexing";
+import { indexVacancy, markForReindex } from "@/lib/indexing";
 
 function parseIdFromUrl(req: NextRequest): string {
   const parts = new URL(req.url).pathname.split("/").filter(Boolean);
@@ -120,7 +120,8 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
         tipoContrato: body.tipoContrato ?? undefined,
       },
     });
-    // 1.5.9: refaz o vetor só se o texto da vaga mudou (hash).
+    // 1.5.9: marca como pendente (o reindex pega se o vetor falhar) e refaz em segundo plano.
+    await markForReindex("vacancy", updated.id, { db: prisma }).catch(() => {});
     runInBackground("reindexar vaga", () => indexVacancy(updated.id));
     return NextResponse.json({ ...updated, id: updated.id }, { status: 200 });
   } catch (e: any) {

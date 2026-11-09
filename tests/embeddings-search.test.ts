@@ -6,8 +6,8 @@ import {
   EMBEDDING_MODEL,
   type Embedder,
 } from "../lib/embeddings";
-import { indexVacancy, indexCandidate, indexPending, EMBED_BATCH } from "../lib/indexing";
-import { queryVector, buildVacancySearchSql, normalizeQuery } from "../lib/search-db";
+import { indexVacancy, indexCandidate, indexPending, markForReindex, EMBED_BATCH } from "../lib/indexing";
+import { queryVector, buildVacancySearchSql, normalizeQuery, searchVacanciesDb } from "../lib/search-db";
 import { createRouter, type AiStore } from "../lib/ai/router";
 import { encryptApiKey } from "../lib/ai/keys";
 
@@ -115,6 +115,16 @@ describe("indexação com hash (decisão 5)", () => {
     expect(calls).toHaveLength(0);
   });
 
+  it("salvar marca como pendente; o reindex procura hash vazio", async () => {
+    const { db, executed } = fakeDb(() => []);
+    await markForReindex("vacancy", "v1", { db });
+    expect(executed[0].sql).toMatch(/"embeddingHash" = NULL, "searchVector" = NULL/);
+    const seen: string[] = [];
+    const { db: db2 } = fakeDb((sql) => (seen.push(sql), /count\(\*\)/.test(sql) ? [{ n: 0 }] : []));
+    await indexPending("candidate", 5, { db: db2, embed: fakeEmbedder().embed });
+    expect(seen.every((q) => /"embeddingHash" IS NULL/.test(q))).toBe(true);
+  });
+
   it("pendentes: manda em lotes e diz quantos faltam", async () => {
     const rows = Array.from({ length: 23 }, (_, i) => ({ ...vaga, key: `v${i}` }));
     const { embed, calls } = fakeEmbedder();
@@ -176,6 +186,14 @@ describe("vetor da busca: cache de 7 dias e limite de 1,2 s (decisão 3)", () =>
 
   it("normaliza maiúsculas e espaços", () => {
     expect(normalizeQuery("  Cloud   AWS ")).toBe("cloud aws");
+  });
+
+  it("página além do fim: mantém o total", async () => {
+    const { db } = fakeDb((_sql, values) => (values.includes(40) ? [] : [{ _total: BigInt(12), _rank: 0, _tsRank: 0, _vecRank: 0 }]));
+    const r = await searchVacanciesDb({ page: 3, pageSize: 20 }, { db });
+    expect(r.items).toHaveLength(0);
+    expect(r.total).toBe(12);
+    expect(r.hasAny).toBe(true);
   });
 
   it("sem texto buscado: lista os mais recentes, sem nota", () => {

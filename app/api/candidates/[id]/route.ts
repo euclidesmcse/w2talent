@@ -54,7 +54,8 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
         .catch(() => {});
       try {
         // Texto já entra na busca na hora; o vetor (bge-m3) vem em segundo plano (1.5.9).
-        await prisma.$executeRaw`UPDATE "CandidateProfile" SET "searchVector" = to_tsvector('portuguese', ${tsvector}) WHERE "userId" = ${params.id}`;
+        // Hash zerado = pendente: se o vetor falhar, o reindex pega depois.
+        await prisma.$executeRaw`UPDATE "CandidateProfile" SET "searchVector" = to_tsvector('portuguese', ${tsvector}), "embeddingHash" = NULL WHERE "userId" = ${params.id}`;
       } catch {}
       runInBackground("indexar perfil", () => indexCandidate(params.id));
     } catch {}

@@ -194,8 +194,14 @@ async function run(kind: "vacancy" | "candidate", p: DbSearchParams, opts: DbSea
   const vec = await queryVector(p.q, opts);
   const sql = kind === "vacancy" ? buildVacancySearchSql(p, vec) : buildCandidateSearchSql(p, vec);
   const rows = await opts.db.$queryRaw<Record<string, any>[]>(sql);
-  const total = rows.length ? Number(rows[0]._total) : 0;
-  let hasAny = rows.length > 0;
+  let total = rows.length ? Number(rows[0]._total) : 0;
+  if (!rows.length && p.page > 1) {
+    // Página além do fim (ex.: itens expiraram): o total vem da primeira página.
+    const first = kind === "vacancy" ? buildVacancySearchSql({ ...p, page: 1, pageSize: 1 }, vec) : buildCandidateSearchSql({ ...p, page: 1, pageSize: 1 }, vec);
+    const head = await opts.db.$queryRaw<{ _total: bigint | number }[]>(first);
+    total = head.length ? Number(head[0]._total) : 0;
+  }
+  let hasAny = total > 0;
   if (!hasAny) {
     const any =
       kind === "vacancy"

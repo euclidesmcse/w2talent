@@ -44,11 +44,11 @@ const KINDS = {
       SELECT id AS key, titulo, nivel, regime, localidade, "tipoContrato", stack, "descricaoBullets",
              "embeddingHash", "embeddingModel", (embedding IS NULL) AS "semVetor"
       FROM "Vacancy"
-      WHERE status = 'ativa' AND (embedding IS NULL OR "embeddingModel" IS DISTINCT FROM ${EMBEDDING_MODEL})
+      WHERE status = 'ativa' AND (embedding IS NULL OR "embeddingHash" IS NULL OR "embeddingModel" IS DISTINCT FROM ${EMBEDDING_MODEL})
       ORDER BY "updatedAt" DESC LIMIT ${limit}`,
     countPending: (db: Db) => db.$queryRaw<{ n: bigint | number }[]>`
       SELECT count(*) AS n FROM "Vacancy"
-      WHERE status = 'ativa' AND (embedding IS NULL OR "embeddingModel" IS DISTINCT FROM ${EMBEDDING_MODEL})`,
+      WHERE status = 'ativa' AND (embedding IS NULL OR "embeddingHash" IS NULL OR "embeddingModel" IS DISTINCT FROM ${EMBEDDING_MODEL})`,
     save: (db: Db, key: string, vec: string, ts: string, hash: string) => db.$executeRaw`
       UPDATE "Vacancy" SET embedding = ${vec}::vector, "searchVector" = to_tsvector('portuguese', ${ts}),
              "embeddingModel" = ${EMBEDDING_MODEL}, "embeddingHash" = ${hash}, "embeddedAt" = now()
@@ -65,11 +65,11 @@ const KINDS = {
       SELECT "userId" AS key, titulo, "resumo3linhas", "objetivoCrescimento", localidade, modo, stack,
              "embeddingHash", "embeddingModel", (embedding IS NULL) AS "semVetor"
       FROM "CandidateProfile"
-      WHERE status = 'ativo' AND (embedding IS NULL OR "embeddingModel" IS DISTINCT FROM ${EMBEDDING_MODEL})
+      WHERE status = 'ativo' AND (embedding IS NULL OR "embeddingHash" IS NULL OR "embeddingModel" IS DISTINCT FROM ${EMBEDDING_MODEL})
       ORDER BY "updatedAt" DESC LIMIT ${limit}`,
     countPending: (db: Db) => db.$queryRaw<{ n: bigint | number }[]>`
       SELECT count(*) AS n FROM "CandidateProfile"
-      WHERE status = 'ativo' AND (embedding IS NULL OR "embeddingModel" IS DISTINCT FROM ${EMBEDDING_MODEL})`,
+      WHERE status = 'ativo' AND (embedding IS NULL OR "embeddingHash" IS NULL OR "embeddingModel" IS DISTINCT FROM ${EMBEDDING_MODEL})`,
     save: (db: Db, key: string, vec: string, ts: string, hash: string) => db.$executeRaw`
       UPDATE "CandidateProfile" SET embedding = ${vec}::vector, "searchVector" = to_tsvector('portuguese', ${ts}),
              "embeddingModel" = ${EMBEDDING_MODEL}, "embeddingHash" = ${hash}, "embeddedAt" = now()
@@ -107,6 +107,20 @@ async function indexOne(kind: IndexKind, key: string, opts: IndexOptions): Promi
   if (!rows[0]) return "nao_encontrado";
   const n = await indexRows(kind, rows, db, opts.embed, opts.force ?? false);
   return n > 0 ? "indexado" : "igual";
+}
+
+/**
+ * Marca o registro como pendente ao salvar, antes da indexação em segundo plano.
+ * Se o vetor novo falhar (ex.: orçamento esgotado), o reindex o encontra depois.
+ * Na vaga também apaga o tsvector antigo: até reindexar, a busca usa o texto atual.
+ */
+export async function markForReindex(kind: IndexKind, key: string, opts: { db?: Db } = {}): Promise<void> {
+  const db = opts.db ?? (await defaultDb());
+  if (kind === "vacancy") {
+    await db.$executeRaw`UPDATE "Vacancy" SET "embeddingHash" = NULL, "searchVector" = NULL WHERE id = ${key}`;
+  } else {
+    await db.$executeRaw`UPDATE "CandidateProfile" SET "embeddingHash" = NULL WHERE "userId" = ${key}`;
+  }
 }
 
 /** Indexa uma vaga pelo id. Não pede vetor se o texto não mudou. */
