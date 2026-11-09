@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateForPublish, publishDraft, buildTsvectorText } from "@/lib/cv-extract";
+import { runInBackground } from "@/lib/background";
+import { indexCandidate } from "@/lib/indexing";
 
 export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const params = await ctx.params;
@@ -51,10 +53,11 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
         })
         .catch(() => {});
       try {
-        const embeddingLiteral = `[${published.embedding.join(",")}]`;
-        // I4: parameterized raw query — evita $executeRawUnsafe + string interpolation
-        await prisma.$executeRaw`UPDATE "CandidateProfile" SET "searchVector" = to_tsvector('portuguese', ${tsvector}), embedding = ${embeddingLiteral}::vector WHERE "userId" = ${params.id}`;
+        // Texto já entra na busca na hora; o vetor (bge-m3) vem em segundo plano (1.5.9).
+        // Hash zerado = pendente: se o vetor falhar, o reindex pega depois.
+        await prisma.$executeRaw`UPDATE "CandidateProfile" SET "searchVector" = to_tsvector('portuguese', ${tsvector}), "embeddingHash" = NULL WHERE "userId" = ${params.id}`;
       } catch {}
+      runInBackground("indexar perfil", () => indexCandidate(params.id));
     } catch {}
 
     return NextResponse.json(
@@ -62,7 +65,6 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
         id: params.id,
         ativo: published.draft,
         draft: published.draft,
-        embedding: published.embedding,
         tsvector: published.tsvector,
         status: "ativo",
       },

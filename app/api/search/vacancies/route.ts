@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchVacancies, PAGE_SIZE } from "@/lib/search";
 import { isValidLocale, defaultLocale, type Locale } from "@/i18n";
-import { generateEmbedding } from "@/lib/embeddings";
 
 export async function GET(req: NextRequest) {
   const start = Date.now();
@@ -14,13 +13,10 @@ export async function GET(req: NextRequest) {
   const nivel = url.searchParams.get("nivel") ?? undefined;
   const faixaDe = url.searchParams.get("faixaDe") ? Number(url.searchParams.get("faixaDe")) : null;
   const faixaAte = url.searchParams.get("faixaAte") ? Number(url.searchParams.get("faixaAte")) : null;
-  // lang no embedding query (Task 10): ?lang=en => multilingual-e5 query lang
   const langRaw = url.searchParams.get("lang") ?? req.headers.get("x-locale") ?? defaultLocale;
   const lang: Locale = isValidLocale(langRaw) ? langRaw : defaultLocale;
-  try {
-    await generateEmbedding(q ?? "", { lang });
-  } catch {}
 
+  // lang: idioma da resposta; o vetor da busca (bge-m3) é o mesmo nos três idiomas.
   const params = { q, page, pageSize, regime, localidade, nivel, faixaDe, faixaAte, lang } as any;
 
   // hybrid tsvector + pgvector where status=ativo only handled inside searchVacancies

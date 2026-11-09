@@ -238,7 +238,16 @@ export function createRouter(store: AiStore, env: RouterEnv) {
     embed(task: TaskName, texts: string[], opts: CallOptions = {}) {
       if (TASKS[task].kind !== "embed") throw new Error(`${task} não é tarefa de embeddings`);
       const chars = texts.reduce((n, t) => n + t.length, 0);
-      return attempt<EmbedResult>(task, opts, chars, (ctx) => callEmbed(ctx, texts), () => 0, (c) => supportsEmbeddings(c.kind));
+      const spec = TASKS[task];
+      return attempt<EmbedResult>(
+        task,
+        opts,
+        chars,
+        // Mesmo cuidado do chat: fornecedor externo em tarefa com dados pessoais recebe o texto sem contatos.
+        (ctx, external) => callEmbed(ctx, external && "personalData" in spec && spec.personalData ? texts.map(redactContacts) : texts),
+        () => 0,
+        (c) => supportsEmbeddings(c.kind),
+      );
     },
   };
 }

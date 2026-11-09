@@ -108,9 +108,12 @@ model CandidateProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // busca
-  searchVector Unsupported("tsvector")?
-  embedding    Unsupported("vector(1024)")?
+  // busca (1.5.9: vetor do bge-m3; índices HNSW/GIN criados na migração, fora do Prisma)
+  searchVector   Unsupported("tsvector")?
+  embedding      Unsupported("vector(1024)")?
+  embeddingModel String?
+  embeddingHash  String?
+  embeddedAt     DateTime?
 
   consentLogs  ConsentLog[]
   applications Application[]
@@ -144,8 +147,12 @@ model Vacancy {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
-  searchVector Unsupported("tsvector")?
-  embedding    Unsupported("vector(1024)")?
+  // busca (1.5.9: vetor do bge-m3; índices HNSW/GIN criados na migração, fora do Prisma)
+  searchVector   Unsupported("tsvector")?
+  embedding      Unsupported("vector(1024)")?
+  embeddingModel String?
+  embeddingHash  String?
+  embeddedAt     DateTime?
 
   applications Application[]
 
@@ -295,4 +302,15 @@ model AiInteraction {
 
   @@index([createdAt])
   @@index([tarefa, createdAt])
+}
+
+// ── Cache dos vetores de busca (1.5.9) ───────────────────────────────
+// Vetor de cada texto buscado, por 7 dias. Guarda só o hash do texto, nunca o texto.
+model QueryEmbedding {
+  hash      String                      @id
+  model     String
+  embedding Unsupported("vector(1024)")
+  createdAt DateTime                    @default(now())
+
+  @@index([createdAt])
 }
