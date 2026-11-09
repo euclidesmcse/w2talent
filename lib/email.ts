@@ -86,3 +86,13 @@ export async function sendEmail(msg: EmailMessage, env: EmailEnv): Promise<SendR
   const tentarDeNovo = res.status === 429 || res.status >= 500;
   return { status: "falhou", http: res.status, codigo, tentarDeNovo };
 }
+
+/** Espera antes de tentar de novo. O limite do dia do Resend zera à meia-noite UTC: espera até lá
+ *  (a fila aceita no máximo 12 h de espera e guarda a mensagem por 24 h; o Cron das 12:00 UTC cabe nisso). */
+export function retryDelay(codigo: string | undefined, http: number, now: Date = new Date()): number {
+  if (codigo === "daily_quota_exceeded") {
+    const meiaNoite = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 5);
+    return Math.min(43200, Math.max(60, Math.ceil((meiaNoite - now.getTime()) / 1000)));
+  }
+  return http === 429 ? 60 : 300;
+}

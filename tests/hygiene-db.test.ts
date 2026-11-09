@@ -139,6 +139,30 @@ describeDb("Higiene no banco", () => {
     expect(amanha.emails.enfileirados).toBe(2);
   });
 
+  it("muitos já avisados não escondem um pendente (páginas)", async () => {
+    const exp = new Date(NOW.getTime() - 5 * DAY);
+    await db.candidateProfile.createMany({
+      data: Array.from({ length: 600 }, (_, i) => ({
+        id: `a${String(i).padStart(4, "0")}`,
+        userId: `arq${i}`,
+        nome: "x",
+        titulo: "x",
+        objetivoCrescimento: "x",
+        celular: "+55",
+        email: `arq${i}@gmail.com`,
+        expiresAt: exp,
+        status: "arquivado" as const,
+        arquivadoEm: NOW,
+      })),
+    });
+    const ciclo = new Date(exp.getTime() - CANDIDATE_TTL_DAYS * DAY).toISOString().slice(0, 10);
+    await db.hygieneEvent.createMany({ data: Array.from({ length: 600 }, (_, i) => ({ userId: `arq${i}`, marco: "D180", date: ciclo, createdAt: new Date(NOW.getTime() - 2 * DAY) })) });
+    await perfil("zz150", 150, { id: "zzzz" });
+    const r = await runHygiene(db, deps());
+    expect(r.emails.enfileirados).toBe(1);
+    expect(fila[0].to).toBe("zz150@gmail.com");
+  });
+
   it("falha ao enfileirar libera a reserva para o próximo Cron", async () => {
     await perfil("u150", 150);
     const r = await runHygiene(db, deps({ enqueue: async () => { throw new Error("fila fora"); } }));

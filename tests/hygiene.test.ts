@@ -19,7 +19,7 @@ import {
 } from "../lib/hygiene";
 import { signRenewToken, verifyRenewToken } from "../lib/renew-token";
 import { renderHygieneEmail, emailLocale } from "../lib/email-templates";
-import { sendEmail, type EmailMessage } from "../lib/email";
+import { retryDelay, sendEmail, type EmailMessage } from "../lib/email";
 
 const DAY = 24 * 60 * 60 * 1000;
 const SECRET = "x".repeat(40);
@@ -176,6 +176,15 @@ describe("Envio pelo Resend", () => {
     expect(await sendEmail(msg, { apiKey: "k", mode: "real", fetch: fakeFetch(429, { name: "daily_quota_exceeded" }).f })).toEqual({ status: "falhou", http: 429, codigo: "daily_quota_exceeded", tentarDeNovo: true });
     expect((await sendEmail(msg, { apiKey: "k", mode: "real", fetch: fakeFetch(503, {}).f })) as { tentarDeNovo: boolean }).toMatchObject({ tentarDeNovo: true });
     expect((await sendEmail(msg, { apiKey: "k", mode: "real", fetch: fakeFetch(403, { name: "validation_error" }).f })) as { tentarDeNovo: boolean }).toMatchObject({ tentarDeNovo: false });
+  });
+});
+
+describe("Espera da fila antes de tentar de novo", () => {
+  it("limite do dia espera a meia-noite UTC (máx. 12 h); 429 1 min; resto 5 min", () => {
+    expect(retryDelay("daily_quota_exceeded", 429, new Date("2026-11-09T12:05:00Z"))).toBe(43200);
+    expect(retryDelay("daily_quota_exceeded", 429, new Date("2026-11-09T20:00:00Z"))).toBe(4 * 3600 + 300);
+    expect(retryDelay("rate_limit_exceeded", 429)).toBe(60);
+    expect(retryDelay(undefined, 503)).toBe(300);
   });
 });
 

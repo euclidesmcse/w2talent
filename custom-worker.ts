@@ -4,7 +4,7 @@
  */
 // @ts-ignore -- gerado por `opennextjs-cloudflare build`
 import { default as handler } from "./.open-next/worker.js";
-import { sendEmail, type EmailMessage } from "./lib/email";
+import { retryDelay, sendEmail, type EmailMessage } from "./lib/email";
 
 type Env = Record<string, unknown> & {
   CRON_SECRET?: string;
@@ -24,6 +24,7 @@ function isEmail(b: unknown): b is EmailMessage & { tipo: "email" } {
 }
 
 const pausa = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 
 export default {
   fetch: handler.fetch,
@@ -51,9 +52,9 @@ export default {
       }
       const r = await sendEmail(msg.body, emailEnv);
       if (r.status === "falhou" && r.tentarDeNovo) {
-        // 429 (limite): espera 1 min; falha do Resend ou de rede: 5 min.
+        // Limite do dia: até a meia-noite UTC; 429 por segundo: 1 min; falha do Resend ou de rede: 5 min.
         console.warn(`[fila] envio falhou (${r.http}${r.codigo ? ` ${r.codigo}` : ""}), nova tentativa ${msg.attempts + 1}`);
-        msg.retry({ delaySeconds: r.http === 429 ? 60 : 300 });
+        msg.retry({ delaySeconds: retryDelay(r.codigo, r.http) });
       } else {
         if (r.status === "falhou") console.error(`[fila] envio recusado (${r.http}${r.codigo ? ` ${r.codigo}` : ""}); não será repetido.`);
         msg.ack();

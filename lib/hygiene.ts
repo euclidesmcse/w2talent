@@ -126,17 +126,18 @@ export async function runHygiene(db: PrismaClient, deps: HygieneDeps): Promise<H
 
   // 3) Arquivados há 30 dias ou mais: apaga de vez (candidaturas e consentimentos vão em cascata).
   const limite = new Date(now.getTime() - PURGE_AFTER_ARCHIVED_DAYS * DAY);
-  const apagar = await db.candidateProfile.findMany({
-    where: { status: "arquivado", arquivadoEm: { lte: limite } },
-    select: { id: true, userId: true },
-    take: 500,
-  });
-  if (apagar.length) {
-    const [, del] = await db.$transaction([
-      db.hygieneEvent.deleteMany({ where: { userId: { in: apagar.map((a) => a.userId) } } }),
-      db.candidateProfile.deleteMany({ where: { id: { in: apagar.map((a) => a.id) } } }),
-    ]);
-    summary.perfisApagados = del.count;
+  // A condição é conferida no próprio DELETE: quem renovou pelo link um instante antes não é apagado.
+  const apagados = await db.$queryRaw<{ userId: string }[]>`
+    DELETE FROM "CandidateProfile"
+    WHERE "id" IN (
+      SELECT "id" FROM "CandidateProfile"
+      WHERE "status" = 'arquivado' AND "arquivadoEm" <= ${limite}
+      LIMIT 500
+    ) AND "status" = 'arquivado' AND "arquivadoEm" <= ${limite}
+    RETURNING "userId"`;
+  if (apagados.length) {
+    await db.hygieneEvent.deleteMany({ where: { userId: { in: apagados.map((a) => a.userId) } } });
+    summary.perfisApagados = apagados.length;
   }
 
   // 4) E-mails: lembretes D150/D165/D175 e aviso D180.
@@ -148,31 +149,44 @@ export async function runHygiene(db: PrismaClient, deps: HygieneDeps): Promise<H
   const jaHoje = await db.hygieneEvent.count({ where: { marco: { in: EMAIL_MARCOS }, createdAt: { gte: inicioDoDia } } });
   let restante = Math.max(0, cap - jaHoje);
 
-  const perfis = await db.candidateProfile.findMany({
-    where: {
-      OR: [
-        { status: "ativo", expiresAt: { gt: now, lte: new Date(now.getTime() + (CANDIDATE_TTL_DAYS - CANDIDATE_NUDGE_DAYS[0]) * DAY) } },
-        { status: "arquivado" },
-      ],
-    },
-    select: { userId: true, nome: true, email: true, idiomaOriginal: true, expiresAt: true, status: true, arquivadoEm: true },
-    orderBy: { expiresAt: "asc" },
-    take: 2000,
-  });
-  const devidos = perfis
-    .map((p) => {
-      const marco: Marco | null = p.status === "arquivado" ? "D180" : dueNudge(p.expiresAt, now);
-      return marco ? { p, marco, ciclo: todayKey(candidateCycleStart(p.expiresAt)) } : null;
-    })
-    .filter((x): x is NonNullable<typeof x> => !!x && !isPlaceholderEmail(x.p.email));
-  if (!devidos.length) return summary;
-
-  const feitos = await db.hygieneEvent.findMany({
-    where: { userId: { in: devidos.map((d) => d.p.userId) }, marco: { in: EMAIL_MARCOS } },
-    select: { userId: true, marco: true, date: true },
-  });
-  const feito = new Set(feitos.map((e) => `${e.userId}|${e.marco}|${e.date}`));
-  const pendentes = devidos.filter((d) => !feito.has(`${d.p.userId}|${d.marco}|${d.ciclo}`));
+  // Percorre em páginas: quem já foi avisado ou tem e-mail de exemplo não pode tomar o lugar dos pendentes.
+  type Perfil = { userId: string; nome: string; email: string; idiomaOriginal: string; expiresAt: Date; status: string; arquivadoEm: Date | null; id: string };
+  const pendentes: { p: Perfil; marco: Marco; ciclo: string }[] = [];
+  let cursor: string | undefined;
+  for (let pagina = 0; pagina < 40; pagina++) {
+    const perfis: Perfil[] = await db.candidateProfile.findMany({
+      where: {
+        OR: [
+          { status: "ativo", expiresAt: { gt: now, lte: new Date(now.getTime() + (CANDIDATE_TTL_DAYS - CANDIDATE_NUDGE_DAYS[0]) * DAY) } },
+          { status: "arquivado" },
+        ],
+      },
+      select: { id: true, userId: true, nome: true, email: true, idiomaOriginal: true, expiresAt: true, status: true, arquivadoEm: true },
+      orderBy: { id: "asc" },
+      take: 500,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    });
+    if (!perfis.length) break;
+    cursor = perfis[perfis.length - 1].id;
+    const devidos = perfis
+      .map((p) => {
+        const marco: Marco | null = p.status === "arquivado" ? "D180" : dueNudge(p.expiresAt, now);
+        return marco ? { p, marco, ciclo: todayKey(candidateCycleStart(p.expiresAt)) } : null;
+      })
+      .filter((x): x is NonNullable<typeof x> => !!x && !isPlaceholderEmail(x.p.email));
+    if (devidos.length) {
+      const feitos = await db.hygieneEvent.findMany({
+        where: { userId: { in: devidos.map((d) => d.p.userId) }, marco: { in: EMAIL_MARCOS } },
+        select: { userId: true, marco: true, date: true },
+      });
+      const feito = new Set(feitos.map((e) => `${e.userId}|${e.marco}|${e.date}`));
+      pendentes.push(...devidos.filter((d) => !feito.has(`${d.p.userId}|${d.marco}|${d.ciclo}`)));
+    }
+    if (perfis.length < 500) break;
+  }
+  if (!pendentes.length) return summary;
+  // Mais urgente primeiro: quem sai da busca antes.
+  pendentes.sort((a, b) => a.p.expiresAt.getTime() - b.p.expiresAt.getTime());
 
   const base = deps.appUrl.replace(/\/+$/, "");
   for (const { p, marco, ciclo } of pendentes) {
