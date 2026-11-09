@@ -21,10 +21,13 @@
     "minhasCandidaturas": "My applications",
     "minhasCandidaturasCurto": "Applications",
     "recrutadores": "For recruiters",
-    "verVagas": "See jobs",
     "recrutadoresCurto": "Recruiters",
     "minhaFicha": "My profile",
-    "minhaFichaCurto": "Profile"
+    "minhaFichaCurto": "Profile",
+    "paraCandidatos": "For candidates",
+    "areaRecrutadores": "Recruiters",
+    "areaAdmin": "Admin",
+    "ia": "AI"
   },
   "lang": {
     "label": "Language",
@@ -33,7 +36,7 @@
     "es": "Español"
   },
   "home": {
-    "title": "Apply to many jobs at once, without losing control",
+    "title": "Apply to <destaque>many jobs at once</destaque>, without losing control",
     "lead": "You find the jobs, review each one and approve it. W2Talent sends a batch with only the ones you approved, plus a profile summary a recruiter understands in seconds.",
     "ctaBuscar": "Search jobs",
     "ctaRecrutador": "I'm a recruiter",
@@ -251,7 +254,6 @@
   },
   "admin": {
     "title": "AI Admin",
-    "area": "Admin",
     "intro": "Register AI APIs, test the models and see which model does each task.",
     "loading": "Loading…",
     "logout": "Sign out",

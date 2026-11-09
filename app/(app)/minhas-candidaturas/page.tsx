@@ -22,7 +22,6 @@ const STATUS_KEYS = ["enviado", "visualizado", "respondido", "arquivado"] as con
 
 export default function MinhasCandidaturasPage() {
   const t = useTranslations("minhas");
-  const tn = useTranslations("nav");
   const statusLabel = (s: string) => ((STATUS_KEYS as readonly string[]).includes(s) ? t(s as (typeof STATUS_KEYS)[number]) : s);
   const [items, setItems] = React.useState<AppRow[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -75,24 +74,17 @@ export default function MinhasCandidaturasPage() {
     if (candidateId !== undefined) fetchApps();
   }, [fetchApps, candidateId]);
 
-  const nav = [
-    { href: "/vagas", label: tn("vagas") },
-    { href: "/candidatos", label: tn("candidatos") },
-    { href: "/minha-ficha", label: tn("minhaFicha"), short: tn("minhaFichaCurto") },
-    { href: "/minhas-candidaturas", label: tn("minhasCandidaturas"), short: tn("minhasCandidaturasCurto"), active: true },
-  ];
-
   if (loading)
     return (
       <div className="min-h-screen">
-        <AppHeader nav={nav} navLabel={tn("main")} />
+        <AppHeader area="candidato" active="/minhas-candidaturas" />
         <main className="mx-auto max-w-page px-6 py-6 text-muted">{t("loading")}</main>
       </div>
     );
 
   return (
     <div className="min-h-screen">
-      <AppHeader nav={nav} navLabel={tn("main")} />
+      <AppHeader area="candidato" active="/minhas-candidaturas" />
       <main className="minhas-candidaturas mx-auto flex max-w-page flex-col gap-4 px-6 py-6">
         <div>
           <h1 className="text-xl font-semibold">{t("title")}</h1>

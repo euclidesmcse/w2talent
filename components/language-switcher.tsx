@@ -28,7 +28,7 @@ export function LanguageSwitcher() {
         value={locale}
         onChange={(e) => choose(e.target.value)}
         aria-busy={pending}
-        className="h-8 rounded-control border border-line bg-surface px-1.5 text-xs font-semibold text-ink md:hidden"
+        className="relevo-caixa h-8 rounded-control border border-line bg-surface px-1.5 text-xs font-semibold text-ink md:hidden"
       >
         {LOCALES.map((l) => (
           <option key={l} value={l} lang={l} aria-label={t(l)}>
@@ -37,7 +37,7 @@ export function LanguageSwitcher() {
         ))}
       </select>
       {/* Computador: três botões lado a lado */}
-      <div role="group" aria-label={t("label")} className="hidden items-center rounded-control border border-line p-0.5 text-xs font-semibold md:flex" aria-busy={pending}>
+      <div role="group" aria-label={t("label")} className="relevo-caixa hidden items-center rounded-control border border-line p-0.5 text-xs font-semibold md:flex" aria-busy={pending}>
         {LOCALES.map((l) => (
           <button
             key={l}

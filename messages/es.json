@@ -21,10 +21,13 @@
     "minhasCandidaturas": "Mis postulaciones",
     "minhasCandidaturasCurto": "Postulaciones",
     "recrutadores": "Para reclutadores",
-    "verVagas": "Ver empleos",
     "recrutadoresCurto": "Reclutadores",
     "minhaFicha": "Mi ficha",
-    "minhaFichaCurto": "Ficha"
+    "minhaFichaCurto": "Ficha",
+    "paraCandidatos": "Para candidatos",
+    "areaRecrutadores": "Reclutadores",
+    "areaAdmin": "Admin",
+    "ia": "IA"
   },
   "lang": {
     "label": "Idioma",
@@ -33,7 +36,7 @@
     "es": "Español"
   },
   "home": {
-    "title": "Postúlate a varios empleos a la vez, sin perder el control",
+    "title": "Postúlate a <destaque>varios empleos a la vez</destaque>, sin perder el control",
     "lead": "Tú encuentras los empleos, revisas cada uno y lo apruebas. W2Talent envía en lote solo los que aprobaste, con un resumen de tu perfil que el reclutador entiende en segundos.",
     "ctaBuscar": "Buscar empleos",
     "ctaRecrutador": "Soy reclutador",
@@ -251,7 +254,6 @@
   },
   "admin": {
     "title": "Admin de IA",
-    "area": "Admin",
     "intro": "Registra las APIs de IA, prueba los modelos y mira qué modelo hace cada tarea.",
     "loading": "Cargando…",
     "logout": "Salir",

@@ -13,3 +13,72 @@
   h1, h2, h3 { letter-spacing: -0.01em; }
   :focus-visible { outline: 2px solid #1F4FD8; outline-offset: 2px; }
 }
+
+/* Visual com relevo (versão C, escolhida pelo Euclides em 2026-11-09).
+   Mesmo espírito do logo: luz no topo, sombra azul embaixo e o ciano da marca.
+   Onde há texto branco sobre gradiente, a ponta ciano é a escura (#0E7490) para manter o contraste AA. */
+@layer components {
+  .relevo-primario {
+    position: relative; isolation: isolate; overflow: hidden;
+    background-image: linear-gradient(180deg, #2A5CE6 0%, #1F4FD8 55%, #1A45C2 100%);
+    border: 1px solid #1838A8;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(10,30,100,.35), 0 1px 0 #1838A8, 0 6px 16px -6px rgba(31,79,216,.55);
+    transition: transform .18s cubic-bezier(.2,.7,.2,1), box-shadow .18s cubic-bezier(.2,.7,.2,1);
+  }
+  .relevo-primario::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -1; pointer-events: none;
+    background: linear-gradient(135deg, rgba(34,211,238,0) 40%, rgba(34,211,238,.45) 100%); opacity: .7; transition: opacity .18s;
+  }
+  .relevo-primario::after {
+    content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; z-index: -1; pointer-events: none;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,.28), transparent); transform: skewX(-18deg);
+  }
+  .relevo-primario:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 -2px 0 rgba(10,30,100,.35), 0 2px 0 #1838A8, 0 12px 24px -8px rgba(31,79,216,.6), 0 0 0 4px rgba(34,211,238,.12);
+  }
+  .relevo-primario:hover:not(:disabled)::before { opacity: 1; }
+  .relevo-primario:hover:not(:disabled)::after { left: 120%; transition: left .6s cubic-bezier(.2,.7,.2,1); }
+  .relevo-primario:active:not(:disabled) { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(10,30,100,.35), 0 2px 6px -2px rgba(31,79,216,.5); }
+
+  .relevo-secundario {
+    background-image: linear-gradient(180deg, #FFFFFF, #E6ECFA);
+    border-color: #C9D4F2;
+    box-shadow: inset 0 1px 0 #fff, 0 4px 12px -4px rgba(31,79,216,.45);
+    transition: transform .18s cubic-bezier(.2,.7,.2,1), box-shadow .18s cubic-bezier(.2,.7,.2,1);
+  }
+  .relevo-secundario:hover:not(:disabled) { transform: translateY(-1px); box-shadow: inset 0 1px 0 #fff, 0 8px 18px -6px rgba(31,79,216,.5); }
+  .relevo-secundario:active:not(:disabled) { transform: translateY(1px); box-shadow: inset 0 1px 3px rgba(31,79,216,.25); }
+
+  .relevo-chip {
+    background-image: linear-gradient(135deg, #1F4FD8, #0E7490);
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 3px 8px -3px rgba(31,79,216,.6);
+  }
+
+  .relevo-pilula {
+    border-radius: 9999px; padding: 4px 10px;
+    background-image: linear-gradient(180deg, #FFFFFF, #E9EEFB);
+    box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(17,24,39,.15), 0 0 0 1px #D6DEF5;
+    transition: transform .18s cubic-bezier(.2,.7,.2,1), box-shadow .18s cubic-bezier(.2,.7,.2,1);
+  }
+  .relevo-pilula:hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 #fff, 0 4px 10px -4px rgba(31,79,216,.45), 0 0 0 1px #C9D4F2; }
+  .relevo-pilula[aria-current="page"] { box-shadow: inset 0 1px 0 #fff, 0 3px 8px -3px rgba(31,79,216,.5), 0 0 0 1px #9DB2EE; }
+
+  .relevo-caixa { background-image: linear-gradient(180deg, #FFFFFF, #E9EEFB); box-shadow: 0 2px 6px -2px rgba(31,79,216,.4); }
+
+  .relevo-cartao { box-shadow: 0 18px 40px -16px rgba(31,79,216,.35), 0 0 0 1px rgba(34,211,238,.22); }
+
+  .relevo-barra { background-image: linear-gradient(90deg, #1F4FD8, #0891B2); box-shadow: 0 0 8px rgba(34,211,238,.7); }
+
+  .relevo-texto {
+    background-image: linear-gradient(90deg, #1F4FD8, #0E7490);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .relevo-primario, .relevo-primario::after, .relevo-secundario, .relevo-pilula { transition: none; }
+  .relevo-primario:hover:not(:disabled), .relevo-primario:active:not(:disabled),
+  .relevo-secundario:hover:not(:disabled), .relevo-secundario:active:not(:disabled), .relevo-pilula:hover { transform: none; }
+}

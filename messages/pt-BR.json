@@ -21,10 +21,13 @@
     "minhasCandidaturas": "Minhas candidaturas",
     "minhasCandidaturasCurto": "Candidaturas",
     "recrutadores": "Para recrutadores",
-    "verVagas": "Ver vagas",
     "recrutadoresCurto": "Recrutadores",
     "minhaFicha": "Minha ficha",
-    "minhaFichaCurto": "Ficha"
+    "minhaFichaCurto": "Ficha",
+    "paraCandidatos": "Para candidatos",
+    "areaRecrutadores": "Recrutadores",
+    "areaAdmin": "Admin",
+    "ia": "IA"
   },
   "lang": {
     "label": "Idioma",
@@ -33,7 +36,7 @@
     "es": "Español"
   },
   "home": {
-    "title": "Candidate-se a várias vagas de uma vez, sem perder o controle",
+    "title": "Candidate-se a <destaque>várias vagas de uma vez</destaque>, sem perder o controle",
     "lead": "Você encontra as vagas, confere cada uma e aprova. O W2Talent envia em lote só as que você aprovou, com um resumo do seu perfil que o recrutador entende em segundos.",
     "ctaBuscar": "Buscar vagas",
     "ctaRecrutador": "Sou recrutador",
@@ -251,7 +254,6 @@
   },
   "admin": {
     "title": "Admin de IA",
-    "area": "Admin",
     "intro": "Cadastre as APIs de IA, teste os modelos e veja qual modelo faz cada tarefa.",
     "loading": "Carregando…",
     "logout": "Sair",

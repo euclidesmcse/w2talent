@@ -247,3 +247,4 @@ Esta cópia veio de https://github.com/heydamir/unslop (commit 97daa3e, 2026-11-
 - **`animate-pulse` em esqueleto de carregamento é permitido** (é estado de carregamento de verdade).
 - **Gate de qualidade no CI:** Lighthouse + axe nos três idiomas. Cuidado com CLS no celular.
 - **Scripts opcionais.** `scripts/snapshot.mjs` e `scripts/story.mjs` precisam de Playwright (e ffmpeg para o vídeo), que não são dependências do projeto. Não adicionar ao `package.json`; rodar só quando pedido.
+- **Visual com relevo é escolha do Euclides (2026-11-09), não é slop.** Botões, menu em pílulas, etiquetas da marca, cartões e barra de match usam as classes `relevo-*` de `app/globals.css` (gradiente azul → ciano, sombra azul, efeitos ao passar o mouse). Não remover sem OK dele.
