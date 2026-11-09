@@ -48,7 +48,7 @@ export function CandidateCards({
           const isSelected = selectedSet.has(rid);
         const emailRaw = row.email ?? row.contato?.email ?? "";
         const telRaw = row.celular ?? row.telefone ?? row.contato?.celular ?? "";
-        const contatoMascarado = [emailRaw ? maskEmail(emailRaw) : "", telRaw ? maskPhone(telRaw) : ""].filter(Boolean).join(" · ");
+        const contatoMascarado = [row.emailMasked ?? (emailRaw ? maskEmail(emailRaw) : ""), row.celularMasked ?? (telRaw ? maskPhone(telRaw) : "")].filter(Boolean).join(" · ");
         const regime = Array.isArray(row.regimePreferido) ? row.regimePreferido.join(", ") : row.regimePreferido ?? "";
         return (
           <li

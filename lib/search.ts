@@ -48,7 +48,7 @@ export type SearchResult<T> = {
 export type RankedItem<T> = T & { _rank: number; _tsRank: number; _vecRank: number };
 
 export { maskEmail, maskPhone, formatFaixa, formatTempo, truncateSkills, skillsDisplay } from "./format";
-import { maskEmail, maskPhone, formatFaixa, formatTempo, truncateSkills, skillsDisplay } from "./format";
+import { maskEmail, maskPhone, maskedContact, formatFaixa, formatTempo, truncateSkills, skillsDisplay } from "./format";
 
 // ── tsvector helper ──────────────────────────────────────────────────
 export function buildTsvectorTextVacancy(v: any): string {
@@ -399,6 +399,23 @@ export function searchVacancies(params: SearchParams, dataSource?: any[]): Promi
   return searchKind("vacancy", params, dataSource);
 }
 
-export function searchCandidates(params: SearchParams, dataSource?: any[]): Promise<SearchResult<any>> {
-  return searchKind("candidate", params, dataSource);
+/**
+ * Perfil como sai na busca: sem e-mail e celular completos, só as versões mascaradas
+ * (emailMasked, celularMasked). O contato completo só sai pelo contato aprovado.
+ */
+export function withoutContacts<T extends Record<string, any>>(row: T) {
+  const { email, celular, telefone, contato, ...rest } = row as Record<string, any>;
+  return {
+    ...rest,
+    ...maskedContact({
+      email: email ?? contato?.email,
+      celular: celular ?? contato?.celular,
+      telefone: telefone ?? contato?.telefone,
+    }),
+  };
+}
+
+export async function searchCandidates(params: SearchParams, dataSource?: any[]): Promise<SearchResult<any>> {
+  const r = await searchKind("candidate", params, dataSource);
+  return { ...r, items: r.items.map(withoutContacts) };
 }

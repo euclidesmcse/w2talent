@@ -192,7 +192,7 @@ describe("Contato RH em Lote — Task 8 (1 Template + Preview)", () => {
       expect(typeof search.maskEmail).toBe("function");
       expect(typeof search.maskPhone).toBe("function");
       expect(search.maskEmail("cand@example.com")).toMatch(/\*\*\*.*🔒/);
-      expect(search.maskPhone("+5511999999999")).toMatch(/\*\*\*.*🔒/);
+      expect(search.maskPhone("+5511999999999")).toMatch(/^\+•+99 🔒$/);
 
       seedCandidates(1);
       mod.clearAllForTests?.();
