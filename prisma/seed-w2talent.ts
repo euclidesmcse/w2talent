@@ -37,7 +37,8 @@ async function main() {
         faixaDe: v.faixaDe, faixaAte: v.faixaAte, faixaMoeda: "BRL",
         descricaoBullets: [v.titulo], status: "ativa", expiresAt: future, renovacoes: 0,
       },
-      update: {},
+      // Rodar o seed de novo renova as vagas de exemplo por mais 14 dias (e reativa as arquivadas).
+      update: { status: "ativa", expiresAt: future },
     });
   }
   console.log("[seed] vacancies", vacancies.length);
@@ -60,7 +61,8 @@ async function main() {
         ...(DEMO_FICHAS[c.userId] as any),
       },
       // Ficha W2 de exemplo (1.5.11) também nos candidatos de demonstração que já existem.
-      update: { ...(DEMO_FICHAS[c.userId] as any) },
+      // e renova o prazo de 180 dias (reativando quem a higiene arquivou).
+      update: { ...(DEMO_FICHAS[c.userId] as any), status: "ativo", arquivadoEm: null, expiresAt: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000) },
     });
   }
   console.log("[seed] candidates", candidates.length);
