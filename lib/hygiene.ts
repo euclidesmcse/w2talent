@@ -197,6 +197,14 @@ export async function runHygiene(db: PrismaClient, deps: HygieneDeps): Promise<H
     // Reserva o envio (o índice único impede duplicar se dois Crons rodarem juntos).
     const reservado = await db.hygieneEvent.createMany({ data: [{ userId: p.userId, marco, date: ciclo, createdAt: now }], skipDuplicates: true });
     if (reservado.count === 0) continue;
+    // Confere o total do dia depois de reservar: se outra execução rodou junto e o limite estourou, devolve a vaga.
+    const totalHoje = await db.hygieneEvent.count({ where: { marco: { in: EMAIL_MARCOS }, createdAt: { gte: inicioDoDia } } });
+    if (totalHoje > cap) {
+      await db.hygieneEvent.deleteMany({ where: { userId: p.userId, marco, date: ciclo } });
+      restante = 0;
+      summary.emails.ficamParaAmanha++;
+      continue;
+    }
     const dias =
       marco === "D180"
         ? PURGE_AFTER_ARCHIVED_DAYS - daysSince(p.arquivadoEm ?? now, now)

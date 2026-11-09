@@ -139,6 +139,14 @@ describeDb("Higiene no banco", () => {
     expect(amanha.emails.enfileirados).toBe(2);
   });
 
+  it("duas execuções ao mesmo tempo não passam do limite do dia", async () => {
+    for (let i = 0; i < 8; i++) await perfil(`p${i}`, 155);
+    const [a, b] = await Promise.all([runHygiene(db, deps({ dailyCap: 5 })), runHygiene(db, deps({ dailyCap: 5 }))]);
+    expect(a.emails.enfileirados + b.emails.enfileirados).toBeLessThanOrEqual(5);
+    expect(fila.length).toBeLessThanOrEqual(5);
+    expect(await db.hygieneEvent.count()).toBe(fila.length);
+  });
+
   it("muitos já avisados não escondem um pendente (páginas)", async () => {
     const exp = new Date(NOW.getTime() - 5 * DAY);
     await db.candidateProfile.createMany({
