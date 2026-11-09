@@ -21,10 +21,13 @@
     "minhasCandidaturas": "My applications",
     "minhasCandidaturasCurto": "Applications",
     "recrutadores": "For recruiters",
-    "verVagas": "See jobs",
     "recrutadoresCurto": "Recruiters",
     "minhaFicha": "My profile",
-    "minhaFichaCurto": "Profile"
+    "minhaFichaCurto": "Profile",
+    "paraCandidatos": "For candidates",
+    "areaRecrutadores": "Recruiters",
+    "areaAdmin": "Admin",
+    "ia": "AI"
   },
   "lang": {
     "label": "Language",
@@ -251,7 +254,6 @@
   },
   "admin": {
     "title": "AI Admin",
-    "area": "Admin",
     "intro": "Register AI APIs, test the models and see which model does each task.",
     "loading": "Loading…",
     "logout": "Sign out",

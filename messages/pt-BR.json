@@ -21,10 +21,13 @@
     "minhasCandidaturas": "Minhas candidaturas",
     "minhasCandidaturasCurto": "Candidaturas",
     "recrutadores": "Para recrutadores",
-    "verVagas": "Ver vagas",
     "recrutadoresCurto": "Recrutadores",
     "minhaFicha": "Minha ficha",
-    "minhaFichaCurto": "Ficha"
+    "minhaFichaCurto": "Ficha",
+    "paraCandidatos": "Para candidatos",
+    "areaRecrutadores": "Recrutadores",
+    "areaAdmin": "Admin",
+    "ia": "IA"
   },
   "lang": {
     "label": "Idioma",
@@ -251,7 +254,6 @@
   },
   "admin": {
     "title": "Admin de IA",
-    "area": "Admin",
     "intro": "Cadastre as APIs de IA, teste os modelos e veja qual modelo faz cada tarefa.",
     "loading": "Carregando…",
     "logout": "Sair",

@@ -39,7 +39,7 @@ export default function RenovarPage() {
 
   return (
     <>
-      <AppHeader />
+      <AppHeader area="publico" />
       <main className="mx-auto max-w-lg px-4 py-12">
         <Card>
           <CardBody className="space-y-4 p-6">

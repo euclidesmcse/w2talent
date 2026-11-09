@@ -8,24 +8,12 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const t = await getTranslations("home");
-  const tn = await getTranslations("nav");
   const ts = await getTranslations("status");
   const PASSOS = [1, 2, 3, 4].map((n) => ({ n: String(n), titulo: t(`step${n}Title`), texto: t(`step${n}Text`) }));
   const PERGUNTAS = [1, 2, 3, 4].map((n) => ({ p: t(`faq${n}q`), r: t(`faq${n}a`) }));
   return (
     <div className="min-h-screen">
-      <AppHeader
-        nav={[
-          { href: "/vagas", label: tn("vagas") },
-          { href: "/candidatos", label: tn("recrutadores"), short: tn("recrutadoresCurto") },
-        ]}
-        navLabel={tn("main")}
-        right={
-          <Link href="/vagas" className={buttonClasses("secondary", "sm", "hover:no-underline")}>
-            {tn("verVagas")}
-          </Link>
-        }
-      />
+      <AppHeader area="publico" />
 
       <main className="mx-auto flex max-w-page flex-col gap-16 px-6 py-12 md:py-16">
         <section className="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
