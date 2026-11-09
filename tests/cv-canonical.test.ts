@@ -217,3 +217,24 @@ Formação: Sistemas de Informação — USP
     });
   });
 });
+
+describe("extractSkillsFromText não inventa competências", () => {
+  it("palavras comuns e pedaços de outros nomes não viram skill", () => {
+    const texto =
+      "Rua das Flores, Rés-do-Chão. Whatsapp +351. Soluções Azure e AWS com PowerShell e GitHub Actions. " +
+      "Apoio consultivo, Zero Trust, Private Link, Recovery Services Vault, Elastic Beanstalk, Windows 2012 R2, " +
+      "microsegmentação, guardrails, relatórios, players da AWS, ExpressRoute, monólitos, nesta etapa, Microsoft Foundry.";
+    const ids = extractSkillsFromText(texto);
+    for (const falso of ["sap", "digitalocean", "ant", "solana", "git", "shell", "consul", "rust", "chainlink", "vault",
+      "elasticsearch", "cloudflare-r2", "segment", "rails", "ios-native", "play-framework", "express", "lit", "nestjs", "cardano"]) {
+      expect(ids).not.toContain(falso);
+    }
+    expect(ids).toEqual(expect.arrayContaining(["azure", "aws", "powershell", "github-actions"]));
+  });
+
+  it("nomes ambíguos contam escritos como a tecnologia", () => {
+    expect(extractSkillsFromText("Consultor SAP e Swift para iOS")).toEqual(expect.arrayContaining(["sap", "swift", "ios-native"]));
+    expect(extractSkillsFromText("o sap da árvore, swift ruby")).not.toEqual(expect.arrayContaining(["sap"]));
+    expect(extractSkillsFromText("Golang, C++ e C# no backend")).toEqual(expect.arrayContaining(["go", "cpp", "csharp"]));
+  });
+});

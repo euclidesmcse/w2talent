@@ -26,6 +26,26 @@ function aiBinding(): AiBinding | undefined {
   return cf?.env?.AI;
 }
 
+/**
+ * O toMarkdown abre o PDF com "# <nome do arquivo>", uma seção "## Metadata" e só depois
+ * "## Contents", com "### Page N" entre as páginas. Fica só o conteúdo: o nome do arquivo
+ * virava cargo ("FULANO CV (1).") e os metadados não são do CV.
+ */
+export function stripToMarkdownWrapper(md: string, fileName: string): string {
+  let out = md;
+  const contents = /^#{1,6}\s*Contents\s*$/im.exec(out);
+  if (contents) out = out.slice(contents.index + contents[0].length);
+  else {
+    const first = out.match(/^\s*#\s+(.+)\n/);
+    const base = fileName.trim().replace(/\.[a-z0-9]+$/i, "");
+    const titulo = first?.[1].trim() ?? "";
+    if (first && (titulo === fileName.trim() || titulo === base || /\.(pdf|docx?|odt|html?)$/i.test(titulo))) {
+      out = out.slice(first[0].length);
+    }
+  }
+  return out.replace(/^#{1,6}\s*Page\s+\d+\s*$/gim, "");
+}
+
 /** Remove a marcação Markdown mais comum para o extrator receber texto corrido. */
 export function markdownToPlain(md: string): string {
   return md
@@ -54,5 +74,5 @@ export async function docToText(
   if (!res || res.format !== "markdown" || !res.data) {
     throw new Error(res?.error ?? "não foi possível ler o arquivo");
   }
-  return markdownToPlain(res.data);
+  return markdownToPlain(stripToMarkdownWrapper(res.data, fileName));
 }

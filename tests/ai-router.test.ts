@@ -87,6 +87,25 @@ describe("adaptadores", () => {
     expect(r).toEqual({ text: "ok", tokensIn: 4, tokensOut: 1 });
   });
 
+  it("Workers AI: GLM vai com o raciocínio desligado (senão gasta o max_tokens e volta vazio)", async () => {
+    const run = jest.fn(async (..._a: unknown[]) => ({ choices: [{ message: { content: "{}" } }] }));
+    await callChat(ctx({ kind: "WORKERS_AI", model: "@cf/zai-org/glm-4.7-flash", ai: { run } }), {
+      messages: [{ role: "user", content: "oi" }],
+      json: true,
+    });
+    expect(run.mock.calls[0][1]).toMatchObject({ chat_template_kwargs: { enable_thinking: false }, response_format: { type: "json_object" } });
+    const outro = jest.fn(async (..._a: unknown[]) => ({ response: "ok" }));
+    await callChat(ctx({ kind: "WORKERS_AI", model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast", ai: { run: outro } }), { messages: [{ role: "user", content: "oi" }] });
+    expect(outro.mock.calls[0][1]).not.toHaveProperty("chat_template_kwargs");
+  });
+
+  it("Workers AI: resposta vazia cortada pelo limite diz isso no erro", async () => {
+    const run = jest.fn(async () => ({ choices: [{ message: { content: null }, finish_reason: "length" }] }));
+    await expect(
+      callChat(ctx({ kind: "WORKERS_AI", model: "@cf/zai-org/glm-4.7-flash", ai: { run } }), { messages: [{ role: "user", content: "oi" }] }),
+    ).rejects.toThrow("limite de tokens");
+  });
+
   it("Workers AI: ainda aceita o formato antigo { response }", async () => {
     const run = jest.fn(async () => ({ response: "ok" }));
     const r = await callChat(ctx({ kind: "WORKERS_AI", model: "x", ai: { run } }), { messages: [{ role: "user", content: "oi" }] });

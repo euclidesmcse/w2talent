@@ -25,19 +25,30 @@ async function runSafe(ctx: CallContext, inputs: Record<string, unknown>): Promi
   }
 }
 
+/** Modelos do Workers AI com raciocínio ligado por padrão e desligável por chat_template_kwargs. */
+export function pensaPorPadrao(model: string): boolean {
+  return /^@cf\/zai-org\/glm-/i.test(model);
+}
+
 export async function chat(ctx: CallContext, req: ChatRequest): Promise<ChatResult> {
   const inputs: Record<string, unknown> = { messages: req.messages };
   if (req.maxTokens) inputs.max_tokens = req.maxTokens;
   if (req.temperature !== undefined) inputs.temperature = req.temperature;
   if (req.json) inputs.response_format = { type: "json_object" };
+  // Modelos que "pensam" antes de responder (GLM-4.7 Flash) gastam o max_tokens no raciocínio e
+  // devolvem content vazio. Nas nossas tarefas a resposta é direta, então o raciocínio fica desligado.
+  if (pensaPorPadrao(ctx.model)) inputs.chat_template_kwargs = { enable_thinking: false };
   const out = (await runSafe(ctx, inputs)) as {
     response?: unknown;
-    choices?: { message?: { content?: unknown } }[];
+    choices?: { message?: { content?: unknown }; finish_reason?: string }[];
     usage?: { prompt_tokens?: number; completion_tokens?: number };
   };
   // Modelos antigos respondem { response }; os novos (GLM, Gemma 4…), no formato do OpenAI { choices }.
   const raw = out?.response ?? out?.choices?.[0]?.message?.content;
-  if (raw === undefined || raw === null || raw === "") throw new AiProviderError("Workers AI respondeu sem texto");
+  if (raw === undefined || raw === null || raw === "") {
+    const corte = out?.choices?.[0]?.finish_reason === "length" ? " (limite de tokens)" : "";
+    throw new AiProviderError(`Workers AI respondeu sem texto${corte}`);
+  }
   const text = typeof raw === "string" ? raw : JSON.stringify(raw);
   return { text, tokensIn: out.usage?.prompt_tokens, tokensOut: out.usage?.completion_tokens };
 }
