@@ -52,7 +52,6 @@ function montarFicha(f: Ficha, rows: SkillRow[]): Ficha {
 
 export default function MinhaFichaPage() {
   const t = useTranslations("ficha");
-  const tr = useTranslations();
   const locale = useLocale();
   const [r, setR] = React.useState<Rascunho>({ passo: "enviar", ficha: fichaVazia(), skills: [], w2: null, aceite: false });
   const [carregado, setCarregado] = React.useState(false);
@@ -224,11 +223,6 @@ export default function MinhaFichaPage() {
     irPara("enviar");
   }
 
-  const nav = [
-    { href: "/vagas", label: tr("nav.vagas") },
-    { href: "/minha-ficha", label: tr("nav.minhaFicha"), short: tr("nav.minhaFichaCurto"), active: true },
-    { href: "/minhas-candidaturas", label: tr("nav.minhasCandidaturas"), short: tr("nav.minhasCandidaturasCurto") },
-  ];
   const passos: [Passo, string][] = [
     ["enviar", t("passoEnviar")],
     ["conferir", t("passoConferir")],
@@ -249,7 +243,7 @@ export default function MinhaFichaPage() {
 
   return (
     <>
-      <AppHeader navLabel={tr("nav.main")} nav={nav} />
+      <AppHeader area="candidato" active="/minha-ficha" />
       <main className="mx-auto max-w-3xl px-4 pb-16 pt-6 md:px-6">
         <h1 className="text-xl font-semibold">{t("title")}</h1>
         <p className="mt-1 text-sm text-muted">{t("subtitle")}</p>

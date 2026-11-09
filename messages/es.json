@@ -21,10 +21,13 @@
     "minhasCandidaturas": "Mis postulaciones",
     "minhasCandidaturasCurto": "Postulaciones",
     "recrutadores": "Para reclutadores",
-    "verVagas": "Ver empleos",
     "recrutadoresCurto": "Reclutadores",
     "minhaFicha": "Mi ficha",
-    "minhaFichaCurto": "Ficha"
+    "minhaFichaCurto": "Ficha",
+    "paraCandidatos": "Para candidatos",
+    "areaRecrutadores": "Reclutadores",
+    "areaAdmin": "Admin",
+    "ia": "IA"
   },
   "lang": {
     "label": "Idioma",
@@ -251,7 +254,6 @@
   },
   "admin": {
     "title": "Admin de IA",
-    "area": "Admin",
     "intro": "Registra las APIs de IA, prueba los modelos y mira qué modelo hace cada tarea.",
     "loading": "Cargando…",
     "logout": "Salir",

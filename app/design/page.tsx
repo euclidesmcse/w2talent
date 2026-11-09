@@ -40,7 +40,7 @@ export default function DesignPage() {
 
   return (
     <div className="min-h-screen">
-      <AppHeader area="Design system" />
+      <AppHeader suffix="Design system" />
       <main className="mx-auto flex max-w-page flex-col gap-8 px-6 py-8">
         <div>
           <h1 className="text-[32px] font-semibold leading-tight tracking-[-0.02em]">Design system v2</h1>

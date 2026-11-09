@@ -117,7 +117,8 @@ export default function AdminIaPage() {
   return (
     <>
       <AppHeader
-        area={t("area")}
+        area="admin"
+        active="/admin/ia"
         right={auth === "ok" ? <Button variant="secondary" size="sm" onClick={logout}>{t("logout")}</Button> : null}
       />
       <main className="mx-auto flex max-w-page flex-col gap-5 px-4 py-6 md:px-6">
