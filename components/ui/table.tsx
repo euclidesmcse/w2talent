@@ -4,7 +4,7 @@ import { cn } from "./cn";
 /** Tabela densa do protótipo: cabeçalho 12px em caixa normal, linhas com borda #F0F1F3, rolagem horizontal no celular. */
 export function Table({ className, minWidth = 560, ...props }: React.TableHTMLAttributes<HTMLTableElement> & { minWidth?: number }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="relative overflow-x-auto">
       <table className={cn("w-full border-collapse text-sm tabular-nums", className)} style={{ minWidth }} {...props} />
     </div>
   );
