@@ -6,6 +6,7 @@
  * significado só reordena, e é esta lista que faz "nuvem" achar "Cloud".
  *
  * Cada grupo lista termos que querem dizer a mesma coisa. Termos de várias palavras valem.
+ * Não há limite de combinações: cada termo vira um grupo "qualquer um destes" na consulta.
  */
 export const EQUIVALENCE_GROUPS: readonly (readonly string[])[] = [
   ["nuvem", "cloud", "nube"],
@@ -24,38 +25,44 @@ export const EQUIVALENCE_GROUPS: readonly (readonly string[])[] = [
   ["observabilidade", "observability", "monitoramento", "monitoring"],
 ];
 
-/** Máximo de variações da busca (evita explosão de combinações). */
-export const MAX_QUERY_VARIANTS = 8;
-
 function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** Termo como palavra inteira (letras com acento contam como letra). */
+/** Termo como palavra inteira (letras com acento contam como letra); captura um "-" antes dele. */
 function termRe(term: string): RegExp {
-  return new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRe(term)}(?=$|[^\\p{L}\\p{N}])`, "u");
+  return new RegExp(`(^|[^\\p{L}\\p{N}-])(-?)${escapeRe(term)}(?=$|[^\\p{L}\\p{N}])`, "u");
 }
 
+export type ExpandedQuery = {
+  /** O texto buscado sem os termos que viraram grupo (vai para websearch_to_tsquery). */
+  rest: string;
+  /** Um grupo por termo encontrado: basta um dos equivalentes aparecer (E entre os grupos). */
+  anyOf: string[][];
+  /** Equivalentes de termos excluídos com "-": nenhum deles pode aparecer. */
+  noneOf: string[];
+};
+
 /**
- * Variações do texto buscado (já normalizado): o original e, para cada termo da lista
- * encontrado, o texto com o termo trocado por cada equivalente. O original vem primeiro.
+ * Separa os termos da lista de equivalências: cada um vira "qualquer um destes" (E entre si),
+ * e um termo excluído ("-cloud") exclui também os equivalentes. Frases entre aspas e "or"
+ * ficam como estão, sem expansão.
  */
-export function queryVariants(q: string): string[] {
-  let variants = [q];
+export function expandQuery(q: string): ExpandedQuery {
+  const out: ExpandedQuery = { rest: q, anyOf: [], noneOf: [] };
+  if (q.includes('"') || /(^|\s)or(\s|$)/.test(q)) return out;
   for (const group of EQUIVALENCE_GROUPS) {
     // Termo mais longo primeiro: "banco de dados" antes de "dados".
-    const found = [...group].sort((a, b) => b.length - a.length).find((t) => termRe(t).test(q));
-    if (!found) continue;
-    const re = termRe(found);
-    const next = [...variants];
-    for (const v of variants) {
-      for (const alt of group) {
-        if (alt === found || next.length >= MAX_QUERY_VARIANTS) continue;
-        const swapped = v.replace(re, (_m, pre: string) => `${pre}${alt}`);
-        if (!next.includes(swapped)) next.push(swapped);
-      }
+    for (const term of [...group].sort((a, b) => b.length - a.length)) {
+      const re = termRe(term);
+      const m = re.exec(out.rest);
+      if (!m) continue;
+      if (m[2] === "-") out.noneOf.push(...group.filter((t) => t !== term));
+      else out.anyOf.push([...group]);
+      // Exclusão continua no texto (o websearch já trata "-cloud"); termo positivo sai do texto.
+      if (m[2] !== "-") out.rest = out.rest.replace(re, (_x, pre: string) => `${pre} `).replace(/\s+/g, " ").trim();
+      break;
     }
-    variants = next;
   }
-  return variants;
+  return out;
 }

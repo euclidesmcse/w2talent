@@ -14,7 +14,7 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { EMBEDDING_DIM, EMBEDDING_MODEL, embeddingHash, generateEmbedding, toVectorLiteral, type Embedder } from "./embeddings";
 import { runInBackground } from "./background";
-import { queryVariants } from "./search-synonyms";
+import { expandQuery } from "./search-synonyms";
 
 type Db = Pick<PrismaClient, "$queryRaw" | "$executeRaw">;
 
@@ -155,11 +155,15 @@ function buildSql(
       LIMIT ${p.pageSize} OFFSET ${offset}`;
   }
 
-  // Texto buscado OU cada variação com equivalentes (nuvem → cloud, nube).
-  const tsq = Prisma.sql`(${Prisma.join(
-    queryVariants(q).map((v) => Prisma.sql`websearch_to_tsquery('portuguese', ${v})`),
-    " || ",
-  )})`;
+  // Termos da lista de equivalências viram "qualquer um destes" (nuvem | cloud | nube), em E
+  // com o resto do texto; um termo excluído ("-cloud") exclui também os equivalentes.
+  const ex = expandQuery(q);
+  const parts: Prisma.Sql[] = [Prisma.sql`websearch_to_tsquery('portuguese', ${ex.rest})`];
+  for (const group of ex.anyOf) {
+    parts.push(Prisma.sql`(${Prisma.join(group.map((t) => Prisma.sql`phraseto_tsquery('portuguese', ${t})`), " || ")})`);
+  }
+  for (const t of ex.noneOf) parts.push(Prisma.sql`!!phraseto_tsquery('portuguese', ${t})`);
+  const tsq = Prisma.sql`(${Prisma.join(parts, " && ")})`;
   const vecExpr = vec
     ? Prisma.sql`CASE WHEN v.embedding IS NULL THEN 0 ELSE 1 - (v.embedding <=> ${toVectorLiteral(vec)}::vector) END`
     : Prisma.sql`0::float8`;
