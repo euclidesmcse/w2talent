@@ -62,38 +62,65 @@ export function emptyDraft(): CvDraft {
 }
 
 /**
+ * Nomes de skill que também são palavras comuns (PT/EN), siglas de cripto ou pedaços de outros
+ * nomes: "do" (DigitalOcean), "ada" (Cardano), "sol", "link", "near", "ant", "shell" (PowerShell),
+ * "elastic" (Elastic Beanstalk), "vault" (Recovery Services Vault)… Nunca contam pelas regras;
+ * a IA, que lê o contexto, ainda pode trazê-las.
+ */
+const SKILL_WORDS_NEVER = new Set([
+  "do", "sol", "ada", "link", "dot", "fil", "atom", "ant", "lit", "play", "nest", "make", "near", "linear",
+  "ens", "ray", "flux", "express", "echo", "fiber", "next", "node", "ui", "ux", "pm", "ga", "rn", "tf", "gpt",
+  "algo", "matic", "eth", "fly", "solid", "less", "lean", "agil", "agile", "sui", "foundry", "elastic",
+  "analytics", "claude", "shell", "segment", "go", "consul", "cosmos", "vault", "spark", "chef", "helm",
+  "envoy", "drone", "feast", "expo", "gin", "apex", "md", "sh", "xd", "unity", "rails", "elm", "nim",
+  "ember", "remix", "hapi", "koa", "sails", "fauna", "torch", "dalle", "kali", "astro", "solr", "aave", "r2",
+]);
+
+/** Contam só escritas exatamente como o nome (ex.: "SAP", "SAS", "OPA", "iOS", "Rust", "Swift"). */
+const SKILL_WORDS_CASE = new Set([
+  "sap", "sas", "opa", "ios", "rust", "swift", "dart", "ruby", "scala", "julia", "perl", "mocha", "chai",
+  "jest", "detox", "ionic", "nomad", "caddy", "java", "lua", "zig", "falco", "keras", "redux", "maven",
+]);
+
+/** Grafia usual de quem só tem a forma minúscula na taxonomia. */
+const SKILL_SPELLING: Record<string, string> = { ios: "iOS" };
+
+/** Nome inteiro: sem letra ou dígito colado antes ou depois ("Whatsapp" não é SAP; "GitHub" não é Git). */
+function wholeWordIndex(text: string, key: string, flags: string): number {
+  const before = /^[\p{L}\p{N}]/u.test(key) ? "(?<![\\p{L}\\p{N}])" : "";
+  const after = /[\p{L}\p{N}]$/u.test(key) ? "(?![\\p{L}\\p{N}])" : "";
+  const m = new RegExp(`${before}${escapeRegExp(key)}${after}`, flags).exec(text);
+  return m ? m.index : -1;
+}
+
+/**
  * Extrai skillIds normalizados a partir de texto livre.
- * Estratégia: para cada skill, verifica se label/id/sinônimo aparece como substring case-insensitive.
- * Ordena por ordem de aparição no texto para top3 relevante.
+ * Estratégia: label/id/sinônimo da taxonomia como palavra inteira (sem diferenciar maiúsculas),
+ * fora as palavras ambíguas acima. Ordena por ordem de aparição no texto para top3 relevante.
  */
 export function extractSkillsFromText(text: string): string[] {
   if (!text || typeof text !== "string") return [];
-  const lower = text.toLowerCase();
   const found: Array<{ id: string; idx: number }> = [];
-  const seen = new Set<string>();
 
   for (const skill of SKILLS) {
-    const keys = [skill.label.toLowerCase(), skill.id.toLowerCase(), ...skill.synonyms.map((s) => s.toLowerCase())];
+    const keys = [skill.label, skill.id, ...skill.synonyms];
     let bestIdx = Infinity;
     for (const k of keys) {
-      if (!k || k.length < 2) continue;
-      // precisa ser substring; para curtos (ex "r", "c") exige word boundary — já filtramos <=1
-      // para skills de 2 chars como "go", "r" etc, exige separador
-      let idx = -1;
-      if (k.length <= 2) {
-        // procura com word boundary simples
-        const re = new RegExp(`(?:^|[^a-z0-9])${escapeRegExp(k)}(?:[^a-z0-9]|$)`, "i");
-        const m = lower.match(re);
-        if (m && m.index != null) idx = m.index;
+      const key = (k ?? "").trim();
+      const lower = key.toLowerCase();
+      if (lower.length < 2 || SKILL_WORDS_NEVER.has(lower)) continue;
+      let idx: number;
+      if (SKILL_WORDS_CASE.has(lower)) {
+        // a grafia minúscula não vale; só a do nome ("SAP", "Rust") ou a de costume ("iOS")
+        const grafia = key === lower ? SKILL_SPELLING[lower] : key;
+        if (!grafia) continue;
+        idx = wholeWordIndex(text, grafia, "u");
       } else {
-        idx = lower.indexOf(k);
+        idx = wholeWordIndex(text, key, "iu");
       }
       if (idx !== -1 && idx < bestIdx) bestIdx = idx;
     }
-    if (bestIdx !== Infinity && !seen.has(skill.id)) {
-      seen.add(skill.id);
-      found.push({ id: skill.id, idx: bestIdx });
-    }
+    if (bestIdx !== Infinity) found.push({ id: skill.id, idx: bestIdx });
   }
   found.sort((a, b) => a.idx - b.idx);
   return found.map((f) => f.id);
@@ -110,7 +137,7 @@ function extractTitulo(text: string): string {
     .filter(Boolean);
   if (lines.length === 0) return "";
   const cargoRe = /engenheiro|analista|desenvolvedor|developer|tech lead|arquiteto|cloud|devops|sre|full.?stack|backend|frontend/i;
-  for (const line of lines.slice(0, 5)) {
+  for (const line of lines.slice(0, 15)) {
     if (cargoRe.test(line)) {
       // Se linha tem "Nome — Cargo", prioriza parte com cargo
       const parts = line.split(/[—\-•|]/).map((p) => p.trim()).filter(Boolean);
@@ -140,7 +167,8 @@ function extractObjetivo(text: string): string {
 }
 
 function extractLocalidade(text: string): string {
-  const m = text.match(/São Paulo|Rio de Janeiro|Belo Horizonte|Brasília|Curitiba|Porto Alegre|Recife|remoto/i);
+  // Só o cabeçalho: uma cidade citada lá embaixo costuma ser de um emprego antigo, não de onde a pessoa mora.
+  const m = text.slice(0, 800).match(/São Paulo|Rio de Janeiro|Belo Horizonte|Brasília|Curitiba|Porto Alegre|Recife|remoto/i);
   return m ? m[0] : "";
 }
 

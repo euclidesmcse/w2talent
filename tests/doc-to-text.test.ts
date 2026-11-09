@@ -1,4 +1,4 @@
-import { docToText, markdownToPlain } from "@/lib/doc-to-text";
+import { docToText, markdownToPlain, stripToMarkdownWrapper } from "@/lib/doc-to-text";
 
 const bytes = (s: string) => new TextEncoder().encode(s).buffer as ArrayBuffer;
 
@@ -42,5 +42,30 @@ describe("docToText (Workers AI toMarkdown)", () => {
 
   it("markdownToPlain tira marcação", () => {
     expect(markdownToPlain("## Título\n`code` __x__")).toBe("Título\ncode x");
+  });
+});
+
+describe("stripToMarkdownWrapper", () => {
+  it("tira o nome do arquivo, os metadados e os marcadores de página do PDF", () => {
+    const md =
+      "# FULANO DE TAL CV (1).pdf\n## Metadata\n- PDFFormatVersion=1.7\n- Author=Fulano\n## Contents\n### Page 1\nFulano de Tal\nArquiteto Cloud\n### Page 2\nExperiência";
+    const out = stripToMarkdownWrapper(md, "FULANO DE TAL CV (1).pdf");
+    expect(out).not.toMatch(/CV \(1\)|Metadata|PDFFormat|Page \d/);
+    expect(out).toContain("Fulano de Tal\nArquiteto Cloud");
+    expect(out).toContain("Experiência");
+  });
+
+  it("sem seção Contents, tira só o título que é o nome do arquivo", () => {
+    expect(stripToMarkdownWrapper("# cv.docx\nAna Souza\nDevOps", "cv.docx").trim()).toBe("Ana Souza\nDevOps");
+    expect(stripToMarkdownWrapper("# Ana Souza\nDevOps", "cv.docx")).toBe("# Ana Souza\nDevOps");
+  });
+
+  it("docToText devolve o CV sem o cabeçalho do toMarkdown", async () => {
+    const ai = {
+      toMarkdown: async () => [
+        { name: "x", format: "markdown" as const, data: "# meu cv.pdf\n## Metadata\n- Title=x\n## Contents\n### Page 1\nAna Souza\n\nDevOps" },
+      ],
+    };
+    expect(await docToText(bytes("%PDF"), "meu cv.pdf", ai)).toBe("Ana Souza\n\nDevOps");
   });
 });

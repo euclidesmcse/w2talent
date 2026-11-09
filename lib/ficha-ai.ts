@@ -13,7 +13,7 @@ import { extractToCanonical } from "./cv-extract";
 import { anosExperiencia, fichaVazia, sanitizeFicha, topSkills, type Ficha, type FichaW2 } from "./ficha";
 import { getSkill } from "./taxonomy";
 
-export const MAX_CV_CHARS = 30_000;
+export const MAX_CV_CHARS = 60_000;
 
 export type ChatFn = (task: "extract_cv" | "ficha_w2", req: ChatRequest) => Promise<ChatResult & { model?: string }>;
 
@@ -73,7 +73,7 @@ export async function lerCv(texto: string, chat: ChatFn | null): Promise<Leitura
       const r = await chat("extract_cv", {
         json: true,
         temperature: 0,
-        maxTokens: 2500,
+        maxTokens: 4000,
         messages: [
           { role: "system", content: EXTRACT_SYSTEM },
           { role: "user", content: redactContacts(bruto) },
@@ -97,6 +97,13 @@ export function nomeDoTexto(texto: string): string {
   return /^[\p{L}][\p{L}'.-]*(?:\s+[\p{L}][\p{L}'.-]*){1,5}$/u.test(linha) && linha.length <= 60 ? linha : "";
 }
 
+/** As regras às vezes levam a linha inteira ("Analista Cloud, AWS, ...") ou, sem achar cargo, o nome. */
+function tituloPorRegras(titulo: string, nome: string): string {
+  const t = titulo.split(/\s*[,|;•–—]\s*/)[0].trim();
+  if (!t || t === "Profissional de TI" || t.toLowerCase() === nome.trim().toLowerCase()) return "";
+  return t;
+}
+
 async function lerPorRegras(texto: string, contatos: ReturnType<typeof contatosDoTexto>): Promise<Ficha> {
   const base = { ...fichaVazia(), nome: nomeDoTexto(texto) };
   try {
@@ -104,8 +111,7 @@ async function lerPorRegras(texto: string, contatos: ReturnType<typeof contatosD
     if (!fallback) {
       return sanitizeFicha({
         ...base,
-        // as regras às vezes levam a linha inteira ("Analista Cloud, AWS, ..."): fica só o cargo.
-        titulo: draft.titulo === "Profissional de TI" ? "" : draft.titulo.split(/\s*[,|;•–—]\s*/)[0],
+        titulo: tituloPorRegras(draft.titulo, base.nome),
         localidade: draft.localidade,
         modo: draft.modo,
         stack: draft.stack.map((s) => ({ skillId: s.skillId, anos: 0 })),
