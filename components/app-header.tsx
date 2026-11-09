@@ -21,14 +21,14 @@ export function AppHeader({ area, active, right, suffix }: { area?: Area; active
           <BrandWordmark suffix={nameKey ? t(nameKey) : suffix} className="sr-only text-[18px] md:not-sr-only" />
         </Link>
         {links.length ? (
-          <nav aria-label={t("main")} className="-my-2 flex min-w-0 flex-1 gap-x-3 overflow-x-auto whitespace-nowrap py-2 text-sm [scrollbar-width:none] md:gap-x-5">
+          <nav aria-label={t("main")} className="-my-2 flex min-w-0 flex-1 gap-x-2 overflow-x-auto whitespace-nowrap px-1 py-2 text-sm [scrollbar-width:none] md:gap-x-3">
             {links.map((n) => (
               <Link
                 key={n.href}
                 href={n.href}
                 data-nav={n.href}
                 aria-current={n.href === active ? "page" : undefined}
-                className={cn("hover:no-underline", n.href === active ? "font-semibold text-ink" : "text-muted hover:text-ink")}
+                className={cn("relevo-pilula hover:no-underline", n.href === active ? "font-semibold text-ink" : "text-muted hover:text-ink")}
               >
                 {n.shortKey ? (
                   <>

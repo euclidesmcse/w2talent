@@ -19,7 +19,7 @@ export default async function HomePage() {
         <section className="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
           <div className="flex flex-col gap-5">
             <h1 className="text-[32px] font-semibold leading-[1.15] tracking-[-0.02em] md:text-[40px]">
-              {t("title")}
+              {t.rich("title", { destaque: (c) => <span className="relevo-texto">{c}</span> })}
             </h1>
             <p className="max-w-[56ch] text-[17px] text-muted">
               {t("lead")}

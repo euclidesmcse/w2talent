@@ -4,7 +4,7 @@ import { cn } from "./cn";
 export type ChipTone = "brand" | "neutral" | "add";
 
 const chipTones: Record<ChipTone, string> = {
-  brand: "bg-brand-soft text-brand-ink",
+  brand: "bg-brand text-white relevo-chip",
   neutral: "bg-neutral-soft text-ink-soft",
   add: "bg-surface text-muted border border-dashed border-[#9CA3AF]",
 };
@@ -28,7 +28,7 @@ export function Chip({
     <span className={cn("inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-[13px] font-medium", chipTones[tone], className)}>
       {children}
       {onRemove ? (
-        <button type="button" onClick={onRemove} aria-label={removeLabel ?? `Remover ${typeof children === "string" ? children : "filtro"}`} className="-mr-1 rounded-full px-1 leading-none hover:bg-black/5">
+        <button type="button" onClick={onRemove} aria-label={removeLabel ?? `Remover ${typeof children === "string" ? children : "filtro"}`} className="-mr-1 rounded-full px-1 leading-none hover:bg-black/10">
           ×
         </button>
       ) : null}
@@ -64,7 +64,7 @@ export function MatchBar({ value, label = "match" }: { value: number; label?: st
   return (
     <span className="inline-flex items-center gap-2 text-[13px] text-muted">
       <span className="inline-block h-1.5 w-20 overflow-hidden rounded-[3px] bg-line" aria-hidden>
-        <span className="block h-1.5 bg-brand" style={{ width: `${v}%` }} />
+        <span className="relevo-barra block h-1.5 bg-brand" style={{ width: `${v}%` }} />
       </span>
       <strong className="font-mono font-medium tabular-nums text-ink">{v}%</strong> {label}
     </span>
