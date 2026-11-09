@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildVacancyPayload, canCreateForCompany, validateVacancy } from "@/lib/vacancy";
 import { vacancyExpiresAt } from "@/lib/hygiene";
+import { runInBackground } from "@/lib/background";
+import { indexVacancy } from "@/lib/indexing";
 
 export async function POST(req: NextRequest) {
   try {
@@ -67,6 +69,9 @@ export async function POST(req: NextRequest) {
           renovacoes: 0,
         },
       });
+      // 1.5.9: vetor + tsvector em segundo plano (a resposta não espera o modelo).
+      const vacancyId = created.id;
+      runInBackground("indexar vaga", () => indexVacancy(vacancyId));
     } catch {
       // fallback sem DB (ex: test sem DATABASE_URL)
       created = {

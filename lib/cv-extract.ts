@@ -2,11 +2,10 @@
  * lib/cv-extract — ingestão CV canônico (Task 3)
  * - parse texto bruto (PDF/DOCX/LinkedIn -> raw string já extraído)
  * - normalização via taxonomy + heuristics
- * - validação objetivoCrescimento, estado draft→ativo, embedding + tsvector no publish
+ * - validação objetivoCrescimento, estado draft→ativo, tsvector no publish (vetor: lib/indexing.ts)
  * Obs: leitura de PDF/DOCX (Workers AI toMarkdown, lib/doc-to-text) fica no ingest — aqui recebe raw text.
  */
 import { normalizeSkill, getSkill, SKILLS } from "./taxonomy";
-import { generateEmbedding, EMBEDDING_DIM } from "./embeddings";
 import { normalizeCelular, isValidCelularBR } from "./auth";
 
 export const FALLBACK_WARNING = "não foi possível extrair, preencha manual";
@@ -278,20 +277,15 @@ export function buildTsvectorText(draft: CvDraft): string {
 }
 
 /**
- * Publica draft -> gera embedding + tsvector.
- * Valida objetivoCrescimento; em produção persistiria no Postgres (pgvector + tsvector).
+ * Publica draft -> valida e monta o texto do tsvector.
+ * O vetor (bge-m3) é gerado depois, em segundo plano, por lib/indexing.ts (1.5.9).
  */
 export async function publishDraft(draft: CvDraft): Promise<{
   draft: CvDraft;
-  embedding: number[];
   tsvector: string;
   status: "ativo";
 }> {
   validateForPublish(draft);
   const tsvector = buildTsvectorText(draft);
-  const embedding = await generateEmbedding(tsvector || draft.titulo || "cv");
-  if (!Array.isArray(embedding) || embedding.length !== EMBEDDING_DIM) {
-    throw httpError(`embedding inválido: esperado ${EMBEDDING_DIM} dims`, 500);
-  }
-  return { draft, embedding, tsvector, status: "ativo" };
+  return { draft, tsvector, status: "ativo" };
 }

@@ -3,8 +3,8 @@ import * as fs from "fs";
 import * as path from "path";
 import {
   hybridSearch,
-  buildHybridQuerySQL,
-  buildCandidateHybridSQL,
+  buildVacancySearchSql,
+  buildCandidateSearchSql,
   buildTsvectorTextVacancy,
   maskEmail,
   maskPhone,
@@ -304,18 +304,23 @@ describe("Busca Semântica + Lista Limpa — Task 5", () => {
       expect(result.tookMs!).toBeLessThan(800);
     });
 
-    it("SQL híbrido contém tsvector + vector where status=ativo only", () => {
-      const sql = buildHybridQuerySQL({ q: "Analista Cloud" });
-      expect(sql.toLowerCase()).toMatch(/tsvector/);
-      expect(sql.toLowerCase()).toMatch(/vector/);
-      expect(sql).toMatch(/status\s*=\s*'ativo'/);
-      expect(sql.toLowerCase()).toMatch(/ts_rank/);
-      expect(sql).toMatch(/LIMIT 20/);
+    it("SQL híbrido contém tsvector + vector, só ativos e não vencidos, 20 por página", () => {
+      const vec = new Array(1024).fill(0.01);
+      const sql = buildVacancySearchSql({ q: "Analista Cloud", page: 1, pageSize: 20 }, vec);
+      expect(sql.sql).toMatch(/ts_rank_cd/);
+      expect(sql.sql).toMatch(/searchVector/);
+      expect(sql.sql).toMatch(/<=>/);
+      expect(sql.sql).toMatch(/v\.status = 'ativa'/);
+      expect(sql.sql).toMatch(/"expiresAt" > now\(\)/);
+      expect(sql.values).toContain(20);
+      // sem vetor (modelo demorou): só texto
+      expect(buildVacancySearchSql({ q: "Analista Cloud", page: 1, pageSize: 20 }, null).sql).not.toMatch(/<=>/);
 
-      const candSql = buildCandidateHybridSQL({ q: "Analista" });
-      expect(candSql.toLowerCase()).toMatch(/tsvector/);
-      expect(candSql.toLowerCase()).toMatch(/vector/);
-      expect(candSql).toMatch(/status\s*=\s*'ativo'/);
+      const candSql = buildCandidateSearchSql({ q: "Analista", page: 2, pageSize: 20 }, vec);
+      expect(candSql.sql).toMatch(/searchVector/);
+      expect(candSql.sql).toMatch(/<=>/);
+      expect(candSql.sql).toMatch(/v\.status = 'ativo'/);
+      expect(candSql.values).toContain(20); // OFFSET da página 2
     });
 
     it("status=ativo only: arquivadas não aparecem", async () => {
@@ -344,7 +349,8 @@ describe("Busca Semântica + Lista Limpa — Task 5", () => {
       const libSrc = fs.readFileSync(path.join(__dirname, "../lib/search.ts"), "utf-8");
       expect(libSrc).toMatch(/HYBRID_WEIGHTS|tsvector.*vector|vector.*tsvector/i);
       expect(libSrc).toMatch(/PAGE_SIZE.*20/);
-      expect(libSrc).toMatch(/generateEmbedding/);
+      const dbSrc = fs.readFileSync(path.join(__dirname, "../lib/search-db.ts"), "utf-8");
+      expect(dbSrc).toMatch(/generateEmbedding/);
     });
   });
 });

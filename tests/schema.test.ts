@@ -51,11 +51,12 @@ describe("Taxonomy — 500 skills + sinônimos", () => {
   });
 });
 
-describe("Embeddings stub", () => {
-  it("gera vetor 1024 dims", async () => {
-    const v = await generateEmbedding("hello");
+describe("Embeddings (1.5.9)", () => {
+  it("gera vetor 1024 dims pelo embedder e recusa vetor de tamanho errado", async () => {
+    const v = await generateEmbedding("hello", { embed: async (t) => t.map(() => new Array(1024).fill(0.1)) });
     expect(v.length).toBe(1024);
     expect(v.length).toBe(EMBEDDING_DIM);
+    await expect(generateEmbedding("hello", { embed: async () => [[1, 2, 3]] })).rejects.toThrow(/1024/);
   });
 });
 

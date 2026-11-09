@@ -9,13 +9,15 @@
  * - faixa null => "—" (hide, não quebra)
  */
 
-import { generateEmbedding, cosineSimilarity, EMBEDDING_DIM } from "./embeddings";
+import { HYBRID_WEIGHTS, searchVacanciesDb, searchCandidatesDb, type DbSearchPage } from "./search-db";
 import { normalizeSkill, SKILLS, getSkill } from "./taxonomy";
 
 // ── Constantes ─────────────────────────────────────────────────────────
 export const PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 20;
-export const HYBRID_WEIGHTS = { tsvector: 0.6, vector: 0.4 };
+// Pesos da nota (0,6 texto + 0,4 significado): definidos em search-db.ts, onde a busca roda no banco.
+export { HYBRID_WEIGHTS };
+export { buildVacancySearchSql, buildCandidateSearchSql } from "./search-db";
 export const P95_BUDGET_MS = 800;
 
 // ── Tipos ──────────────────────────────────────────────────────────────
@@ -176,32 +178,7 @@ export function buildEmptyCTA(suggestion: string | null): string | null {
   return "Tente ajustar os filtros ou buscar por outro termo";
 }
 
-// ── SQL builder (for test assertion: must contain tsvector+vector where status=ativo) ──
-export function buildHybridQuerySQL(params: SearchParams & { embedding?: number[] }): string {
-  const clauses: string[] = [];
-  // MUST contain these keywords for test
-  clauses.push("SELECT * FROM \"Vacancy\"");
-  clauses.push("WHERE status = 'ativo'"); // status=ativo only - also matches candidate
-  clauses.push("AND expiresAt > NOW()");
-  // hybrid rank
-  clauses.push("ORDER BY (ts_rank(searchVector, plainto_tsquery('portuguese', $1)) * 0.6 + (1 - (embedding <=> $2::vector)) * 0.4) DESC");
-  clauses.push("/* tsvector + vector hybrid */");
-  clauses.push("/* cosine similarity */");
-  clauses.push("LIMIT 20 OFFSET $3");
-  return clauses.join(" ");
-}
-
-export function buildCandidateHybridSQL(params: SearchParams & { embedding?: number[] }): string {
-  const clauses: string[] = [];
-  clauses.push("SELECT * FROM \"CandidateProfile\"");
-  clauses.push("WHERE status = 'ativo'");
-  clauses.push("ORDER BY (ts_rank(searchVector, plainto_tsquery('portuguese', $1)) * 0.6 + (1 - (embedding <=> $2::vector)) * 0.4) DESC");
-  clauses.push("/* tsvector + pgvector vector */");
-  clauses.push("LIMIT 20 OFFSET $3");
-  return clauses.join(" ");
-}
-
-// ── Core hybrid search (in-memory, for tests + fallback when DB unavailable) ──
+// ── Busca em memória (testes + dados de demonstração quando o banco está vazio ou fora) ──
 export async function hybridSearch<T extends Record<string, any>>(
   query: string,
   items: T[],
@@ -217,15 +194,6 @@ export async function hybridSearch<T extends Record<string, any>>(
   const page = Math.max(1, opts.page ?? 1);
   const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, opts.pageSize ?? PAGE_SIZE));
   const q = (query ?? "").trim();
-
-  // embedding for query (stub returns zeros, but we call it for contract)
-  let queryEmbedding: number[] | null = null;
-  try {
-    queryEmbedding = await generateEmbedding(q || "vazio");
-    if (!Array.isArray(queryEmbedding) || queryEmbedding.length !== EMBEDDING_DIM) queryEmbedding = null;
-  } catch {
-    queryEmbedding = null;
-  }
 
   // 1. filter status=ativo only — mirrors isSearchableCandidate/Vacancy from lib/hygiene
   // (arquivado/arquivada must be excluded; use those helpers as source of truth when importing)
@@ -284,19 +252,9 @@ export async function hybridSearch<T extends Record<string, any>>(
       const text = opts.buildText(it);
       const stack = opts.getStack ? opts.getStack(it) : (it as any).stack ?? [];
       const ts = tsRank(q, text);
-      // vector cosine: if embedding available, compute against item embedding if exists
-      let vec = 0;
-      const itemEmb = (it as any).embedding;
-      if (queryEmbedding && Array.isArray(itemEmb) && itemEmb.length === EMBEDDING_DIM) {
-        try {
-          vec = Math.max(0, cosineSimilarity(queryEmbedding, itemEmb));
-        } catch {
-          vec = 0;
-        }
-      }
-      // semantic boost as vector proxy when embeddings are zero-stub
-      const boost = semanticBoost(q, stack);
-      if (vec === 0 && boost > 0) vec = boost;
+      // Busca em memória (demonstração e testes): sem vetores, o "significado" é o bônus de categoria.
+      // A busca de verdade, com vetores do bge-m3, roda no banco (search-db.ts).
+      const vec = semanticBoost(q, stack);
 
       const rank = ts * HYBRID_WEIGHTS.tsvector + vec * HYBRID_WEIGHTS.vector;
       return { ...it, _tsRank: ts, _vecRank: vec, _rank: rank };
@@ -356,242 +314,91 @@ export async function hybridSearch<T extends Record<string, any>>(
   };
 }
 
-// ── Public: searchVacancies / searchCandidates (DB-aware fallback) ───────
-export async function searchVacancies(params: SearchParams, dataSource?: any[]): Promise<SearchResult<any>> {
-  // if dataSource provided (tests inject array), use hybridSearch
-  if (Array.isArray(dataSource)) {
-    return hybridSearch(params.q ?? "", dataSource, {
-      buildText: buildTsvectorTextVacancy,
-      getStack: (v) => v.stack ?? [],
-      filters: params,
-      page: params.page,
-      pageSize: params.pageSize,
-    });
-  }
-  // try DB path: build SQL string for audit and then fallback to prisma
-  const q = (params.q ?? "").trim();
-  const page = Math.max(1, params.page ?? 1);
-  const pageSize = Math.min(MAX_PAGE_SIZE, params.pageSize ?? PAGE_SIZE);
-  const offset = (page - 1) * pageSize;
-  let embedding: number[] | null = null;
+// ── Public: searchVacancies / searchCandidates ───────────────────────────
+// Com banco: busca de verdade em SQL (search-db.ts). Banco vazio ou fora do ar: demonstração em memória.
+
+type Kind = "vacancy" | "candidate";
+
+async function demoItems(kind: Kind): Promise<any[]> {
   try {
-    embedding = await generateEmbedding(q || "vazio");
-  } catch {
-    embedding = null;
-  }
-  const sql = buildHybridQuerySQL({ ...params, embedding: embedding ?? undefined });
-  void sql;
-  void offset;
-  // attempt prisma query if available
+    const { vacancyStore, candidateStore } = await import("./proxy");
+    const store = kind === "vacancy" ? vacancyStore : candidateStore;
+    if (store.size > 0) return [...store.values()] as any[];
+  } catch {}
   try {
-    const { prisma } = await import("./prisma");
-    const where: any = { status: "ativa" };
-    if (params.regime) where.regime = { contains: params.regime, mode: "insensitive" };
-    if (params.localidade) where.localidade = { contains: params.localidade, mode: "insensitive" };
-    const items: any[] = await (prisma as any).vacancy
-      .findMany({
-        where,
-        orderBy: { createdAt: "desc" },
-        skip: offset,
-        take: pageSize,
-      })
-      .catch(() => []);
-    // DEMO fallback: se DB vazio mas vacancyStore tem dados (staging sem Postgres), usa in-memory
-    if (items.length === 0) {
-      try {
-        const { vacancyStore } = await import("./proxy");
-        if (vacancyStore.size > 0) {
-          const demoItems = [...vacancyStore.values()] as any[];
-          return hybridSearch(q, demoItems, {
-            buildText: buildTsvectorTextVacancy,
-            getStack: (v) => v.stack ?? [],
-            filters: params,
-            page,
-            pageSize,
-          });
-        }
-      } catch {}
-      try {
-        const { DEMO_VACANCIES } = await import("./demo-data");
-        if (DEMO_VACANCIES.length > 0) {
-          return hybridSearch(q, DEMO_VACANCIES as any, {
-            buildText: buildTsvectorTextVacancy,
-            getStack: (v) => v.stack ?? [],
-            filters: params,
-            page,
-            pageSize,
-          });
-        }
-      } catch {}
-    }
-    if (items.length === 0 && q) {
-      const suggestion = suggestCorrection(q);
-      return {
-        items: [],
-        total: 0,
-        page,
-        pageSize,
-        totalPages: 1,
-        suggestion,
-        emptyCTA: buildEmptyCTA(suggestion),
-        tookMs: 5,
-      };
-    }
-    if (q && items.length > 0) {
-      return hybridSearch(q, items, {
-        buildText: buildTsvectorTextVacancy,
-        getStack: (v) => v.stack ?? [],
-        filters: params,
-        page,
-        pageSize,
-      });
-    }
-    return { items, total: items.length, page, pageSize, totalPages: Math.ceil(items.length / pageSize) || 1, suggestion: null, emptyCTA: null, tookMs: 5 };
+    const { DEMO_VACANCIES, DEMO_CANDIDATES } = await import("./demo-data");
+    return (kind === "vacancy" ? DEMO_VACANCIES : DEMO_CANDIDATES) as any[];
   } catch {
-    // no DB: tenta demo store antes de retornar vazio
-    try {
-      const { vacancyStore } = await import("./proxy");
-      if (vacancyStore.size > 0) {
-        const demoItems = [...vacancyStore.values()] as any[];
-        return hybridSearch(q, demoItems, {
-          buildText: buildTsvectorTextVacancy,
-          getStack: (v) => v.stack ?? [],
-          filters: params,
-          page,
-          pageSize,
-        });
-      }
-    } catch {}
-    try {
-      const { DEMO_VACANCIES } = await import("./demo-data");
-      if (DEMO_VACANCIES.length > 0) {
-        return hybridSearch(q, DEMO_VACANCIES as any, {
-          buildText: buildTsvectorTextVacancy,
-          getStack: (v) => v.stack ?? [],
-          filters: params,
-          page,
-          pageSize,
-        });
-      }
-    } catch {}
-    if (q) {
-      const suggestion = suggestCorrection(q);
-      return {
-        items: [],
-        total: 0,
-        page,
-        pageSize,
-        totalPages: 1,
-        suggestion,
-        emptyCTA: buildEmptyCTA(suggestion),
-        tookMs: 2,
-      };
-    }
-    return { items: [], total: 0, page, pageSize, totalPages: 1, suggestion: null, emptyCTA: null, tookMs: 2 };
+    return [];
   }
 }
 
-export async function searchCandidates(params: SearchParams, dataSource?: any[]): Promise<SearchResult<any>> {
-  if (Array.isArray(dataSource)) {
-    return hybridSearch(params.q ?? "", dataSource, {
-      buildText: buildTsvectorTextCandidate,
-      getStack: (c) => c.stack ?? [],
-      filters: params,
-      page: params.page,
-      pageSize: params.pageSize,
-    });
-  }
-  const q = (params.q ?? "").trim();
+function memorySearch(kind: Kind, params: SearchParams, items: any[], page: number, pageSize: number) {
+  return hybridSearch(params.q ?? "", items, {
+    buildText: kind === "vacancy" ? buildTsvectorTextVacancy : buildTsvectorTextCandidate,
+    getStack: (it) => it.stack ?? [],
+    filters: params,
+    page,
+    pageSize,
+  });
+}
+
+function emptyResult(q: string, page: number, pageSize: number, tookMs: number): SearchResult<any> {
+  const suggestion = q ? suggestCorrection(q) : null;
+  return { items: [], total: 0, page, pageSize, totalPages: 1, suggestion, emptyCTA: q ? buildEmptyCTA(suggestion) : null, tookMs };
+}
+
+async function searchKind(kind: Kind, params: SearchParams, dataSource?: any[]): Promise<SearchResult<any>> {
   const page = Math.max(1, params.page ?? 1);
-  const pageSize = Math.min(MAX_PAGE_SIZE, params.pageSize ?? PAGE_SIZE);
-  const offset = (page - 1) * pageSize;
-  let embedding: number[] | null = null;
+  const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, params.pageSize ?? PAGE_SIZE));
+  // Testes injetam a lista: busca em memória.
+  if (Array.isArray(dataSource)) return memorySearch(kind, params, dataSource, page, pageSize);
+
+  const start = Date.now();
+  const q = (params.q ?? "").trim();
+  let found: DbSearchPage;
   try {
-    embedding = await generateEmbedding(q || "vazio");
-  } catch {
-    embedding = null;
+    const { getPrisma } = await import("./prisma");
+    const dbParams = {
+      q,
+      page,
+      pageSize,
+      regime: params.regime,
+      modo: params.modo,
+      localidade: params.localidade,
+      nivel: params.nivel,
+      faixaDe: params.faixaDe ?? null,
+      faixaAte: params.faixaAte ?? null,
+    };
+    const opts = { db: getPrisma() };
+    found = kind === "vacancy" ? await searchVacanciesDb(dbParams, opts) : await searchCandidatesDb(dbParams, opts);
+  } catch (e) {
+    // Banco fora do ar: mostra a demonstração em vez de uma tela de erro.
+    // eslint-disable-next-line no-console
+    console.error("[busca] banco indisponível:", e instanceof Error ? e.message : e);
+    return memorySearch(kind, params, await demoItems(kind), page, pageSize);
   }
-  const sql = buildCandidateHybridSQL({ ...params, embedding: embedding ?? undefined });
-  void sql;
-  void offset;
-  try {
-    const { prisma } = await import("./prisma");
-    const where: any = { status: "ativo" };
-    if (params.modo) where.modo = { contains: params.modo, mode: "insensitive" };
-    const items: any[] = await (prisma as any).candidateProfile
-      .findMany({ where, orderBy: { updatedAt: "desc" }, skip: offset, take: pageSize })
-      .catch(() => []);
-    if (items.length === 0) {
-      try {
-        const { candidateStore } = await import("./proxy");
-        if (candidateStore.size > 0) {
-          const demoItems = [...candidateStore.values()] as any[];
-          return hybridSearch(q, demoItems, {
-            buildText: buildTsvectorTextCandidate,
-            getStack: (c) => c.stack ?? [],
-            filters: params,
-            page,
-            pageSize,
-          });
-        }
-      } catch {}
-      try {
-        const { DEMO_CANDIDATES } = await import("./demo-data");
-        if (DEMO_CANDIDATES.length > 0) {
-          return hybridSearch(q, DEMO_CANDIDATES as any, {
-            buildText: buildTsvectorTextCandidate,
-            getStack: (c) => c.stack ?? [],
-            filters: params,
-            page,
-            pageSize,
-          });
-        }
-      } catch {}
-    }
-    if (q && items.length > 0) {
-      return hybridSearch(q, items, {
-        buildText: buildTsvectorTextCandidate,
-        getStack: (c) => c.stack ?? [],
-        filters: params,
-        page,
-        pageSize,
-      });
-    }
-    if (items.length === 0 && q) {
-      const suggestion = suggestCorrection(q);
-      return { items: [], total: 0, page, pageSize, totalPages: 1, suggestion, emptyCTA: buildEmptyCTA(suggestion), tookMs: 5 };
-    }
-    return { items, total: items.length, page, pageSize, totalPages: Math.ceil(items.length / pageSize) || 1, suggestion: null, emptyCTA: null, tookMs: 5 };
-  } catch {
-    try {
-      const { candidateStore } = await import("./proxy");
-      if (candidateStore.size > 0) {
-        const demoItems = [...candidateStore.values()] as any[];
-        return hybridSearch(q, demoItems, {
-          buildText: buildTsvectorTextCandidate,
-          getStack: (c) => c.stack ?? [],
-          filters: params,
-          page,
-          pageSize,
-        });
-      }
-    } catch {}
-    try {
-      const { DEMO_CANDIDATES } = await import("./demo-data");
-      if (DEMO_CANDIDATES.length > 0) {
-        return hybridSearch(q, DEMO_CANDIDATES as any, {
-          buildText: buildTsvectorTextCandidate,
-          getStack: (c) => c.stack ?? [],
-          filters: params,
-          page,
-          pageSize,
-        });
-      }
-    } catch {}
-    if (q) {
-      const suggestion = suggestCorrection(q);
-      return { items: [], total: 0, page, pageSize, totalPages: 1, suggestion, emptyCTA: buildEmptyCTA(suggestion), tookMs: 2 };
-    }
-    return { items: [], total: 0, page, pageSize, totalPages: 1, suggestion: null, emptyCTA: null, tookMs: 2 };
-  }
+  // Nenhum registro ativo no banco (staging recém-criado): demonstração.
+  if (!found.hasAny) return memorySearch(kind, params, await demoItems(kind), page, pageSize);
+
+  const tookMs = Date.now() - start;
+  if (found.total === 0) return emptyResult(q, page, pageSize, tookMs);
+  return {
+    items: found.items,
+    total: found.total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(found.total / pageSize)),
+    suggestion: null,
+    emptyCTA: null,
+    tookMs,
+  };
+}
+
+export function searchVacancies(params: SearchParams, dataSource?: any[]): Promise<SearchResult<any>> {
+  return searchKind("vacancy", params, dataSource);
+}
+
+export function searchCandidates(params: SearchParams, dataSource?: any[]): Promise<SearchResult<any>> {
+  return searchKind("candidate", params, dataSource);
 }

@@ -139,13 +139,12 @@ Formação: Sistemas de Informação — USP
       expect(published.draft.stack[0].skillId).toBe("kubernetes");
     });
 
-    it("publish cria pgvector embedding 1024 dims + tsvector não vazio", async () => {
+    it("publish monta o tsvector na hora; o vetor (bge-m3) vem depois, em segundo plano (1.5.9)", async () => {
       const result = await extractToCanonical(pdfText, { consent: { iaReescritaV: true } });
       const draft = { ...result.draft, objetivoCrescimento: "Crescer como Tech Lead Cloud" };
       const published = await publishDraft(draft as any);
-      // embedding 1024
-      expect(Array.isArray(published.embedding)).toBe(true);
-      expect(published.embedding.length).toBe(1024);
+      // o vetor não sai mais na resposta: lib/indexing.ts grava no banco
+      expect((published as any).embedding).toBeUndefined();
       // tsvector text gerado
       expect(typeof published.tsvector).toBe("string");
       expect(published.tsvector.length).toBeGreaterThan(10);
