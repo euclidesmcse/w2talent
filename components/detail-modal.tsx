@@ -5,6 +5,8 @@ import { skillName } from "@/components/skill-chips";
 import { buttonClasses } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { formatFaixa, formatTempo } from "@/lib/format";
+import { FichaW2Card } from "@/components/ficha-w2-card";
+import { sanitizeFicha, sanitizeFichaW2 } from "@/lib/ficha";
 
 /**
  * DetailModal — modal desktop / bottom sheet mobile (Task 6)
@@ -157,7 +159,18 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef }
       ].filter(([, v]) => v && v !== "—") as Array<[string, React.ReactNode]>)
     : [];
 
-  const content = item ? (
+  // Candidato com Ficha W2 (1.5.11): o cartão padronizado substitui a lista de campos.
+  const w2 = item?.nome ? sanitizeFichaW2(item.fichaW2) : null;
+
+  const content = w2 ? (
+    <div className="detail-content flex flex-col gap-5 text-sm">
+      <FichaW2Card ficha={sanitizeFicha(item)} w2={w2} />
+      <p className="text-xs text-muted">
+        {t("atualizada")}: {formatTempo((item.updatedAt ?? item.createdAt) as any, locale)}
+      </p>
+      {children}
+    </div>
+  ) : item ? (
     <div className="detail-content flex flex-col gap-5 text-sm">
       {fields.length ? (
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">

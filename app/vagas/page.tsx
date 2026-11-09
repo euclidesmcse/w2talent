@@ -101,7 +101,7 @@ export default function VagasPage() {
 
   return (
     <div>
-      <AppHeader navLabel={tr("nav.main")} nav={[{ href: "/vagas", label: tr("nav.vagas"), active: true }, { href: "/candidatos", label: tr("nav.candidatos"), active: false }, { href: "/minhas-candidaturas", label: tr("nav.minhasCandidaturas"), short: tr("nav.minhasCandidaturasCurto") }]} />
+      <AppHeader navLabel={tr("nav.main")} nav={[{ href: "/vagas", label: tr("nav.vagas"), active: true }, { href: "/candidatos", label: tr("nav.candidatos"), active: false }, { href: "/minha-ficha", label: tr("nav.minhaFicha"), short: tr("nav.minhaFichaCurto") }, { href: "/minhas-candidaturas", label: tr("nav.minhasCandidaturas"), short: tr("nav.minhasCandidaturasCurto") }]} />
       <main>
       <div className="mx-auto max-w-page px-6 pt-6">
         <h1 className="text-xl font-semibold">{tr("vagas.title")}</h1>

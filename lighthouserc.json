@@ -7,6 +7,7 @@
         "http://localhost:3999/",
         "http://localhost:3999/vagas",
         "http://localhost:3999/candidatos",
+        "http://localhost:3999/minha-ficha",
         "http://localhost:3999/minhas-candidaturas"
       ],
       "numberOfRuns": 3,

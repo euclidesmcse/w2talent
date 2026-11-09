@@ -74,12 +74,14 @@ model CandidateProfile {
   resumo3linhas       String?
   localidade          String?
   modo                String? // remoto | hibrido | presencial
+  senioridade         String? // estagio | junior | pleno | senior | especialista | lideranca (1.5.10)
   regimePreferido     String[] @default([])
   pretensaoDe         Int?
   pretensaoAte        Int?
   pretensaoMoeda      String?  @default("BRL")
   disponibilidade     String?
-  objetivoCrescimento String
+  mudanca             Boolean? // aceita mudar de cidade (1.5.10)
+  objetivoCrescimento String?
   stack               Json     @default("[]") // [{skillId, nivel, anos}]
   experiencias        Json     @default("[]")
   formacao            Json     @default("[]")
@@ -87,7 +89,7 @@ model CandidateProfile {
   links               Json     @default("[]")
 
   // contato
-  celular     String // E.164 obrigatório
+  celular     String? // opcional desde o 1.5.10 (o e-mail é o contato principal)
   email       String
   whatsappOpt Boolean @default(false)
   telegramOpt Boolean @default(false)
@@ -102,6 +104,9 @@ model CandidateProfile {
 
   status         CandidateStatus @default(ativo)
   idiomaOriginal String          @default("pt-BR")
+
+  // Ficha W2 (1.5.11): resumo padronizado pela IA, revisado pelo candidato. Ver lib/ficha.ts.
+  fichaW2 Json?
 
   // higiene
   expiresAt   DateTime // now + 180d
@@ -294,6 +299,15 @@ model AiModelTest {
 }
 
 // Tentativas erradas da senha de admin (1.5.8), por hash do IP. Some com o login do 1.5.5.
+// Limite de uso por dia (1.5.10): leituras de CV e Fichas W2 por IP (só o hash), sem login.
+model UsoDiario {
+  chave String
+  dia   String // YYYY-MM-DD (UTC)
+  total Int    @default(0)
+
+  @@id([chave, dia])
+}
+
 model AdminLoginLock {
   chave        String    @id // sha-256 do IP
   falhas       Int       @default(0)

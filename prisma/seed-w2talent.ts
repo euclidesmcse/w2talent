@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { DEMO_FICHAS } from "../lib/demo-data";
 // engineType = "client": todo PrismaClient precisa de driver adapter.
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
 
@@ -56,8 +57,10 @@ async function main() {
         localidade: c.localidade, modo: c.modo as any, objetivoCrescimento: "Crescer para Sênior em Cloud",
         celular: `+5511999${c.userId.slice(-4).padStart(4,"0")}9`, email: `${c.userId}@demo.w2talent.com`,
         status: "ativo", expiresAt: new Date(Date.now()+180*24*60*60*1000),
+        ...(DEMO_FICHAS[c.userId] as any),
       },
-      update: {},
+      // Ficha W2 de exemplo (1.5.11) também nos candidatos de demonstração que já existem.
+      update: { ...(DEMO_FICHAS[c.userId] as any) },
     });
   }
   console.log("[seed] candidates", candidates.length);

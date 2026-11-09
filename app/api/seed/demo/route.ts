@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requestHasSecret, timingSafeEqualStr } from "@/lib/secret";
+import { DEMO_FICHAS } from "@/lib/demo-data";
 import { vacancyStore, candidateStore, seedVacancy, seedCandidate, clearAllForTests } from "@/lib/proxy";
 
 // GET explica, POST semeia. Sem auth em staging (dummy secrets), em prod exige CRON_SECRET.
@@ -100,6 +101,7 @@ export async function POST(req: NextRequest) {
       if (stored) {
         stored.localidade = c.localidade;
         stored.modo = c.modo;
+        Object.assign(stored, DEMO_FICHAS[c.userId] ?? {});
         stored.createdAt = now;
         stored.updatedAt = now;
       }
