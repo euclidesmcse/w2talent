@@ -195,6 +195,8 @@ model Application {
   proxyThreadId String            @unique
   status        ApplicationStatus @default(enviado)
   loteId        String?
+  /// 1.5.13: e-mail para a empresa ainda não entrou na fila; o Cron diário tenta de novo.
+  emailPendente Boolean           @default(false)
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 

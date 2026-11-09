@@ -16,6 +16,7 @@ import {
   hashVaga,
   mensagemCandidatura,
   perfilDoEmail,
+  reenviarEmailsPendentes,
   snapshotVaga,
   userIdDoEmail,
   type EmailCandidatura,
@@ -100,6 +101,12 @@ describeDb("Aprovar antes de enviar", () => {
     filaEmails.length = 0;
   });
 
+  /** Aprova a versão que a tela mostraria agora. */
+  const aprova = async (id: string) => {
+    const [it] = await estadoDasVagas(db, perfil, [id], NOW);
+    return aprovarVaga(db, perfil.id, id, it.hash ?? "", NOW);
+  };
+
   it("acha o perfil pelo e-mail e nunca devolve o contato para a empresa", async () => {
     expect(perfil.ficha.nome).toBe("Beatriz Souza Lima");
     const v = await vaga("Analista Cloud PJ");
@@ -122,7 +129,7 @@ describeDb("Aprovar antes de enviar", () => {
 
   it("vaga que mudou depois da aprovação: mostra o que mudou e não envia", async () => {
     const v = await vaga("Vai mudar");
-    expect((await aprovarVaga(db, perfil.id, v.id, NOW)).ok).toBe(true);
+    expect((await aprova(v.id)).ok).toBe(true);
     expect((await estadoDasVagas(db, perfil, [v.id], NOW))[0].estado).toBe("aprovada");
     await db.vacancy.update({ where: { id: v.id }, data: { descricaoBullets: ["Cuidar da AWS", "Plantão aos fins de semana"], regime: "CLT" } });
     const [it] = await estadoDasVagas(db, perfil, [v.id], NOW);
@@ -137,8 +144,8 @@ describeDb("Aprovar antes de enviar", () => {
     const a = await vaga("Aprovada com contato");
     const b = await vaga("Não aprovada");
     const c = await vaga("Aprovada sem contato", { companyId: semContatoId, regime: "CLT" });
-    await aprovarVaga(db, perfil.id, a.id, NOW);
-    await aprovarVaga(db, perfil.id, c.id, NOW);
+    await aprova(a.id);
+    await aprova(c.id);
     const emails: EmailCandidatura[] = [];
     const r = await enviarCandidaturas(db, perfil, [a.id, b.id, c.id], { now: NOW, loteId: "lote-1", enviarEmail: async (e) => { emails.push(e); } });
     expect(r.ok).toBe(true);
@@ -169,22 +176,53 @@ describeDb("Aprovar antes de enviar", () => {
     expect(msg.text).toContain("Match com a vaga:");
 
     // a mesma vaga nunca vai duas vezes, nem pode ser aprovada de novo
-    expect(await aprovarVaga(db, perfil.id, a.id, NOW)).toEqual({ ok: false, motivo: "ja_enviada" });
+    expect(await aprova(a.id)).toEqual({ ok: false, motivo: "ja_enviada" });
     const de_novo = await enviarCandidaturas(db, perfil, [a.id], { now: NOW });
     expect(de_novo).toMatchObject({ ok: true, itens: [{ status: "ja_enviada" }] });
     expect((await estadoDasVagas(db, perfil, [a.id], NOW))[0]).toMatchObject({ estado: "enviada", enviadaEm: NOW.toISOString() });
   });
 
+  it("não aprova uma versão da vaga diferente da que a tela mostrou", async () => {
+    const v = await vaga("Muda com a tela aberta");
+    const [antes] = await estadoDasVagas(db, perfil, [v.id], NOW);
+    await db.vacancy.update({ where: { id: v.id }, data: { faixaAte: 11000 } });
+    expect(await aprovarVaga(db, perfil.id, v.id, antes.hash!, NOW)).toEqual({ ok: false, motivo: "mudou" });
+    expect(await db.applicationApproval.count({ where: { vacancyId: v.id } })).toBe(0);
+  });
+
+  it("moedas diferentes não entram na faixa do match", async () => {
+    const usd = await vaga("Vaga em dólar", { faixaMoeda: "USD", faixaDe: 3000, faixaAte: 5000 });
+    const brl = await vaga("Vaga em real baixa", { faixaAte: 6000 });
+    const [a, b] = await estadoDasVagas(db, perfil, [usd.id, brl.id], NOW);
+    expect(a.match!.gaps.find((g) => g.kind === "faixa")).toBeUndefined();
+    expect(b.match!.gaps.find((g) => g.kind === "faixa")).toMatchObject({ want: 13000, have: 6000 });
+  });
+
+  it("e-mail que não entrou na fila fica pendente e o Cron tenta de novo", async () => {
+    const v = await vaga("Fila fora do ar");
+    await aprova(v.id);
+    const r = await enviarCandidaturas(db, perfil, [v.id], { now: NOW, enviarEmail: async () => { throw new Error("fila fora do ar"); } });
+    expect(r).toMatchObject({ ok: true, itens: [{ status: "enviada" }] });
+    const app = await db.application.findFirstOrThrow({ where: { vacancyId: v.id } });
+    expect(app.emailPendente).toBe(true);
+    const fila: EmailMessage[] = [];
+    expect(await reenviarEmailsPendentes(db, async (m) => { fila.push(m); }, NOW)).toMatchObject({ enviados: 1, falhas: 0 });
+    expect(fila.map((m) => m.idempotencyKey)).toEqual([`candidatura:${app.id}`]);
+    expect(fila[0].text).not.toContain(EMAIL);
+    expect((await db.application.findUniqueOrThrow({ where: { id: app.id } })).emailPendente).toBe(false);
+    expect((await reenviarEmailsPendentes(db, async (m) => { fila.push(m); }, NOW)).enviados).toBe(0);
+  });
+
   it("vaga vencida ou arquivada desde a aprovação não vai", async () => {
     const v = await vaga("Vai vencer");
     const w = await vaga("Vai arquivar");
-    await aprovarVaga(db, perfil.id, v.id, NOW);
-    await aprovarVaga(db, perfil.id, w.id, NOW);
+    await aprova(v.id);
+    await aprova(w.id);
     await db.vacancy.update({ where: { id: v.id }, data: { expiresAt: new Date(NOW.getTime() - 1000) } });
     await db.vacancy.update({ where: { id: w.id }, data: { status: "arquivada" } });
     const r = await enviarCandidaturas(db, perfil, [v.id, w.id], { now: NOW });
     expect(r).toMatchObject({ ok: true, itens: [{ status: "indisponivel" }, { status: "indisponivel" }] });
-    expect(await aprovarVaga(db, perfil.id, v.id, NOW)).toEqual({ ok: false, motivo: "indisponivel" });
+    expect(await aprova(v.id)).toEqual({ ok: false, motivo: "indisponivel" });
   });
 
   it("no máximo 10 por envio e 30 nas últimas 24 h", async () => {
@@ -198,8 +236,8 @@ describeDb("Aprovar antes de enviar", () => {
 
     const v1 = await vaga("Limite 1");
     const v2 = await vaga("Limite 2");
-    await aprovarVaga(db, perfil.id, v1.id, NOW);
-    await aprovarVaga(db, perfil.id, v2.id, NOW);
+    await aprova(v1.id);
+    await aprova(v2.id);
     expect(await enviarCandidaturas(db, perfil, [v1.id, v2.id], { now: NOW })).toEqual({ ok: false, erro: "limite_dia", max: 30, usadas24h: 29, restantes: 1 });
     // nada foi gravado e as aprovações continuam
     expect(await db.application.count({ where: { vacancyId: { in: [v1.id, v2.id] } } })).toBe(0);
@@ -212,7 +250,7 @@ describeDb("Aprovar antes de enviar", () => {
 
   it("dois envios ao mesmo tempo não mandam a mesma vaga duas vezes", async () => {
     const v = await vaga("Paralelo");
-    await aprovarVaga(db, perfil.id, v.id, NOW);
+    await aprova(v.id);
     const rs = await Promise.all([1, 2, 3].map(() => enviarCandidaturas(db, perfil, [v.id], { now: NOW })));
     const status = rs.flatMap((r) => (r.ok ? r.itens.map((i) => i.status) : [r.erro]));
     expect(status.filter((s) => s === "enviada")).toHaveLength(1);
@@ -243,10 +281,12 @@ describeDb("Aprovar antes de enviar", () => {
     expect(j1.itens[0]).toMatchObject({ estado: "nova", vaga: { titulo: "Pela rota", empresa: "Envio Teste SA", temContato: true } });
     expect(j1.itens[0].paraEmpresa.pretensoes).toEqual([{ regime: "PJ", valor: 13000, unidade: "mes", moeda: "BRL" }]);
 
-    expect((await aprovar(post("/api/envio/aprovar", { email: EMAIL, vacancyId: v.id }))).status).toBe(200);
+    const hash = j1.itens[0].hash;
+    expect((await aprovar(post("/api/envio/aprovar", { email: EMAIL, vacancyId: v.id }))).status).toBe(409);
+    expect((await aprovar(post("/api/envio/aprovar", { email: EMAIL, vacancyId: v.id, hash }))).status).toBe(200);
     expect((await aprovar(post("/api/envio/aprovar", { email: EMAIL, vacancyId: v.id, aprovar: false }))).status).toBe(200);
     expect(await db.applicationApproval.count({ where: { vacancyId: v.id } })).toBe(0);
-    await aprovar(post("/api/envio/aprovar", { email: EMAIL, vacancyId: v.id }));
+    await aprovar(post("/api/envio/aprovar", { email: EMAIL, vacancyId: v.id, hash }));
 
     const r2 = await enviar(post("/api/envio/enviar", { email: EMAIL, vacancyIds: [v.id] }));
     expect(r2.status).toBe(200);

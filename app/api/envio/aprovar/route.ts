@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
       await desfazerAprovacao(db, perfil.id, vacancyId);
       return NextResponse.json({ ok: true, estado: "nova" }, { headers: NO_STORE });
     }
-    const r = await aprovarVaga(db, perfil.id, vacancyId);
+    const hash = typeof body.hash === "string" ? body.hash.slice(0, 128) : "";
+    const r = await aprovarVaga(db, perfil.id, vacancyId, hash);
     if (!r.ok) return NextResponse.json({ error: r.motivo }, { status: r.motivo === "nao_encontrada" ? 404 : 409, headers: NO_STORE });
     return NextResponse.json({ ok: true, estado: "aprovada", aprovadaEm: r.aprovadaEm }, { headers: NO_STORE });
   } catch (e) {

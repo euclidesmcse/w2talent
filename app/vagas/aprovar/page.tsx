@@ -39,6 +39,8 @@ type Item = {
   estado: "nova" | "aprovada" | "mudou" | "enviada" | "indisponivel" | "nao_encontrada";
   campos?: CampoVaga[];
   enviadaEm?: string;
+  /** Versão da vaga mostrada; a aprovação vale só para ela. */
+  hash: string | null;
   vaga: Vaga | null;
   match: MatchResult | null;
   paraEmpresa: Ficha | null;
@@ -107,12 +109,12 @@ export default function AprovarPage() {
     setOcupado(true);
     setErro(null);
     try {
-      const r = await postEnvio("aprovar", { email, vacancyId: atual.vacancyId, aprovar });
+      const r = await postEnvio("aprovar", { email, vacancyId: atual.vacancyId, aprovar, hash: atual.hash });
       if (r.ok) {
         setItens((xs) => xs.map((x) => (x.vacancyId === atual.vacancyId ? { ...x, estado: aprovar ? "aprovada" : "nova", campos: undefined } : x)));
         if (aprovar && idx < itens.length - 1) proxima();
       } else {
-        // A vaga venceu ou já foi enviada enquanto a tela estava aberta: recarrega o estado.
+        // A vaga mudou, venceu ou já foi enviada enquanto a tela estava aberta: recarrega o estado.
         await carregar(email, itens.map((i) => i.vacancyId));
       }
     } catch {

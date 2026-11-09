@@ -144,9 +144,11 @@ const NIVEL_DA_SENIORIDADE: Record<string, Nivel> = { junior: "Júnior", pleno: 
 const REGIMES_MATCH: Regime[] = ["CLT", "PJ", "Estágio"];
 
 /** Critérios do match a partir do perfil (no lugar da busca, como previsto no 1.5.12). */
-export function criteriosDoPerfil(f: Ficha, regimeVaga: string | null | undefined): MatchCriteria {
+export function criteriosDoPerfil(f: Ficha, regimeVaga: string | null | undefined, moedaVaga: string | null | undefined = "BRL"): MatchCriteria {
   const regime = (regimeDaVaga(f.regimes, regimeVaga) ?? f.regimes.find((r) => (REGIMES_MATCH as string[]).includes(r)) ?? null) as Regime | null;
-  const p = regime ? f.pretensoes.find((x) => x.regime === regime && x.unidade === "mes" && x.valor != null) : undefined;
+  // Moedas diferentes não se comparam (sem câmbio): a faixa fica fora do match.
+  const moeda = moedaVaga || "BRL";
+  const p = regime ? f.pretensoes.find((x) => x.regime === regime && x.unidade === "mes" && x.valor != null && x.moeda === moeda) : undefined;
   return {
     skills: [...f.stack].sort((a, b) => b.anos - a.anos).slice(0, 5).map((s) => s.skillId),
     regime: regime && (REGIMES_MATCH as string[]).includes(regime) ? regime : null,
@@ -157,7 +159,7 @@ export function criteriosDoPerfil(f: Ficha, regimeVaga: string | null | undefine
 }
 
 export function matchDoPerfil(f: Ficha, v: VagaRow, now: Date): MatchResult {
-  return matchVacancy(v, criteriosDoPerfil(f, v.regime), now.getTime());
+  return matchVacancy(v, criteriosDoPerfil(f, v.regime, v.faixaMoeda), now.getTime());
 }
 
 // ── estado de cada vaga para o candidato ─────────────────────────────────
@@ -201,7 +203,8 @@ export function limparIds(ids: unknown, max = 50): string[] {
   return [...new Set((Array.isArray(ids) ? ids : []).filter((x): x is string => typeof x === "string" && x.length > 0 && x.length <= 64))].slice(0, max);
 }
 
-export type ItemEstado = { vacancyId: string; vaga: VagaRow | null; match: MatchResult | null } & EstadoVaga;
+/** `hash`: versão da vaga mostrada na tela; a aprovação só vale para essa versão. */
+export type ItemEstado = { vacancyId: string; vaga: VagaRow | null; match: MatchResult | null; hash: string | null } & EstadoVaga;
 
 export async function estadoDasVagas(db: PrismaClient, perfil: PerfilEnvio, vacancyIds: string[], now = new Date()): Promise<ItemEstado[]> {
   const [vagas, aprovacoes, enviadas] = await Promise.all([
@@ -212,7 +215,7 @@ export async function estadoDasVagas(db: PrismaClient, perfil: PerfilEnvio, vaca
   const out: ItemEstado[] = [];
   for (const id of vacancyIds) {
     const v = vagas.get(id) ?? null;
-    const base = { vacancyId: id, vaga: v, match: v ? matchDoPerfil(perfil.ficha, v, now) : null };
+    const base = { vacancyId: id, vaga: v, match: v ? matchDoPerfil(perfil.ficha, v, now) : null, hash: v ? await hashVaga(snapshotVaga(v)) : null };
     const env = enviadas.find((a) => a.vacancyId === id);
     if (env) {
       out.push({ ...base, estado: "enviada", enviadaEm: env.createdAt.toISOString() });
@@ -238,15 +241,18 @@ export async function estadoDasVagas(db: PrismaClient, perfil: PerfilEnvio, vaca
   return out;
 }
 
-export type ResultadoAprovar = { ok: true; aprovadaEm: string } | { ok: false; motivo: "nao_encontrada" | "indisponivel" | "ja_enviada" };
+export type ResultadoAprovar = { ok: true; aprovadaEm: string } | { ok: false; motivo: "nao_encontrada" | "indisponivel" | "ja_enviada" | "mudou" };
 
-export async function aprovarVaga(db: PrismaClient, candidateId: string, vacancyId: string, now = new Date()): Promise<ResultadoAprovar> {
+/** `hashLido`: o hash que a tela mostrou. Se a vaga mudou depois disso, não aprova (a tela recarrega). */
+export async function aprovarVaga(db: PrismaClient, candidateId: string, vacancyId: string, hashLido: string, now = new Date()): Promise<ResultadoAprovar> {
   const v = (await carregarVagas(db, [vacancyId])).get(vacancyId);
   if (!v) return { ok: false, motivo: "nao_encontrada" };
   if (await db.application.findFirst({ where: { candidateId, vacancyId }, select: { id: true } })) return { ok: false, motivo: "ja_enviada" };
   if (!vagaDisponivel(v, now)) return { ok: false, motivo: "indisponivel" };
   const snap = snapshotVaga(v);
-  const dados = { vacancyHash: await hashVaga(snap), snapshot: snap as unknown as Prisma.InputJsonValue, aprovadaEm: now };
+  const hash = await hashVaga(snap);
+  if (hash !== hashLido) return { ok: false, motivo: "mudou" };
+  const dados = { vacancyHash: hash, snapshot: snap as unknown as Prisma.InputJsonValue, aprovadaEm: now };
   await db.applicationApproval.upsert({
     where: { candidateId_vacancyId: { candidateId, vacancyId } },
     create: { candidateId, vacancyId, ...dados },
@@ -332,7 +338,7 @@ export async function enviarCandidaturas(
     const emails: EmailCandidatura[] = [];
     for (const v of prontas) {
       const app = await tx.application.create({
-        data: { vacancyId: v.id, candidateId: perfil.id, companyId: v.companyId, origem: "candidaturaLote", proxyThreadId: novoProxyThreadId(), loteId, createdAt: now },
+        data: { vacancyId: v.id, candidateId: perfil.id, companyId: v.companyId, origem: "candidaturaLote", proxyThreadId: novoProxyThreadId(), loteId, createdAt: now, emailPendente: !!v.company.emailContato },
         select: { id: true, proxyThreadId: true },
       });
       await tx.applicationApproval.deleteMany({ where: { candidateId: perfil.id, vacancyId: v.id } });
@@ -347,8 +353,10 @@ export async function enviarCandidaturas(
   for (const e of r.emails) {
     try {
       await opts.enviarEmail?.(e);
+      await db.application.update({ where: { id: e.applicationId }, data: { emailPendente: false } });
     } catch (err) {
-      // A candidatura já está registrada; o e-mail pode ser reenviado depois pelo id.
+      // A candidatura já está registrada com emailPendente = true; o Cron diário tenta de novo
+      // (reenviarEmailsPendentes).
       console.error(`[envio] e-mail da candidatura ${e.applicationId} não entrou na fila:`, err instanceof Error ? err.message : err);
     }
   }
@@ -399,4 +407,44 @@ export function mensagemCandidatura(perfil: PerfilEnvio, e: EmailCandidatura): E
     referencia: e.referencia,
   });
   return { to, subject, html, text, idempotencyKey: `candidatura:${e.applicationId}` };
+}
+
+/**
+ * E-mails de candidatura que não entraram na fila no envio (fila fora do ar, por exemplo).
+ * Roda no Cron diário; tenta os dos últimos 7 dias. A chave de idempotência evita e-mail repetido.
+ */
+export async function reenviarEmailsPendentes(
+  db: PrismaClient,
+  enqueue: (m: EmailMessage) => Promise<void>,
+  now = new Date(),
+  limite = 50,
+): Promise<{ enviados: number; falhas: number }> {
+  const apps = await db.application.findMany({
+    where: { emailPendente: true, vacancyId: { not: null }, createdAt: { gt: new Date(now.getTime() - 7 * 86_400_000) } },
+    orderBy: { createdAt: "asc" },
+    take: limite,
+    select: { id: true, proxyThreadId: true, vacancyId: true, candidate: { select: { userId: true } } },
+  });
+  let enviados = 0;
+  let falhas = 0;
+  for (const a of apps) {
+    try {
+      const row = await db.candidateProfile.findUnique({ where: { userId: a.candidate.userId } });
+      const v = row ? (await carregarVagas(db, [a.vacancyId!])).get(a.vacancyId!) : undefined;
+      const msg =
+        row && v
+          ? mensagemCandidatura(
+              { id: row.id, ficha: sanitizeFicha(row), w2: sanitizeFichaW2(row.fichaW2), idioma: row.idiomaOriginal },
+              { applicationId: a.id, referencia: a.proxyThreadId, vaga: v, match: matchDoPerfil(sanitizeFicha(row), v, now) },
+            )
+          : null;
+      if (msg) await enqueue(msg);
+      await db.application.update({ where: { id: a.id }, data: { emailPendente: false } });
+      if (msg) enviados++;
+    } catch (err) {
+      falhas++;
+      console.error(`[envio] reenvio do e-mail ${a.id} falhou:`, err instanceof Error ? err.message : err);
+    }
+  }
+  return { enviados, falhas };
 }
