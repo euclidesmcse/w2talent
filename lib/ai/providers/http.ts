@@ -54,3 +54,17 @@ export function errorCode(body: string): string | null {
   }
   return null;
 }
+
+export async function getJson(ctx: CallContext, url: string, headers: Record<string, string>): Promise<any> {
+  const res = await ctx.fetch(url, { method: "GET", headers });
+  const text = await res.text();
+  if (!res.ok) {
+    const code = errorCode(text);
+    throw new AiProviderError(`HTTP ${res.status}${code ? ` (${code})` : ""}`, res.status);
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new AiProviderError("resposta do fornecedor não é JSON");
+  }
+}

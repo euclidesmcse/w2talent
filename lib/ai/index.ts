@@ -28,6 +28,18 @@ export function aiConfig() {
   };
 }
 
+/** Ambiente das operações do Admin de IA (1.5.8). */
+export function aiAdminEnv() {
+  const cfg = aiConfig();
+  return {
+    ai: workerAi(),
+    fetch: ((...args: Parameters<typeof fetch>) => fetch(...args)) as typeof fetch,
+    gateway: cfg.gateway,
+    master: process.env.AI_KEYS_MASTER,
+    globalDailyBudgetUsd: cfg.globalDailyBudgetUsd,
+  };
+}
+
 export function getAiRouter() {
   const cfg = aiConfig();
   return createRouter(prismaAiStore(getPrisma()), {

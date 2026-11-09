@@ -121,11 +121,16 @@ export function costUsd(c: RouteCandidate, tokensIn = 0, tokensOut = 0): number 
   return (tokensIn * (c.priceIn ?? 0) + tokensOut * (c.priceOut ?? 0)) / 1_000_000;
 }
 
+/** providerId do candidato padrão do Workers AI (store.ts). */
+export const RESERVE_PROVIDER_ID = "workers-ai-padrao";
+
 function orderCandidates(cfg: RouteConfig): RouteCandidate[] {
   if (cfg.mode === "fixo") return cfg.candidates.slice(0, 1);
   const price = (c: RouteCandidate) => (c.priceIn == null && c.priceOut == null ? Infinity : (c.priceIn ?? 0) + (c.priceOut ?? 0));
-  // sort estável: empate mantém a ordem configurada
-  return [...cfg.candidates].sort((a, b) => price(a) - price(b));
+  // sort estável: empate mantém a ordem configurada. A reserva (padrão do Workers AI) fica sempre no fim
+  // quando há outros modelos: ela não passou pelos testes do painel (1.5.8).
+  const reserve = (c: RouteCandidate) => (c.providerId === RESERVE_PROVIDER_ID && cfg.candidates.length > 1 ? 1 : 0);
+  return [...cfg.candidates].sort((a, b) => reserve(a) - reserve(b) || price(a) - price(b));
 }
 
 export function createRouter(store: AiStore, env: RouterEnv) {

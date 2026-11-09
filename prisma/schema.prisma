@@ -66,25 +66,25 @@ model CompanyProfile {
 
 // ── CandidateProfile ─────────────────────────────────────────────────
 model CandidateProfile {
-  id                  String          @id @default(cuid())
-  userId              String          @unique
+  id                  String   @id @default(cuid())
+  userId              String   @unique
   nome                String
   fotoUrl             String?
   titulo              String
   resumo3linhas       String?
   localidade          String?
   modo                String? // remoto | hibrido | presencial
-  regimePreferido     String[]        @default([])
+  regimePreferido     String[] @default([])
   pretensaoDe         Int?
   pretensaoAte        Int?
-  pretensaoMoeda      String?         @default("BRL")
+  pretensaoMoeda      String?  @default("BRL")
   disponibilidade     String?
   objetivoCrescimento String
-  stack               Json            @default("[]") // [{skillId, nivel, anos}]
-  experiencias        Json            @default("[]")
-  formacao            Json            @default("[]")
-  idiomas             Json            @default("[]")
-  links               Json            @default("[]")
+  stack               Json     @default("[]") // [{skillId, nivel, anos}]
+  experiencias        Json     @default("[]")
+  formacao            Json     @default("[]")
+  idiomas             Json     @default("[]")
+  links               Json     @default("[]")
 
   // contato
   celular     String // E.164 obrigatório
@@ -94,11 +94,11 @@ model CandidateProfile {
   telefoneOpt String?
 
   // LGPD 4 consentimentos versionados
-  tratamentoBuscaV Int      @default(1)
-  contatoProxyV    Int      @default(1)
-  nudgesV          Int      @default(1)
-  iaReescritaV     Int      @default(1)
-  consentTexts     Json     @default("[]") // textos originais consentidos
+  tratamentoBuscaV Int  @default(1)
+  contatoProxyV    Int  @default(1)
+  nudgesV          Int  @default(1)
+  iaReescritaV     Int  @default(1)
+  consentTexts     Json @default("[]") // textos originais consentidos
 
   status         CandidateStatus @default(ativo)
   idiomaOriginal String          @default("pt-BR")
@@ -125,27 +125,27 @@ model CandidateProfile {
 
 // ── Vacancy ──────────────────────────────────────────────────────────
 model Vacancy {
-  id               String        @id @default(cuid())
-  companyId        String
-  company          CompanyProfile @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  titulo           String
-  stack            Json          @default("[]") // [{skillId}]
-  nivel            String?
-  regime           String?
-  localidade       String?
-  faixaDe          Int?
-  faixaAte         Int?
-  faixaMoeda       String?       @default("BRL")
-  descricaoBullets Json          @default("[]")
-  beneficios       Json          @default("[]")
-  tipoContrato     String?
-  expiresAt        DateTime
-  renovacoes       Int           @default(0)
-  views            Int           @default(0)
-  candidaturasCount Int          @default(0)
-  status           VacancyStatus @default(ativa)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id                String         @id @default(cuid())
+  companyId         String
+  company           CompanyProfile @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  titulo            String
+  stack             Json           @default("[]") // [{skillId}]
+  nivel             String?
+  regime            String?
+  localidade        String?
+  faixaDe           Int?
+  faixaAte          Int?
+  faixaMoeda        String?        @default("BRL")
+  descricaoBullets  Json           @default("[]")
+  beneficios        Json           @default("[]")
+  tipoContrato      String?
+  expiresAt         DateTime
+  renovacoes        Int            @default(0)
+  views             Int            @default(0)
+  candidaturasCount Int            @default(0)
+  status            VacancyStatus  @default(ativa)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   // busca (1.5.9: vetor do bge-m3; índices HNSW/GIN criados na migração, fora do Prisma)
   searchVector   Unsupported("tsvector")?
@@ -170,19 +170,19 @@ model Vacancy {
 // - Aplicação deve dedupar em código: verificar existência antes de criar quando vacancyId != null
 // Alternativa (se quiser normalizar): separar em modelos Application (vacancyId required) + Contact (sem vacancyId).
 model Application {
-  id             String            @id @default(cuid())
-  vacancyId      String?
-  vacancy        Vacancy?          @relation(fields: [vacancyId], references: [id], onDelete: SetNull)
-  candidateId    String
-  candidate      CandidateProfile  @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  companyId      String
-  company        CompanyProfile    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  origem         ApplicationOrigin
-  proxyThreadId  String            @unique
-  status         ApplicationStatus @default(enviado)
-  loteId         String?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  id            String            @id @default(cuid())
+  vacancyId     String?
+  vacancy       Vacancy?          @relation(fields: [vacancyId], references: [id], onDelete: SetNull)
+  candidateId   String
+  candidate     CandidateProfile  @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  companyId     String
+  company       CompanyProfile    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  origem        ApplicationOrigin
+  proxyThreadId String            @unique
+  status        ApplicationStatus @default(enviado)
+  loteId        String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   @@unique([candidateId, vacancyId])
   @@index([candidateId])
@@ -193,14 +193,14 @@ model Application {
 
 // ── OtpCode ──────────────────────────────────────────────────────────
 model OtpCode {
-  id         String   @id @default(cuid())
-  userId     String // celular E.164
-  codigoHash String
-  codigo     String? // only for testing/debug, not in prod — kept hashed normally
-  expiraEm   DateTime
-  tentativas Int      @default(0)
+  id          String    @id @default(cuid())
+  userId      String // celular E.164
+  codigoHash  String
+  codigo      String? // only for testing/debug, not in prod — kept hashed normally
+  expiraEm    DateTime
+  tentativas  Int       @default(0)
   bloqueioAte DateTime?
-  createdAt  DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   @@index([userId])
   @@index([expiraEm])
@@ -208,14 +208,14 @@ model OtpCode {
 
 // ── ConsentLog ───────────────────────────────────────────────────────
 model ConsentLog {
-  id        String   @id @default(cuid())
+  id        String            @id @default(cuid())
   userId    String
   candidate CandidateProfile? @relation(fields: [userId], references: [userId], onDelete: Cascade)
   versao    Int
   tipo      String // tratamentoBusca | contatoProxy | nudges | iaReescrita
-  texto     String   @db.Text
+  texto     String            @db.Text
   baseLegal String
-  createdAt DateTime @default(now())
+  createdAt DateTime          @default(now())
 
   @@index([userId])
 }
@@ -262,18 +262,41 @@ model AiProvider {
 }
 
 model AiModel {
-  id                    String     @id @default(cuid())
+  id                    String        @id @default(cuid())
   providerId            String
-  provider              AiProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  provider              AiProvider    @relation(fields: [providerId], references: [id], onDelete: Cascade)
   modelo                String // id no fornecedor, ex.: "@cf/baai/bge-m3", "gpt-4o-mini"
   contexto              Int?
   precoEntradaUsdMilhao Float? // US$ por milhão de tokens de entrada
   precoSaidaUsdMilhao   Float?
   embeddingDim          Int?
-  ativo                 Boolean    @default(true)
-  createdAt             DateTime   @default(now())
+  ativo                 Boolean       @default(true)
+  createdAt             DateTime      @default(now())
+  testes                AiModelTest[]
 
   @@unique([providerId, modelo])
+}
+
+// Resultado de cada teste de compatibilidade (1.5.8). Só o resultado: nunca texto de usuário.
+model AiModelTest {
+  id         String   @id @default(cuid())
+  modelId    String
+  model      AiModel  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  teste      String // ver lib/ai/compat.ts (texto, json, ferramentas, idiomas, contexto_longo, embeddings)
+  ok         Boolean
+  detalhe    String?
+  latenciaMs Int?
+  createdAt  DateTime @default(now())
+
+  @@index([modelId, teste, createdAt])
+}
+
+// Tentativas erradas da senha de admin (1.5.8), por hash do IP. Some com o login do 1.5.5.
+model AdminLoginLock {
+  chave        String    @id // sha-256 do IP
+  falhas       Int       @default(0)
+  bloqueadoAte DateTime?
+  updatedAt    DateTime  @updatedAt
 }
 
 model TaskRoute {

@@ -63,6 +63,10 @@ export function prismaAiStore(db: PrismaClient, now: () => number = Date.now): A
       });
       // Rota apontando só para modelos desligados: volta ao padrão em vez de ficar sem IA.
       if (candidates.length === 0) candidates.push(defaultCandidate(task));
+      // Modo automático (1.5.8): o padrão do Workers AI fica sempre no fim, como reserva.
+      else if (route.modo !== "fixo" && !candidates.some((c) => c.kind === "WORKERS_AI" && c.model === TASKS[task].defaultWorkersModel)) {
+        candidates.push(defaultCandidate(task));
+      }
       return { mode: route.modo === "fixo" ? "fixo" : "automatico", candidates, dailyBudgetUsd: route.orcamentoDiarioUsd };
     },
     async spentTodayUsd(task) {
