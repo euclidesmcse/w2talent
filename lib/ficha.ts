@@ -217,15 +217,30 @@ export function camposFaltando(f: Ficha): CampoMinimo[] {
   return falta;
 }
 
-/** Anos de experiência: do início mais antigo até hoje (ou até o fim mais recente). */
+/** Anos de experiência: soma dos períodos de trabalho (sobreposições contam uma vez, intervalos sem emprego não contam). */
 export function anosExperiencia(f: Ficha, now: Date = new Date()): number {
-  const inicios = f.experiencias.map((e) => e.inicio).filter(Boolean).sort();
-  if (!inicios.length) return Math.max(0, ...f.stack.map((s) => s.anos));
-  const [ai, mi] = inicios[0].split("-").map(Number);
-  const atual = f.experiencias.some((e) => e.atual || !e.fim);
-  const fims = f.experiencias.map((e) => e.fim).filter(Boolean).sort();
-  const [af, mf] = atual || !fims.length ? [now.getUTCFullYear(), now.getUTCMonth() + 1] : fims[fims.length - 1].split("-").map(Number);
-  return Math.max(0, Math.floor((af * 12 + mf - (ai * 12 + mi)) / 12));
+  const mes = (v: string) => {
+    const [a, m] = v.split("-").map(Number);
+    return a * 12 + (m - 1);
+  };
+  const hoje = now.getUTCFullYear() * 12 + now.getUTCMonth();
+  const periodos = f.experiencias
+    .filter((e) => e.inicio)
+    .map((e) => [mes(e.inicio), e.atual || !e.fim ? hoje : mes(e.fim)] as [number, number])
+    .filter(([i, fim]) => fim >= i)
+    .sort((x, y) => x[0] - y[0]);
+  if (!periodos.length) return Math.max(0, ...f.stack.map((s) => s.anos));
+  let meses = 0;
+  let [ini, fim] = periodos[0];
+  for (const [i, e] of periodos.slice(1)) {
+    if (i <= fim) fim = Math.max(fim, e);
+    else {
+      meses += fim - ini;
+      [ini, fim] = [i, e];
+    }
+  }
+  meses += fim - ini;
+  return Math.max(0, Math.floor(meses / 12));
 }
 
 /** Top 5 competências por anos (as que a Ficha W2 mostra). */

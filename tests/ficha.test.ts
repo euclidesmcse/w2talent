@@ -103,6 +103,10 @@ describe("formato da ficha", () => {
     expect(anosExperiencia(f, NOW)).toBe(7);
     expect(anosExperiencia(fichaCompleta({ experiencias: [{ cargo: "A", empresa: "B", inicio: "2018-01", fim: "2020-06", atual: false }] }), NOW)).toBe(2);
     expect(anosExperiencia(fichaCompleta({ experiencias: [] }), NOW)).toBe(4);
+    // intervalo sem emprego não conta; sobreposição conta uma vez
+    const exp = (l: [string, string][]) => fichaCompleta({ experiencias: l.map(([inicio, fim]) => ({ cargo: "A", empresa: "B", inicio, fim, atual: false })) });
+    expect(anosExperiencia(exp([["2015-01", "2016-01"], ["2024-01", "2025-01"]]), NOW)).toBe(2);
+    expect(anosExperiencia(exp([["2015-01", "2019-01"], ["2017-01", "2021-01"]]), NOW)).toBe(6);
     expect(topSkills(f).map((s) => s.skillId)).toEqual(["aws", "terraform"]);
     expect(nomeCurto("Ana Maria Silva")).toBe("Ana S.");
     expect(nomeCurto("Ana")).toBe("Ana");
