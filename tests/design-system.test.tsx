@@ -68,10 +68,11 @@ describe("componentes base", () => {
     }
   });
 
-  it("MatchBar limita 0–100 e muda de cor pelo valor", () => {
+  it("MatchBar limita 0–100 e usa sempre a cor da marca (sem semáforo)", () => {
     expect(renderToStaticMarkup(<MatchBar value={140} />)).toContain("100%");
-    expect(renderToStaticMarkup(<MatchBar value={87} />)).toContain("bg-success");
-    expect(renderToStaticMarkup(<MatchBar value={60} />)).toContain("bg-warning");
+    expect(renderToStaticMarkup(<MatchBar value={87} />)).toContain("bg-brand");
+    expect(renderToStaticMarkup(<MatchBar value={60} />)).toContain("bg-brand");
+    expect(renderToStaticMarkup(<MatchBar value={60} />)).not.toMatch(/bg-(success|warning)/);
   });
 
   it("Table com cabeçalho em coluna e linha selecionada destacada", () => {

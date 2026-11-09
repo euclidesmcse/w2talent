@@ -94,7 +94,7 @@ export default function MinhasCandidaturasPage() {
       <AppHeader nav={nav} navLabel={tn("main")} />
       <main className="minhas-candidaturas mx-auto flex max-w-page flex-col gap-4 px-6 py-6">
         <div>
-          <h1 className="text-xl font-bold">{t("title")}</h1>
+          <h1 className="text-xl font-semibold">{t("title")}</h1>
           <p className="mt-1 text-sm text-muted">
             {t("subtitle", { count: items.length })}
           </p>
@@ -119,7 +119,7 @@ export default function MinhasCandidaturasPage() {
           <div className="overflow-x-auto rounded-card border border-line bg-surface">
             <table aria-label={t("tableLabel")} className="w-full min-w-[560px] border-collapse text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-[0.04em] text-muted [&>th]:px-2 [&>th]:py-2.5 [&>th]:font-semibold [&>th:first-child]:pl-4 [&>th:last-child]:pr-4">
+                <tr className="text-left text-xs text-muted [&>th]:px-2 [&>th]:py-2.5 [&>th]:font-medium [&>th:first-child]:pl-4 [&>th:last-child]:pr-4">
                   <th scope="col">{t("colVaga")}</th>
                   <th scope="col">{t("colStatus")}</th>
                   <th scope="col">{t("colAndamento")}</th>
@@ -135,7 +135,7 @@ export default function MinhasCandidaturasPage() {
                     <td className="px-2 py-3.5">
                       <span
                         data-status-badge={app.status}
-                        className={`badge badge-${app.status} inline-flex h-[26px] items-center rounded-control px-2.5 text-[13px] font-medium ${
+                        className={`badge badge-${app.status} inline-flex h-7 items-center rounded-control px-2.5 text-[13px] font-medium ${
                           app.status === "respondido" ? "bg-success-soft text-success-ink" : app.status === "visualizado" ? "bg-brand-soft text-brand-ink" : "bg-neutral-soft text-ink-soft"
                         }`}
                       >
