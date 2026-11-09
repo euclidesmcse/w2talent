@@ -98,6 +98,8 @@ export default function MinhaFichaPage() {
     setErro(null);
     requestAnimationFrame(() => tituloRef.current?.focus());
   }
+  // Publicado vale para o rascunho daquele momento: qualquer mudança na ficha ou na Ficha W2 pede publicar de novo.
+  React.useEffect(() => setPublicado(false), [r.ficha, r.skills, r.w2]);
   const set = <K extends keyof Ficha>(k: K, v: Ficha[K]) => setR((x) => ({ ...x, ficha: { ...x.ficha, [k]: v } }));
   const msgErro = (codigo: string) => {
     const k = `erro_${codigo}`;
@@ -145,12 +147,13 @@ export default function MinhaFichaPage() {
       return;
     }
     if (r.w2?.editada && !forcar) return irPara("w2");
+    if (!r.aceite) return setErro(t("erro_aceite_ia_obrigatorio"));
     setOcupado("gerar");
     try {
       const res = await fetch("/api/ficha/w2", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ficha: fichaAtual, idioma: locale, aceiteIa: true }),
+        body: JSON.stringify({ ficha: fichaAtual, idioma: locale, aceiteIa: r.aceite }),
       });
       const j = (await res.json().catch(() => ({}))) as { fichaW2?: FichaW2; error?: string };
       if (!res.ok || !j.fichaW2) return setErro(msgErro(j.error ?? "geral"));
@@ -490,6 +493,11 @@ export default function MinhaFichaPage() {
                   <Textarea rows={2} value={r.ficha.objetivo} onChange={(e) => set("objetivo", e.target.value)} />
                 </Field>
               </div>
+
+              <label className="flex items-start gap-2 text-sm text-ink">
+                <input type="checkbox" data-aceite="w2" className="mt-0.5 h-4 w-4 accent-brand" checked={r.aceite} onChange={(e) => setR((x) => ({ ...x, aceite: e.target.checked }))} />
+                <span>{t("aceiteW2")}</span>
+              </label>
 
               <div className="flex flex-wrap gap-3">
                 <Button data-action="gerar-w2" onClick={() => gerar(false)} disabled={ocupado === "gerar"}>

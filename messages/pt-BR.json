@@ -435,6 +435,7 @@
     "arquivoAjuda": "PDF ou DOCX, até 5 MB",
     "colar": "Ou cole o texto do CV",
     "aceite": "Autorizo a IA do W2Talent a ler meu CV para preencher a ficha. Meus contatos não são enviados à IA.",
+    "aceiteW2": "Autorizo a IA do W2Talent a escrever minha Ficha W2 a partir destes dados. Meus contatos não são enviados à IA.",
     "ler": "Ler com a IA",
     "lendo": "Lendo seu CV…",
     "manual": "Preencher à mão",

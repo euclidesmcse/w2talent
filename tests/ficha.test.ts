@@ -237,6 +237,12 @@ describe("rotas da ficha (sem banco)", () => {
     expect(curto.status).toBe(422);
     const fora = await POST(post("/api/ficha/ler", { texto: "x".repeat(100), aceiteIa: true }, { origin: "https://outro.site" }));
     expect(fora.status).toBe(403);
+    // arquivo grande é recusado antes de contar o uso e antes de converter
+    const fd = new FormData();
+    fd.set("aceiteIa", "true");
+    fd.set("arquivo", new File([new Uint8Array(5 * 1024 * 1024 + 1)], "cv.pdf", { type: "application/pdf" }));
+    const grande = await POST(new NextRequest("http://w2.test/api/ficha/ler", { method: "POST", body: fd }));
+    expect(grande.status).toBe(413);
   });
 
   it("w2: exige o aceite e a ficha mínima", async () => {

@@ -435,6 +435,7 @@
     "arquivoAjuda": "PDF or DOCX, up to 5 MB",
     "colar": "Or paste your résumé text",
     "aceite": "I allow the W2Talent AI to read my résumé to fill in the profile. My contact details are not sent to the AI.",
+    "aceiteW2": "I authorize W2Talent's AI to write my W2 Profile from this data. My contact details are not sent to the AI.",
     "ler": "Read with AI",
     "lendo": "Reading your résumé…",
     "manual": "Fill in by hand",

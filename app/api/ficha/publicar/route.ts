@@ -34,6 +34,9 @@ export async function POST(req: NextRequest) {
   };
   try {
     const p = await prisma.candidateProfile.upsert({ where: { userId }, create: { userId, ...dados }, update: dados, select: { id: true, userId: true } });
+    // O texto mudou: o índice antigo sai (a busca monta o texto na hora) e o vetor fica pendente.
+    // Se a indexação em segundo plano falhar, o reindex encontra o perfil depois.
+    await prisma.$executeRaw`UPDATE "CandidateProfile" SET "searchVector" = NULL, "embeddingHash" = NULL WHERE "userId" = ${p.userId}`;
     runInBackground("indexar perfil", async () => {
       const { indexCandidate } = await import("@/lib/indexing");
       await indexCandidate(p.userId);
