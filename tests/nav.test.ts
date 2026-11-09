@@ -11,6 +11,7 @@ const TELAS: Record<string, string> = {
   "app/page.tsx": "/",
   "app/renovar/page.tsx": "/renovar",
   "app/vagas/page.tsx": "/vagas",
+  "app/vagas/aprovar/page.tsx": "/vagas",
   "app/minha-ficha/page.tsx": "/minha-ficha",
   "app/(app)/minhas-candidaturas/page.tsx": "/minhas-candidaturas",
   "app/candidatos/page.tsx": "/candidatos",

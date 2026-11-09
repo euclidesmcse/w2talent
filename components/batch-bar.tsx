@@ -21,9 +21,11 @@ export type BatchBarProps = {
   /** modo: "vagas" => Candidatar, "candidatos" => Contatar */
   variant?: "vagas" | "candidatos";
   onAction?: (ids: string[]) => void;
+  /** Vagas: "Revisar e aprovar" ligado (1.5.13; até o login, só no modo de teste do admin). */
+  actionEnabled?: boolean;
 };
 
-export function BatchBar({ variant = "vagas", onAction }: BatchBarProps) {
+export function BatchBar({ variant = "vagas", onAction, actionEnabled = false }: BatchBarProps) {
   const t = useTranslations("batch");
   const tc = useTranslations();
   const isCand = variant === "candidatos";
@@ -85,8 +87,8 @@ export function BatchBar({ variant = "vagas", onAction }: BatchBarProps) {
 
   const label = isCand ? "Contatar" : "Candidatar";
   const actionText = isCand ? t("contact", { count }) : t("review", { count });
-  // Vagas: "Revisar e aprovar" chega no 1.5.13 (decisão de 09/11: aparece desativado até lá).
-  const actionSoon = !isCand;
+  // Vagas: "Revisar e aprovar" (1.5.13). Sem login, aparece desativado ("disponível em breve").
+  const actionSoon = !isCand && !actionEnabled;
   const drawerLabel = `${count} selecionados — limpar`;
 
   const handleClear = () => {

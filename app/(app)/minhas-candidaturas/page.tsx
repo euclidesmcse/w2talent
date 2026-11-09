@@ -1,9 +1,10 @@
 "use client";
 import * as React from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
 import { buttonClasses } from "@/components/ui/button";
+import { diaMes, emailDaFichaLocal, podeEnviar, postEnvio } from "@/lib/envio-client";
 
 type AppRow = {
   id: string;
@@ -12,6 +13,7 @@ type AppRow = {
   status: "enviado" | "visualizado" | "respondido" | "arquivado";
   origem?: string;
   titulo?: string;
+  empresa?: string;
   companyId?: string;
   createdAt?: string;
 };
@@ -22,6 +24,9 @@ const STATUS_KEYS = ["enviado", "visualizado", "respondido", "arquivado"] as con
 
 export default function MinhasCandidaturasPage() {
   const t = useTranslations("minhas");
+  const locale = useLocale();
+  // 1.5.13: no modo de teste do admin, lê do banco as candidaturas do perfil de "Minha ficha".
+  const [testeEmail, setTesteEmail] = React.useState("");
   const statusLabel = (s: string) => ((STATUS_KEYS as readonly string[]).includes(s) ? t(s as (typeof STATUS_KEYS)[number]) : s);
   const [items, setItems] = React.useState<AppRow[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -42,6 +47,17 @@ export default function MinhasCandidaturasPage() {
   const fetchApps = React.useCallback(async () => {
     setLoading(true);
     try {
+      const email = emailDaFichaLocal();
+      if (email && (await podeEnviar())) {
+        const r = await postEnvio("enviadas", { email });
+        if (r.ok) {
+          const j = (await r.json()) as { applications: AppRow[] };
+          setTesteEmail(email);
+          setNeedsLogin(false);
+          setItems(j.applications ?? []);
+          return;
+        }
+      }
       const qs = candidateId ? `?candidateId=${encodeURIComponent(candidateId)}` : "";
       // tenta api batch listing; fallback para mock
       const res = await fetch(`/api/applications/batch${qs}`, { method: "GET" }).catch(() => null as any);
@@ -122,7 +138,12 @@ export default function MinhasCandidaturasPage() {
                 {items.map((app) => (
                   <tr key={app.id} data-testid={`app-${app.id}`} data-status={app.status} data-proxy={app.proxyThreadId} className="border-t border-line-soft">
                     <td className="py-3.5 pl-4 pr-2">
-                      <div className="font-semibold">{app.titulo ?? app.vacancyId ?? "—"}</div>
+                      <div className="font-semibold">{app.titulo || app.vacancyId || "—"}</div>
+                      {app.empresa || app.createdAt ? (
+                        <div className="text-[13px] text-muted">
+                          {[app.empresa, app.createdAt ? t("sentOn", { date: diaMes(app.createdAt, locale) }) : ""].filter(Boolean).join(" · ")}
+                        </div>
+                      ) : null}
                       <div className="font-mono text-xs text-muted" title={t("proxyHint")}>{app.proxyThreadId}</div>
                     </td>
                     <td className="px-2 py-3.5">
@@ -158,6 +179,7 @@ export default function MinhasCandidaturasPage() {
           </div>
         )}
         <p className="text-xs text-muted">{t("footnote")}</p>
+        {testeEmail ? <p className="text-xs text-muted">{t("testMode", { email: testeEmail })}</p> : null}
       </main>
     </div>
   );

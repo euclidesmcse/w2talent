@@ -7,8 +7,9 @@ const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: proc
 async function main() {
   const company = await prisma.companyProfile.upsert({
     where: { id: "demo-company" },
-    create: { id: "demo-company", nome: "W2Talent Demo", cnpj: "00000000000100", site: "https://w2talent.com", validacaoStatus: "validado" },
-    update: {},
+    // emailContato (1.5.13): com EMAIL_MODE=teste, o e-mail da candidatura vai para EMAIL_TEST_TO.
+    create: { id: "demo-company", nome: "W2Talent Demo", cnpj: "00000000000100", site: "https://w2talent.com", validacaoStatus: "validado", emailContato: "vagas@demo.w2talent.com" },
+    update: { emailContato: "vagas@demo.w2talent.com" },
   });
   console.log("[seed] company", company.id);
 
