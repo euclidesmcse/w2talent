@@ -25,12 +25,12 @@
 | 1.5.7 | AI Router + AI Gateway | Adaptadores OpenAI-compatível, Anthropic, Google e Workers AI; roteamento por custo por tarefa; chaves cifradas (AES-GCM, `AI_KEYS_MASTER`); orçamento diário. | 1.5.2 | ✅ PR #11 (plano: https://claude.ai/artifact/3EbNpTQKyDB4rtpdeBesQJ) |
 | 1.5.8 | Admin de IA | Tela do protótipo: cadastrar API, listar modelos, teste de compatibilidade (JSON, ferramentas, contexto, visão, idiomas, embeddings, latência) com aviso em português do porquê; só admin da plataforma. | 1.5.7 | ✅ (PR do Admin de IA) |
 | 1.5.9 | Embeddings reais | `@cf/baai/bge-m3` (1024 dim) pelo roteador, em segundo plano ao salvar (`waitUntil`) + rota `/api/ai/reindex` para os existentes; busca híbrida no banco (0,6 texto + 0,4 vetor). A Queue `ia-jobs` foi para o 1.5.15. | 1.5.7 | ✅ (PR #13) |
-| 1.5.10 | Ficha mínima + entrada de dados | Campos obrigatórios da spec §6.2; entrada por upload de CV (PDF/DOCX), LinkedIn (PDF exportado), formulário e conversa com a IA. | 1.5.5 | ⏳ |
-| 1.5.11 | Ficha W2 | Resumo padronizado gerado pela IA (`CandidateCard`), editável pelo candidato antes de publicar; contatos removidos antes de enviar a provedores externos. | 1.5.9, 1.5.10 | ⏳ |
+| 1.5.10 | Ficha mínima + entrada de dados | Campos obrigatórios da spec §6.2; entrada por upload de CV (PDF/DOCX), LinkedIn (PDF exportado), formulário e conversa com a IA. | 1.5.5 | 🔄 em PR (publicar só admin até o 1.5.5) |
+| 1.5.11 | Ficha W2 | Resumo padronizado gerado pela IA (`CandidateCard`), editável pelo candidato antes de publicar; contatos removidos antes de enviar a provedores externos. | 1.5.9, 1.5.10 | 🔄 em PR |
 | 1.5.12 | Buscar vagas (candidato) | Tela "Vagas" do protótipo: busca em linguagem natural, chips "A IA entendeu", tabela com match e lacunas, seleção. | 1.5.4, 1.5.9 | ✅ (PR #17) |
 | 1.5.13 | Aprovar antes de enviar | Shortlist + `ApplicationApproval` com `vacancyVersionHash`; abrir → conferir → aprovar uma por uma → enviar em lote (10 por envio, 30 por dia); enviada fica marcada e não pode reenviar; se a vaga mudar, a aprovação cai. | 1.5.12 | ⏳ |
 | 1.5.14 | PWA | Manifest, ícones, offline básico, layout de celular do protótipo. | 1.5.13 | ⏳ |
-| 1.5.15 | Cron/Queues de higiene | Higiene 180d/14d e e-mails (Resend) em Cron/Queues da Cloudflare; n8n fica só para o não crítico. Aviso de vaga vencendo vai com o 1.5.5; Queue `ia-jobs` com o 1.5.10. | 1.5.2 | 🔄 em PR |
+| 1.5.15 | Cron/Queues de higiene | Higiene 180d/14d e e-mails (Resend) em Cron/Queues da Cloudflare; n8n fica só para o não crítico. Aviso de vaga vencendo vai com o 1.5.5; Queue `ia-jobs` com o 1.5.10. | 1.5.2 | ✅ PR #20 |
 
 **Marco da Fase 1.5:** candidato entra com Google/Microsoft, monta a Ficha W2, busca vagas e envia em lote com aprovação. Staging em `workers.dev`. Publicar em `w2talent.com` **só com ordem do Euclides**.
 

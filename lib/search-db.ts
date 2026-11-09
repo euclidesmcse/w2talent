@@ -104,7 +104,7 @@ const VACANCY_COLS = Prisma.sql`v.id, v."companyId", v.titulo, v.stack, v.nivel,
 
 const CANDIDATE_COLS = Prisma.sql`v.id, v."userId", v.nome, v."fotoUrl", v.titulo, v."resumo3linhas", v.localidade,
   v.modo, v."regimePreferido", v."pretensaoDe", v."pretensaoAte", v."pretensaoMoeda", v.disponibilidade,
-  v."objetivoCrescimento", v.stack, v.idiomas, v.email, v.celular, v.status, v."createdAt", v."updatedAt"`;
+  v."objetivoCrescimento", v.stack, v.idiomas, v.senioridade, v.mudanca, v.experiencias, v.formacao, v."fichaW2", v.email, v.celular, v.status, v."createdAt", v."updatedAt"`;
 
 /** tsvector do registro; quem ainda não foi indexado usa um texto montado na hora. */
 const VACANCY_TSV = Prisma.sql`coalesce(v."searchVector", to_tsvector('portuguese',

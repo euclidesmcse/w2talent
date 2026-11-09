@@ -78,6 +78,7 @@ export default function MinhasCandidaturasPage() {
   const nav = [
     { href: "/vagas", label: tn("vagas") },
     { href: "/candidatos", label: tn("candidatos") },
+    { href: "/minha-ficha", label: tn("minhaFicha"), short: tn("minhaFichaCurto") },
     { href: "/minhas-candidaturas", label: tn("minhasCandidaturas"), short: tn("minhasCandidaturasCurto"), active: true },
   ];
 
