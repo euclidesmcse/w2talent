@@ -52,9 +52,9 @@ export function VacancyTable({
   const locale = useLocale();
 
   return (
-    <table aria-label={t("vagas.tableLabel")} className="vacancy-table w-full min-w-[760px] border-collapse text-sm">
+    <table aria-label={t("vagas.tableLabel")} className="vacancy-table w-full min-w-[760px] border-collapse text-sm tabular-nums">
       <thead>
-        <tr className="text-left text-xs uppercase tracking-[0.04em] text-muted [&>th]:px-2 [&>th]:py-2.5 [&>th]:font-semibold [&>th:first-child]:pl-4 [&>th:last-child]:pr-4">
+        <tr className="text-left text-xs text-muted [&>th]:px-2 [&>th]:py-2.5 [&>th]:font-medium [&>th:first-child]:pl-4 [&>th:last-child]:pr-4">
           <th scope="col"><span className="sr-only">{t("table.selection")}</span></th>
           <th scope="col">{t("vagas.colVaga")}</th>
           <th scope="col">{t("table.skills")}</th>

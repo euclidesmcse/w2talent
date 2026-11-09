@@ -43,14 +43,14 @@ export default function DesignPage() {
       <AppHeader area="Design system" />
       <main className="mx-auto flex max-w-page flex-col gap-8 px-6 py-8">
         <div>
-          <h1 className="text-[32px] font-bold leading-tight tracking-[-0.02em]">Design system v2</h1>
+          <h1 className="text-[32px] font-semibold leading-tight tracking-[-0.02em]">Design system v2</h1>
           <p className="mt-1 max-w-[640px] text-muted">
             Limpo e leve: fundo neutro, uma cor de ação, informação densa e escaneável. Inter · grade 4/8 px · raio 6.
           </p>
         </div>
 
         <section aria-labelledby="cores" className="flex flex-col gap-3">
-          <h2 id="cores" className="text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Cores</h2>
+          <h2 id="cores" className="text-[13px] font-medium text-muted">Cores</h2>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3">
             {swatches.map(([nome, hex]) => (
               <Card key={nome} className="overflow-hidden">
@@ -68,7 +68,7 @@ export default function DesignPage() {
           <Card>
             <CardHeader title="Tipografia" />
             <CardBody className="flex flex-col gap-3">
-              <p className="text-[32px] font-bold leading-tight tracking-[-0.02em]">Título 32 / 700</p>
+              <p className="text-[32px] font-semibold leading-tight tracking-[-0.02em]">Título 32 / 600</p>
               <p className="text-xl font-semibold">Seção 20 / 600</p>
               <p>Corpo 15 / 400. Texto de leitura em listas, fichas e descrições de vaga.</p>
               <p className="text-[13px] text-muted">Apoio 13 / 400 · metadados, datas, legendas</p>

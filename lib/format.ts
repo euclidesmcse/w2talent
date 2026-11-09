@@ -110,3 +110,12 @@ export function skillsDisplay(skills: string[], limit = 3): string {
   if (!skills || skills.length <= limit) return skills.join(", ");
   return `${skills.slice(0, limit).join(", ")} +${skills.length - limit}`;
 }
+
+/** Iniciais para o avatar: primeira letra do nome e do último sobrenome ("Ana Silva" → "AS"). */
+export function initials(nome: string | null | undefined): string {
+  const parts = String(nome ?? "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "";
+  const first = parts[0][0] ?? "";
+  const last = parts.length > 1 ? parts[parts.length - 1][0] ?? "" : parts[0][1] ?? "";
+  return (first + last).toUpperCase();
+}

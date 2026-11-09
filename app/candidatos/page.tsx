@@ -82,7 +82,7 @@ export default function CandidatosPage() {
       <AppHeader navLabel={tr("nav.main")} nav={[{ href: "/vagas", label: tr("nav.vagas"), active: false }, { href: "/candidatos", label: tr("nav.candidatos"), active: true }, { href: "/minhas-candidaturas", label: tr("nav.minhasCandidaturas"), short: tr("nav.minhasCandidaturasCurto") }]} />
       <main>
       <div className="mx-auto max-w-page px-6 pt-6">
-        <h1 className="text-xl font-bold">{tr("candidatos.title")}</h1>
+        <h1 className="text-xl font-semibold">{tr("candidatos.title")}</h1>
         <p className="mt-1 text-sm text-muted">{tr("candidatos.subtitle")}</p>
         <form role="search" onSubmit={submitSearch} className="mt-4 flex flex-wrap items-center gap-3">
           <Input
@@ -104,7 +104,7 @@ export default function CandidatosPage() {
         {!loaded ? (
           <div aria-busy="true" aria-label={tr("common.loading")} className="flex min-h-[640px] flex-col gap-px overflow-hidden rounded-card border border-line bg-line-soft">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex h-[70px] items-center gap-4 bg-surface px-4">
+              <div key={i} className="flex h-[72px] items-center gap-4 bg-surface px-4">
                 <span className="h-4 w-4 rounded bg-line" />
                 <span className="h-3 w-1/3 animate-pulse rounded bg-line" />
                 <span className="h-3 w-1/6 animate-pulse rounded bg-line-soft" />
@@ -121,13 +121,16 @@ export default function CandidatosPage() {
           <div className="md:hidden"><CandidateCards items={items} selectedIds={selectedSet} onToggle={toggle} onOpenDetail={openDetail} /></div>
           </div>
         )}
-        <nav aria-label={tr("common.pageOf", { page, total: totalPages })} className="mt-3.5 flex items-center justify-between gap-2 text-[13px] text-muted">
-          <span>{tr("candidatos.pageSummary", { page, totalPages, count: total })}</span>
-          <div className="flex gap-2">
-            <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>{tr("common.previous")}</Button>
-            <Button variant="secondary" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>{tr("common.next")}</Button>
-          </div>
-        </nav>
+        {/* Com uma página só, a paginação some: a contagem já aparece ao lado da busca */}
+        {totalPages > 1 ? (
+          <nav aria-label={tr("common.pageOf", { page, total: totalPages })} className="mt-3.5 flex items-center justify-between gap-2 text-[13px] text-muted">
+            <span>{tr("candidatos.pageSummary", { page, totalPages, count: total })}</span>
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>{tr("common.previous")}</Button>
+              <Button variant="secondary" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>{tr("common.next")}</Button>
+            </div>
+          </nav>
+        ) : null}
         <DetailModal open={modalOpen} onClose={closeModal} item={modalItem} triggerRef={activeTrigger} title={modalItem?.nome ?? modalItem?.titulo ?? tr("detail.title")} />
         <BatchBar variant="candidatos" onAction={(ids) => { void ids; }} />
       </div>

@@ -21,7 +21,8 @@
     "minhasCandidaturas": "My applications",
     "minhasCandidaturasCurto": "Applications",
     "recrutadores": "For recruiters",
-    "verVagas": "See jobs"
+    "verVagas": "See jobs",
+    "recrutadoresCurto": "Recruiters"
   },
   "lang": {
     "label": "Language",
@@ -30,7 +31,7 @@
     "es": "Español"
   },
   "home": {
-    "title": "Apply to many jobs at once, without losing control.",
+    "title": "Apply to many jobs at once, without losing control",
     "lead": "You find the jobs, review each one and approve it. W2Talent sends a batch with only the ones you approved, plus a profile summary a recruiter understands in seconds.",
     "ctaBuscar": "Search jobs",
     "ctaRecrutador": "I'm a recruiter",
@@ -60,7 +61,24 @@
     "faq3a": "Yes. The same account works on computer and phone, and you can install it as an app.",
     "faq4q": "Is w2talent.com live yet?",
     "faq4a": "Not yet. This is the test version, and it changes often.",
-    "footer": "W2Talent · test version"
+    "footer": "W2Talent · test version",
+    "faqTitle": "Questions",
+    "ficha_label": "Sample W2 profile",
+    "ficha_name": "Ana Silva",
+    "ficha_role": "Mid-level Cloud Analyst",
+    "ficha_vaga": "For: Cloud Analyst (mid-level) — AWS",
+    "ficha_why": "Why it matches",
+    "ficha_has": "Has",
+    "ficha_missing": "Missing",
+    "ficha_fieldModelo": "Work model",
+    "ficha_fieldRegime": "Contract",
+    "ficha_fieldPretensao": "Expected pay",
+    "ficha_fieldInicio": "Start",
+    "ficha_valModelo": "Remote",
+    "ficha_valRegime": "CLT",
+    "ficha_valPretensao": "R$ 12k",
+    "ficha_valInicio": "30 days",
+    "ficha_contact": "Contact protected until they reply"
   },
   "status": {
     "aprovada": "Approved",
@@ -133,8 +151,8 @@
     "apply": "Apply ({count})",
     "contact": "Contact ({count})",
     "clear": "Clear selection ({count})",
-    "limitNote": "Up to {max} per batch.",
-    "limitReached": "Limit of {max} per batch reached.",
+    "limitNote": "Up to {max} per batch",
+    "limitReached": "Limit of {max} per batch reached",
     "removeItem": "Remove {name} from selection",
     "closeDrawer": "Close selection",
     "toolbarLabel": "Selection bar"
@@ -153,19 +171,19 @@
     "closeLabel": "Close details"
   },
   "empty": {
-    "noResults": "No results for \"{query}\".",
+    "noResults": "No results for \"{query}\"",
     "didYouMean": "Did you mean \"{suggestion}\"?",
     "useSuggestion": "See \"{suggestion}\"",
     "viewSuggestion": "See suggestion"
   },
   "minhas": {
     "title": "My applications",
-    "subtitle": "Track each application: sent, seen by the company and answered. {count, plural, one {# application} other {# applications}}.",
+    "subtitle": "Track each application: sent, seen by the company and answered. {count, plural, =0 {No applications} one {# application} other {# applications}}.",
     "loading": "Loading applications…",
-    "loginTitle": "Sign in to see your applications.",
+    "loginTitle": "Sign in to see your applications",
     "loginBody": "Sign-in with Google or Microsoft is coming soon. Meanwhile, explore the jobs.",
     "loginCta": "See jobs",
-    "emptyTitle": "No applications yet.",
+    "emptyTitle": "No applications yet",
     "emptyBody": "Search jobs, approve the ones that make sense and send them in a batch.",
     "emptyCta": "Search jobs",
     "tableLabel": "My applications",
