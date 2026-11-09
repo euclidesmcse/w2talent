@@ -15,6 +15,7 @@ import { useGapText } from "@/components/vacancy-match";
 import { formatFaixa } from "@/lib/format";
 import { selectionStore } from "@/lib/selection-store";
 import { diaMes, emailDaFichaLocal, podeEnviar, postEnvio } from "@/lib/envio-client";
+import { useOnline } from "@/lib/pwa-client";
 import type { Ficha, FichaW2 } from "@/lib/ficha";
 import type { MatchResult } from "@/lib/match";
 import type { CampoVaga } from "@/lib/envio";
@@ -46,7 +47,7 @@ type Item = {
   paraEmpresa: Ficha | null;
 };
 type Resultado = { vacancyId: string; status: string; email?: boolean };
-type Fase = "carregando" | "sem_admin" | "sem_perfil" | "sem_selecao" | "erro" | "revisar" | "feito";
+type Fase = "carregando" | "sem_admin" | "sem_perfil" | "sem_selecao" | "sem_rede" | "erro" | "revisar" | "feito";
 
 const textos = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.trim() !== "") : []);
 const skillIds = (v: unknown): string[] =>
@@ -54,6 +55,8 @@ const skillIds = (v: unknown): string[] =>
 
 export default function AprovarPage() {
   const t = useTranslations("aprovar");
+  const tp = useTranslations("pwa");
+  const online = useOnline();
   const locale = useLocale();
   const gapText = useGapText();
   const [fase, setFase] = React.useState<Fase>("carregando");
@@ -79,17 +82,25 @@ export default function AprovarPage() {
     setFase("revisar");
   }, []);
 
+  // Sem internet não dá para conferir a versão atual das vagas (1.5.14): avisa e tenta de novo quando voltar.
   React.useEffect(() => {
+    if (!online) { setFase((f) => (f === "carregando" || f === "erro" ? "sem_rede" : f)); return; }
+    setFase((f) => (f === "sem_rede" ? "carregando" : f));
+  }, [online]);
+
+  React.useEffect(() => {
+    if (fase !== "carregando") return;
     (async () => {
-      if (!(await podeEnviar())) return setFase("sem_admin");
+      if (!navigator.onLine) return setFase("sem_rede");
+      if (!(await podeEnviar())) return setFase(navigator.onLine ? "sem_admin" : "sem_rede");
       const mail = emailDaFichaLocal();
       if (!mail) return setFase("sem_perfil");
       setEmail(mail);
       const ids = [...(selectionStore.getState().selectedIds ?? [])];
       if (!ids.length) return setFase("sem_selecao");
       await carregar(mail, ids);
-    })().catch(() => setFase("erro"));
-  }, [carregar]);
+    })().catch(() => setFase(navigator.onLine ? "erro" : "sem_rede"));
+  }, [carregar, fase]);
 
   // Ao trocar de vaga, o foco volta ao título (leitor de tela anuncia a nova vaga).
   React.useEffect(() => {
@@ -99,7 +110,7 @@ export default function AprovarPage() {
   const atual = itens[idx];
   const aprovadas = itens.filter((i) => i.estado === "aprovada");
   const restantesHoje = Math.max(0, limites.dia - limites.usadas24h);
-  const podeMandar = aprovadas.length > 0 && aprovadas.length <= limites.lote && aprovadas.length <= restantesHoje && !ocupado;
+  const podeMandar = aprovadas.length > 0 && aprovadas.length <= limites.lote && aprovadas.length <= restantesHoje && !ocupado && online;
 
   const proxima = () => setIdx((i) => Math.min(itens.length - 1, i + 1));
   const anterior = () => setIdx((i) => Math.max(0, i - 1));
@@ -189,6 +200,7 @@ export default function AprovarPage() {
   else if (fase === "sem_admin") corpo = vazio(t("adminOnlyTitle"), t("adminOnlyBody"));
   else if (fase === "sem_perfil") corpo = vazio(t("noProfileTitle"), t("noProfileBody"), { href: "/minha-ficha", label: t("noProfileCta") });
   else if (fase === "sem_selecao") corpo = vazio(t("emptyTitle"), t("emptyBody"));
+  else if (fase === "sem_rede") corpo = vazio(tp("needsInternet"), tp("reviewOffline"));
   else if (fase === "erro") corpo = vazio(t("error"), "");
   else if (fase === "feito") {
     const enviadas = resultado.filter((r) => r.status === "enviada").length;
@@ -316,12 +328,12 @@ export default function AprovarPage() {
               <span data-testid="aprovada" className="inline-flex h-9 items-center rounded-control bg-success-soft px-3 text-sm font-medium text-success-ink">
                 ✓ {t("approved")}
               </span>
-              <Button variant="ghost" size="md" disabled={ocupado} onClick={() => marcar(false)}>
+              <Button variant="ghost" size="md" disabled={ocupado || !online} onClick={() => marcar(false)}>
                 {t("undo")}
               </Button>
             </>
           ) : (
-            <Button variant="primary" size="md" disabled={ocupado || bloqueada} onClick={() => marcar(true)}>
+            <Button variant="primary" size="md" disabled={ocupado || bloqueada || !online} title={online ? undefined : tp("needsInternet")} onClick={() => marcar(true)}>
               {atual.estado === "mudou" ? t("approveAgain") : t("approve")}
             </Button>
           )}
@@ -342,7 +354,7 @@ export default function AprovarPage() {
   return (
     <div>
       <AppHeader area="candidato" active="/vagas" />
-      <main className="mx-auto max-w-page px-6 pb-32 pt-6">
+      <main className="mx-auto max-w-page px-4 pb-32 pt-6 md:px-6">
         <h1 className="text-xl font-semibold">{t("title")}</h1>
         <p className="mt-1 text-sm text-muted">{t("subtitle")}</p>
         <div className="mt-5">{corpo}</div>
@@ -367,7 +379,7 @@ export default function AprovarPage() {
                   {t("overLimit", { left: restantesHoje })}
                 </span>
               ) : null}
-              <Button variant="primary" size="md" data-action="enviar-aprovadas" disabled={!podeMandar} onClick={enviar}>
+              <Button variant="primary" size="md" data-action="enviar-aprovadas" disabled={!podeMandar} title={online ? undefined : tp("needsInternet")} onClick={enviar}>
                 {ocupado ? t("sending") : t("send", { count: aprovadas.length })}
               </Button>
             </div>

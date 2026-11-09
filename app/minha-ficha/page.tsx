@@ -7,6 +7,7 @@
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
+import { useOnline } from "@/lib/pwa-client";
 import { FichaW2Card } from "@/components/ficha-w2-card";
 import { Button, Card, Field, Input, Select, Textarea, cn } from "@/components/ui";
 import {
@@ -52,7 +53,11 @@ function montarFicha(f: Ficha, rows: SkillRow[]): Ficha {
 
 export default function MinhaFichaPage() {
   const t = useTranslations("ficha");
+  const tp = useTranslations("pwa");
   const locale = useLocale();
+  // Sem internet (1.5.14): editar continua (fica neste navegador); ler o CV, gerar e publicar esperam a rede.
+  const online = useOnline();
+  const semRede = online ? undefined : tp("needsInternet");
   const [r, setR] = React.useState<Rascunho>({ passo: "enviar", ficha: fichaVazia(), skills: [], w2: null, aceite: false });
   const [carregado, setCarregado] = React.useState(false);
   const [ocupado, setOcupado] = React.useState<null | "ler" | "gerar" | "publicar">(null);
@@ -282,7 +287,7 @@ export default function MinhaFichaPage() {
                 <span>{t("aceite")}</span>
               </label>
               <div className="flex flex-wrap gap-3">
-                <Button data-action="ler-cv" onClick={ler} disabled={ocupado === "ler"}>
+                <Button data-action="ler-cv" onClick={ler} disabled={ocupado === "ler" || !online} title={semRede}>
                   {ocupado === "ler" ? t("lendo") : t("ler")}
                 </Button>
                 <Button variant="secondary" data-action="manual" onClick={() => irPara("conferir")}>
@@ -544,7 +549,7 @@ export default function MinhaFichaPage() {
               </label>
 
               <div className="flex flex-wrap gap-3">
-                <Button data-action="gerar-w2" onClick={() => gerar(false)} disabled={ocupado === "gerar"}>
+                <Button data-action="gerar-w2" onClick={() => gerar(false)} disabled={ocupado === "gerar" || !online} title={semRede}>
                   {ocupado === "gerar" ? t("gerando") : t("gerar")}
                 </Button>
                 <Button variant="secondary" onClick={() => irPara("enviar")}>
@@ -577,7 +582,7 @@ export default function MinhaFichaPage() {
               ) : null}
               <div className="flex flex-wrap gap-3">
                 {podePublicar && !publicado ? (
-                  <Button data-action="publicar" onClick={publicar} disabled={ocupado === "publicar" || editandoW2}>
+                  <Button data-action="publicar" onClick={publicar} disabled={ocupado === "publicar" || editandoW2 || !online} title={semRede}>
                     {ocupado === "publicar" ? t("publicando") : t("publicar")}
                   </Button>
                 ) : null}
@@ -586,7 +591,7 @@ export default function MinhaFichaPage() {
                     {t("editar")}
                   </Button>
                 ) : null}
-                <Button variant="secondary" onClick={() => gerar(true)} disabled={ocupado === "gerar"}>
+                <Button variant="secondary" onClick={() => gerar(true)} disabled={ocupado === "gerar" || !online} title={semRede}>
                   {ocupado === "gerar" ? t("gerando") : t("refazer")}
                 </Button>
                 <Button variant="secondary" onClick={() => irPara("conferir")}>

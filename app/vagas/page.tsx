@@ -13,12 +13,19 @@ import { IntentChips } from "@/components/intent-chips";
 import { removeChipFromQuery, type IntentChip } from "@/lib/query-intent";
 import { emailDaFichaLocal, enviadasDoPerfil, podeEnviar } from "@/lib/envio-client";
 import { useRouter } from "next/navigation";
+import { dataHoraCurta, lerCopia, salvarCopia, useOnline } from "@/lib/pwa-client";
+
+/** Últimos resultados de busca, para abrir a tela sem internet (1.5.14). Só vagas públicas, nada pessoal. */
+const COPIA_BUSCA = "w2talent:ultima-busca";
+type CopiaBusca = { q: string; page: number; items: any[]; total: number; totalPages: number; entendeu: IntentChip[] };
 
 type Item = any;
 
 export default function VagasPage() {
   const tr = useTranslations();
   const locale = useLocale();
+  const online = useOnline();
+  const [copiaDe, setCopiaDe] = React.useState<string | null>(null);
   const [q, setQ] = React.useState("");
   const [draft, setDraft] = React.useState("");
   const [searching, setSearching] = React.useState(false);
@@ -87,8 +94,21 @@ export default function VagasPage() {
   const fetchPage = React.useCallback(async (query: string, p: number) => {
     const lang = locale;
     const params = new URLSearchParams({ q: query, page: String(p), pageSize: "20", lang });
-    const res = await fetch(`/api/search/vacancies?${params.toString()}`);
-    const data = await res.json();
+    let data: any;
+    try {
+      const res = await fetch(`/api/search/vacancies?${params.toString()}`);
+      if (!res.ok) throw new Error(String(res.status));
+      data = await res.json();
+      setCopiaDe(null);
+      salvarCopia<CopiaBusca>(COPIA_BUSCA, { q: query, page: p, items: data.items ?? [], total: data.total ?? 0, totalPages: data.totalPages ?? 1, entendeu: Array.isArray(data.entendeu) ? data.entendeu : [] });
+    } catch (e) {
+      // Sem internet: mostra os últimos resultados salvos neste aparelho, com a data.
+      const copia = navigator.onLine ? null : lerCopia<CopiaBusca>(COPIA_BUSCA);
+      if (!copia) throw e;
+      data = copia.dados;
+      setCopiaDe(copia.salvoEm);
+      if (copia.dados.q !== query) { setDraft(copia.dados.q); }
+    }
     setItems(data.items ?? []);
     setTotal(data.total ?? 0);
     setTotalPages(data.totalPages ?? 1);
@@ -103,6 +123,12 @@ export default function VagasPage() {
     setSearching(true);
     fetchPage(q, page).catch(() => {}).finally(() => { setLoaded(true); setSearching(false); });
   }, [ready, q, page, fetchPage]);
+
+  // A internet voltou: troca a cópia salva pelos resultados atuais.
+  React.useEffect(() => {
+    if (online && copiaDe) fetchPage(q, page).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [online]);
 
   const handleClearFilters = () => runSearch("");
   const handleUseSuggestion = (s: string) => runSearch(s);
@@ -122,7 +148,7 @@ export default function VagasPage() {
     <div>
       <AppHeader area="candidato" active="/vagas" />
       <main>
-      <div className="mx-auto max-w-page px-6 pt-6">
+      <div className="mx-auto max-w-page px-4 pt-6 md:px-6">
         <h1 className="text-xl font-semibold">{tr("vagas.title")}</h1>
         <p className="mt-1 text-sm text-muted">{tr("vagas.subtitle")}</p>
         <form role="search" onSubmit={submitSearch} className="mt-4 flex flex-wrap items-center gap-3">
@@ -134,15 +160,17 @@ export default function VagasPage() {
             onChange={(e) => setDraft(e.target.value)}
             className="min-w-0 max-w-[560px] flex-[1_1_220px]"
           />
-          <Button type="submit" variant="primary" size="md">{tr("common.search")}</Button>
+          <Button type="submit" variant="primary" size="md" disabled={!online} title={online ? undefined : tr("pwa.needsInternet")}>{tr("common.search")}</Button>
           <span aria-live="polite" className="basis-full text-[13px] text-muted md:basis-auto">{searching && loaded ? tr("common.searching") : entendeu.length ? "" : tr("vagas.count", { count: total })}</span>
         </form>
         <IntentChips chips={entendeu} total={total} byMatch={items.some((it) => it.match != null)} onRemove={removeChip} />
       </div>
 
-      <div className="mx-auto max-w-page px-6 pt-4 pb-24">
+      <div className="mx-auto max-w-page px-4 pt-4 pb-24 md:px-6">
+        {copiaDe ? <div role="status" data-testid="copia-busca" className="mb-3 rounded-card border border-warning bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning-ink">{tr("pwa.savedSearch", { date: dataHoraCurta(copiaDe, locale) })}</div> : null}
         {suggestion ? <div role="status" data-testid="sugestao" className="mb-3 rounded-card border border-line bg-brand-soft px-3.5 py-2.5 text-[13px] text-brand-ink">{tr("empty.didYouMean", { suggestion })} <Button variant="ghost" size="sm" onClick={() => handleUseSuggestion(suggestion)}>{tr("empty.viewSuggestion")}</Button></div> : null}
-        {isEmpty ? <EmptyState query={q} suggestion={suggestion} emptyCTA={emptyCTA} variant="vagas" onClearFilters={handleClearFilters} onUseSuggestion={handleUseSuggestion} /> : null}
+        {isEmpty && !online && !copiaDe ? <div role="status" className="rounded-card border border-line bg-surface px-6 py-10 text-center text-sm"><p className="font-semibold">{tr("pwa.needsInternet")}</p><p className="mt-1 text-muted">{tr("pwa.offlineBody")}</p></div> : null}
+        {isEmpty && (online || copiaDe) ? <EmptyState query={q} suggestion={suggestion} emptyCTA={emptyCTA} variant="vagas" onClearFilters={handleClearFilters} onUseSuggestion={handleUseSuggestion} /> : null}
         {!loaded ? (
           <div aria-busy="true" aria-label={tr("common.loading")} className="flex min-h-[640px] flex-col gap-px overflow-hidden rounded-card border border-line bg-line-soft">
             {Array.from({ length: 8 }).map((_, i) => (

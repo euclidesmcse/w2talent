@@ -5,6 +5,10 @@ import { useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
 import { buttonClasses } from "@/components/ui/button";
 import { diaMes, emailDaFichaLocal, podeEnviar, postEnvio } from "@/lib/envio-client";
+import { dataHoraCurta, lerCopia, salvarCopia } from "@/lib/pwa-client";
+
+/** Última lista de candidaturas, para ver sem internet (1.5.14). Fica só neste navegador. */
+const COPIA_ENVIADAS = "w2talent:candidaturas-copia";
 
 type AppRow = {
   id: string;
@@ -24,7 +28,9 @@ const STATUS_KEYS = ["enviado", "visualizado", "respondido", "arquivado"] as con
 
 export default function MinhasCandidaturasPage() {
   const t = useTranslations("minhas");
+  const tp = useTranslations("pwa");
   const locale = useLocale();
+  const [copiaDe, setCopiaDe] = React.useState<string | null>(null);
   // 1.5.13: no modo de teste do admin, lê do banco as candidaturas do perfil de "Minha ficha".
   const [testeEmail, setTesteEmail] = React.useState("");
   const statusLabel = (s: string) => ((STATUS_KEYS as readonly string[]).includes(s) ? t(s as (typeof STATUS_KEYS)[number]) : s);
@@ -48,6 +54,15 @@ export default function MinhasCandidaturasPage() {
     setLoading(true);
     try {
       const email = emailDaFichaLocal();
+      // Sem internet: mostra a última lista salva deste perfil, com a data.
+      const copia = email && !navigator.onLine ? lerCopia<{ email: string; applications: AppRow[] }>(COPIA_ENVIADAS) : null;
+      if (copia && copia.dados.email === email) {
+        setTesteEmail(email);
+        setNeedsLogin(false);
+        setItems(copia.dados.applications ?? []);
+        setCopiaDe(copia.salvoEm);
+        return;
+      }
       if (email && (await podeEnviar())) {
         const r = await postEnvio("enviadas", { email });
         if (r.ok) {
@@ -55,6 +70,8 @@ export default function MinhasCandidaturasPage() {
           setTesteEmail(email);
           setNeedsLogin(false);
           setItems(j.applications ?? []);
+          setCopiaDe(null);
+          salvarCopia(COPIA_ENVIADAS, { email, applications: j.applications ?? [] });
           return;
         }
       }
@@ -94,20 +111,25 @@ export default function MinhasCandidaturasPage() {
     return (
       <div className="min-h-screen">
         <AppHeader area="candidato" active="/minhas-candidaturas" />
-        <main className="mx-auto max-w-page px-6 py-6 text-muted">{t("loading")}</main>
+        <main className="mx-auto max-w-page px-4 py-6 md:px-6 text-muted">{t("loading")}</main>
       </div>
     );
 
   return (
     <div className="min-h-screen">
       <AppHeader area="candidato" active="/minhas-candidaturas" />
-      <main className="minhas-candidaturas mx-auto flex max-w-page flex-col gap-4 px-6 py-6">
+      <main className="minhas-candidaturas mx-auto flex max-w-page flex-col gap-4 px-4 py-6 md:px-6">
         <div>
           <h1 className="text-xl font-semibold">{t("title")}</h1>
           <p className="mt-1 text-sm text-muted">
             {t("subtitle", { count: items.length })}
           </p>
         </div>
+        {copiaDe ? (
+          <div role="status" data-testid="copia-candidaturas" className="rounded-card border border-warning bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning-ink">
+            {tp("savedCopy", { date: dataHoraCurta(copiaDe, locale) })}
+          </div>
+        ) : null}
         {needsLogin ? (
           <div role="status" className="rounded-card border border-line bg-surface px-6 py-10 text-center">
             <p className="font-semibold">{t("loginTitle")}</p>
@@ -125,7 +147,29 @@ export default function MinhasCandidaturasPage() {
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-card border border-line bg-surface">
+          <>
+          {/* Celular (1.5.14): um cartão por candidatura, sem rolar para o lado */}
+          <ul aria-label={t("tableLabel")} className="flex flex-col gap-2.5 md:hidden">
+            {items.map((app) => (
+              <li key={app.id} data-testid={`card-${app.id}`} className="rounded-card border border-line bg-surface p-3.5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-semibold">{app.titulo || app.vacancyId || "—"}</div>
+                    {app.empresa || app.createdAt ? (
+                      <div className="text-[13px] text-muted">
+                        {[app.empresa, app.createdAt ? t("sentOn", { date: diaMes(app.createdAt, locale) }) : ""].filter(Boolean).join(" · ")}
+                      </div>
+                    ) : null}
+                  </div>
+                  <span className={`inline-flex h-7 shrink-0 items-center rounded-control px-2.5 text-[13px] font-medium ${app.status === "respondido" ? "bg-success-soft text-success-ink" : app.status === "visualizado" ? "bg-brand-soft text-brand-ink" : "bg-neutral-soft text-ink-soft"}`}>
+                    {statusLabel(app.status)}
+                  </span>
+                </div>
+                <div className="mt-1 font-mono text-xs text-muted" title={t("proxyHint")}>{app.proxyThreadId}</div>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto rounded-card border border-line bg-surface md:block">
             <table aria-label={t("tableLabel")} className="w-full min-w-[560px] border-collapse text-sm">
               <thead>
                 <tr className="text-left text-xs text-muted [&>th]:px-2 [&>th]:py-2.5 [&>th]:font-medium [&>th:first-child]:pl-4 [&>th:last-child]:pr-4">
@@ -177,6 +221,7 @@ export default function MinhasCandidaturasPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
         <p className="text-xs text-muted">{t("footnote")}</p>
         {testeEmail ? <p className="text-xs text-muted">{t("testMode", { email: testeEmail })}</p> : null}

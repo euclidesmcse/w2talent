@@ -619,5 +619,23 @@
     "res_nao_encontrada": "La vacante ya no existe",
     "res_mudou": "La vacante cambió; revísala de nuevo",
     "limitDay": "Límite de {max} postulaciones en 24 h. Hoy caben {left} más."
+  },
+  "pwa": {
+    "offlineTitle": "Sin conexión.",
+    "offlineBody": "Ves lo que está guardado en este dispositivo. Buscar, publicar y enviar vuelven cuando vuelva internet.",
+    "needsInternet": "Necesita internet",
+    "install": "Instalar app",
+    "iosTitle": "Instalar en iPhone o iPad",
+    "iosBody": "En Safari, toca Compartir y luego \"Agregar a la pantalla de inicio\".",
+    "close": "Cerrar",
+    "offlinePageTitle": "Sin conexión a internet",
+    "offlinePageBody": "Esta pantalla todavía no está guardada en este dispositivo. Estas abren sin internet con lo que ya viste:",
+    "screenVagas": "Vacantes",
+    "screenFicha": "Mi ficha",
+    "screenMinhas": "Mis postulaciones",
+    "retry": "Intentar de nuevo",
+    "savedCopy": "Sin conexión: esta es la lista guardada el {date}.",
+    "savedSearch": "Sin conexión: estos son los resultados guardados el {date}.",
+    "reviewOffline": "La revisión necesita internet para verificar la versión actual de cada vacante. Tus vacantes seleccionadas siguen guardadas."
   }
 }

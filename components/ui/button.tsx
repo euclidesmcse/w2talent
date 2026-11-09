@@ -16,10 +16,10 @@ const variants: Record<ButtonVariant, string> = {
   danger: "bg-danger text-white font-semibold hover:opacity-90",
 };
 
-// Alturas do protótipo: 32 (compacto), 40 (padrão), 44 (ação principal / toque).
+// Alturas do protótipo: 32 (compacto), 40 (padrão; 44 no celular, alvo de toque — 1.5.14), 44 (ação principal / toque).
 const sizes: Record<ButtonSize, string> = {
   sm: "h-8 px-3 text-[13px]",
-  md: "h-10 px-4 text-sm",
+  md: "h-11 px-4 text-sm md:h-10",
   lg: "h-11 px-5 text-[15px]",
 };
 
