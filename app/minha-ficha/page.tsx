@@ -17,13 +17,20 @@ import {
   MODOS,
   MOEDAS,
   NIVEIS_IDIOMA,
+  novaPretensao,
   REGIMES,
+  REGIMES_COM_UNIDADE,
   sanitizeFicha,
   SENIORIDADES,
   type CampoMinimo,
   type Ficha,
   type FichaW2,
+  type Pretensao,
+  UNIDADES,
 } from "@/lib/ficha";
+
+/** Chave das mensagens por regime (sem acento): pret_CLT, pret_Estagio… */
+const chaveRegime = (g: string) => g.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 import { getSkill, listSkills, normalizeSkill } from "@/lib/taxonomy";
 
 type Passo = "enviar" | "conferir" | "w2";
@@ -101,6 +108,17 @@ export default function MinhaFichaPage() {
   // Publicado vale para o rascunho daquele momento: qualquer mudança na ficha ou na Ficha W2 pede publicar de novo.
   React.useEffect(() => setPublicado(false), [r.ficha, r.skills, r.w2]);
   const set = <K extends keyof Ficha>(k: K, v: Ficha[K]) => setR((x) => ({ ...x, ficha: { ...x.ficha, [k]: v } }));
+  // Marcar um regime abre a linha da pretensão dele; desmarcar tira as duas coisas.
+  const marcarRegime = (g: string, on: boolean) =>
+    setR((x) => {
+      const f = x.ficha;
+      // sempre na ordem da tela (CLT, PJ, Estágio…), não na ordem em que foram marcados
+      const regimes = REGIMES.filter((y) => (y === g ? on : f.regimes.includes(y)));
+      const pretensoes = regimes.map((y) => f.pretensoes.find((p) => p.regime === y) ?? novaPretensao(y, f.pretensoes));
+      return { ...x, ficha: { ...f, regimes, pretensoes } };
+    });
+  const setPretensao = (i: number, patch: Partial<Pretensao>) =>
+    setR((x) => ({ ...x, ficha: { ...x.ficha, pretensoes: x.ficha.pretensoes.map((p, j) => (j === i ? { ...p, ...patch } : p)) } }));
   const msgErro = (codigo: string) => {
     const k = `erro_${codigo}`;
     return t.has(k) ? t(k) : t("erro_geral");
@@ -431,29 +449,52 @@ export default function MinhaFichaPage() {
                         type="checkbox"
                         className="h-4 w-4 accent-brand"
                         checked={r.ficha.regimes.includes(g)}
-                        onChange={(e) => set("regimes", e.target.checked ? [...r.ficha.regimes, g] : r.ficha.regimes.filter((x) => x !== g))}
+                        onChange={(e) => marcarRegime(g, e.target.checked)}
                       />
                       {g}
                     </label>
                   ))}
                 </div>
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-[1fr_1fr_120px]">
-                  <Field label={t("pretensaoDe")} hint={t("porMes")}>
-                    <Input type="number" min={0} inputMode="numeric" value={r.ficha.pretensaoDe ?? ""} aria-invalid={marcar("pretensao")} onChange={(e) => set("pretensaoDe", e.target.value ? Number(e.target.value) : null)} />
-                  </Field>
-                  <Field label={t("pretensaoAte")}>
-                    <Input type="number" min={0} inputMode="numeric" value={r.ficha.pretensaoAte ?? ""} onChange={(e) => set("pretensaoAte", e.target.value ? Number(e.target.value) : null)} />
-                  </Field>
-                  <Field label={t("moeda")}>
-                    <Select value={r.ficha.pretensaoMoeda} onChange={(e) => set("pretensaoMoeda", e.target.value)}>
-                      {MOEDAS.map((m) => (
-                        <option key={m} value={m}>
-                          {m}
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
-                </div>
+                {r.ficha.pretensoes.length ? <p className="-mb-1 text-[13px] text-muted">{t("pretMinimo")}</p> : null}
+                {r.ficha.pretensoes.map((p, i) => (
+                  <div key={p.regime} data-pretensao={p.regime} className="grid grid-cols-2 gap-3 md:grid-cols-[1fr_120px_110px]">
+                    <Field
+                      className="col-span-2 md:col-span-1"
+                      label={t(`pret_${chaveRegime(p.regime)}`)}
+                    >
+                      <Input
+                        type="number"
+                        min={0}
+                        inputMode="numeric"
+                        value={p.valor ?? ""}
+                        aria-invalid={marcar("pretensao") && p.valor == null}
+                        onChange={(e) => setPretensao(i, { valor: e.target.value ? Number(e.target.value) : null })}
+                      />
+                    </Field>
+                    <Field label={t("unidade")}>
+                      {(REGIMES_COM_UNIDADE as readonly string[]).includes(p.regime) ? (
+                        <Select value={p.unidade} onChange={(e) => setPretensao(i, { unidade: e.target.value as Pretensao["unidade"] })}>
+                          {UNIDADES.map((u) => (
+                            <option key={u} value={u}>
+                              {t(`unidade_${u}`)}
+                            </option>
+                          ))}
+                        </Select>
+                      ) : (
+                        <Input value={t("unidade_mes")} readOnly tabIndex={-1} className="bg-canvas text-muted" />
+                      )}
+                    </Field>
+                    <Field label={t("moeda")}>
+                      <Select value={p.moeda} onChange={(e) => setPretensao(i, { moeda: e.target.value })}>
+                        {MOEDAS.map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                  </div>
+                ))}
               </fieldset>
 
               <fieldset className="flex flex-col gap-3">

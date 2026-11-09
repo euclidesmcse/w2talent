@@ -15,6 +15,27 @@ export const REGIMES = ["CLT", "PJ", "Estágio", "Freelancer", "Outro"] as const
 export const DISPONIBILIDADES = ["imediata", "15d", "30d", "60d", "90d"] as const;
 export const NIVEIS_IDIOMA = ["basico", "intermediario", "avancado", "fluente", "nativo"] as const;
 export const MOEDAS = ["BRL", "USD", "EUR"] as const;
+export const UNIDADES = ["mes", "hora"] as const;
+export type Unidade = (typeof UNIDADES)[number];
+
+/**
+ * Pretensão de um regime: o mínimo que a pessoa aceita naquele regime (decisão do Euclides,
+ * 2026-11-09). CLT, PJ e Estágio são sempre por mês (CLT = bruto mensal sem benefícios,
+ * PJ = valor mensal da nota, Estágio = bolsa); Freelancer e Outro escolhem mês ou hora.
+ */
+export type Pretensao = { regime: string; valor: number | null; unidade: Unidade; moeda: string };
+
+/** Regimes em que a pessoa escolhe a unidade; nos outros é sempre por mês. */
+export const REGIMES_COM_UNIDADE = ["Freelancer", "Outro"] as const;
+
+export function unidadePadrao(regime: string): Unidade {
+  return regime === "Freelancer" ? "hora" : "mes";
+}
+
+/** Linha nova de pretensão para um regime recém-marcado (moeda igual à da primeira linha). */
+export function novaPretensao(regime: string, existentes: Pretensao[]): Pretensao {
+  return { regime, valor: null, unidade: unidadePadrao(regime), moeda: existentes[0]?.moeda ?? "BRL" };
+}
 export const MAX_SKILLS = 10;
 export const MAX_EXPERIENCIAS = 8;
 export const MAX_DESTAQUES = 3;
@@ -51,9 +72,8 @@ export type Ficha = {
   modo: Modo | "";
   mudanca: boolean;
   regimes: string[];
-  pretensaoDe: number | null;
-  pretensaoAte: number | null;
-  pretensaoMoeda: string;
+  /** Uma por regime marcado, na ordem dos regimes. */
+  pretensoes: Pretensao[];
   idiomas: Idioma[];
   disponibilidade: Disponibilidade | "";
   objetivo: string;
@@ -85,9 +105,7 @@ export function fichaVazia(): Ficha {
     modo: "",
     mudanca: false,
     regimes: [],
-    pretensaoDe: null,
-    pretensaoAte: null,
-    pretensaoMoeda: "BRL",
+    pretensoes: [],
     idiomas: [],
     disponibilidade: "",
     objetivo: "",
@@ -125,6 +143,30 @@ const SENIOR_ALIAS: Record<string, Senioridade> = {
   lideranca: "lideranca", liderança: "lideranca", lead: "lideranca", manager: "lideranca", gerente: "lideranca", coordenador: "lideranca", head: "lideranca", director: "lideranca", diretor: "lideranca",
 };
 const REGIME_ALIAS: Record<string, string> = { clt: "CLT", pj: "PJ", contractor: "PJ", estágio: "Estágio", estagio: "Estágio", internship: "Estágio", freelancer: "Freelancer", freela: "Freelancer", freelance: "Freelancer", outro: "Outro" };
+
+/**
+ * Lista de pretensões válida: uma por regime, unidade fixa onde o regime não deixa escolher.
+ * Rascunhos e perfis de antes (pretensaoDe/pretensaoAte num valor só) viram a pretensão do
+ * primeiro regime marcado, usando o "de" como mínimo.
+ */
+function sanitizePretensoes(o: Record<string, any>, regimes: string[]): Pretensao[] {
+  const out: Pretensao[] = [];
+  const brutas: any[] = Array.isArray(o.pretensoes) ? o.pretensoes : [];
+  if (!brutas.length && regimes.length) {
+    const valores = [num(o.pretensaoDe), num(o.pretensaoAte)].filter((v): v is number => v != null);
+    const antigo = valores.length ? Math.min(...valores) : null;
+    if (antigo != null) brutas.push({ regime: regimes[0], valor: antigo, unidade: "mes", moeda: o.pretensaoMoeda });
+  }
+  for (const x of brutas) {
+    if (!x || typeof x !== "object") continue;
+    const regime = REGIME_ALIAS[str(x.regime, 20).toLowerCase()];
+    if (!regime || out.some((p) => p.regime === regime)) continue;
+    const livre = (REGIMES_COM_UNIDADE as readonly string[]).includes(regime);
+    const unidade = livre ? oneOf(UNIDADES, x.unidade) || unidadePadrao(regime) : "mes";
+    out.push({ regime, valor: num(x.valor), unidade, moeda: oneOf(MOEDAS, x.moeda) || "BRL" });
+  }
+  return out;
+}
 
 /** Aceita qualquer coisa e devolve uma Ficha válida (campos desconhecidos somem, tamanhos limitados). */
 export function sanitizeFicha(input: unknown): Ficha {
@@ -167,11 +209,10 @@ export function sanitizeFicha(input: unknown): Ficha {
   const regimes = (Array.isArray(o.regimes) ? o.regimes : Array.isArray(o.regimePreferido) ? o.regimePreferido : [])
     .map((r: unknown) => REGIME_ALIAS[str(r, 20).toLowerCase()])
     .filter(Boolean) as string[];
-  f.regimes = [...new Set(regimes)];
-  f.pretensaoDe = num(o.pretensaoDe);
-  f.pretensaoAte = num(o.pretensaoAte);
-  if (f.pretensaoDe && f.pretensaoAte && f.pretensaoAte < f.pretensaoDe) [f.pretensaoDe, f.pretensaoAte] = [f.pretensaoAte, f.pretensaoDe];
-  f.pretensaoMoeda = oneOf(MOEDAS, o.pretensaoMoeda) || "BRL";
+  const pretensoes = sanitizePretensoes(o, regimes);
+  // Uma pretensão de um regime não marcado (a IA às vezes traz) marca o regime.
+  f.regimes = [...new Set([...regimes, ...pretensoes.map((p) => p.regime)])];
+  f.pretensoes = f.regimes.map((g) => pretensoes.find((p) => p.regime === g) ?? novaPretensao(g, pretensoes));
   f.idiomas = (Array.isArray(o.idiomas) ? o.idiomas : [])
     .filter((x) => x && typeof x === "object" && str(x.idioma, 40))
     .map((x) => ({ idioma: str(x.idioma, 40), nivel: oneOf(NIVEIS_IDIOMA, x.nivel) }))
@@ -211,7 +252,7 @@ export function camposFaltando(f: Ficha): CampoMinimo[] {
   if (!f.localidade) falta.push("localidade");
   if (!f.modo) falta.push("modo");
   if (!f.regimes.length) falta.push("regimes");
-  if (f.pretensaoDe == null && f.pretensaoAte == null) falta.push("pretensao");
+  if (!f.pretensoes.length || f.pretensoes.some((p) => p.valor == null)) falta.push("pretensao");
   if (!f.idiomas.some((i) => i.nivel)) falta.push("idiomas");
   if (!f.disponibilidade) falta.push("disponibilidade");
   return falta;
@@ -274,6 +315,11 @@ export function sanitizeFichaW2(input: unknown): FichaW2 | null {
   };
 }
 
+function pretensaoAntiga(ps: Pretensao[]) {
+  const p = ps.find((x) => x.valor != null && x.unidade === "mes");
+  return { pretensaoDe: p?.valor ?? null, pretensaoAte: null, pretensaoMoeda: p?.moeda ?? "BRL" };
+}
+
 /** Ficha → colunas do CandidateProfile. */
 export function fichaToProfile(f: Ficha) {
   return {
@@ -290,9 +336,9 @@ export function fichaToProfile(f: Ficha) {
     modo: f.modo || null,
     mudanca: f.mudanca,
     regimePreferido: f.regimes,
-    pretensaoDe: f.pretensaoDe,
-    pretensaoAte: f.pretensaoAte,
-    pretensaoMoeda: f.pretensaoMoeda,
+    pretensoes: f.pretensoes.filter((p) => p.valor != null),
+    // Colunas antigas (um valor só) ficam com a primeira pretensão mensal, para quem ainda lê delas.
+    ...pretensaoAntiga(f.pretensoes),
     idiomas: f.idiomas,
     disponibilidade: f.disponibilidade || null,
     objetivoCrescimento: f.objetivo || null,

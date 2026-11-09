@@ -103,7 +103,7 @@ const VACANCY_COLS = Prisma.sql`v.id, v."companyId", v.titulo, v.stack, v.nivel,
   v."expiresAt", v.views, v."candidaturasCount", v.status, v."createdAt", v."updatedAt"`;
 
 const CANDIDATE_COLS = Prisma.sql`v.id, v."userId", v.nome, v."fotoUrl", v.titulo, v."resumo3linhas", v.localidade,
-  v.modo, v."regimePreferido", v."pretensaoDe", v."pretensaoAte", v."pretensaoMoeda", v.disponibilidade,
+  v.modo, v."regimePreferido", v."pretensaoDe", v."pretensaoAte", v."pretensaoMoeda", v.pretensoes, v.disponibilidade,
   v."objetivoCrescimento", v.stack, v.idiomas, v.senioridade, v.mudanca, v.experiencias, v.formacao, v."fichaW2", v.email, v.celular, v.status, v."createdAt", v."updatedAt"`;
 
 /** tsvector do registro; quem ainda não foi indexado usa um texto montado na hora. */
@@ -133,8 +133,15 @@ function candidateFilters(p: DbSearchParams): Prisma.Sql[] {
   if (p.modo) f.push(Prisma.sql`(v.modo ILIKE ${like(p.modo)} OR v.localidade ILIKE ${like(p.modo)})`);
   if (p.localidade) f.push(Prisma.sql`v.localidade ILIKE ${like(p.localidade)}`);
   if (p.regime) f.push(Prisma.sql`EXISTS (SELECT 1 FROM unnest(v."regimePreferido") r WHERE lower(r) = lower(${p.regime}))`);
-  if (p.faixaDe != null) f.push(Prisma.sql`(v."pretensaoAte" IS NULL OR v."pretensaoAte" >= ${p.faixaDe})`);
-  if (p.faixaAte != null) f.push(Prisma.sql`(v."pretensaoDe" IS NULL OR v."pretensaoDe" <= ${p.faixaAte})`);
+  // Pretensão = mínimo aceito por regime: cabe quando o mínimo (mensal) do regime procurado é até o
+  // teto da faixa. O piso da faixa não exclui ninguém (quem pede menos também aceita mais).
+  // Sem pretensão mensal informada naquele regime, continua aparecendo (fica escondida, não some).
+  if (p.faixaAte != null) {
+    const doRegime = p.regime ? Prisma.sql`AND lower(x->>'regime') = lower(${p.regime})` : Prisma.empty;
+    const mensais = Prisma.sql`FROM jsonb_array_elements(v.pretensoes) x
+      WHERE x->>'unidade' = 'mes' AND jsonb_typeof(x->'valor') = 'number' ${doRegime}`;
+    f.push(Prisma.sql`(NOT EXISTS (SELECT 1 ${mensais}) OR EXISTS (SELECT 1 ${mensais} AND (x->>'valor')::numeric <= ${p.faixaAte}))`);
+  }
   return f;
 }
 

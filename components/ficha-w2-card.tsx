@@ -7,7 +7,7 @@ import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Chip } from "@/components/ui/chip";
 import { skillName } from "@/components/skill-chips";
-import { formatFaixa } from "@/lib/format";
+import { formatPretensoes } from "@/lib/format";
 import { anosExperiencia, nomeCurto, topSkills, type Ficha, type FichaW2 } from "@/lib/ficha";
 
 function semAcento(s: string): string {
@@ -18,7 +18,7 @@ export function FichaW2Card({ ficha, w2, children }: { ficha: Ficha; w2: FichaW2
   const t = useTranslations("ficha");
   const locale = useLocale();
   const anos = anosExperiencia(ficha);
-  const faixa = ficha.pretensaoDe != null || ficha.pretensaoAte != null ? formatFaixa(ficha.pretensaoDe, ficha.pretensaoAte, ficha.pretensaoMoeda, locale) : "";
+  const pretensoes = formatPretensoes(ficha.pretensoes, locale);
   // "Analista Cloud Pleno" já diz a senioridade: não repete.
   const sen = ficha.senioridade ? t(`sen_${ficha.senioridade}`) : "";
   const cargo = sen && !semAcento(ficha.titulo).includes(semAcento(sen)) ? `${ficha.titulo} ${sen}`.trim() : ficha.titulo;
@@ -29,8 +29,8 @@ export function FichaW2Card({ ficha, w2, children }: { ficha: Ficha; w2: FichaW2
     anos > 0 ? t("w2Anos", { n: anos }) : "",
     local,
     ficha.mudanca ? t("w2Mudanca") : "",
-    ficha.regimes.join("/"),
-    faixa && faixa !== "—" ? faixa : "",
+    // com valor, o regime já aparece junto ("CLT a partir de R$ 12.000")
+    pretensoes || ficha.regimes.join("/"),
     ficha.disponibilidade === "imediata" ? t("w2InicioImediato") : ficha.disponibilidade ? t("w2Inicio", { d: t(`disp_${ficha.disponibilidade}`).toLowerCase() }) : "",
   ].filter(Boolean);
   const skills = topSkills(ficha);

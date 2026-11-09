@@ -53,6 +53,18 @@ export { maskEmail, maskPhone, formatFaixa, formatTempo, truncateSkills, skillsD
 import { maskEmail, maskPhone, maskedContact, formatFaixa, formatTempo, truncateSkills, skillsDisplay } from "./format";
 
 // ── tsvector helper ──────────────────────────────────────────────────
+/**
+ * Pretensão = mínimo aceito por regime: cabe quando o mínimo mensal do regime é até o teto.
+ * Sem teto, ou sem pretensão mensal naquele regime, cabe (fica escondida, não some).
+ */
+export function cabeNaFaixa(pretensoes: unknown[], faixaAte: number | null, regime: string | null): boolean {
+  if (faixaAte == null) return true;
+  const mensais = pretensoes.filter(
+    (x: any) => x && x.unidade === "mes" && typeof x.valor === "number" && (!regime || String(x.regime).toLowerCase() === regime.toLowerCase()),
+  ) as { valor: number }[];
+  return !mensais.length || mensais.some((x) => x.valor <= faixaAte);
+}
+
 export function buildTsvectorTextVacancy(v: any): string {
   const parts: string[] = [];
   if (v.titulo) parts.push(v.titulo);
@@ -233,6 +245,9 @@ export async function hybridSearch<T extends Record<string, any>>(
     // faixa filter: only apply when both candidate vacancy have numeric faixa; null is hide not break
     if (f.faixaDe != null || f.faixaAte != null) {
       filtered = filtered.filter((it) => {
+        // candidato com pretensão por regime: mesmo critério do banco (lib/search-db.ts)
+        const ps = (it as any).pretensoes;
+        if (Array.isArray(ps) && ps.length) return cabeNaFaixa(ps, f.faixaAte ?? null, (f as any).regime ?? null);
         const de = (it as any).faixaDe ?? (it as any).pretensaoDe ?? null;
         const ate = (it as any).faixaAte ?? (it as any).pretensaoAte ?? null;
         // hide null faixa does not break: if item has null faixa, keep it (hide)
