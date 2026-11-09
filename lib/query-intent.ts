@@ -16,15 +16,34 @@ export type Modo = "remoto" | "hibrido" | "presencial";
 export type Nivel = "Júnior" | "Pleno" | "Sênior";
 export type Idioma = "en" | "es";
 
-export type IntentChip =
-  | { kind: "skill"; value: string; source: string }
-  | { kind: "regime"; value: Regime; source: string }
-  | { kind: "modo"; value: Modo; source: string }
-  | { kind: "nivel"; value: Nivel; source: string }
-  | { kind: "faixa"; value: number; source: string }
-  | { kind: "idioma"; value: Idioma; source: string }
-  /** Palavra ou frase que segue como busca por texto. */
-  | { kind: "texto"; value: string; source: string };
+/** Trecho do texto buscado (já normalizado) que gerou o chip: [start, end). */
+type Span = { source: string; start: number; end: number };
+
+export type IntentChip = Span &
+  (
+    | { kind: "skill"; value: string }
+    | { kind: "regime"; value: Regime }
+    | { kind: "modo"; value: Modo }
+    | { kind: "nivel"; value: Nivel }
+    | { kind: "faixa"; value: number }
+    | { kind: "idioma"; value: Idioma }
+    /** Palavra ou frase que segue como busca por texto. */
+    | { kind: "texto"; value: string }
+  );
+
+/** Só as chaves declaradas (nunca "constructor", "__proto__"…). */
+function own<T>(dict: Record<string, T>, key: string): T | undefined {
+  return Object.prototype.hasOwnProperty.call(dict, key) ? dict[key] : undefined;
+}
+
+/** Trechos entre aspas: ficam exatamente como a pessoa escreveu. */
+function quotedRanges(q: string): Array<[number, number]> {
+  const out: Array<[number, number]> = [];
+  const re = /"[^"]*"?/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(q))) out.push([m.index, m.index + m[0].length]);
+  return out;
+}
 
 export type QueryIntent = {
   skills: string[];
@@ -117,25 +136,32 @@ function parseMoney(q: string): { value: number; start: number; end: number } | 
     if (!hasCurrency && !m[2] && (n < 1000 || (n >= 1900 && n <= 2100))) continue; // "2024" é ano
     const value = Math.round(n * mult);
     if (!Number.isFinite(value) || value <= 0) continue;
+    const end = m.index + full.trimEnd().length;
+    if (quotedRanges(q).some(([a, b]) => m!.index < b && end > a)) continue; // "ISO 27001"
     const before = q[m.index - 1];
     if (before && /[\p{L}\p{N}-]/u.test(before)) continue; // "-15k" ou parte de outra palavra
-    return { value, start: m.index, end: m.index + full.trimEnd().length };
+    return { value, start: m.index, end };
   }
   return null;
 }
 
 /** Procura frases de 1 a 3 tokens livres que estejam no dicionário. */
-function matchPhrases<T>(toks: Tok[], dict: Record<string, T>, onHit: (value: T, source: string) => void) {
+function matchPhrases<T>(toks: Tok[], dict: Record<string, T>, onHit: (value: T, span: Span) => void) {
   for (let n = 3; n >= 1; n--) {
     for (let i = 0; i + n <= toks.length; i++) {
       const span = toks.slice(i, i + n);
       if (span.some((t) => t.used || t.locked)) continue;
       const key = fold(span.map((t) => t.text).join(" "));
-      if (!(key in dict)) continue;
+      const value = own(dict, key);
+      if (value === undefined) continue;
       span.forEach((t) => (t.used = true));
-      onHit(dict[key], span.map((t) => t.text).join(" "));
+      onHit(value, spanOf(span));
     }
   }
+}
+
+function spanOf(span: Tok[]): Span {
+  return { source: span.map((t) => t.text).join(" "), start: span[0].start, end: span[span.length - 1].end };
 }
 
 function hasOr(q: string): boolean {
@@ -147,45 +173,44 @@ export function parseQueryIntent(input: string | undefined | null): QueryIntent 
   const out: QueryIntent = { skills: [], idiomas: [], rest: q, chips: [] };
   if (!q || hasOr(q)) return out;
 
-  const found: Array<IntentChip & { at: number }> = [];
+  const found: IntentChip[] = [];
   let text = q;
 
   // 1. Faixa (no texto inteiro, antes de quebrar em palavras)
   const money = parseMoney(text);
   if (money) {
     const source = text.slice(money.start, money.end);
-    found.push({ kind: "faixa", value: money.value, source, at: money.start });
+    found.push({ kind: "faixa", value: money.value, source, start: money.start, end: money.end });
     out.faixaMin = money.value;
     text = text.slice(0, money.start) + " ".repeat(money.end - money.start) + text.slice(money.end);
   }
 
   const toks = tokenize(text);
-  const at = (source: string) => q.indexOf(source);
 
   // 2. Regime, modelo, nível, idioma (frases primeiro)
-  matchPhrases(toks, REGIME, (v, source) => {
+  matchPhrases(toks, REGIME, (v, sp) => {
     if (out.regime) return;
     out.regime = v;
-    found.push({ kind: "regime", value: v, source, at: at(source) });
+    found.push({ kind: "regime", value: v, ...sp });
   });
-  matchPhrases(toks, MODO, (v, source) => {
+  matchPhrases(toks, MODO, (v, sp) => {
     if (out.modo) return;
     out.modo = v;
-    found.push({ kind: "modo", value: v, source, at: at(source) });
+    found.push({ kind: "modo", value: v, ...sp });
   });
-  matchPhrases(toks, NIVEL, (v, source) => {
+  matchPhrases(toks, NIVEL, (v, sp) => {
     if (out.nivel) return;
     out.nivel = v;
-    found.push({ kind: "nivel", value: v, source, at: at(source) });
+    found.push({ kind: "nivel", value: v, ...sp });
   });
   const idiomaToks: Tok[] = [];
-  matchPhrases(toks, IDIOMA, (v, source) => {
+  matchPhrases(toks, IDIOMA, (v, sp) => {
     if (!out.idiomas.includes(v)) out.idiomas.push(v);
-    found.push({ kind: "idioma", value: v, source, at: at(source) });
+    found.push({ kind: "idioma", value: v, ...sp });
   });
   // Idioma sai do texto obrigatório: a vaga não tem campo de idioma, e exigir a palavra "inglês"
   // escondia quase todas. Ele continua no texto do vetor (q inteiro), que só reordena.
-  for (const t of toks) if (t.used && IDIOMA[fold(t.text)]) idiomaToks.push(t);
+  for (const t of toks) if (t.used && own(IDIOMA, fold(t.text))) idiomaToks.push(t);
   const idiomaSet = new Set(idiomaToks);
 
   // 3. Competências (frases de até 3 palavras, a mais longa primeiro)
@@ -211,20 +236,25 @@ export function parseQueryIntent(input: string | undefined | null): QueryIntent 
     }
     if (out.skills.includes(h.id)) continue;
     out.skills.push(h.id);
-    found.push({ kind: "skill", value: h.id, source: h.source, at: at(h.source) });
+    found.push({ kind: "skill", value: h.id, ...spanOf(h.span) });
   }
 
   const free = toks.filter((t) => !t.used);
   // Só palavras de ligação sobrando ("remoto de PJ"): não há texto para buscar.
   out.rest = free.every((t) => STOPWORDS.has(fold(t.text))) ? "" : free.map((t) => t.text).join(" ").trim();
   // Posição vem do próprio token: a mesma palavra pode aparecer duas vezes.
-  for (const t of free) if (!idiomaSet.has(t) && !STOPWORDS.has(fold(t.text))) found.push({ kind: "texto", value: t.text, source: t.text, at: t.start });
-  out.chips = found.sort((a, b) => a.at - b.at).map(({ at: _at, ...c }) => c as IntentChip);
+  for (const t of free) if (!idiomaSet.has(t) && !STOPWORDS.has(fold(t.text))) found.push({ kind: "texto", value: t.text, source: t.text, start: t.start, end: t.end });
+  out.chips = found.sort((a, b) => a.start - b.start);
   return out;
 }
 
 /** Tira o trecho de um chip do texto buscado (o × do chip). */
-export function removeChipFromQuery(q: string, chip: Pick<IntentChip, "source">): string {
+export function removeChipFromQuery(q: string, chip: Pick<IntentChip, "source" | "start" | "end">): string {
+  // O trecho exato do chip ("javascript java": tirar Java não pode mexer em JavaScript).
+  const norm = q.trim().replace(/\s+/g, " ");
+  if (norm.slice(chip.start, chip.end) === chip.source) {
+    return (norm.slice(0, chip.start) + " " + norm.slice(chip.end)).replace(/\s+/g, " ").trim();
+  }
   const i = q.indexOf(chip.source);
   if (i < 0) return q;
   return (q.slice(0, i) + " " + q.slice(i + chip.source.length)).replace(/\s+/g, " ").trim();

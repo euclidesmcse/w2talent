@@ -46,7 +46,7 @@ export default function VagasPage() {
   // A busca guardada no endereço (/vagas?q=...) volta ao abrir a página e pode ser compartilhada.
   React.useEffect(() => {
     try {
-      const initial = new URLSearchParams(window.location.search).get("q") ?? "";
+      const initial = (new URLSearchParams(window.location.search).get("q") ?? "").trim().replace(/\s+/g, " ");
       if (initial) { setDraft(initial); setQ(initial); }
     } catch {}
     setReady(true);

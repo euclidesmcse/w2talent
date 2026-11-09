@@ -60,6 +60,30 @@ describe("parseQueryIntent", () => {
     expect(removeChipFromQuery(q, chip)).toBe("DevOps remoto 15k inglês");
   });
 
+  it("o × tira o trecho exato, mesmo quando um termo contém o outro", () => {
+    const q = "javascript java";
+    const java = parseQueryIntent(q).chips.find((c) => c.kind === "skill" && c.value === "java")!;
+    expect(removeChipFromQuery(q, java)).toBe("javascript");
+  });
+
+  it("aspas protegem números da faixa", () => {
+    const i = parseQueryIntent('"ISO 27001" aws');
+    expect(i.faixaMin).toBeUndefined();
+    expect(i.rest).toBe('"ISO 27001"');
+    const chip = i.chips.find((c) => c.kind === "texto")!;
+    expect(removeChipFromQuery('"ISO 27001" aws', chip)).toBe("aws");
+  });
+
+  it("palavras como constructor e __proto__ não viram critério", () => {
+    for (const w of ["constructor", "__proto__", "toString", "hasOwnProperty"]) {
+      const i = parseQueryIntent(`${w} remoto`);
+      expect(i.regime).toBeUndefined();
+      expect(i.nivel).toBeUndefined();
+      expect(i.idiomas).toEqual([]);
+      expect(i.modo).toBe("remoto");
+    }
+  });
+
   it("termos de texto de uma competência", () => {
     expect(skillTextTerms("nodejs")).toEqual(expect.arrayContaining(["nodejs"]));
   });
@@ -139,6 +163,13 @@ describe("searchVacancies com match", () => {
     expect(r.items.map((i: any) => i.id)).toEqual(["a", "b"]);
     expect(r.items[0].match).toBeGreaterThan(r.items[1].match);
     expect(r.items[1].gaps.map((g: any) => g.kind)).toEqual(["regime", "modo", "faixa"]);
+  });
+
+  it("idioma sozinho não filtra o texto", async () => {
+    const r = await searchVacancies({ q: "DevOps inglês", page: 1, pageSize: 20 }, vagas as any);
+    expect(r.items.map((i: any) => i.id).sort()).toEqual(["a", "b"]);
+    expect(r.items.every((i: any) => i.match === null)).toBe(true);
+    expect(r.entendeu.map((c) => c.kind)).toEqual(["texto", "idioma"]);
   });
 
   it("só texto livre: sem match", async () => {

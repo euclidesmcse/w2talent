@@ -427,7 +427,8 @@ export type VacancySearchResult = SearchResult<any> & { entendeu: IntentChip[] }
 export async function searchVacancies(params: SearchParams, dataSource?: any[]): Promise<VacancySearchResult> {
   const intent = parseQueryIntent(params.q);
   if (!hasCriteria(intent)) {
-    const r = await searchKind("vacancy", params, dataSource);
+    // Sem critério para o match, mas o texto já vem sem o idioma (que não filtra): "DevOps inglês".
+    const r = await searchKind("vacancy", params, dataSource, { textQ: intent.rest, memoryQ: intent.rest });
     return { ...r, entendeu: intent.chips, items: r.items.map((it) => ({ ...it, match: null, gaps: [] })) };
   }
 
