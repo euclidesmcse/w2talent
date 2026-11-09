@@ -107,6 +107,9 @@ describe("formato da ficha", () => {
     const exp = (l: [string, string][]) => fichaCompleta({ experiencias: l.map(([inicio, fim]) => ({ cargo: "A", empresa: "B", inicio, fim, atual: false })) });
     expect(anosExperiencia(exp([["2015-01", "2016-01"], ["2024-01", "2025-01"]]), NOW)).toBe(2);
     expect(anosExperiencia(exp([["2015-01", "2019-01"], ["2017-01", "2021-01"]]), NOW)).toBe(6);
+    // fim em branco sem "atual": não conta até hoje e a ficha mínima pede o fim
+    expect(anosExperiencia(exp([["2015-01", ""], ["2024-01", "2025-01"]]), NOW)).toBe(1);
+    expect(camposFaltando(exp([["2015-01", ""]]))).toEqual(["experiencia"]);
     expect(topSkills(f).map((s) => s.skillId)).toEqual(["aws", "terraform"]);
     expect(nomeCurto("Ana Maria Silva")).toBe("Ana S.");
     expect(nomeCurto("Ana")).toBe("Ana");

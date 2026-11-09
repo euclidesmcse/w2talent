@@ -511,7 +511,7 @@
     "campo_titulo": "puesto",
     "campo_senioridade": "seniority",
     "campo_stack": "competencia con años",
-    "campo_experiencia": "última experiencia (puesto, empresa e inicio)",
+    "campo_experiencia": "última experiencia (puesto, empresa, inicio y fin o empleo actual)",
     "campo_localidade": "ciudad",
     "campo_modo": "modalidad",
     "campo_regimes": "contratación",

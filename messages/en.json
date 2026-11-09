@@ -511,7 +511,7 @@
     "campo_titulo": "role",
     "campo_senioridade": "seniority",
     "campo_stack": "skill with years",
-    "campo_experiencia": "latest experience (role, company and start)",
+    "campo_experiencia": "latest experience (role, company, start, and end or current job)",
     "campo_localidade": "city",
     "campo_modo": "work model",
     "campo_regimes": "contract",

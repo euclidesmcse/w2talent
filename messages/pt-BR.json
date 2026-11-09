@@ -511,7 +511,7 @@
     "campo_titulo": "cargo",
     "campo_senioridade": "senioridade",
     "campo_stack": "competência com anos",
-    "campo_experiencia": "última experiência (cargo, empresa e início)",
+    "campo_experiencia": "última experiência (cargo, empresa, início e fim ou emprego atual)",
     "campo_localidade": "cidade",
     "campo_modo": "modelo de trabalho",
     "campo_regimes": "regime",

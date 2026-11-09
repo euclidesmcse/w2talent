@@ -207,7 +207,7 @@ export function camposFaltando(f: Ficha): CampoMinimo[] {
   if (!f.senioridade) falta.push("senioridade");
   if (!f.stack.some((s) => s.anos > 0)) falta.push("stack");
   const ult = f.experiencias[0];
-  if (!ult || !ult.cargo || !ult.empresa || !ult.inicio) falta.push("experiencia");
+  if (!ult || !ult.cargo || !ult.empresa || !ult.inicio || (!ult.atual && !ult.fim)) falta.push("experiencia");
   if (!f.localidade) falta.push("localidade");
   if (!f.modo) falta.push("modo");
   if (!f.regimes.length) falta.push("regimes");
@@ -225,8 +225,9 @@ export function anosExperiencia(f: Ficha, now: Date = new Date()): number {
   };
   const hoje = now.getUTCFullYear() * 12 + now.getUTCMonth();
   const periodos = f.experiencias
-    .filter((e) => e.inicio)
-    .map((e) => [mes(e.inicio), e.atual || !e.fim ? hoje : mes(e.fim)] as [number, number])
+    // sem fim e sem "atual" não se sabe quanto durou: fica de fora em vez de contar até hoje
+    .filter((e) => e.inicio && (e.atual || e.fim))
+    .map((e) => [mes(e.inicio), e.atual ? hoje : mes(e.fim)] as [number, number])
     .filter(([i, fim]) => fim >= i)
     .sort((x, y) => x[0] - y[0]);
   if (!periodos.length) return Math.max(0, ...f.stack.map((s) => s.anos));
