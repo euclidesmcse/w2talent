@@ -46,7 +46,7 @@ export function LanguageSwitcher() {
             aria-pressed={l === locale}
             title={t(l)}
             onClick={() => choose(l)}
-            className={`h-7 min-w-[34px] rounded-[4px] px-1.5 ${l === locale ? "bg-ink text-white" : "text-muted hover:bg-canvas hover:text-ink"}`}
+            className={`h-7 min-w-8 rounded-[4px] px-1.5 ${l === locale ? "bg-ink text-white" : "text-muted hover:bg-canvas hover:text-ink"}`}
           >
             <span aria-hidden>{SHORT[l]}</span>
             <span className="sr-only">{t(l)}</span>

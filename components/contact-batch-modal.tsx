@@ -36,7 +36,7 @@ function suggestLocal(candidate: CandidatePreview): { subject: string; body: str
   const skill = (candidate.stack?.[0] as any)?.skillId ?? "Cloud";
   return {
     subject: `Oportunidade: ${titulo} • ${String(skill).toUpperCase()} — convite via W2Talent`,
-    body: `Olá ${nome},\n\nSeu perfil "${titulo}" chamou atenção — ${skill}. Temos oportunidade remota alinhada.\nGostaria de conversar esta semana? Responda este e-mail (proxy) para liberar contato direto 🔒.`,
+    body: `Olá ${nome},\n\nSeu perfil "${titulo}" chamou atenção — ${skill}. Temos oportunidade remota alinhada.\nGostaria de conversar esta semana? Responda este e-mail (proxy) para liberar contato direto.`,
   };
 }
 
@@ -171,7 +171,7 @@ export function ContactBatchModal({
             />
             <span className="text-xs text-zinc-500">IA sugere body se não informado — cada candidato vê preview personalizado</span>
           </label>
-          <div className="text-xs text-zinc-400">Limite 10 por lote, 30/dia RH — mascarado até envio 🔒 — resposta no proxy libera contato direto (B)</div>
+          <div className="text-xs text-zinc-400">Limite 10 por lote, 30/dia RH — mascarado até envio — resposta no proxy libera contato direto (B)</div>
         </div>
 
         {/* Lista preview expansível por candidato */}
@@ -186,7 +186,7 @@ export function ContactBatchModal({
               return (
                 <li key={id} className="border rounded p-3" data-testid={`preview-${id}`}>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{cand.nome} — {cand.titulo ?? "—"} <span className="text-zinc-400 text-xs">{cand.email ? `${cand.email.slice(0,2)}*** 🔒` : ""}</span></span>
+                    <span className="text-sm font-medium">{cand.nome} — {cand.titulo ?? "—"} <span className="text-zinc-400 text-xs">{cand.email ? `${cand.email.slice(0,2)}***` : ""}</span></span>
                     <button
                       type="button"
                       aria-label={`expandir preview ${id}`}
@@ -245,7 +245,7 @@ export function ContactBatchModal({
                 <li key={r.candidateId ?? r.proxyThreadId}>{r.candidateId ?? r.proxyThreadId}: {r.status} {r.proxyThreadId ? `(${r.proxyThreadId})` : ""} {r.subject ? `— ${r.subject}` : ""}</li>
               ))}
             </ul>
-            <div className="text-xs text-zinc-500">Mascarado até envio 🔒 — resposta no proxy libera contato direto (B) e loga consentimento</div>
+            <div className="text-xs text-zinc-500">Mascarado até envio — resposta no proxy libera contato direto (B) e loga consentimento</div>
           </div>
         ) : null}
       </div>

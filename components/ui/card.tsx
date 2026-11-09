@@ -24,7 +24,7 @@ export function StatCard({ label, value }: { label: string; value: React.ReactNo
   return (
     <Card className="p-4">
       <div className="text-[13px] text-muted">{label}</div>
-      <div className="mt-1 text-[28px] font-bold leading-tight">{value}</div>
+      <div className="mt-1 text-[28px] font-semibold leading-tight tabular-nums">{value}</div>
     </Card>
   );
 }

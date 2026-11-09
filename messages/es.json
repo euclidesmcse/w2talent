@@ -21,7 +21,8 @@
     "minhasCandidaturas": "Mis postulaciones",
     "minhasCandidaturasCurto": "Postulaciones",
     "recrutadores": "Para reclutadores",
-    "verVagas": "Ver empleos"
+    "verVagas": "Ver empleos",
+    "recrutadoresCurto": "Reclutadores"
   },
   "lang": {
     "label": "Idioma",
@@ -30,7 +31,7 @@
     "es": "Español"
   },
   "home": {
-    "title": "Postúlate a varios empleos a la vez, sin perder el control.",
+    "title": "Postúlate a varios empleos a la vez, sin perder el control",
     "lead": "Tú encuentras los empleos, revisas cada uno y lo apruebas. W2Talent envía en lote solo los que aprobaste, con un resumen de tu perfil que el reclutador entiende en segundos.",
     "ctaBuscar": "Buscar empleos",
     "ctaRecrutador": "Soy reclutador",
@@ -60,7 +61,24 @@
     "faq3a": "Sí. La misma cuenta funciona en la computadora y en el celular, y se puede instalar como app.",
     "faq4q": "¿w2talent.com ya está en línea?",
     "faq4a": "Todavía no. Esta es la versión de pruebas, que cambia con frecuencia.",
-    "footer": "W2Talent · versión de pruebas"
+    "footer": "W2Talent · versión de pruebas",
+    "faqTitle": "Preguntas",
+    "ficha_label": "Ejemplo de Ficha W2",
+    "ficha_name": "Ana Silva",
+    "ficha_role": "Analista Cloud Semi Senior",
+    "ficha_vaga": "Para: Analista Cloud Semi Senior — AWS",
+    "ficha_why": "Por qué encaja",
+    "ficha_has": "Tiene",
+    "ficha_missing": "Falta",
+    "ficha_fieldModelo": "Modalidad",
+    "ficha_fieldRegime": "Contrato",
+    "ficha_fieldPretensao": "Pretensión",
+    "ficha_fieldInicio": "Inicio",
+    "ficha_valModelo": "Remoto",
+    "ficha_valRegime": "CLT",
+    "ficha_valPretensao": "R$ 12 mil",
+    "ficha_valInicio": "30 días",
+    "ficha_contact": "Contacto protegido hasta la respuesta"
   },
   "status": {
     "aprovada": "Aprobada",
@@ -133,8 +151,8 @@
     "apply": "Postularme ({count})",
     "contact": "Contactar ({count})",
     "clear": "Limpiar selección ({count})",
-    "limitNote": "Hasta {max} por envío.",
-    "limitReached": "Se alcanzó el límite de {max} por envío.",
+    "limitNote": "Hasta {max} por envío",
+    "limitReached": "Se alcanzó el límite de {max} por envío",
     "removeItem": "Quitar {name} de la selección",
     "closeDrawer": "Cerrar selección",
     "toolbarLabel": "Barra de selección"
@@ -153,19 +171,19 @@
     "closeLabel": "Cerrar detalles"
   },
   "empty": {
-    "noResults": "Sin resultados para \"{query}\".",
+    "noResults": "Sin resultados para \"{query}\"",
     "didYouMean": "¿Quisiste decir \"{suggestion}\"?",
     "useSuggestion": "Ver \"{suggestion}\"",
     "viewSuggestion": "Ver sugerencia"
   },
   "minhas": {
     "title": "Mis postulaciones",
-    "subtitle": "Sigue cada envío: enviada, vista por la empresa y respondida. {count, plural, one {# postulación} other {# postulaciones}}.",
+    "subtitle": "Sigue cada envío: enviada, vista por la empresa y respondida. {count, plural, =0 {Ninguna postulación} one {# postulación} other {# postulaciones}}.",
     "loading": "Cargando postulaciones…",
-    "loginTitle": "Inicia sesión para ver tus postulaciones.",
+    "loginTitle": "Inicia sesión para ver tus postulaciones",
     "loginBody": "El inicio de sesión con Google o Microsoft llega pronto. Mientras tanto, explora los empleos.",
     "loginCta": "Ver empleos",
-    "emptyTitle": "Todavía no tienes postulaciones.",
+    "emptyTitle": "Todavía no tienes postulaciones",
     "emptyBody": "Busca empleos, aprueba los que tengan sentido y envíalos en lote.",
     "emptyCta": "Buscar empleos",
     "tableLabel": "Mis postulaciones",

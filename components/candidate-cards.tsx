@@ -74,8 +74,12 @@ export function CandidateCards({
               <dd><SkillChips ids={skillIds} limit={3} /></dd>
               <dt className="text-muted">{t("table.modeloShort")}</dt>
               <dd>{[row.localidade ?? row.modo, regime].filter(Boolean).join(" · ") || "—"}</dd>
-              <dt className="text-muted">{t("candidatos.colPretensao")}</dt>
-              <dd>{faixa}</dd>
+              {faixa !== "—" ? (
+                <>
+                  <dt className="text-muted">{t("candidatos.colPretensao")}</dt>
+                  <dd className="tabular-nums">{faixa}</dd>
+                </>
+              ) : null}
               <dt className="text-muted">{t("candidatos.colAtualizado")}</dt>
               <dd>{tempo}</dd>
               {contatoMascarado ? (

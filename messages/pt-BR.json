@@ -21,7 +21,8 @@
     "minhasCandidaturas": "Minhas candidaturas",
     "minhasCandidaturasCurto": "Candidaturas",
     "recrutadores": "Para recrutadores",
-    "verVagas": "Ver vagas"
+    "verVagas": "Ver vagas",
+    "recrutadoresCurto": "Recrutadores"
   },
   "lang": {
     "label": "Idioma",
@@ -30,7 +31,7 @@
     "es": "Español"
   },
   "home": {
-    "title": "Candidate-se a várias vagas de uma vez, sem perder o controle.",
+    "title": "Candidate-se a várias vagas de uma vez, sem perder o controle",
     "lead": "Você encontra as vagas, confere cada uma e aprova. O W2Talent envia em lote só as que você aprovou, com um resumo do seu perfil que o recrutador entende em segundos.",
     "ctaBuscar": "Buscar vagas",
     "ctaRecrutador": "Sou recrutador",
@@ -60,7 +61,24 @@
     "faq3a": "Sim. A mesma conta funciona no computador e no celular, e dá para instalar como app.",
     "faq4q": "O w2talent.com já está no ar?",
     "faq4a": "Ainda não. Esta é a versão de testes, que muda com frequência.",
-    "footer": "W2Talent · versão de testes"
+    "footer": "W2Talent · versão de testes",
+    "faqTitle": "Perguntas",
+    "ficha_label": "Exemplo de Ficha W2",
+    "ficha_name": "Ana Silva",
+    "ficha_role": "Analista Cloud Pleno",
+    "ficha_vaga": "Para: Analista Cloud Pleno — AWS",
+    "ficha_why": "Por que combina",
+    "ficha_has": "Tem",
+    "ficha_missing": "Falta",
+    "ficha_fieldModelo": "Modelo",
+    "ficha_fieldRegime": "Regime",
+    "ficha_fieldPretensao": "Pretensão",
+    "ficha_fieldInicio": "Início",
+    "ficha_valModelo": "Remoto",
+    "ficha_valRegime": "CLT",
+    "ficha_valPretensao": "R$ 12 mil",
+    "ficha_valInicio": "30 dias",
+    "ficha_contact": "Contato protegido até a resposta"
   },
   "status": {
     "aprovada": "Aprovada",
@@ -133,8 +151,8 @@
     "apply": "Candidatar ({count})",
     "contact": "Contatar ({count})",
     "clear": "Limpar seleção ({count})",
-    "limitNote": "Até {max} por envio.",
-    "limitReached": "Limite de {max} por envio atingido.",
+    "limitNote": "Até {max} por envio",
+    "limitReached": "Limite de {max} por envio atingido",
     "removeItem": "Remover {name} da seleção",
     "closeDrawer": "Fechar seleção",
     "toolbarLabel": "Barra de seleção"
@@ -153,19 +171,19 @@
     "closeLabel": "Fechar detalhes"
   },
   "empty": {
-    "noResults": "Nenhum resultado para \"{query}\".",
+    "noResults": "Nenhum resultado para \"{query}\"",
     "didYouMean": "Você quis dizer \"{suggestion}\"?",
     "useSuggestion": "Ver \"{suggestion}\"",
     "viewSuggestion": "Ver sugestão"
   },
   "minhas": {
     "title": "Minhas candidaturas",
-    "subtitle": "Acompanhe cada envio: enviada, vista pela empresa e respondida. {count, plural, one {# candidatura} other {# candidaturas}}.",
+    "subtitle": "Acompanhe cada envio: enviada, vista pela empresa e respondida. {count, plural, =0 {Nenhuma candidatura} one {# candidatura} other {# candidaturas}}.",
     "loading": "Carregando candidaturas…",
-    "loginTitle": "Entre na sua conta para ver suas candidaturas.",
+    "loginTitle": "Entre na sua conta para ver suas candidaturas",
     "loginBody": "O login com Google ou Microsoft chega em breve. Enquanto isso, explore as vagas.",
     "loginCta": "Ver vagas",
-    "emptyTitle": "Nenhuma candidatura ainda.",
+    "emptyTitle": "Nenhuma candidatura ainda",
     "emptyBody": "Busque vagas, aprove as que fazem sentido e envie em lote.",
     "emptyCta": "Buscar vagas",
     "tableLabel": "Minhas candidaturas",
