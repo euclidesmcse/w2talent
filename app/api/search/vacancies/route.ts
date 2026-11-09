@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
       suggestion: result.suggestion ?? null,
       emptyCTA: result.emptyCTA ?? null,
       tookMs: result.tookMs ?? tookMs,
+      entendeu: result.entendeu,
     },
     { status: 200, headers }
   );

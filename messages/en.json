@@ -91,8 +91,8 @@
   "vagas": {
     "title": "Jobs",
     "subtitle": "Search your way, open each job and select the ones that make sense.",
-    "searchLabel": "Search jobs",
-    "searchPlaceholder": "Remote cloud analyst",
+    "searchLabel": "Search the way you talk",
+    "searchPlaceholder": "Remote DevOps contractor 15k English",
     "count": "{count, plural, one {# job} other {# jobs}}",
     "pageSummary": "Page {page} of {totalPages} — {count, plural, one {# job} other {# jobs}}",
     "tableLabel": "Job list",
@@ -143,7 +143,7 @@
     "selectItem": "Select {name}"
   },
   "batch": {
-    "selectedCount": "{count} selected · up to {max} per batch",
+    "selectedCount": "{count} selected · limit: {max} per send · {daily} per day",
     "selectedCountCandidatos": "{count} selected · up to {max} per batch",
     "drawerTitle": "{count} selected",
     "drawerTitleCandidatos": "{count} selected",
@@ -155,7 +155,9 @@
     "limitReached": "Limit of {max} per batch reached",
     "removeItem": "Remove {name} from selection",
     "closeDrawer": "Close selection",
-    "toolbarLabel": "Selection bar"
+    "toolbarLabel": "Selection bar",
+    "review": "Review and approve ({count})",
+    "soon": "coming soon"
   },
   "detail": {
     "cargo": "Role",
@@ -206,5 +208,42 @@
   "range": {
     "from": "from {value}",
     "upTo": "up to {value}"
+  },
+  "match": {
+    "label": "match",
+    "column": "Match",
+    "understood": "AI understood:",
+    "removeChip": "Remove {chip} from the search",
+    "countByMatch": "{count, plural, one {# job} other {# jobs}}, sorted by match",
+    "countByRelevance": "{count, plural, one {# job} other {# jobs}}, sorted by relevance",
+    "moreGaps": "(+{count})",
+    "gapSkill": "missing: {skill}",
+    "gapNivel": "{have} level, you asked for {want}",
+    "gapNivelNone": "level not stated",
+    "gapRegime": "{have}, you asked for {want}",
+    "gapRegimeNone": "contract type not stated",
+    "gapModo": "{have}, you asked for {want}",
+    "gapModoNone": "work model not stated",
+    "gapFaixa": "salary {have}",
+    "gapFaixaNone": "salary not stated",
+    "modo": {
+      "remoto": "remote",
+      "hibrido": "hybrid",
+      "presencial": "on-site"
+    },
+    "idioma": {
+      "en": "English",
+      "es": "Spanish"
+    },
+    "nivel": {
+      "junior": "Junior",
+      "pleno": "Mid-level",
+      "senior": "Senior"
+    },
+    "regime": {
+      "CLT": "CLT (employee)",
+      "PJ": "PJ (contractor)",
+      "estagio": "Internship"
+    }
   }
 }

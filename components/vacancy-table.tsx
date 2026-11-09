@@ -4,6 +4,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { formatFaixa, formatTempo, maskEmail, maskPhone } from "@/lib/format";
 import { buttonClasses } from "@/components/ui/button";
 import { SkillChips } from "@/components/skill-chips";
+import { MatchCell } from "@/components/vacancy-match";
+import type { MatchGap } from "@/lib/match";
 // breakpoints: 360 / 768 / 1024 / 1280 — Tailwind screens xs/md/lg/xl (see tailwind.config.js)
 // next-intl: colunas via messages/pt-BR.json, en.json — fallback PT-BR (i18n.ts t())
 // PWA: manifest.json linked in layout.tsx
@@ -26,6 +28,9 @@ export type VacancyRow = {
   email?: string;
   telefone?: string;
   status?: string;
+  /** 1.5.12: match com a busca (null quando a busca não tem critério) e o que falta. */
+  match?: number | null;
+  gaps?: MatchGap[];
 };
 
 function getSkillIds(row: VacancyRow): string[] {
@@ -50,6 +55,7 @@ export function VacancyTable({
   }, [selectedIds]);
   const t = useTranslations();
   const locale = useLocale();
+  const showMatch = items.some((r) => r.match != null);
 
   return (
     <table aria-label={t("vagas.tableLabel")} className="vacancy-table w-full min-w-[760px] border-collapse text-sm tabular-nums">
@@ -60,6 +66,7 @@ export function VacancyTable({
           <th scope="col">{t("table.skills")}</th>
           <th scope="col">{t("table.modelo")}</th>
           <th scope="col">{t("vagas.colFaixa")}</th>
+          {showMatch ? <th scope="col">{t("match.column")}</th> : null}
           <th scope="col">{t("vagas.colAtualizada")}</th>
           <th scope="col"><span className="sr-only">{t("table.action")}</span></th>
         </tr>
@@ -111,6 +118,11 @@ export function VacancyTable({
                 {[row.localidade ?? t("table.remoto"), row.regime].filter(Boolean).join(" · ")}
               </td>
               <td className="whitespace-nowrap px-2 py-3.5 align-top text-ink-soft">{faixa}</td>
+              {showMatch ? (
+                <td className="px-2 py-3.5 align-top">
+                  <MatchCell match={row.match} gaps={row.gaps} />
+                </td>
+              ) : null}
               <td className="whitespace-nowrap px-2 py-3.5 align-top text-[13px] text-muted">{tempo}</td>
               <td className="py-3 pl-2 pr-4 text-right align-top">
                 <button
@@ -127,7 +139,7 @@ export function VacancyTable({
         })}
         {items.length === 0 ? (
           <tr>
-            <td colSpan={7} className="empty px-4 py-8 text-center text-muted">
+            <td colSpan={showMatch ? 8 : 7} className="empty px-4 py-8 text-center text-muted">
               {t("vagas.empty")}
             </td>
           </tr>

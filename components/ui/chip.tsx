@@ -13,11 +13,14 @@ const chipTones: Record<ChipTone, string> = {
 export function Chip({
   tone = "brand",
   onRemove,
+  removeLabel,
   children,
   className,
 }: {
   tone?: ChipTone;
   onRemove?: () => void;
+  /** Nome acessível do ×, já traduzido. */
+  removeLabel?: string;
   children: React.ReactNode;
   className?: string;
 }) {
@@ -25,7 +28,7 @@ export function Chip({
     <span className={cn("inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-[13px] font-medium", chipTones[tone], className)}>
       {children}
       {onRemove ? (
-        <button type="button" onClick={onRemove} aria-label={`Remover ${typeof children === "string" ? children : "filtro"}`} className="-mr-1 rounded-full px-1 leading-none hover:bg-black/5">
+        <button type="button" onClick={onRemove} aria-label={removeLabel ?? `Remover ${typeof children === "string" ? children : "filtro"}`} className="-mr-1 rounded-full px-1 leading-none hover:bg-black/5">
           ×
         </button>
       ) : null}

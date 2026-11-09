@@ -91,8 +91,8 @@
   "vagas": {
     "title": "Vagas",
     "subtitle": "Busque do seu jeito, abra cada vaga e selecione as que fazem sentido.",
-    "searchLabel": "Buscar vagas",
-    "searchPlaceholder": "Analista Cloud remoto",
+    "searchLabel": "Busque como você fala",
+    "searchPlaceholder": "DevOps remoto PJ 15k inglês",
     "count": "{count, plural, one {# vaga} other {# vagas}}",
     "pageSummary": "Página {page} de {totalPages} — {count, plural, one {# vaga} other {# vagas}}",
     "tableLabel": "Lista de vagas",
@@ -143,7 +143,7 @@
     "selectItem": "Selecionar {name}"
   },
   "batch": {
-    "selectedCount": "{count, plural, one {# selecionada} other {# selecionadas}} · máx. {max} por envio",
+    "selectedCount": "{count, plural, one {# selecionada} other {# selecionadas}} · limite: {max} por envio · {daily} por dia",
     "selectedCountCandidatos": "{count, plural, one {# selecionado} other {# selecionados}} · máx. {max} por envio",
     "drawerTitle": "{count, plural, one {# selecionada} other {# selecionadas}}",
     "drawerTitleCandidatos": "{count, plural, one {# selecionado} other {# selecionados}}",
@@ -155,7 +155,9 @@
     "limitReached": "Limite de {max} por envio atingido",
     "removeItem": "Remover {name} da seleção",
     "closeDrawer": "Fechar seleção",
-    "toolbarLabel": "Barra de seleção"
+    "toolbarLabel": "Barra de seleção",
+    "review": "Revisar e aprovar ({count})",
+    "soon": "disponível em breve"
   },
   "detail": {
     "cargo": "Cargo",
@@ -206,5 +208,42 @@
   "range": {
     "from": "a partir de {value}",
     "upTo": "até {value}"
+  },
+  "match": {
+    "label": "match",
+    "column": "Match",
+    "understood": "A IA entendeu:",
+    "removeChip": "Tirar {chip} da busca",
+    "countByMatch": "{count, plural, one {# vaga} other {# vagas}}, ordenadas por match",
+    "countByRelevance": "{count, plural, one {# vaga} other {# vagas}}, ordenadas por relevância",
+    "moreGaps": "(+{count})",
+    "gapSkill": "falta: {skill}",
+    "gapNivel": "nível {have}, você pediu {want}",
+    "gapNivelNone": "nível não informado",
+    "gapRegime": "{have}, você pediu {want}",
+    "gapRegimeNone": "regime não informado",
+    "gapModo": "{have}, você pediu {want}",
+    "gapModoNone": "modelo não informado",
+    "gapFaixa": "faixa {have}",
+    "gapFaixaNone": "faixa não informada",
+    "modo": {
+      "remoto": "remoto",
+      "hibrido": "híbrido",
+      "presencial": "presencial"
+    },
+    "idioma": {
+      "en": "Inglês",
+      "es": "Espanhol"
+    },
+    "nivel": {
+      "junior": "Júnior",
+      "pleno": "Pleno",
+      "senior": "Sênior"
+    },
+    "regime": {
+      "CLT": "CLT",
+      "PJ": "PJ",
+      "estagio": "Estágio"
+    }
   }
 }

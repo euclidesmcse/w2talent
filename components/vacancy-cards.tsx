@@ -5,6 +5,7 @@ import { formatFaixa, formatTempo, maskEmail, maskPhone } from "@/lib/format";
 import type { VacancyRow } from "./vacancy-table";
 import { buttonClasses } from "@/components/ui/button";
 import { SkillChips } from "@/components/skill-chips";
+import { MatchCell } from "@/components/vacancy-match";
 // breakpoints 360/768/1024/1280 — Tailwind xs/md/lg/xl; cards <ul><li aria-label> WCAG 2.1 AA
 
 function getSkillIds(row: VacancyRow): string[] {
@@ -80,6 +81,12 @@ export function VacancyCards({
               <dd>{[row.localidade ?? t("table.remoto"), row.regime].filter(Boolean).join(" · ")}</dd>
               <dt className="text-muted">{t("vagas.colFaixa")}</dt>
               <dd>{faixa}</dd>
+              {row.match != null ? (
+                <>
+                  <dt className="text-muted">{t("match.column")}</dt>
+                  <dd><MatchCell match={row.match} gaps={row.gaps} /></dd>
+                </>
+              ) : null}
               <dt className="text-muted">{t("vagas.colAtualizada")}</dt>
               <dd>{tempo}</dd>
               {contatoMascarado ? (
