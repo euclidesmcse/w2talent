@@ -14,12 +14,10 @@ import {
   enviarCandidaturas,
   estadoDasVagas,
   hashVaga,
-  mensagemCandidatura,
   perfilDoEmail,
   reenviarEmailsPendentes,
   snapshotVaga,
   userIdDoEmail,
-  type EmailCandidatura,
   type PerfilEnvio,
 } from "../lib/envio";
 
@@ -146,8 +144,8 @@ describeDb("Aprovar antes de enviar", () => {
     const c = await vaga("Aprovada sem contato", { companyId: semContatoId, regime: "CLT" });
     await aprova(a.id);
     await aprova(c.id);
-    const emails: EmailCandidatura[] = [];
-    const r = await enviarCandidaturas(db, perfil, [a.id, b.id, c.id], { now: NOW, loteId: "lote-1", enviarEmail: async (e) => { emails.push(e); } });
+    const emails: EmailMessage[] = [];
+    const r = await enviarCandidaturas(db, perfil, [a.id, b.id, c.id], { now: NOW, loteId: "lote-1", enviarEmail: async (m) => { emails.push(m); } });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.itens.map((i) => [i.vacancyId, i.status])).toEqual([[a.id, "enviada"], [b.id, "sem_aprovacao"], [c.id, "enviada"]]);
@@ -159,10 +157,12 @@ describeDb("Aprovar antes de enviar", () => {
     expect(await db.applicationApproval.count({ where: { vacancyId: { in: [a.id, c.id] } } })).toBe(0);
 
     // só a empresa com contato recebe e-mail
-    expect(emails.map((e) => e.vaga.id)).toEqual([a.id]);
-    const msg = mensagemCandidatura(perfil, emails[0])!;
+    expect(emails).toHaveLength(1);
+    const msg = emails[0];
+    const appA = apps.find((x) => x.vacancyId === a.id)!;
     expect(msg.to).toBe("rh@envio-teste.example");
-    expect(msg.idempotencyKey).toBe(`candidatura:${emails[0].applicationId}`);
+    expect(msg.idempotencyKey).toBe(`candidatura:${appA.proxyThreadId}`);
+    expect(appA.emailPendente).toBeNull();
     expect(msg.subject).toBe("Candidatura para Aprovada com contato: Beatriz L.");
     for (const corpo of [msg.html, msg.text]) {
       expect(corpo).not.toContain(EMAIL);
@@ -204,12 +204,16 @@ describeDb("Aprovar antes de enviar", () => {
     const r = await enviarCandidaturas(db, perfil, [v.id], { now: NOW, enviarEmail: async () => { throw new Error("fila fora do ar"); } });
     expect(r).toMatchObject({ ok: true, itens: [{ status: "enviada" }] });
     const app = await db.application.findFirstOrThrow({ where: { vacancyId: v.id } });
-    expect(app.emailPendente).toBe(true);
+    expect(app.emailPendente).toMatchObject({ to: "rh@envio-teste.example", idempotencyKey: `candidatura:${app.proxyThreadId}` });
+    // o perfil muda antes do Cron: o e-mail reenviado é o do envio, não o perfil novo
+    await db.candidateProfile.update({ where: { id: perfil.id }, data: { fichaW2: { resumo: "Resumo novo depois do envio.", destaques: [], idioma: "pt-BR", geradaEm: NOW.toISOString(), editada: true } } });
     const fila: EmailMessage[] = [];
     expect(await reenviarEmailsPendentes(db, async (m) => { fila.push(m); }, NOW)).toMatchObject({ enviados: 1, falhas: 0 });
-    expect(fila.map((m) => m.idempotencyKey)).toEqual([`candidatura:${app.id}`]);
+    expect(fila.map((m) => m.idempotencyKey)).toEqual([`candidatura:${app.proxyThreadId}`]);
+    expect(fila[0].text).toContain("Analista cloud com 4 anos de AWS.");
+    expect(fila[0].text).not.toContain("Resumo novo");
     expect(fila[0].text).not.toContain(EMAIL);
-    expect((await db.application.findUniqueOrThrow({ where: { id: app.id } })).emailPendente).toBe(false);
+    expect((await db.application.findUniqueOrThrow({ where: { id: app.id } })).emailPendente).toBeNull();
     expect((await reenviarEmailsPendentes(db, async (m) => { fila.push(m); }, NOW)).enviados).toBe(0);
   });
 

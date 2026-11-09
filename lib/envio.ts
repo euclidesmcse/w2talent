@@ -9,7 +9,7 @@
  * - Cada envio vira uma Application e, se a empresa tem e-mail de contato, um e-mail na fila
  *   `notificacoes` com a Ficha W2 e o match (sem e-mail nem telefone do candidato).
  */
-import type { PrismaClient, Prisma } from "@prisma/client";
+import { Prisma, type PrismaClient } from "@prisma/client";
 import { sha256Hex } from "./admin-auth";
 import { matchVacancy, type MatchCriteria, type MatchResult } from "./match";
 import { fold, type Nivel, type Regime } from "./query-intent";
@@ -278,7 +278,8 @@ export type ResultadoEnvio =
   | { ok: false; erro: "limite_dia"; max: number; usadas24h: number; restantes: number }
   | { ok: false; erro: "nada_para_enviar" };
 
-export type EmailCandidatura = { applicationId: string; referencia: string; vaga: VagaRow; match: MatchResult };
+/** Entrada do e-mail: `referencia` é o proxyThreadId da candidatura (também a chave de idempotência). */
+export type EmailCandidatura = { referencia: string; vaga: VagaRow; match: MatchResult };
 
 export async function usadasNas24h(db: Db, candidateId: string, now: Date): Promise<number> {
   // Só o que o candidato enviou; contatos de recrutadores não contam.
@@ -298,7 +299,7 @@ export async function enviarCandidaturas(
   db: PrismaClient,
   perfil: PerfilEnvio,
   vacancyIdsBrutos: unknown,
-  opts: { now?: Date; loteId?: string; enviarEmail?: (e: EmailCandidatura) => Promise<void> } = {},
+  opts: { now?: Date; loteId?: string; enviarEmail?: (m: EmailMessage) => Promise<void> } = {},
 ): Promise<ResultadoEnvio> {
   const now = opts.now ?? new Date();
   const todos = limparIds(vacancyIdsBrutos, 100);
@@ -335,16 +336,29 @@ export async function enviarCandidaturas(
     if (prontas.length && usadas + prontas.length > ENVIO_LIMITE_24H) {
       return { ok: false as const, erro: "limite_dia" as const, max: ENVIO_LIMITE_24H, usadas24h: usadas, restantes: Math.max(0, ENVIO_LIMITE_24H - usadas) };
     }
-    const emails: EmailCandidatura[] = [];
+    const emails: { applicationId: string; mensagem: EmailMessage }[] = [];
     for (const v of prontas) {
+      const proxyThreadId = novoProxyThreadId();
+      // O e-mail é montado agora, com o perfil e a vaga que a pessoa aprovou, e guardado com a
+      // candidatura até entrar na fila: uma nova tentativa manda exatamente o mesmo conteúdo.
+      const mensagem = mensagemCandidatura(perfil, { referencia: proxyThreadId, vaga: v, match: matchDoPerfil(perfil.ficha, v, now) });
       const app = await tx.application.create({
-        data: { vacancyId: v.id, candidateId: perfil.id, companyId: v.companyId, origem: "candidaturaLote", proxyThreadId: novoProxyThreadId(), loteId, createdAt: now, emailPendente: !!v.company.emailContato },
-        select: { id: true, proxyThreadId: true },
+        data: {
+          vacancyId: v.id,
+          candidateId: perfil.id,
+          companyId: v.companyId,
+          origem: "candidaturaLote",
+          proxyThreadId,
+          loteId,
+          createdAt: now,
+          ...(mensagem ? { emailPendente: mensagem as unknown as Prisma.InputJsonValue } : {}),
+        },
+        select: { id: true },
       });
       await tx.applicationApproval.deleteMany({ where: { candidateId: perfil.id, vacancyId: v.id } });
       await tx.vacancy.update({ where: { id: v.id }, data: { candidaturasCount: { increment: 1 } } });
       itens.push({ vacancyId: v.id, status: "enviada", applicationId: app.id, email: !!v.company.emailContato });
-      if (v.company.emailContato) emails.push({ applicationId: app.id, referencia: app.proxyThreadId, vaga: v, match: matchDoPerfil(perfil.ficha, v, now) });
+      if (mensagem) emails.push({ applicationId: app.id, mensagem });
     }
     return { ok: true as const, itens, usadas24h: usadas + prontas.length, emails };
   });
@@ -352,11 +366,11 @@ export async function enviarCandidaturas(
   if (!r.ok) return r;
   for (const e of r.emails) {
     try {
-      await opts.enviarEmail?.(e);
-      await db.application.update({ where: { id: e.applicationId }, data: { emailPendente: false } });
+      await opts.enviarEmail?.(e.mensagem);
+      await db.application.update({ where: { id: e.applicationId }, data: { emailPendente: Prisma.DbNull } });
     } catch (err) {
-      // A candidatura já está registrada com emailPendente = true; o Cron diário tenta de novo
-      // (reenviarEmailsPendentes).
+      // A candidatura já está registrada com o e-mail em emailPendente; o Cron diário tenta de novo
+      // (reenviarEmailsPendentes) com o mesmo conteúdo.
       console.error(`[envio] e-mail da candidatura ${e.applicationId} não entrou na fila:`, err instanceof Error ? err.message : err);
     }
   }
@@ -406,12 +420,20 @@ export function mensagemCandidatura(perfil: PerfilEnvio, e: EmailCandidatura): E
     matchPct: e.match.pct,
     referencia: e.referencia,
   });
-  return { to, subject, html, text, idempotencyKey: `candidatura:${e.applicationId}` };
+  return { to, subject, html, text, idempotencyKey: `candidatura:${e.referencia}` };
+}
+
+function mensagemGuardada(v: unknown): EmailMessage | null {
+  const m = v as Record<string, unknown> | null;
+  if (!m || typeof m !== "object") return null;
+  const ok = ["to", "subject", "html", "text", "idempotencyKey"].every((k) => typeof m[k] === "string" && m[k] !== "");
+  return ok ? (m as unknown as EmailMessage) : null;
 }
 
 /**
  * E-mails de candidatura que não entraram na fila no envio (fila fora do ar, por exemplo).
- * Roda no Cron diário; tenta os dos últimos 7 dias. A chave de idempotência evita e-mail repetido.
+ * Roda no Cron diário; tenta os dos últimos 7 dias, com o conteúdo guardado no envio (não remonta
+ * a partir do perfil ou da vaga, que podem ter mudado). A chave de idempotência evita e-mail repetido.
  */
 export async function reenviarEmailsPendentes(
   db: PrismaClient,
@@ -420,26 +442,18 @@ export async function reenviarEmailsPendentes(
   limite = 50,
 ): Promise<{ enviados: number; falhas: number }> {
   const apps = await db.application.findMany({
-    where: { emailPendente: true, vacancyId: { not: null }, createdAt: { gt: new Date(now.getTime() - 7 * 86_400_000) } },
+    where: { emailPendente: { not: Prisma.DbNull }, createdAt: { gt: new Date(now.getTime() - 7 * 86_400_000) } },
     orderBy: { createdAt: "asc" },
     take: limite,
-    select: { id: true, proxyThreadId: true, vacancyId: true, candidate: { select: { userId: true } } },
+    select: { id: true, emailPendente: true },
   });
   let enviados = 0;
   let falhas = 0;
   for (const a of apps) {
     try {
-      const row = await db.candidateProfile.findUnique({ where: { userId: a.candidate.userId } });
-      const v = row ? (await carregarVagas(db, [a.vacancyId!])).get(a.vacancyId!) : undefined;
-      const msg =
-        row && v
-          ? mensagemCandidatura(
-              { id: row.id, ficha: sanitizeFicha(row), w2: sanitizeFichaW2(row.fichaW2), idioma: row.idiomaOriginal },
-              { applicationId: a.id, referencia: a.proxyThreadId, vaga: v, match: matchDoPerfil(sanitizeFicha(row), v, now) },
-            )
-          : null;
+      const msg = mensagemGuardada(a.emailPendente);
       if (msg) await enqueue(msg);
-      await db.application.update({ where: { id: a.id }, data: { emailPendente: false } });
+      await db.application.update({ where: { id: a.id }, data: { emailPendente: Prisma.DbNull } });
       if (msg) enviados++;
     } catch (err) {
       falhas++;

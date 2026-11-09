@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { pedidoDeEnvio, NO_STORE } from "@/lib/envio-request";
-import { enviarCandidaturas, mensagemCandidatura } from "@/lib/envio";
+import { enviarCandidaturas } from "@/lib/envio";
 import { enqueueEmail } from "@/lib/notifications";
 
 /** Envia as vagas aprovadas: até 10 por vez e 30 nas últimas 24 h. */
@@ -11,10 +11,7 @@ export async function POST(req: NextRequest) {
   try {
     const r = await enviarCandidaturas(db, perfil, body.vacancyIds, {
       loteId: typeof body.loteId === "string" ? body.loteId : undefined,
-      enviarEmail: async (e) => {
-        const msg = mensagemCandidatura(perfil, e);
-        if (msg) await enqueueEmail(msg);
-      },
+      enviarEmail: enqueueEmail,
     });
     if (!r.ok) {
       const status = r.erro === "limite_dia" ? 429 : 400;

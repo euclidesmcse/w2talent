@@ -19,8 +19,8 @@ CREATE INDEX "ApplicationApproval_vacancyId_idx" ON "ApplicationApproval"("vacan
 ALTER TABLE "ApplicationApproval" ADD CONSTRAINT "ApplicationApproval_candidateId_fkey" FOREIGN KEY ("candidateId") REFERENCES "CandidateProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "ApplicationApproval" ADD CONSTRAINT "ApplicationApproval_vacancyId_fkey" FOREIGN KEY ("vacancyId") REFERENCES "Vacancy"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- E-mail da candidatura que não entrou na fila: o Cron diário tenta de novo.
-ALTER TABLE "Application" ADD COLUMN "emailPendente" BOOLEAN NOT NULL DEFAULT false;
+-- E-mail da candidatura montado no envio e ainda fora da fila: o Cron diário tenta de novo com o mesmo conteúdo.
+ALTER TABLE "Application" ADD COLUMN "emailPendente" JSONB;
 
 -- Conta as candidaturas de um candidato nas últimas 24 h (limite de 30).
 CREATE INDEX "Application_candidateId_createdAt_idx" ON "Application"("candidateId", "createdAt");
