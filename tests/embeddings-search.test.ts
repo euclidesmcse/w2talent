@@ -10,6 +10,7 @@ import { indexVacancy, indexCandidate, indexPending, markForReindex, EMBED_BATCH
 import { queryVector, buildVacancySearchSql, normalizeQuery, searchVacanciesDb } from "../lib/search-db";
 import { createRouter, type AiStore } from "../lib/ai/router";
 import { encryptApiKey } from "../lib/ai/keys";
+import { queryVariants, MAX_QUERY_VARIANTS } from "../lib/search-synonyms";
 
 const DIM = 1024;
 const vec = (x: number) => new Array(DIM).fill(x);
@@ -200,6 +201,33 @@ describe("vetor da busca: cache de 7 dias e limite de 1,2 s (decisão 3)", () =>
     const sql = buildVacancySearchSql({ page: 1, pageSize: 20 }, null).sql;
     expect(sql).toMatch(/ORDER BY v\."updatedAt" DESC/);
     expect(sql).not.toMatch(/websearch_to_tsquery/);
+  });
+});
+
+describe("equivalências e significado só reordena (decisão de 2026-11-09)", () => {
+  it("nuvem também busca cloud e nube; o original vem primeiro", () => {
+    expect(queryVariants("engenheiro nuvem")).toEqual(
+      expect.arrayContaining(["engenheiro nuvem", "engenheiro cloud", "engineer nuvem"]),
+    );
+    expect(queryVariants("engenheiro nuvem")[0]).toBe("engenheiro nuvem");
+    expect(queryVariants("nuvem")).toEqual(["nuvem", "cloud", "nube"]);
+  });
+
+  it("palavra inteira e termo de várias palavras", () => {
+    expect(queryVariants("dadosx")).toEqual(["dadosx"]);
+    expect(queryVariants("banco de dados")).toContain("database");
+    expect(queryVariants("cozinheiro de restaurante")).toEqual(["cozinheiro de restaurante"]);
+  });
+
+  it("limita as variações", () => {
+    expect(queryVariants("desenvolvedor engenheiro analista dados nuvem").length).toBeLessThanOrEqual(MAX_QUERY_VARIANTS);
+  });
+
+  it("SQL: entra só o que bate no texto; o vetor só entra na nota", () => {
+    const q = buildVacancySearchSql({ q: "nuvem", page: 1, pageSize: 20 }, vec(0.01));
+    expect(q.sql).toMatch(/WHERE s\."_textMatch"\s/);
+    expect(q.sql).not.toMatch(/_vecRank" >=/);
+    expect(q.values).toEqual(expect.arrayContaining(["nuvem", "cloud", "nube"]));
   });
 });
 
