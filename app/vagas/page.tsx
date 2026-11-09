@@ -107,7 +107,15 @@ export default function VagasPage() {
       if (!copia) throw e;
       data = copia.dados;
       setCopiaDe(copia.salvoEm);
-      if (copia.dados.q !== query) { setDraft(copia.dados.q); }
+      // A busca mostrada passa a ser a da cópia (texto, página e endereço), para Buscar/voltar a rede usarem a mesma.
+      if (copia.dados.q !== query || copia.dados.page !== p) {
+        setDraft(copia.dados.q); setQ(copia.dados.q); setPage(copia.dados.page || 1);
+        try {
+          const url = new URL(window.location.href);
+          if (copia.dados.q) url.searchParams.set("q", copia.dados.q); else url.searchParams.delete("q");
+          window.history.replaceState(null, "", url.toString());
+        } catch {}
+      }
     }
     setItems(data.items ?? []);
     setTotal(data.total ?? 0);

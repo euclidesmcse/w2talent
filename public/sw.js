@@ -20,7 +20,7 @@
 var VERSAO = "w2-1";
 var CACHE_ESTATICO = VERSAO + "-estatico";
 var CACHE_TELAS = VERSAO + "-telas";
-var MAX_ESTATICOS = 200;
+var MAX_ESTATICOS = 400;
 
 var OFFLINE = "/offline";
 // D2: telas que abrem sem internet com o que está salvo no aparelho.
@@ -78,15 +78,10 @@ if (typeof self !== "undefined" && typeof self.addEventListener === "function" &
         await Promise.all(PRECACHE.filter(function (u) { return u !== OFFLINE; }).map(function (u) {
           return cache.add(new Request(u, { cache: "reload" })).catch(function () {});
         }));
-        // A página offline e o CSS/JS dela, para abrir mesmo sem nunca ter sido visitada.
-        try {
-          var res = await fetch(new Request(OFFLINE, { cache: "reload" }));
-          if (podeGuardar(res)) {
-            var html = await res.clone().text();
-            await (await caches.open(CACHE_TELAS)).put(OFFLINE, res);
-            await Promise.all(estaticosDoHtml(html).map(function (u) { return cache.add(u).catch(function () {}); }));
-          }
-        } catch (e) { /* sem rede na instalação: tenta de novo na próxima versão */ }
+        // Todas as telas offline (e o CSS/JS de cada uma) já na instalação: quem navega pelo menu
+        // (navegação do Next, que não é "navigate") também encontra a tela guardada depois.
+        var telas = await caches.open(CACHE_TELAS);
+        await Promise.all(TELAS_OFFLINE.map(function (tela) { return guardarTela(tela, telas, cache); }));
         await self.skipWaiting();
       })()
     );
@@ -111,6 +106,17 @@ if (typeof self !== "undefined" && typeof self.addEventListener === "function" &
     else if (tipo === "tela") event.respondWith(redePrimeiro(req));
     else if (tipo === "navegacao") event.respondWith(redeOuOffline(req));
   });
+}
+
+async function guardarTela(tela, telas, estatico) {
+  try {
+    var res = await fetch(new Request(tela, { cache: "reload", credentials: "same-origin" }));
+    var tipo = res.headers.get("content-type") || "";
+    if (!podeGuardar(res) || tipo.indexOf("text/html") < 0) return;
+    var html = await res.clone().text();
+    await telas.put(new URL(tela, self.location.origin).href, res);
+    await Promise.all(estaticosDoHtml(html).map(function (u) { return estatico.add(u).catch(function () {}); }));
+  } catch (e) { /* sem rede na instalação: a tela entra no cache na próxima visita */ }
 }
 
 async function cachePrimeiro(req) {
