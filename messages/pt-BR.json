@@ -619,5 +619,23 @@
     "res_nao_encontrada": "Vaga não existe mais",
     "res_mudou": "A vaga mudou; revise de novo",
     "limitDay": "Limite de {max} candidaturas em 24 h. Hoje cabem mais {left}."
+  },
+  "pwa": {
+    "offlineTitle": "Sem conexão.",
+    "offlineBody": "Você vê o que está salvo neste aparelho. Buscar, publicar e enviar voltam quando a internet voltar.",
+    "needsInternet": "Precisa de internet",
+    "install": "Instalar app",
+    "iosTitle": "Instalar no iPhone ou iPad",
+    "iosBody": "No Safari, toque em Compartilhar e depois em \"Adicionar à Tela de Início\".",
+    "close": "Fechar",
+    "offlinePageTitle": "Sem conexão com a internet",
+    "offlinePageBody": "Esta tela ainda não foi guardada neste aparelho. Estas abrem sem internet com o que você já viu:",
+    "screenVagas": "Vagas",
+    "screenFicha": "Minha ficha",
+    "screenMinhas": "Minhas candidaturas",
+    "retry": "Tentar de novo",
+    "savedCopy": "Sem conexão: esta é a lista salva em {date}.",
+    "savedSearch": "Sem conexão: estes são os resultados salvos em {date}.",
+    "reviewOffline": "A revisão precisa de internet para conferir a versão atual de cada vaga. Suas vagas selecionadas continuam guardadas."
   }
 }

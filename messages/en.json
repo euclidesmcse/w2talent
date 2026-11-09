@@ -619,5 +619,23 @@
     "res_nao_encontrada": "Job no longer exists",
     "res_mudou": "The job changed; review it again",
     "limitDay": "Limit of {max} applications in 24 h. {left} more fit today."
+  },
+  "pwa": {
+    "offlineTitle": "No connection.",
+    "offlineBody": "You are seeing what is saved on this device. Search, publish and send come back when you are online again.",
+    "needsInternet": "Needs internet",
+    "install": "Install app",
+    "iosTitle": "Install on iPhone or iPad",
+    "iosBody": "In Safari, tap Share and then \"Add to Home Screen\".",
+    "close": "Close",
+    "offlinePageTitle": "No internet connection",
+    "offlinePageBody": "This screen is not saved on this device yet. These open offline with what you have already seen:",
+    "screenVagas": "Jobs",
+    "screenFicha": "My profile",
+    "screenMinhas": "My applications",
+    "retry": "Try again",
+    "savedCopy": "Offline: this is the list saved on {date}.",
+    "savedSearch": "Offline: these are the results saved on {date}.",
+    "reviewOffline": "Reviewing needs internet to check the current version of each job. Your selected jobs are still saved."
   }
 }

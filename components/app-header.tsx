@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/cn";
 import { BrandMark, BrandWordmark } from "@/components/brand-logo";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { InstallApp } from "@/components/install-app";
 import { AREA_NAME, AREA_SWITCH, NAV, type Area } from "@/lib/nav";
 
 /** Barra do topo: logo, o menu fixo da área (lib/nav.ts), idioma e o link para a outra área.
@@ -14,7 +15,7 @@ export function AppHeader({ area, active, right, suffix }: { area?: Area; active
   const nameKey = area ? AREA_NAME[area] : undefined;
   const troca = area ? AREA_SWITCH[area] : undefined;
   return (
-    <header className="border-b border-line bg-surface" data-area={area}>
+    <header className="border-b border-line bg-surface pt-[env(safe-area-inset-top)]" data-area={area}>
       <div className="mx-auto flex min-h-14 max-w-page items-center gap-x-3 px-4 py-2.5 md:gap-x-6 md:px-6">
         <Link href="/" className="flex shrink-0 items-center gap-2 text-ink hover:text-ink hover:no-underline">
           <BrandMark size={28} />
@@ -44,7 +45,8 @@ export function AppHeader({ area, active, right, suffix }: { area?: Area; active
         ) : (
           <span className="flex-1" />
         )}
-        <div className="flex shrink-0 items-center gap-2 md:gap-3">
+        <div className="flex shrink-0 items-center gap-1 md:gap-3">
+          <InstallApp />
           <LanguageSwitcher />
           {troca ? (
             <Link href={troca.href} data-area-switch={troca.href} className="hidden text-sm text-brand md:inline">
