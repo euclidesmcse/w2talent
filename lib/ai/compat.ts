@@ -31,6 +31,29 @@ export const TEST_TOKENS = {
   embed: { in: 20, out: 0 },
 } as const;
 
+/** Tokens de cada teste, para quando o fornecedor não informa o uso (soma = TEST_TOKENS.chat). */
+export const TEST_TOKENS_EACH: Record<CompatTest, { in: number; out: number }> = {
+  texto: { in: 60, out: 10 },
+  json: { in: 70, out: 30 },
+  ferramentas: { in: 120, out: 40 },
+  idiomas: { in: 170, out: 250 },
+  contexto_longo: TEST_TOKENS.contexto_longo,
+  embeddings: TEST_TOKENS.embed,
+};
+
+/**
+ * Tokens gastos por um resultado. Sem o número do fornecedor (o Google não informa nos embeddings),
+ * usa a estimativa do teste, para o gasto do dia não ficar em zero. Teste que nem chamou a API conta zero.
+ */
+export function testTokens(r: Pick<TestResult, "teste" | "latenciaMs" | "tokensIn" | "tokensOut">): { in: number; out: number } {
+  const called = r.latenciaMs > 0;
+  const est = TEST_TOKENS_EACH[r.teste];
+  return {
+    in: r.tokensIn ?? (called ? est.in : 0),
+    out: r.tokensOut ?? (called && r.tokensIn == null ? est.out : 0),
+  };
+}
+
 /** Tamanho do teste de texto longo: acima dos 32 mil tokens que Ficha W2 e leitura de CV pedem. */
 export const LONG_CONTEXT_TOKENS = 33_000;
 

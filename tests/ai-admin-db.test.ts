@@ -3,6 +3,8 @@
  * Postgres local (localhost/127.0.0.1, como o do CI), nunca no Neon. Sem rede.
  */
 import type { PrismaClient } from "@prisma/client";
+import { ADMIN_MAX_FAILS } from "../lib/admin-auth";
+import { clearAttempts, failedAttempt, reserveAttempt } from "../lib/admin-lock";
 import { addProvider, adminState, AdminInputError, estimateTests, refreshModels, runTests, setRoute, updateModel, type AdminEnv } from "../lib/ai/admin";
 
 function localDb(url: string | undefined): boolean {
@@ -29,6 +31,7 @@ const fakeFetch = (async (url: string, init?: RequestInit) => {
   const prompt: string = body?.messages?.[0]?.content ?? "";
   let content = body?.response_format ? '{"ok": true, "itens": [1, 2, 3]}' : "ok";
   for (const k of Object.keys(ANSWERS)) if (prompt.startsWith(k)) content = ANSWERS[k];
+  if (prompt.includes("código secreto")) content = "ZEBRA-4821";
   return new Response(JSON.stringify({ choices: [{ message: { content } }], usage: { prompt_tokens: 20, completion_tokens: 5 } }));
 }) as unknown as typeof fetch;
 
@@ -46,6 +49,27 @@ describeDb("Admin de IA no banco", () => {
   });
   afterAll(async () => {
     await db?.$disconnect();
+  });
+
+  it("tentativas de senha em paralelo não passam do limite", async () => {
+    const chave = "ip-de-teste";
+    await clearAttempts(db, chave);
+    const now = new Date("2026-11-09T12:00:00Z");
+    const r = await Promise.all(Array.from({ length: 12 }, () => reserveAttempt(db, chave, now)));
+    expect(r.filter((x) => x.permitido)).toHaveLength(ADMIN_MAX_FAILS);
+    const bloqueio = r.find((x) => !x.permitido) as { ate: Date };
+    expect(bloqueio.ate.getTime()).toBe(now.getTime() + 15 * 60_000);
+    // ainda bloqueado; depois de 15 min, recomeça do 1
+    expect((await reserveAttempt(db, chave, new Date(now.getTime() + 60_000))).permitido).toBe(false);
+    expect(await reserveAttempt(db, chave, new Date(now.getTime() + 16 * 60_000))).toEqual({ permitido: true, tentativa: 1 });
+    // a 5ª senha errada bloqueia
+    const later = new Date(now.getTime() + 20 * 60_000);
+    let last: Awaited<ReturnType<typeof reserveAttempt>> | null = null;
+    for (let i = 0; i < ADMIN_MAX_FAILS - 1; i++) last = await reserveAttempt(db, chave, later);
+    expect(last).toEqual({ permitido: true, tentativa: ADMIN_MAX_FAILS });
+    expect(await failedAttempt(db, chave, ADMIN_MAX_FAILS, later)).toEqual(new Date(later.getTime() + 15 * 60_000));
+    expect((await reserveAttempt(db, chave, later)).permitido).toBe(false);
+    await clearAttempts(db, chave);
   });
 
   it("cadastra, lista, testa e monta as rotas", async () => {
@@ -77,6 +101,10 @@ describeDb("Admin de IA no banco", () => {
     expect(state.gastoHojeUsd).toBeGreaterThan(0);
     // a rota gravada é a que o roteador lê
     expect((await db.taskRoute.findUniqueOrThrow({ where: { tarefa: "extract_cv" } })).modelos).toEqual(cv.modelos);
+
+    // passou no texto longo: o contexto guardado sobe para o tamanho testado (o roteador usa esse número)
+    await runTests(db, { modelos: [byName("modelo-sem-preco")], contextoLongo: true }, env);
+    expect((await db.aiModel.findUniqueOrThrow({ where: { id: byName("modelo-sem-preco") } })).contexto).toBe(33_000);
 
     await setRoute(db, { tarefa: "support_chat", modo: "fixo", modelo: byName("gpt-4.1") });
     expect(await db.taskRoute.findUniqueOrThrow({ where: { tarefa: "support_chat" } })).toMatchObject({ modo: "fixo", modelos: [byName("gpt-4.1")] });

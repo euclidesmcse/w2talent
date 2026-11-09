@@ -4,7 +4,7 @@
  * Decisão do Euclides em 2026-11-09: uma senha só, guardada no Worker Secret ADMIN_SECRET
  * (criada no servidor dele com openssl, sem o valor aparecer na tela). Quem acerta recebe um
  * cookie assinado (HMAC-SHA256 com a própria senha), só do servidor, que vale 12 horas.
- * Cinco erros seguidos do mesmo IP bloqueiam por 15 minutos.
+ * Cinco erros seguidos do mesmo IP bloqueiam por 15 minutos (admin-lock.ts).
  *
  * WebCrypto puro: roda no Worker e no Node (jest).
  */
@@ -84,18 +84,4 @@ export function cookieHeader(value: string, expires: Date): string {
 
 export function clearCookieHeader(): string {
   return `${ADMIN_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;
-}
-
-// ── bloqueio por tentativas erradas ──
-export type LockState = { falhas: number; bloqueadoAte: Date | null };
-
-export function isLocked(st: LockState | null, now = Date.now()): boolean {
-  return !!st?.bloqueadoAte && st.bloqueadoAte.getTime() > now;
-}
-
-/** Próximo estado depois de um erro: na 5ª falha seguida, bloqueia por 15 minutos e zera a conta. */
-export function afterFailure(st: LockState | null, now = Date.now()): LockState {
-  const falhas = (st && !isLocked(st, now) ? st.falhas : 0) + 1;
-  if (falhas >= ADMIN_MAX_FAILS) return { falhas: 0, bloqueadoAte: new Date(now + ADMIN_LOCK_MINUTES * 60_000) };
-  return { falhas, bloqueadoAte: null };
 }

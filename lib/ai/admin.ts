@@ -6,7 +6,7 @@ import type { PrismaClient } from "@prisma/client";
 import { decryptApiKey, encryptApiKey, keyHint } from "./keys";
 import { listModels, looksLikeEmbedding } from "./catalog";
 import { knownPrice } from "./prices";
-import { COMPAT_TESTS, estimateTestCost, runCompatTests, type CompatTest, type LatestTests, type TestResult } from "./compat";
+import { COMPAT_TESTS, LONG_CONTEXT_TOKENS, estimateTestCost, runCompatTests, testTokens, type CompatTest, type LatestTests, type TestResult } from "./compat";
 import { computeRoutes, LOCKED_TASKS, type RoutingModel, type SavedRoute, type TaskRouting } from "./routing";
 import { TASKS, isTaskName, type TaskName } from "./tasks";
 import { startOfUtcDay } from "./store";
@@ -325,9 +325,14 @@ export async function runTests(db: Db, input: Record<string, unknown>, env: Admi
     });
     const dim = results.find((r) => r.teste === "embeddings" && r.ok)?.detalhe?.match(/^dim:(\d+)$/)?.[1];
     if (dim) await db.aiModel.update({ where: { id: m.id }, data: { embeddingDim: Number(dim) } });
+    // Passou no texto longo: o contexto é de pelo menos esse tamanho. Grava, para o roteador
+    // (que olha o contexto guardado) aceitar o modelo nas mesmas tarefas que o painel aprova.
+    if (results.some((r) => r.teste === "contexto_longo" && r.ok) && (m.contexto == null || m.contexto < LONG_CONTEXT_TOKENS)) {
+      await db.aiModel.update({ where: { id: m.id }, data: { contexto: LONG_CONTEXT_TOKENS } });
+    }
     // Custo dos testes entra no gasto do dia (o orçamento geral vale para eles também).
-    const tin = results.reduce((n, r) => n + (r.tokensIn ?? 0), 0);
-    const tout = results.reduce((n, r) => n + (r.tokensOut ?? 0), 0);
+    const tin = results.reduce((n, r) => n + testTokens(r).in, 0);
+    const tout = results.reduce((n, r) => n + testTokens(r).out, 0);
     await db.aiInteraction.create({
       data: {
         tarefa: "admin_teste",

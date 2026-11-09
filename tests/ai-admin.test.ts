@@ -1,11 +1,7 @@
 /** Admin de IA (1.5.8): senha de admin, preços, catálogo, testes de compatibilidade e rota automática. Sem rede. */
 import {
-  ADMIN_LOCK_MINUTES,
-  ADMIN_MAX_FAILS,
   adminSecretUsable,
-  afterFailure,
   cookieHeader,
-  isLocked,
   passwordMatches,
   readCookie,
   signAdminSession,
@@ -13,7 +9,7 @@ import {
 } from "../lib/admin-auth";
 import { knownPrice } from "../lib/ai/prices";
 import { listModels, looksLikeEmbedding, WORKERS_AI_MODELS } from "../lib/ai/catalog";
-import { blockers, detectLang, estimateTestCost, runCompatTests, type LatestTests } from "../lib/ai/compat";
+import { blockers, detectLang, estimateTestCost, runCompatTests, testTokens, TEST_TOKENS, TEST_TOKENS_EACH, type LatestTests } from "../lib/ai/compat";
 import { autoRoute, computeRoutes, exclusionReasons, type RoutingModel } from "../lib/ai/routing";
 import { createRouter, RESERVE_PROVIDER_ID, type AiStore, type RouteCandidate } from "../lib/ai/router";
 import type { CallContext } from "../lib/ai/types";
@@ -65,18 +61,6 @@ describe("acesso de admin", () => {
     expect(h).toMatch(/Secure/);
     expect(h).toMatch(/SameSite=Strict/);
     expect(readCookie(`a=1; w2_admin=${encodeURIComponent(s.value)}`, "w2_admin")).toBe(s.value);
-  });
-
-  it("5 erros seguidos bloqueiam por 15 minutos", () => {
-    const now = 1_000_000;
-    let st = null as ReturnType<typeof afterFailure> | null;
-    for (let i = 0; i < ADMIN_MAX_FAILS - 1; i++) st = afterFailure(st, now);
-    expect(isLocked(st, now)).toBe(false);
-    st = afterFailure(st, now);
-    expect(isLocked(st, now)).toBe(true);
-    expect(isLocked(st, now + ADMIN_LOCK_MINUTES * 60_000 + 1)).toBe(false);
-    // depois do bloqueio, a conta recomeça
-    expect(afterFailure(st, now + ADMIN_LOCK_MINUTES * 60_000 + 1)).toEqual({ falhas: 1, bloqueadoAte: null });
   });
 });
 
@@ -133,6 +117,14 @@ describe("testes de compatibilidade", () => {
     expect(detectLang("El cielo es azul por la dispersión de la luz. Los rayos azules se dispersan más.")).toBe("es");
     expect(detectLang("The sky is blue because of the scattering of light and this is why.")).toBe("en");
     expect(detectLang("ok")).toBeNull();
+  });
+
+  it("sem uso informado pelo fornecedor, conta a estimativa do teste", () => {
+    expect(testTokens({ teste: "embeddings", latenciaMs: 300 })).toEqual({ in: 20, out: 0 });
+    expect(testTokens({ teste: "json", latenciaMs: 300, tokensIn: 5, tokensOut: 2 })).toEqual({ in: 5, out: 2 });
+    expect(testTokens({ teste: "texto", latenciaMs: 0 })).toEqual({ in: 0, out: 0 });
+    const chat = (["texto", "json", "ferramentas", "idiomas"] as const).reduce((n, k) => n + TEST_TOKENS_EACH[k].in, 0);
+    expect(chat).toBe(TEST_TOKENS.chat.in);
   });
 
   it("estima o custo (nulo sem preço)", () => {
