@@ -114,6 +114,7 @@ export default function MinhaFichaPage() {
     if (!file && texto.trim().length < 30) return setErro(t("erro_texto_curto"));
     if (file && file.size > 5 * 1024 * 1024) return setErro(t("erro_arquivo_grande"));
     setOcupado("ler");
+    const alvo = fichaAtualRef.current;
     try {
       const fd = new FormData();
       fd.set("aceiteIa", "true");
@@ -121,6 +122,8 @@ export default function MinhaFichaPage() {
       else fd.set("texto", texto);
       const res = await fetch("/api/ficha/ler", { method: "POST", body: fd });
       const j = (await res.json().catch(() => ({}))) as { ficha?: Ficha; origem?: string; error?: string };
+      // Se a pessoa começou a preencher à mão enquanto a IA lia, não sobrescreve o que ela digitou.
+      if (fichaAtualRef.current !== alvo) return;
       if (!res.ok || !j.ficha) return setErro(msgErro(j.error ?? "geral"));
       const ficha = sanitizeFicha(j.ficha);
       setR((x) => ({ ...x, ficha, skills: skillRows(ficha), w2: null }));
@@ -136,6 +139,9 @@ export default function MinhaFichaPage() {
 
   const fichaAtual = montarFicha(r.ficha, r.skills);
   const faltas = camposFaltando(fichaAtual);
+  // A ficha atual, para descartar uma Ficha W2 que chegue depois de o rascunho mudar.
+  const fichaAtualRef = React.useRef("");
+  fichaAtualRef.current = JSON.stringify(fichaAtual);
   const marcar = (c: CampoMinimo) => mostrarFaltas && faltas.includes(c);
 
   async function gerar(forcar = false) {
@@ -149,6 +155,7 @@ export default function MinhaFichaPage() {
     if (r.w2?.editada && !forcar) return irPara("w2");
     if (!r.aceite) return setErro(t("erro_aceite_ia_obrigatorio"));
     setOcupado("gerar");
+    const alvo = JSON.stringify(fichaAtual);
     try {
       const res = await fetch("/api/ficha/w2", {
         method: "POST",
@@ -156,6 +163,8 @@ export default function MinhaFichaPage() {
         body: JSON.stringify({ ficha: fichaAtual, idioma: locale, aceiteIa: r.aceite }),
       });
       const j = (await res.json().catch(() => ({}))) as { fichaW2?: FichaW2; error?: string };
+      // O rascunho mudou (campos editados ou começou de novo) enquanto a IA escrevia: resposta velha, descarta.
+      if (fichaAtualRef.current !== alvo) return;
       if (!res.ok || !j.fichaW2) return setErro(msgErro(j.error ?? "geral"));
       setR((x) => ({ ...x, w2: j.fichaW2!, passo: "w2" }));
       setEditandoW2(false);
