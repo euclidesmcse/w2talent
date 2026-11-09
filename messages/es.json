@@ -91,8 +91,8 @@
   "vagas": {
     "title": "Empleos",
     "subtitle": "Busca a tu manera, abre cada empleo y selecciona los que tengan sentido.",
-    "searchLabel": "Buscar empleos",
-    "searchPlaceholder": "Analista Cloud remoto",
+    "searchLabel": "Busca como hablas",
+    "searchPlaceholder": "DevOps remoto 15k inglés",
     "count": "{count, plural, one {# empleo} other {# empleos}}",
     "pageSummary": "Página {page} de {totalPages} — {count, plural, one {# empleo} other {# empleos}}",
     "tableLabel": "Lista de empleos",
@@ -143,7 +143,7 @@
     "selectItem": "Seleccionar {name}"
   },
   "batch": {
-    "selectedCount": "{count, plural, one {# seleccionado} other {# seleccionados}} · máx. {max} por envío",
+    "selectedCount": "{count, plural, one {# seleccionada} other {# seleccionadas}} · límite: {max} por envío · {daily} por día",
     "selectedCountCandidatos": "{count, plural, one {# seleccionado} other {# seleccionados}} · máx. {max} por envío",
     "drawerTitle": "{count, plural, one {# seleccionado} other {# seleccionados}}",
     "drawerTitleCandidatos": "{count, plural, one {# seleccionado} other {# seleccionados}}",
@@ -155,7 +155,9 @@
     "limitReached": "Se alcanzó el límite de {max} por envío",
     "removeItem": "Quitar {name} de la selección",
     "closeDrawer": "Cerrar selección",
-    "toolbarLabel": "Barra de selección"
+    "toolbarLabel": "Barra de selección",
+    "review": "Revisar y aprobar ({count})",
+    "soon": "disponible pronto"
   },
   "detail": {
     "cargo": "Cargo",
@@ -206,5 +208,42 @@
   "range": {
     "from": "desde {value}",
     "upTo": "hasta {value}"
+  },
+  "match": {
+    "label": "match",
+    "column": "Match",
+    "understood": "La IA entendió:",
+    "removeChip": "Quitar {chip} de la búsqueda",
+    "countByMatch": "{count, plural, one {# vacante} other {# vacantes}}, ordenadas por match",
+    "countByRelevance": "{count, plural, one {# vacante} other {# vacantes}}, ordenadas por relevancia",
+    "moreGaps": "(+{count})",
+    "gapSkill": "falta: {skill}",
+    "gapNivel": "nivel {have}, pediste {want}",
+    "gapNivelNone": "nivel no informado",
+    "gapRegime": "{have}, pediste {want}",
+    "gapRegimeNone": "tipo de contrato no informado",
+    "gapModo": "{have}, pediste {want}",
+    "gapModoNone": "modalidad no informada",
+    "gapFaixa": "salario {have}",
+    "gapFaixaNone": "salario no informado",
+    "modo": {
+      "remoto": "remoto",
+      "hibrido": "híbrido",
+      "presencial": "presencial"
+    },
+    "idioma": {
+      "en": "Inglés",
+      "es": "Español"
+    },
+    "nivel": {
+      "junior": "Junior",
+      "pleno": "Semi senior",
+      "senior": "Senior"
+    },
+    "regime": {
+      "CLT": "CLT (empleado)",
+      "PJ": "PJ (contratista)",
+      "estagio": "Pasantía"
+    }
   }
 }

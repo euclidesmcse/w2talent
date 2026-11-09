@@ -2,6 +2,9 @@
 import * as React from "react";
 import { useTranslations } from "next-intl";
 import { selectionStore, SELECTION_LIMIT } from "@/lib/selection-store";
+
+/** Candidaturas por dia (spec §5); o controle de verdade entra com o envio, no 1.5.13. */
+const DAILY_LIMIT = 30;
 import { buttonClasses } from "@/components/ui/button";
 
 /**
@@ -81,7 +84,9 @@ export function BatchBar({ variant = "vagas", onAction }: BatchBarProps) {
   }, []);
 
   const label = isCand ? "Contatar" : "Candidatar";
-  const actionText = isCand ? t("contact", { count }) : t("apply", { count });
+  const actionText = isCand ? t("contact", { count }) : t("review", { count });
+  // Vagas: "Revisar e aprovar" chega no 1.5.13 (decisão de 09/11: aparece desativado até lá).
+  const actionSoon = !isCand;
   const drawerLabel = `${count} selecionados — limpar`;
 
   const handleClear = () => {
@@ -133,7 +138,7 @@ export function BatchBar({ variant = "vagas", onAction }: BatchBarProps) {
       <div className="mx-auto flex max-w-page flex-wrap items-center justify-between gap-2 px-4 py-3 md:px-6" style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}>
         <div className="flex items-center gap-2">
           <span data-testid="batch-count" className="text-sm font-medium">
-            {t(isCand ? "selectedCountCandidatos" : "selectedCount", { count, max: SELECTION_LIMIT })}
+            {t(isCand ? "selectedCountCandidatos" : "selectedCount", { count, max: SELECTION_LIMIT, daily: DAILY_LIMIT })}
           </span>
           {error ? (
             <span role="alert" aria-live="polite" className="text-sm text-danger">
@@ -159,11 +164,13 @@ export function BatchBar({ variant = "vagas", onAction }: BatchBarProps) {
             data-action="enviar-lote"
             onClick={handleAction}
             onKeyDown={(e) => { if (e.key === "Enter") handleAction(); }}
-            disabled={count === 0}
+            disabled={count === 0 || actionSoon}
+            aria-describedby={actionSoon ? "batch-soon" : undefined}
             className={buttonClasses("primary", "md")}
           >
             {actionText}
           </button>
+          {actionSoon ? <span id="batch-soon" className="text-xs text-muted">{t("soon")}</span> : null}
         </div>
       </div>
 

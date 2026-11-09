@@ -32,6 +32,10 @@ export type DbSearchParams = {
   nivel?: string;
   faixaDe?: number | null;
   faixaAte?: number | null;
+  /** Texto para a busca por texto, quando difere de `q` (q segue inteiro para o vetor). */
+  textQ?: string;
+  /** Basta um destes termos aparecer (as competências da busca, 1.5.12). */
+  anyTerms?: string[];
 };
 
 export type DbSearchOptions = { db: Db; embed?: Embedder; timeoutMs?: number };
@@ -142,12 +146,13 @@ function buildSql(
   p: DbSearchParams,
   vec: number[] | null,
 ): Prisma.Sql {
-  const q = normalizeQuery(p.q);
+  const q = normalizeQuery(p.textQ ?? p.q);
+  const anyTerms = (p.anyTerms ?? []).map((t) => normalizeQuery(t)).filter(Boolean);
   const offset = (p.page - 1) * p.pageSize;
   const where = Prisma.join(filters, " AND ");
   const from = Prisma.sql`FROM ${Prisma.raw(`"${table}"`)} v WHERE ${where}`;
 
-  if (!q) {
+  if (!q && !anyTerms.length) {
     return Prisma.sql`
       SELECT ${cols}, 0::float8 AS "_rank", 0::float8 AS "_tsRank", 0::float8 AS "_vecRank", count(*) OVER() AS "_total"
       ${from}
@@ -158,7 +163,11 @@ function buildSql(
   // Termos da lista de equivalências viram "qualquer um destes" (nuvem | cloud | nube), em E
   // com o resto do texto; um termo excluído ("-cloud") exclui também os equivalentes.
   const ex = expandQuery(q);
-  const parts: Prisma.Sql[] = [Prisma.sql`websearch_to_tsquery('portuguese', ${ex.rest})`];
+  const parts: Prisma.Sql[] = [];
+  if (ex.rest) parts.push(Prisma.sql`websearch_to_tsquery('portuguese', ${ex.rest})`);
+  if (anyTerms.length) {
+    parts.push(Prisma.sql`(${Prisma.join(anyTerms.map((t) => Prisma.sql`phraseto_tsquery('portuguese', ${t})`), " || ")})`);
+  }
   for (const group of ex.anyOf) {
     parts.push(Prisma.sql`(${Prisma.join(group.map((t) => Prisma.sql`phraseto_tsquery('portuguese', ${t})`), " || ")})`);
   }
@@ -200,7 +209,9 @@ export type DbSearchPage = {
 };
 
 async function run(kind: "vacancy" | "candidate", p: DbSearchParams, opts: DbSearchOptions): Promise<DbSearchPage> {
-  const vec = await queryVector(p.q, opts);
+  // Sem texto para buscar (só critérios, como "remoto PJ"), a lista sai por data: o vetor não seria usado.
+  const hasText = !!normalizeQuery(p.textQ ?? p.q) || !!p.anyTerms?.length;
+  const vec = hasText ? await queryVector(p.q, opts) : null;
   const sql = kind === "vacancy" ? buildVacancySearchSql(p, vec) : buildCandidateSearchSql(p, vec);
   const rows = await opts.db.$queryRaw<Record<string, any>[]>(sql);
   let total = rows.length ? Number(rows[0]._total) : 0;

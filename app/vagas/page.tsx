@@ -9,6 +9,8 @@ import { DetailModal } from "@/components/detail-modal";
 import { BatchBar } from "@/components/batch-bar";
 import { EmptyState } from "@/components/empty-state";
 import { selectionStore } from "@/lib/selection-store";
+import { IntentChips } from "@/components/intent-chips";
+import { removeChipFromQuery, type IntentChip } from "@/lib/query-intent";
 
 type Item = any;
 
@@ -25,6 +27,8 @@ export default function VagasPage() {
   const [suggestion, setSuggestion] = React.useState<string | null>(null);
   const [emptyCTA, setEmptyCTA] = React.useState<string | null>(null);
   const [loaded, setLoaded] = React.useState(false);
+  const [ready, setReady] = React.useState(false);
+  const [entendeu, setEntendeu] = React.useState<IntentChip[]>([]);
   const [selected, setSelected] = React.useState<string[]>(() => {
     try { return selectionStore.getState().selectedIds ?? []; } catch { return []; }
   });
@@ -39,14 +43,27 @@ export default function VagasPage() {
     return () => { try { (unsub as any)?.(); } catch {} };
   }, []);
 
-
-  // digitar busca sozinho após uma pausa curta; Enter ou "Buscar" buscam na hora
+  // A busca guardada no endereço (/vagas?q=...) volta ao abrir a página e pode ser compartilhada.
   React.useEffect(() => {
-    if (draft === q) return;
-    const t = setTimeout(() => { setQ(draft); setPage(1); }, 400);
-    return () => clearTimeout(t);
-  }, [draft, q]);
-  const submitSearch = (e: React.FormEvent) => { e.preventDefault(); setQ(draft); setPage(1); };
+    try {
+      const initial = new URLSearchParams(window.location.search).get("q") ?? "";
+      if (initial) { setDraft(initial); setQ(initial); }
+    } catch {}
+    setReady(true);
+  }, []);
+
+  // Busca ao apertar Enter ou "Buscar" (decisão de 09/11: os chips não piscam enquanto digita).
+  const runSearch = (next: string) => {
+    const clean = next.trim().replace(/\s+/g, " ");
+    setDraft(clean); setQ(clean); setPage(1);
+    try {
+      const url = new URL(window.location.href);
+      if (clean) url.searchParams.set("q", clean); else url.searchParams.delete("q");
+      window.history.replaceState(null, "", url.toString());
+    } catch {}
+  };
+  const submitSearch = (e: React.FormEvent) => { e.preventDefault(); runSearch(draft); };
+  const removeChip = (chip: IntentChip) => runSearch(removeChipFromQuery(q, chip));
 
   const fetchPage = React.useCallback(async (query: string, p: number) => {
     const lang = locale;
@@ -58,13 +75,18 @@ export default function VagasPage() {
     setTotalPages(data.totalPages ?? 1);
     setSuggestion(data.suggestion ?? null);
     setEmptyCTA(data.emptyCTA ?? null);
+    setEntendeu(Array.isArray(data.entendeu) ? data.entendeu : []);
     setLoaded(true);
   }, [locale]);
 
-  React.useEffect(() => { setSearching(true); fetchPage(q, page).catch(() => {}).finally(() => { setLoaded(true); setSearching(false); }); }, [q, page, fetchPage]);
+  React.useEffect(() => {
+    if (!ready) return;
+    setSearching(true);
+    fetchPage(q, page).catch(() => {}).finally(() => { setLoaded(true); setSearching(false); });
+  }, [ready, q, page, fetchPage]);
 
-  const handleClearFilters = () => { setDraft(""); setQ(""); setPage(1); };
-  const handleUseSuggestion = (s: string) => { setDraft(s); setQ(s); setPage(1); };
+  const handleClearFilters = () => runSearch("");
+  const handleUseSuggestion = (s: string) => runSearch(s);
   const toggle = (id: string) => { const it = items.find((x) => String(x.id ?? x.userId) === id); if (it) selectionStore.rememberLabel(id, it.titulo); const res = selectionStore.toggle(id); setSelected([...selectionStore.getState().selectedIds]); void res; };
   const openDetail = (id: string) => {
     const item = items.find((x) => x.id === id) ?? null;
@@ -94,8 +116,9 @@ export default function VagasPage() {
             className="min-w-0 max-w-[560px] flex-[1_1_220px]"
           />
           <Button type="submit" variant="primary" size="md">{tr("common.search")}</Button>
-          <span aria-live="polite" className="basis-full text-[13px] text-muted md:basis-auto">{searching && loaded ? tr("common.searching") : tr("vagas.count", { count: total })}</span>
+          <span aria-live="polite" className="basis-full text-[13px] text-muted md:basis-auto">{searching && loaded ? tr("common.searching") : entendeu.length ? "" : tr("vagas.count", { count: total })}</span>
         </form>
+        <IntentChips chips={entendeu} total={total} byMatch={items.some((it) => it.match != null)} onRemove={removeChip} />
       </div>
 
       <div className="mx-auto max-w-page px-6 pt-4 pb-24">

@@ -11,6 +11,8 @@
 
 import { HYBRID_WEIGHTS, searchVacanciesDb, searchCandidatesDb, type DbSearchPage } from "./search-db";
 import { normalizeSkill, SKILLS, getSkill } from "./taxonomy";
+import { parseQueryIntent, skillTextTerms, type IntentChip } from "./query-intent";
+import { hasCriteria, matchVacancy } from "./match";
 
 // ── Constantes ─────────────────────────────────────────────────────────
 export const PAGE_SIZE = 20;
@@ -188,11 +190,13 @@ export async function hybridSearch<T extends Record<string, any>>(
     filters?: SearchParams;
     page?: number;
     pageSize?: number;
+    /** Uso interno: o match (1.5.12) pede um lote maior para reordenar. */
+    maxPageSize?: number;
   }
 ): Promise<SearchResult<T & { _rank: number }>> {
   const start = Date.now();
   const page = Math.max(1, opts.page ?? 1);
-  const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, opts.pageSize ?? PAGE_SIZE));
+  const pageSize = Math.min(opts.maxPageSize ?? MAX_PAGE_SIZE, Math.max(1, opts.pageSize ?? PAGE_SIZE));
   const q = (query ?? "").trim();
 
   // 1. filter status=ativo only — mirrors isSearchableCandidate/Vacancy from lib/hygiene
@@ -333,13 +337,26 @@ async function demoItems(kind: Kind): Promise<any[]> {
   }
 }
 
-function memorySearch(kind: Kind, params: SearchParams, items: any[], page: number, pageSize: number) {
-  return hybridSearch(params.q ?? "", items, {
+/** Ajustes internos da busca de vagas com match (1.5.12). */
+type KindOptions = {
+  /** Texto para a busca por texto (sem os termos que viraram critério). */
+  textQ?: string;
+  /** Basta um destes aparecer (competências pedidas). */
+  anyTerms?: string[];
+  /** Texto da busca em memória (demonstração), que não tem o grupo "qualquer um". */
+  memoryQ?: string;
+  /** Lote maior que a página, para reordenar por match. */
+  pool?: number;
+};
+
+function memorySearch(kind: Kind, params: SearchParams, items: any[], page: number, pageSize: number, ko: KindOptions = {}) {
+  return hybridSearch(ko.memoryQ ?? params.q ?? "", items, {
     buildText: kind === "vacancy" ? buildTsvectorTextVacancy : buildTsvectorTextCandidate,
     getStack: (it) => it.stack ?? [],
     filters: params,
     page,
     pageSize,
+    maxPageSize: ko.pool,
   });
 }
 
@@ -348,11 +365,11 @@ function emptyResult(q: string, page: number, pageSize: number, tookMs: number):
   return { items: [], total: 0, page, pageSize, totalPages: 1, suggestion, emptyCTA: q ? buildEmptyCTA(suggestion) : null, tookMs };
 }
 
-async function searchKind(kind: Kind, params: SearchParams, dataSource?: any[]): Promise<SearchResult<any>> {
+async function searchKind(kind: Kind, params: SearchParams, dataSource?: any[], ko: KindOptions = {}): Promise<SearchResult<any>> {
   const page = Math.max(1, params.page ?? 1);
-  const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, params.pageSize ?? PAGE_SIZE));
+  const pageSize = Math.min(ko.pool ?? MAX_PAGE_SIZE, Math.max(1, params.pageSize ?? PAGE_SIZE));
   // Testes injetam a lista: busca em memória.
-  if (Array.isArray(dataSource)) return memorySearch(kind, params, dataSource, page, pageSize);
+  if (Array.isArray(dataSource)) return memorySearch(kind, params, dataSource, page, pageSize, ko);
 
   const start = Date.now();
   const q = (params.q ?? "").trim();
@@ -369,6 +386,8 @@ async function searchKind(kind: Kind, params: SearchParams, dataSource?: any[]):
       nivel: params.nivel,
       faixaDe: params.faixaDe ?? null,
       faixaAte: params.faixaAte ?? null,
+      textQ: ko.textQ,
+      anyTerms: ko.anyTerms,
     };
     const opts = { db: getPrisma() };
     found = kind === "vacancy" ? await searchVacanciesDb(dbParams, opts) : await searchCandidatesDb(dbParams, opts);
@@ -376,10 +395,10 @@ async function searchKind(kind: Kind, params: SearchParams, dataSource?: any[]):
     // Banco fora do ar: mostra a demonstração em vez de uma tela de erro.
     // eslint-disable-next-line no-console
     console.error("[busca] banco indisponível:", e instanceof Error ? e.message : e);
-    return memorySearch(kind, params, await demoItems(kind), page, pageSize);
+    return memorySearch(kind, params, await demoItems(kind), page, pageSize, ko);
   }
   // Nenhum registro ativo no banco (staging recém-criado): demonstração.
-  if (!found.hasAny) return memorySearch(kind, params, await demoItems(kind), page, pageSize);
+  if (!found.hasAny) return memorySearch(kind, params, await demoItems(kind), page, pageSize, ko);
 
   const tookMs = Date.now() - start;
   if (found.total === 0) return emptyResult(q, page, pageSize, tookMs);
@@ -395,8 +414,50 @@ async function searchKind(kind: Kind, params: SearchParams, dataSource?: any[]):
   };
 }
 
-export function searchVacancies(params: SearchParams, dataSource?: any[]): Promise<SearchResult<any>> {
-  return searchKind("vacancy", params, dataSource);
+/** Até quantas vagas entram na reordenação por match (as mais relevantes no texto). */
+export const MATCH_POOL = 200;
+
+export type VacancySearchResult = SearchResult<any> & { entendeu: IntentChip[] };
+
+/**
+ * Busca de vagas do candidato (1.5.12): lê os critérios do texto ("A IA entendeu"), busca pelo
+ * resto do texto e pelas competências, e ordena por match (desempate: relevância do texto).
+ * Sem critério nenhum (só texto livre), a ordem é a da relevância e não há match.
+ */
+export async function searchVacancies(params: SearchParams, dataSource?: any[]): Promise<VacancySearchResult> {
+  const intent = parseQueryIntent(params.q);
+  if (!hasCriteria(intent)) {
+    const r = await searchKind("vacancy", params, dataSource);
+    return { ...r, entendeu: intent.chips, items: r.items.map((it) => ({ ...it, match: null, gaps: [] })) };
+  }
+
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, params.pageSize ?? PAGE_SIZE));
+  const anyTerms = intent.skills.flatMap(skillTextTerms);
+  const r = await searchKind("vacancy", { ...params, page: 1, pageSize: MATCH_POOL }, dataSource, {
+    textQ: intent.rest,
+    anyTerms,
+    memoryQ: [intent.rest, ...intent.skills.map((s) => getSkill(s)?.label ?? s)].filter(Boolean).join(" "),
+    pool: MATCH_POOL,
+  });
+  const now = Date.now();
+  const ranked = r.items
+    .map((it: any) => {
+      const m = matchVacancy(it, intent, now);
+      return { ...it, match: m.pct, gaps: m.gaps };
+    })
+    .sort((a: any, b: any) => b.match - a.match || (b._rank ?? 0) - (a._rank ?? 0));
+  const total = Math.min(r.total, ranked.length);
+  const start = (page - 1) * pageSize;
+  return {
+    ...r,
+    items: ranked.slice(start, start + pageSize),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    entendeu: intent.chips,
+  };
 }
 
 /**
