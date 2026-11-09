@@ -31,8 +31,7 @@ function fichaCompleta(over: Partial<Ficha> = {}): Ficha {
     localidade: "São Paulo, SP",
     modo: "remoto",
     regimes: ["CLT"],
-    pretensaoDe: 9000,
-    pretensaoAte: 12000,
+    pretensoes: [{ regime: "CLT", valor: 9000 }],
     idiomas: [{ idioma: "Inglês", nivel: "avancado" }],
     disponibilidade: "30d",
     ...over,
@@ -75,7 +74,11 @@ describe("formato da ficha", () => {
     expect(f.experiencias).toEqual([{ cargo: "Dev", empresa: "X", inicio: "2020-03", fim: "", atual: true }]);
     expect(f.idiomas).toEqual([{ idioma: "Inglês", nivel: "fluente" }]);
     expect(f.objetivo).toBe("Liderar um time");
-    expect([f.pretensaoDe, f.pretensaoAte]).toEqual([8000, 12000]);
+    // formato antigo (um valor só): o menor vira o mínimo do primeiro regime
+    expect(f.pretensoes).toEqual([
+      { regime: "CLT", valor: 8000, unidade: "mes", moeda: "BRL" },
+      { regime: "PJ", valor: null, unidade: "mes", moeda: "BRL" },
+    ]);
     expect((f as any).lixo).toBeUndefined();
   });
 
@@ -131,6 +134,45 @@ describe("formato da ficha", () => {
     expect(p.objetivoCrescimento).toBeNull();
     expect(p.regimePreferido).toEqual(["CLT"]);
     expect(p.senioridade).toBe("pleno");
+  });
+
+  it("pretensão por regime: unidade fixa onde não se escolhe, uma por regime, regime marcado junto", () => {
+    const f = sanitizeFicha({
+      regimes: ["CLT"],
+      pretensoes: [
+        { regime: "CLT", valor: 12000, unidade: "hora", moeda: "BRL" },
+        { regime: "clt", valor: 1 },
+        { regime: "freela", valor: 50, unidade: "hora", moeda: "USD" },
+        { regime: "nada", valor: 3 },
+      ],
+    });
+    expect(f.regimes).toEqual(["CLT", "Freelancer"]);
+    expect(f.pretensoes).toEqual([
+      { regime: "CLT", valor: 12000, unidade: "mes", moeda: "BRL" },
+      { regime: "Freelancer", valor: 50, unidade: "hora", moeda: "USD" },
+    ]);
+  });
+
+  it("pretensão: falta enquanto algum regime marcado estiver sem valor", () => {
+    expect(camposFaltando(fichaCompleta())).not.toContain("pretensao");
+    const dois = fichaCompleta({ regimes: ["CLT", "PJ"], pretensoes: [{ regime: "CLT", valor: 9000, unidade: "mes", moeda: "BRL" }] });
+    expect(dois.pretensoes.map((p) => [p.regime, p.valor])).toEqual([["CLT", 9000], ["PJ", null]]);
+    expect(camposFaltando(dois)).toContain("pretensao");
+  });
+
+  it("perfil guarda só pretensões com valor, e a coluna antiga fica com a primeira mensal", () => {
+    const p = fichaToProfile(
+      fichaCompleta({
+        regimes: ["Freelancer", "PJ", "CLT"],
+        pretensoes: [
+          { regime: "Freelancer", valor: 60, unidade: "hora", moeda: "USD" },
+          { regime: "PJ", valor: 18000, unidade: "mes", moeda: "BRL" },
+          { regime: "CLT", valor: null, unidade: "mes", moeda: "BRL" },
+        ],
+      }),
+    );
+    expect(p.pretensoes.map((x) => x.regime)).toEqual(["Freelancer", "PJ"]);
+    expect([p.pretensaoDe, p.pretensaoAte, p.pretensaoMoeda]).toEqual([18000, null, "BRL"]);
   });
 
   it("os candidatos de demonstração têm ficha mínima e Ficha W2", () => {

@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { formatFaixa, formatTempo, maskEmail, maskPhone } from "@/lib/format";
+import { formatPretensaoCandidato, formatTempo, maskEmail, maskPhone } from "@/lib/format";
 import type { CandidateRow } from "./candidate-table";
 import { buttonClasses } from "@/components/ui/button";
 import { SkillChips } from "@/components/skill-chips";
@@ -41,7 +41,7 @@ export function CandidateCards({
     <ul aria-label={t("candidatos.cardsLabel")} className="candidate-cards flex flex-col gap-3">
       {items.map((row) => {
         const skillIds = getSkillIds(row);
-        const faixa = formatFaixa(row.pretensaoDe ?? row.faixaDe ?? null, row.pretensaoAte ?? row.faixaAte ?? null, row.pretensaoMoeda ?? "BRL", locale);
+        const faixa = formatPretensaoCandidato(row as any, locale);
         const tempo = formatTempo((row.updatedAt ?? row.createdAt) as any, locale);
         // a busca às vezes devolve só userId (sem id)
           const rid = String(row.id ?? (row as any).userId ?? "");

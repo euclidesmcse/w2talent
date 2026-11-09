@@ -56,8 +56,8 @@ Schema:
  "localidade": string ("City, State" or "City, Country"; never the street),
  "modo": "remoto"|"hibrido"|"presencial"|"",
  "mudanca": boolean (says they accept relocating),
- "regimes": ["CLT"|"PJ"|"Estágio"|"Freelancer"],
- "pretensaoDe": number|null, "pretensaoAte": number|null (monthly salary expectation), "pretensaoMoeda": "BRL"|"USD"|"EUR",
+ "regimes": ["CLT"|"PJ"|"Estágio"|"Freelancer"|"Outro"],
+ "pretensoes": [{"regime": "CLT"|"PJ"|"Estágio"|"Freelancer"|"Outro", "valor": number (the minimum they accept), "unidade": "mes"|"hora", "moeda": "BRL"|"USD"|"EUR"}] (salary expectation per employment type; only when the résumé states both the amount and which employment type it refers to, otherwise []; CLT is gross monthly salary, PJ is the monthly invoice amount),
  "idiomas": [{"idioma": string (language name in Portuguese, e.g. "Inglês"), "nivel": "basico"|"intermediario"|"avancado"|"fluente"|"nativo"}],
  "disponibilidade": "imediata"|"15d"|"30d"|"60d"|"90d"|"",
  "objetivo": string (one sentence about their career goal, or "")}`;

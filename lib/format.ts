@@ -61,6 +61,40 @@ export function formatFaixa(
   return `${words.upTo} ${fmt(faixaAte!)}`;
 }
 
+/** Nome do regime em cada idioma (na tela de busca do recrutador). */
+const REGIME_NOMES: Record<string, Record<string, string>> = {
+  "pt-BR": { CLT: "CLT", PJ: "PJ", "Estágio": "Estágio", Freelancer: "Freelancer", Outro: "Outro" },
+  en: { CLT: "CLT", PJ: "PJ", "Estágio": "Internship", Freelancer: "Freelancer", Outro: "Other" },
+  es: { CLT: "CLT", PJ: "PJ", "Estágio": "Prácticas", Freelancer: "Freelancer", Outro: "Otro" },
+};
+
+export function nomeRegime(regime: string, locale = "pt-BR"): string {
+  return (REGIME_NOMES[locale] ?? REGIME_NOMES["pt-BR"])[regime] ?? regime;
+}
+
+type PretensaoFmt = { regime: string; valor: number | null; unidade?: string | null; moeda?: string | null };
+
+/**
+ * Pretensões por regime em uma linha: "CLT a partir de R$ 12.000 · Freelancer a partir de US$ 50/h".
+ * Cada valor é o mínimo aceito naquele regime. Lista vazia ou inválida → "".
+ */
+export function formatPretensoes(lista: unknown, locale = "pt-BR"): string {
+  if (!Array.isArray(lista)) return "";
+  const words = RANGE_WORDS[locale] ?? RANGE_WORDS["pt-BR"];
+  return (lista as PretensaoFmt[])
+    .filter((p) => p && typeof p.regime === "string" && typeof p.valor === "number")
+    .map((p) => `${nomeRegime(p.regime, locale)} ${words.from} ${formatMoney(p.valor!, locale, p.moeda || "BRL")}${p.unidade === "hora" ? "/h" : ""}`)
+    .join(" · ");
+}
+
+/** Pretensão de um candidato da busca: por regime quando há; senão a faixa antiga (de/até). */
+export function formatPretensaoCandidato(
+  row: { pretensoes?: unknown; pretensaoDe?: number | null; pretensaoAte?: number | null; pretensaoMoeda?: string | null },
+  locale = "pt-BR",
+): string {
+  return formatPretensoes(row.pretensoes, locale) || formatFaixa(row.pretensaoDe, row.pretensaoAte, row.pretensaoMoeda ?? "BRL", locale);
+}
+
 type TempoWords = { today: string; day: (n: number) => string; week: (n: number) => string; month: (n: number) => string };
 const TEMPO_WORDS: Record<string, TempoWords> = {
   "pt-BR": {

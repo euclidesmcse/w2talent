@@ -61,4 +61,42 @@ describeDb("Uso por dia no banco", () => {
       SELECT "searchVector"::text AS sv, "embeddingHash" AS h, "resumo3linhas" AS r FROM "CandidateProfile" WHERE "userId" = ${p.userId}`;
     expect(row).toEqual({ sv: null, h: null, r: "Segundo resumo." });
   });
+
+  it("pretensão por regime: grava a lista e a busca compara o mínimo do regime com o teto", async () => {
+    const SECRET = "uma-senha-de-admin-bem-comprida-123";
+    process.env.ADMIN_SECRET = SECRET;
+    const { POST } = await import("../app/api/ficha/publicar/route");
+    const { searchCandidatesDb } = await import("../lib/search-db");
+    const cookie = `${ADMIN_COOKIE}=${encodeURIComponent((await signAdminSession(SECRET)).value)}`;
+    const publicar = (email: string, regimes: string[], pretensoes: unknown[]) =>
+      POST(
+        new NextRequest("http://w2.test/api/ficha/publicar", {
+          method: "POST",
+          headers: { cookie, "content-type": "application/json" },
+          body: JSON.stringify({
+            ficha: { ...DEMO_FICHAS["demo-c-02"], nome: "Teste Regime", email, titulo: "Engenheiro Cloud", localidade: "Lisboa", modo: "remoto", regimes, pretensoes },
+            fichaW2: { resumo: "Resumo." },
+          }),
+        }),
+      );
+    // CLT pede 9 mil, PJ pede 22 mil: numa vaga PJ até 15 mil não cabe; numa CLT até 15 mil cabe.
+    expect((await publicar("dois.regimes@exemplo.com", ["CLT", "PJ"], [{ regime: "CLT", valor: 9000 }, { regime: "PJ", valor: 22000 }])).status).toBe(200);
+    expect((await publicar("so.hora@exemplo.com", ["Freelancer"], [{ regime: "Freelancer", valor: 80, unidade: "hora" }])).status).toBe(200);
+    const salvo = await db.candidateProfile.findFirstOrThrow({ where: { email: "dois.regimes@exemplo.com" } });
+    expect(salvo.pretensoes).toEqual([
+      { regime: "CLT", valor: 9000, unidade: "mes", moeda: "BRL" },
+      { regime: "PJ", valor: 22000, unidade: "mes", moeda: "BRL" },
+    ]);
+    expect([salvo.pretensaoDe, salvo.pretensaoAte]).toEqual([9000, null]);
+
+    const emails = async (p: { regime?: string; faixaAte?: number }) => {
+      const r = await searchCandidatesDb({ page: 1, pageSize: 100, ...p }, { db });
+      return r.items.map((x) => x.email).filter((e: string) => e.endsWith("@exemplo.com") && e !== "ana.publicar@exemplo.com").sort();
+    };
+    expect(await emails({ regime: "PJ", faixaAte: 15000 })).toEqual([]);
+    expect(await emails({ regime: "CLT", faixaAte: 15000 })).toEqual(["dois.regimes@exemplo.com"]);
+    // sem regime: cabe se algum regime cabe; quem só tem valor por hora não é comparado com mês
+    expect(await emails({ faixaAte: 15000 })).toEqual(["dois.regimes@exemplo.com", "so.hora@exemplo.com"]);
+    expect(await emails({ faixaAte: 5000 })).toEqual(["so.hora@exemplo.com"]);
+  });
 });

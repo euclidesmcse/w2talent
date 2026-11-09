@@ -79,6 +79,9 @@ model CandidateProfile {
   pretensaoDe         Int?
   pretensaoAte        Int?
   pretensaoMoeda      String?  @default("BRL")
+  /// [{ regime, valor, unidade: "mes"|"hora", moeda }]: o mínimo aceito em cada regime (2026-11-09).
+  /// pretensaoDe/Ate/Moeda ficam com a primeira mensal, para quem ainda lê delas.
+  pretensoes          Json     @default("[]")
   disponibilidade     String?
   mudanca             Boolean? // aceita mudar de cidade (1.5.10)
   objetivoCrescimento String?

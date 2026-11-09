@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { skillName } from "@/components/skill-chips";
 import { buttonClasses } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
-import { formatFaixa, formatTempo } from "@/lib/format";
+import { formatFaixa, formatPretensaoCandidato, formatTempo } from "@/lib/format";
 import { FichaW2Card } from "@/components/ficha-w2-card";
 import { sanitizeFicha, sanitizeFichaW2 } from "@/lib/ficha";
 
@@ -144,7 +144,9 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef }
 
   const skills: string[] = item?.stack && Array.isArray(item.stack) ? item.stack.map((x: any) => x?.skillId ?? x).filter(Boolean) : [];
   const faixa = item
-    ? formatFaixa(item.faixaDe ?? item.pretensaoDe ?? null, item.faixaAte ?? item.pretensaoAte ?? null, item.faixaMoeda ?? item.pretensaoMoeda ?? "BRL", locale)
+    ? item.nome
+      ? formatPretensaoCandidato(item, locale)
+      : formatFaixa(item.faixaDe ?? null, item.faixaAte ?? null, item.faixaMoeda ?? "BRL", locale)
     : "";
   const regime = item ? (Array.isArray(item.regimePreferido) ? item.regimePreferido.join(", ") : item.regime ?? item.regimePreferido) : null;
   const fields: Array<[string, React.ReactNode]> = item

@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { formatFaixa, formatTempo, initials, maskEmail, maskPhone } from "@/lib/format";
+import { formatPretensaoCandidato, formatTempo, initials, maskEmail, maskPhone } from "@/lib/format";
 import { buttonClasses } from "@/components/ui/button";
 import { SkillChips } from "@/components/skill-chips";
 
@@ -17,6 +17,7 @@ export type CandidateRow = {
   pretensaoDe?: number | null;
   pretensaoAte?: number | null;
   pretensaoMoeda?: string | null;
+  pretensoes?: unknown;
   faixaDe?: number | null;
   faixaAte?: number | null;
   updatedAt?: string | Date | null;
@@ -54,7 +55,7 @@ export function CandidateTable({
   const t = useTranslations();
   const locale = useLocale();
   // Coluna "Pretensão" só aparece quando alguma linha tem valor.
-  const showPretensao = items.some((r: any) => r.pretensaoDe != null || r.pretensaoAte != null || r.faixaDe != null || r.faixaAte != null);
+  const showPretensao = items.some((r: any) => formatPretensaoCandidato(r, locale) !== "—");
 
   return (
     <table aria-label={t("candidatos.tableLabel")} className="candidate-table w-full min-w-[760px] border-collapse text-sm tabular-nums">
@@ -72,7 +73,7 @@ export function CandidateTable({
       <tbody>
         {items.map((row) => {
           const skillIds = getSkillIds(row);
-          const faixa = formatFaixa(row.pretensaoDe ?? row.faixaDe ?? null, row.pretensaoAte ?? row.faixaAte ?? null, row.pretensaoMoeda ?? "BRL", locale);
+          const faixa = formatPretensaoCandidato(row as any, locale);
           const tempo = formatTempo((row.updatedAt ?? row.createdAt) as any, locale);
           // a busca às vezes devolve só userId (sem id)
           const rid = String(row.id ?? (row as any).userId ?? "");
