@@ -10,6 +10,7 @@ import { indexVacancy, indexCandidate, indexPending, markForReindex, EMBED_BATCH
 import { queryVector, buildVacancySearchSql, normalizeQuery, searchVacanciesDb } from "../lib/search-db";
 import { createRouter, type AiStore } from "../lib/ai/router";
 import { encryptApiKey } from "../lib/ai/keys";
+import { expandQuery } from "../lib/search-synonyms";
 
 const DIM = 1024;
 const vec = (x: number) => new Array(DIM).fill(x);
@@ -200,6 +201,45 @@ describe("vetor da busca: cache de 7 dias e limite de 1,2 s (decisão 3)", () =>
     const sql = buildVacancySearchSql({ page: 1, pageSize: 20 }, null).sql;
     expect(sql).toMatch(/ORDER BY v\."updatedAt" DESC/);
     expect(sql).not.toMatch(/websearch_to_tsquery/);
+  });
+});
+
+describe("equivalências e significado só reordena (decisão de 2026-11-09)", () => {
+  it("cada termo vira um grupo; o resto do texto fica", () => {
+    const e = expandQuery("engenheiro nuvem aws");
+    expect(e.rest).toBe("aws");
+    expect(e.anyOf).toEqual([expect.arrayContaining(["nuvem", "cloud", "nube"]), expect.arrayContaining(["engenheiro", "engineer"])]);
+    expect(e.noneOf).toEqual([]);
+  });
+
+  it("combina idiomas sem limite: developer database acha desenvolvedor + banco de dados", () => {
+    const e = expandQuery("developer database");
+    expect(e.rest).toBe("");
+    expect(e.anyOf).toHaveLength(2);
+    expect(e.anyOf.flat()).toEqual(expect.arrayContaining(["desenvolvedor", "banco de dados"]));
+  });
+
+  it("exclusão vale para os equivalentes", () => {
+    const e = expandQuery("aws -cloud");
+    expect(e.rest).toBe("aws -cloud");
+    expect(e.anyOf).toEqual([]);
+    expect(e.noneOf).toEqual(expect.arrayContaining(["nuvem", "nube"]));
+  });
+
+  it("palavra inteira, termo longo primeiro, aspas e or sem expansão", () => {
+    expect(expandQuery("dadosx").anyOf).toEqual([]);
+    expect(expandQuery("banco de dados").anyOf).toHaveLength(1);
+    expect(expandQuery("cozinheiro de restaurante").anyOf).toEqual([]);
+    expect(expandQuery('"analista cloud"').anyOf).toEqual([]);
+    expect(expandQuery("cloud or aws").anyOf).toEqual([]);
+  });
+
+  it("SQL: entra só o que bate no texto; o vetor só entra na nota", () => {
+    const q = buildVacancySearchSql({ q: "nuvem", page: 1, pageSize: 20 }, vec(0.01));
+    expect(q.sql).toMatch(/WHERE s\."_textMatch"\s/);
+    expect(q.sql).not.toMatch(/_vecRank" >=/);
+    expect(q.sql).toMatch(/phraseto_tsquery/);
+    expect(q.values).toEqual(expect.arrayContaining(["nuvem", "cloud", "nube"]));
   });
 });
 

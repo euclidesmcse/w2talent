@@ -2,8 +2,10 @@
  * Busca no banco (1.5.9): texto (tsvector) + significado (pgvector) numa consulta SQL só,
  * sobre a base inteira, com filtros, total e páginas.
  *
- * Nota = 0,6 × texto + 0,4 × significado (HYBRID_WEIGHTS). Entra no resultado o que bate no
- * texto OU fica perto o bastante no significado (VECTOR_MIN_SIMILARITY).
+ * Nota = 0,6 × texto + 0,4 × significado (HYBRID_WEIGHTS). Entra no resultado só o que bate no
+ * texto (com as equivalências PT/EN/ES de search-synonyms.ts); o significado reordena.
+ * Decisão do Euclides em 2026-11-09, depois de medir: com textos curtos o bge-m3 não separa
+ * "nuvem" de "cozinheiro" (0,3 a 0,4 nos dois). Medir de novo quando houver vagas reais.
  *
  * O vetor do texto buscado fica guardado 7 dias (tabela QueryEmbedding, só o hash do texto).
  * Se o modelo demorar mais que QUERY_VECTOR_TIMEOUT_MS, a busca sai só por texto e o vetor
@@ -12,12 +14,11 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { EMBEDDING_DIM, EMBEDDING_MODEL, embeddingHash, generateEmbedding, toVectorLiteral, type Embedder } from "./embeddings";
 import { runInBackground } from "./background";
+import { expandQuery } from "./search-synonyms";
 
 type Db = Pick<PrismaClient, "$queryRaw" | "$executeRaw">;
 
 export const HYBRID_WEIGHTS = { tsvector: 0.6, vector: 0.4 } as const;
-/** Similaridade mínima (cosseno, 0 a 1) para um item entrar só pelo significado. Ajustar com dados reais. */
-export const VECTOR_MIN_SIMILARITY = 0.5;
 export const QUERY_VECTOR_TIMEOUT_MS = 1200;
 export const QUERY_CACHE_DAYS = 7;
 
@@ -154,7 +155,15 @@ function buildSql(
       LIMIT ${p.pageSize} OFFSET ${offset}`;
   }
 
-  const tsq = Prisma.sql`websearch_to_tsquery('portuguese', ${q})`;
+  // Termos da lista de equivalências viram "qualquer um destes" (nuvem | cloud | nube), em E
+  // com o resto do texto; um termo excluído ("-cloud") exclui também os equivalentes.
+  const ex = expandQuery(q);
+  const parts: Prisma.Sql[] = [Prisma.sql`websearch_to_tsquery('portuguese', ${ex.rest})`];
+  for (const group of ex.anyOf) {
+    parts.push(Prisma.sql`(${Prisma.join(group.map((t) => Prisma.sql`phraseto_tsquery('portuguese', ${t})`), " || ")})`);
+  }
+  for (const t of ex.noneOf) parts.push(Prisma.sql`!!phraseto_tsquery('portuguese', ${t})`);
+  const tsq = Prisma.sql`(${Prisma.join(parts, " && ")})`;
   const vecExpr = vec
     ? Prisma.sql`CASE WHEN v.embedding IS NULL THEN 0 ELSE 1 - (v.embedding <=> ${toVectorLiteral(vec)}::vector) END`
     : Prisma.sql`0::float8`;
@@ -168,7 +177,7 @@ function buildSql(
              (${tsv} @@ ${tsq}) AS "_textMatch"
       ${from}
     ) s
-    WHERE s."_textMatch" OR s."_vecRank" >= ${VECTOR_MIN_SIMILARITY}
+    WHERE s."_textMatch"
     ORDER BY "_rank" DESC, s."updatedAt" DESC
     LIMIT ${p.pageSize} OFFSET ${offset}`;
 }
