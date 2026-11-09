@@ -11,6 +11,8 @@ import { EmptyState } from "@/components/empty-state";
 import { selectionStore } from "@/lib/selection-store";
 import { IntentChips } from "@/components/intent-chips";
 import { removeChipFromQuery, type IntentChip } from "@/lib/query-intent";
+import { emailDaFichaLocal, enviadasDoPerfil, podeEnviar } from "@/lib/envio-client";
+import { useRouter } from "next/navigation";
 
 type Item = any;
 
@@ -35,6 +37,23 @@ export default function VagasPage() {
   const [modalItem, setModalItem] = React.useState<Item | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [activeTrigger, setActiveTrigger] = React.useState<React.RefObject<HTMLElement | null> | undefined>(undefined);
+  const router = useRouter();
+  // 1.5.13: envio ligado só no modo de teste do admin; vagas já enviadas não podem ser marcadas.
+  const [envioLigado, setEnvioLigado] = React.useState(false);
+  const [enviadas, setEnviadas] = React.useState<Record<string, string>>({});
+
+  React.useEffect(() => {
+    let vivo = true;
+    (async () => {
+      if (!(await podeEnviar())) return;
+      if (vivo) setEnvioLigado(true);
+      const env = await enviadasDoPerfil(emailDaFichaLocal());
+      if (!vivo) return;
+      setEnviadas(env);
+      for (const id of Object.keys(env)) if (selectionStore.getState().selectedIds.includes(id)) selectionStore.remove(id);
+    })().catch(() => {});
+    return () => { vivo = false; };
+  }, []);
 
   React.useEffect(() => {
     const sync = () => { try { setSelected([...selectionStore.getState().selectedIds]); } catch {} };
@@ -87,7 +106,7 @@ export default function VagasPage() {
 
   const handleClearFilters = () => runSearch("");
   const handleUseSuggestion = (s: string) => runSearch(s);
-  const toggle = (id: string) => { const it = items.find((x) => String(x.id ?? x.userId) === id); if (it) selectionStore.rememberLabel(id, it.titulo); const res = selectionStore.toggle(id); setSelected([...selectionStore.getState().selectedIds]); void res; };
+  const toggle = (id: string) => { if (enviadas[id]) return; const it = items.find((x) => String(x.id ?? x.userId) === id); if (it) selectionStore.rememberLabel(id, it.titulo); const res = selectionStore.toggle(id); setSelected([...selectionStore.getState().selectedIds]); void res; };
   const openDetail = (id: string) => {
     const item = items.find((x) => x.id === id) ?? null;
     setModalItem(item); setModalOpen(true);
@@ -138,10 +157,10 @@ export default function VagasPage() {
           <div aria-busy={searching} className={`transition-opacity ${searching ? "opacity-60" : ""}`}>
           <div className="hidden md:block">
             <div className="overflow-hidden rounded-card border border-line bg-surface">
-              <VacancyTable items={items} selectedIds={selectedSet} onToggle={toggle} onOpenDetail={openDetail} />
+              <VacancyTable items={items} selectedIds={selectedSet} sentAt={enviadas} onToggle={toggle} onOpenDetail={openDetail} />
             </div>
           </div>
-          <div className="md:hidden"><VacancyCards items={items} selectedIds={selectedSet} onToggle={toggle} onOpenDetail={openDetail} /></div>
+          <div className="md:hidden"><VacancyCards items={items} selectedIds={selectedSet} sentAt={enviadas} onToggle={toggle} onOpenDetail={openDetail} /></div>
           </div>
         )}
         {/* Com uma página só, a paginação some: a contagem já aparece ao lado da busca */}
@@ -155,7 +174,7 @@ export default function VagasPage() {
           </nav>
         ) : null}
         <DetailModal open={modalOpen} onClose={closeModal} item={modalItem} triggerRef={activeTrigger} title={modalItem?.titulo ?? tr("vagas.detailFallback")} />
-        <BatchBar variant="vagas" onAction={(ids) => { void ids; }} />
+        <BatchBar variant="vagas" actionEnabled={envioLigado} onAction={() => router.push("/vagas/aprovar")} />
       </div>
       </main>
     </div>

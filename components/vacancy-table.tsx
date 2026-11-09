@@ -6,6 +6,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { SkillChips } from "@/components/skill-chips";
 import { MatchCell } from "@/components/vacancy-match";
 import type { MatchGap } from "@/lib/match";
+import { diaMes } from "@/lib/envio-client";
 // breakpoints: 360 / 768 / 1024 / 1280 — Tailwind screens xs/md/lg/xl (see tailwind.config.js)
 // next-intl: colunas via messages/pt-BR.json, en.json — fallback PT-BR (i18n.ts t())
 // PWA: manifest.json linked in layout.tsx
@@ -41,11 +42,14 @@ function getSkillIds(row: VacancyRow): string[] {
 export function VacancyTable({
   items,
   selectedIds,
+  sentAt,
   onToggle,
   onOpenDetail,
 }: {
   items: VacancyRow[];
   selectedIds?: Set<string> | string[];
+  /** 1.5.13: vagas já enviadas (id → data). Não podem ser marcadas de novo. */
+  sentAt?: Record<string, string>;
   onToggle?: (id: string) => void;
   onOpenDetail?: (id: string) => void;
 }) {
@@ -77,6 +81,7 @@ export function VacancyTable({
           const faixa = formatFaixa(row.faixaDe, row.faixaAte, row.faixaMoeda ?? "BRL", locale);
           const tempo = formatTempo((row.updatedAt ?? row.createdAt) as any, locale);
           const isSelected = selectedSet.has(row.id);
+        const enviadaEm = sentAt?.[row.id];
           const emailRaw = row.email ?? row.contato?.email ?? "";
           const telRaw = row.telefone ?? row.contato?.telefone ?? "";
           const contatoMascarado = [emailRaw ? maskEmail(emailRaw) : "", telRaw ? maskPhone(telRaw) : ""].filter(Boolean).join(" · ");
@@ -85,7 +90,7 @@ export function VacancyTable({
             <tr
               key={row.id}
               data-vacancy-id={row.id}
-              onClick={(e) => { if ((e.target as HTMLElement).closest("button, a, input, label")) return; onToggle?.(row.id); }}
+              onClick={(e) => { if (enviadaEm || (e.target as HTMLElement).closest("button, a, input, label")) return; onToggle?.(row.id); }}
               className={`cursor-pointer border-t border-line-soft ${isSelected ? "selected bg-[#F5F8FF]" : "bg-surface hover:bg-canvas"}`}
             >
               <td className="py-3.5 pl-4 pr-2 align-top">
@@ -94,8 +99,9 @@ export function VacancyTable({
                   aria-label={t("table.selectItem", { name: row.titulo })}
                   data-select-id={row.id}
                   checked={isSelected}
+                  disabled={!!enviadaEm}
                   onChange={() => onToggle?.(row.id)}
-                  className="h-5 w-5 cursor-pointer accent-brand"
+                  className="h-5 w-5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 accent-brand"
                 />
               </td>
               <td className="px-2 py-3.5 align-top">
@@ -110,6 +116,7 @@ export function VacancyTable({
                     </span>
                   ) : null}
                 </div>
+                {enviadaEm ? <div data-enviada={row.id} className="mt-1 text-xs font-medium text-success-ink">{t("vagas.sentOn", { date: diaMes(enviadaEm, locale) })}</div> : null}
               </td>
               <td className="px-2 py-3.5 align-top text-ink-soft">
                 <SkillChips ids={skillIds} limit={3} />

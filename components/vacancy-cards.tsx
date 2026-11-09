@@ -2,6 +2,7 @@
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { formatFaixa, formatTempo, maskEmail, maskPhone } from "@/lib/format";
+import { diaMes } from "@/lib/envio-client";
 import type { VacancyRow } from "./vacancy-table";
 import { buttonClasses } from "@/components/ui/button";
 import { SkillChips } from "@/components/skill-chips";
@@ -16,11 +17,14 @@ function getSkillIds(row: VacancyRow): string[] {
 export function VacancyCards({
   items,
   selectedIds,
+  sentAt,
   onToggle,
   onOpenDetail,
 }: {
   items: VacancyRow[];
   selectedIds?: Set<string> | string[];
+  /** 1.5.13: vagas já enviadas (id → data). Não podem ser marcadas de novo. */
+  sentAt?: Record<string, string>;
   onToggle?: (id: string) => void;
   onOpenDetail?: (id: string) => void;
 }) {
@@ -46,6 +50,7 @@ export function VacancyCards({
         const faixa = formatFaixa(row.faixaDe, row.faixaAte, row.faixaMoeda ?? "BRL", locale);
         const tempo = formatTempo((row.updatedAt ?? row.createdAt) as any, locale);
         const isSelected = selectedSet.has(row.id);
+        const enviadaEm = sentAt?.[row.id];
         const emailRaw = row.email ?? row.contato?.email ?? "";
         const telRaw = row.telefone ?? row.contato?.telefone ?? "";
         const contatoMascarado = [emailRaw ? maskEmail(emailRaw) : "", telRaw ? maskPhone(telRaw) : ""].filter(Boolean).join(" · ");
@@ -54,7 +59,7 @@ export function VacancyCards({
             key={row.id}
             data-vacancy-id={row.id}
             aria-label={t("vagas.itemLabel", { title: row.titulo })}
-            onClick={(e) => { if ((e.target as HTMLElement).closest("button, a, input, label")) return; onToggle?.(row.id); }}
+            onClick={(e) => { if (enviadaEm || (e.target as HTMLElement).closest("button, a, input, label")) return; onToggle?.(row.id); }}
             className={`cursor-pointer vacancy-card rounded-card border p-4 ${isSelected ? "selected border-brand bg-[#F5F8FF]" : "border-line bg-surface"}`}
           >
             <div className="card-header flex items-start gap-3">
@@ -63,12 +68,14 @@ export function VacancyCards({
                 aria-label={t("table.selectItem", { name: row.titulo })}
                   data-select-id={row.id}
                 checked={isSelected}
+                disabled={!!enviadaEm}
                 onChange={() => onToggle?.(row.id)}
-                className="mt-1 h-5 w-5 shrink-0 cursor-pointer accent-brand"
+                className="mt-1 h-5 w-5 shrink-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 accent-brand"
               />
               <div className="min-w-0 flex-1">
                 <strong className="block font-semibold leading-snug">{row.titulo}</strong>
                 <span className="text-[13px] text-muted">{[row.company?.nome, row.nivel].filter(Boolean).join(" · ")}</span>
+                {enviadaEm ? <span data-enviada={row.id} className="mt-0.5 block text-xs font-medium text-success-ink">{t("vagas.sentOn", { date: diaMes(enviadaEm, locale) })}</span> : null}
               </div>
               <button type="button" data-detail-id={row.id} onClick={() => onOpenDetail?.(row.id)} className={buttonClasses("secondary", "sm")}>
                 {t("common.view")}

@@ -27,6 +27,7 @@ describe("catálogos de idioma", () => {
     const files = [
       "app/page.tsx",
       "app/vagas/page.tsx",
+      "app/vagas/aprovar/page.tsx",
       "app/candidatos/page.tsx",
       "app/(app)/minhas-candidaturas/page.tsx",
       "components/vacancy-table.tsx",

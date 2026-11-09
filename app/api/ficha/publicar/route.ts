@@ -4,7 +4,7 @@ import { adminGuard } from "@/lib/admin-request";
 import { camposFaltando, fichaToProfile, sanitizeFicha, sanitizeFichaW2 } from "@/lib/ficha";
 import { candidateExpiresAt } from "@/lib/hygiene";
 import { runInBackground } from "@/lib/background";
-import { sha256Hex } from "@/lib/admin-auth";
+import { userIdDoEmail } from "@/lib/envio";
 
 /**
  * "Minha ficha", Publicar (1.5.10, decisão D1): até existir o login novo (1.5.5), só o admin publica,
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   if (!w2) return NextResponse.json({ error: "ficha_w2_ausente" }, { status: 422 });
 
   // userId aparece na busca: vai o hash do e-mail, nunca o e-mail.
-  const userId = `teste:${(await sha256Hex(`w2-perfil:${ficha.email}`)).slice(0, 24)}`;
+  const userId = await userIdDoEmail(ficha.email);
   const now = new Date();
   const dados = {
     ...fichaToProfile(ficha),

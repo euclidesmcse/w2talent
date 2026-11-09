@@ -58,6 +58,8 @@ model CompanyProfile {
   validacaoData    DateTime?
   vagasAtivasCount Int              @default(0)
   plano            PlanType         @default(free)
+  /// Para onde vão as candidaturas (1.5.13). Sem ele, a candidatura só fica registrada.
+  emailContato     String?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   vacancies        Vacancy[]
@@ -126,6 +128,7 @@ model CandidateProfile {
 
   consentLogs  ConsentLog[]
   applications Application[]
+  aprovacoes   ApplicationApproval[]
 
   @@index([status])
   @@index([expiresAt])
@@ -165,6 +168,7 @@ model Vacancy {
   embeddedAt     DateTime?
 
   applications Application[]
+  aprovacoes   ApplicationApproval[]
 
   @@index([status])
   @@index([expiresAt])
@@ -191,14 +195,36 @@ model Application {
   proxyThreadId String            @unique
   status        ApplicationStatus @default(enviado)
   loteId        String?
+  /// 1.5.13: e-mail para a empresa montado no envio e ainda fora da fila; o Cron diário tenta de novo
+  /// com este mesmo conteúdo. null quando já entrou na fila (ou não há e-mail).
+  emailPendente Json?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
   @@unique([candidateId, vacancyId])
   @@index([candidateId])
+  @@index([candidateId, createdAt])
   @@index([vacancyId])
   @@index([companyId])
   @@index([loteId])
+}
+
+// ── ApplicationApproval (1.5.13) ─────────────────────────────────────
+// O candidato aprova cada vaga antes do envio. vacancyHash cobre o que a pessoa leu (título, empresa,
+// regime, faixa, local, nível, competências, descrição e benefícios); se a vaga mudar, a aprovação cai.
+// snapshot guarda esses campos para mostrar o que mudou. Ao enviar, a aprovação vira Application.
+model ApplicationApproval {
+  id          String           @id @default(cuid())
+  candidateId String
+  candidate   CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  vacancyId   String
+  vacancy     Vacancy          @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
+  vacancyHash String
+  snapshot    Json
+  aprovadaEm  DateTime         @default(now())
+
+  @@unique([candidateId, vacancyId])
+  @@index([vacancyId])
 }
 
 // ── OtpCode ──────────────────────────────────────────────────────────
