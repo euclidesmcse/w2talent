@@ -23,6 +23,9 @@ export type CandidateRow = {
   createdAt?: string | Date | null;
   contato?: { email?: string; telefone?: string; celular?: string };
   email?: string;
+  /** Da API de busca: contatos já mascarados (o completo não sai na busca). */
+  emailMasked?: string;
+  celularMasked?: string;
   celular?: string;
   telefone?: string;
   status?: string;
@@ -74,7 +77,7 @@ export function CandidateTable({
           const isSelected = selectedSet.has(rid);
           const emailRaw = row.email ?? row.contato?.email ?? "";
           const telRaw = row.celular ?? row.telefone ?? row.contato?.celular ?? row.contato?.telefone ?? "";
-          const contatoMascarado = [emailRaw ? maskEmail(emailRaw) : "", telRaw ? maskPhone(telRaw) : ""].filter(Boolean).join(" · ");
+          const contatoMascarado = [row.emailMasked ?? (emailRaw ? maskEmail(emailRaw) : ""), row.celularMasked ?? (telRaw ? maskPhone(telRaw) : "")].filter(Boolean).join(" · ");
           const regime = Array.isArray(row.regimePreferido) ? row.regimePreferido.join(", ") : row.regimePreferido ?? "";
           return (
             <tr

@@ -5,25 +5,39 @@
 import { formatMoney } from "./locale";
 
 // ── Helpers: mascaramento ─────────────────────────────────────────────
+// Valem para qualquer idioma e país: não interpretam o formato, só escondem.
+
+/** E-mail: 1ª letra + *** @ 1ª letra do domínio + *** + final (ex.: a***@g***.com). */
 export function maskEmail(email: string): string {
   if (!email || typeof email !== "string") return "—";
-  const at = email.indexOf("@");
-  if (at <= 1) return "***" + (at !== -1 ? email.slice(at) : "");
+  const at = email.lastIndexOf("@");
+  if (at < 1) return "*** 🔒";
   const local = email.slice(0, at);
-  const domain = email.slice(at);
-  // mostra 2 primeiros + ***
-  const visible = local.slice(0, 2);
-  return `${visible}***${domain} 🔒`;
+  const domain = email.slice(at + 1);
+  const dot = domain.lastIndexOf(".");
+  const host = dot > 0 ? domain.slice(0, dot) : domain;
+  const tld = dot > 0 ? domain.slice(dot) : "";
+  return `${local[0]}***@${host ? host[0] : ""}***${tld} 🔒`;
 }
 
+/**
+ * Telefone de qualquer país: troca todos os dígitos por • menos os 2 últimos, mantendo
+ * "+", espaços, parênteses e traços (ex.: +55 (11) 98765-4321 → +•• (••) •••••-••21).
+ * Não tenta adivinhar código de país ou de área, que mudam de um país para outro.
+ */
 export function maskPhone(phone: string): string {
   if (!phone || typeof phone !== "string") return "—";
-  const digits = phone.replace(/\D/g, "");
-  if (digits.length < 8) return "*** 🔒";
-  // mostra DDD + *** + últimos 2
-  const last2 = digits.slice(-2);
-  const ddd = digits.slice(0, 4); // +55 + DDD? simplifica
-  return `${ddd.slice(0, 4)}***${last2} 🔒`;
+  const total = (phone.match(/\d/g) ?? []).length;
+  if (total < 6) return "*** 🔒";
+  let seen = 0;
+  const masked = phone.trim().replace(/\d/g, (d) => (++seen > total - 2 ? d : "•"));
+  return `${masked} 🔒`;
+}
+
+/** Contatos que podem sair na busca: só mascarados. O completo só pelo contato aprovado. */
+export function maskedContact(row: { email?: string | null; celular?: string | null; telefone?: string | null }) {
+  const tel = row.celular ?? row.telefone ?? "";
+  return { emailMasked: row.email ? maskEmail(row.email) : "", celularMasked: tel ? maskPhone(tel) : "" };
 }
 
 // ── Helpers: faixa / tempo (por idioma: pt-BR, en, es) ──────────────

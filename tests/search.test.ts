@@ -246,10 +246,17 @@ describe("Busca Semântica + Lista Limpa — Task 5", () => {
     });
 
     it("mascaramento e-mail/tel na lista (cadeado)", () => {
-      expect(maskEmail("rh@empresa.com")).toMatch(/rh\*\*\*@empresa\.com/);
+      expect(maskEmail("rh@empresa.com")).toBe("r***@e***.com 🔒");
       expect(maskEmail("rh@empresa.com")).toMatch(/🔒/);
       expect(maskPhone("+5511999998888")).toMatch(/🔒/);
       expect(maskEmail("")).toBe("—");
+      // Telefones de vários países: só os 2 últimos dígitos aparecem, o formato fica.
+      expect(maskPhone("+55 (11) 98765-4321")).toBe("+•• (••) •••••-••21 🔒");
+      expect(maskPhone("+1 415 555 0100")).toBe("+• ••• ••• ••00 🔒");
+      expect(maskPhone("+44 20 7946 0958")).toBe("+•• •• •••• ••58 🔒");
+      expect(maskPhone("+34 612 34 56 78")).toBe("+•• ••• •• •• 78 🔒");
+      expect(maskPhone("+81 90-1234-5678")).toBe("+•• ••-••••-••78 🔒");
+      expect(maskPhone("12345")).toBe("*** 🔒");
       expect(maskPhone("")).toBe("—");
       // componentes contêm mascaramento + cadeado
       const vacTable = fs.readFileSync(path.join(__dirname, "../components/vacancy-table.tsx"), "utf-8");
@@ -352,5 +359,23 @@ describe("Busca Semântica + Lista Limpa — Task 5", () => {
       const dbSrc = fs.readFileSync(path.join(__dirname, "../lib/search-db.ts"), "utf-8");
       expect(dbSrc).toMatch(/generateEmbedding/);
     });
+  });
+});
+
+describe("busca de candidatos não devolve contato completo", () => {
+  it("troca e-mail e celular pelas versões mascaradas, em qualquer formato", async () => {
+    const { searchCandidates } = await import("../lib/search");
+    const rows = [
+      { userId: "c1", nome: "Ana", titulo: "Analista Cloud", status: "ativo", stack: [], email: "ana.lima@empresa.com", celular: "+5511987654321" },
+      { userId: "c2", nome: "John", titulo: "Cloud Analyst", status: "ativo", stack: [], contato: { email: "john@corp.io", telefone: "+1 415 555 0100" } },
+    ];
+    const r = await searchCandidates({ q: "", page: 1, pageSize: 20 } as any, rows);
+    const json = JSON.stringify(r.items);
+    for (const raw of ["ana.lima@empresa.com", "987654321", "john@corp.io", "415 555"]) expect(json).not.toContain(raw);
+    const ana = r.items.find((i: any) => i.userId === "c1");
+    expect(ana).toMatchObject({ emailMasked: "a***@e***.com 🔒", celularMasked: "+•••••••••••21 🔒" });
+    expect(ana).not.toHaveProperty("email");
+    expect(ana).not.toHaveProperty("celular");
+    expect(r.items.find((i: any) => i.userId === "c2")).not.toHaveProperty("contato");
   });
 });
