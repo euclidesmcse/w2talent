@@ -405,5 +405,18 @@
       "modelo_tipo_errado": "This model is not the type the task needs.",
       "chave_mestra": "AI_KEYS_MASTER is missing from the Worker, so the key cannot be encrypted."
     }
+  },
+  "renovar": {
+    "title": "I'm still looking",
+    "lead": "Confirm below and your profile stays in recruiter search for another 180 days.",
+    "botao": "I'm still looking",
+    "enviando": "Confirming…",
+    "ok": "Done. Your profile stays in search until {data}.",
+    "verVagas": "See jobs",
+    "semLink": "This page needs the link we sent by email. Open the email and click the button again.",
+    "erroVencido": "This link has expired. Use the link from the most recent email.",
+    "erroInvalido": "This link is not valid. Open the email and click the button again.",
+    "erroPerfil": "We couldn't find your profile. It may have been deleted already.",
+    "erroGeral": "That didn't work right now. Try again in a few minutes."
   }
 }

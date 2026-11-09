@@ -405,5 +405,18 @@
       "modelo_tipo_errado": "Este modelo no es del tipo que la tarea necesita.",
       "chave_mestra": "Falta AI_KEYS_MASTER en el Worker para cifrar la clave."
     }
+  },
+  "renovar": {
+    "title": "Sigo buscando",
+    "lead": "Confírmalo abajo y tu perfil sigue en la búsqueda de los reclutadores otros 180 días.",
+    "botao": "Sigo buscando",
+    "enviando": "Confirmando…",
+    "ok": "Listo. Tu perfil sigue en la búsqueda hasta el {data}.",
+    "verVagas": "Ver vacantes",
+    "semLink": "Esta página necesita el enlace que enviamos por correo. Abre el correo y haz clic en el botón otra vez.",
+    "erroVencido": "Este enlace venció. Usa el enlace del correo más reciente.",
+    "erroInvalido": "Este enlace no es válido. Abre el correo y haz clic en el botón otra vez.",
+    "erroPerfil": "No encontramos tu perfil. Puede que ya se haya borrado.",
+    "erroGeral": "No funcionó ahora. Inténtalo de nuevo en unos minutos."
   }
 }

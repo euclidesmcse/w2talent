@@ -22,7 +22,7 @@ export function timingSafeEqualStr(received: string, expected: string): boolean 
  * Valores de segredo que a requisição apresentou: `Authorization: Bearer <s>`,
  * `Authorization: <s>`, `x-cron-secret`, `x-webhook-secret` e (legado) `?cron_secret=`.
  */
-function presentedSecrets(req: Request & { nextUrl?: URL }): string[] {
+function presentedSecrets(req: Request & { nextUrl?: URL }, allowQuery: boolean): string[] {
   const out: string[] = [];
   const auth = req.headers.get("authorization") ?? "";
   if (auth) {
@@ -33,18 +33,23 @@ function presentedSecrets(req: Request & { nextUrl?: URL }): string[] {
     const v = req.headers.get(h);
     if (v) out.push(v);
   }
-  const url = req.nextUrl ?? new URL(req.url);
-  const q = url.searchParams.get("cron_secret");
-  if (q) out.push(q);
+  if (allowQuery) {
+    const url = req.nextUrl ?? new URL(req.url);
+    const q = url.searchParams.get("cron_secret");
+    if (q) out.push(q);
+  }
   return out;
 }
 
-/** true se a requisição trouxe `expected` em algum dos lugares aceitos. Sem segredo configurado, nega. */
-export function requestHasSecret(req: Request & { nextUrl?: URL }, expected: string | undefined): boolean {
+/**
+ * true se a requisição trouxe `expected` em algum dos lugares aceitos. Sem segredo configurado, nega.
+ * `headerOnly`: ignora `?cron_secret=` (endereços com segredo ficam em logs e históricos).
+ */
+export function requestHasSecret(req: Request & { nextUrl?: URL }, expected: string | undefined, opts: { headerOnly?: boolean } = {}): boolean {
   if (!expected) return false;
   let ok = false;
   // Compara todos (sem parar no primeiro acerto) para o tempo não indicar qual campo bateu.
-  for (const v of presentedSecrets(req)) {
+  for (const v of presentedSecrets(req, !opts.headerOnly)) {
     if (timingSafeEqualStr(v, expected)) ok = true;
   }
   return ok;

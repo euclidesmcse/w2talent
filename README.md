@@ -45,7 +45,7 @@ curl "https://w2talent.euclidespns.workers.dev/api/search/candidates?q=Cloud"
 | **Lista limpa** | Tabela desktop / cards mobile, mesmo dado. `☐` checkbox + `🔍` lupa abre modal sem perder seleção. Faixa, regime, remoto e Top 3 skills sempre no mesmo lugar. `+2` skills truncadas. |
 | **1-clique em lote** | Selecionar até **10** → **Candidatar** ou **Contatar**. Cada item vira um `id@via.w2talent.com` com CV canônico anexo. **30/dia** por usuário. Erro parcial `207` (2 ok + 1 expirada), sem rollback. |
 | **Proxy LGPD (decisão B)** | Antes da resposta, contato mascarado (`🔒`). Ao **responder no proxy**, o contato direto é liberado implicitamente — sem clique bilateral. `consentLogs` versionados. |
-| **Higiene automática** | **CV 180d** com 3 nudges (D150/D165/D175) + **Vaga 14d** (aviso D12, renova +14 com 1 clique). Arquiva sai da busca, purge LGPD em +30d. Cron `GET /api/cron/hygiene` idempotente (dedupe `userId+marco+date`) + n8n `n8n/workflows/hygiene.json`. |
+| **Higiene automática** | **CV 180d** com 3 nudges (D150/D165/D175) + **Vaga 14d** (aviso D12, renova +14 com 1 clique). Arquiva sai da busca, purge LGPD em +30d. Cron Trigger diário da Cloudflare (`custom-worker.ts` → `POST /api/cron/hygiene`, segredo só no cabeçalho), e-mails pela fila `notificacoes` + Resend, link "Continuo procurando" (`/renovar`). Idempotente (`HygieneEvent`). |
 | **Busca semântica** | Hybrid `ts_rank (0.6) + cosine vector (0.4)` com `multilingual-e5` (stub zero-vector no MVP, `lib/demo-data.ts` cobre staging). Sinônimos via taxonomia **500 skills** + typo `Analsita Cluod → Analista Cloud` com `emptyCTA`. |
 | **Responsivo & i18n** | Mobile-first 360/768/1024/1280, `next-intl` PT-BR (default) / EN, `Intl.NumberFormat` por locale. PWA `manifest.json`, `theme #0a0a0a`. |
 
@@ -161,7 +161,7 @@ w2talent/
 │   │   ├── search/{vacancies,candidates} # hybrid tsvector+vector
 │   │   ├── applications/batch      # POST lote 10/30 + PATCH webhook + GET (IDOR fix: exige JWT em prod)
 │   │   ├── contacts/batch          # POST RH lote 1 template + PATCH proxy B
-│   │   ├── cron/hygiene            # GET cron 180d/14d idempotente
+│   │   ├── cron/hygiene            # POST higiene diária (Cron Trigger), idempotente
 │   │   └── seed/demo               # POST semeia demo (staging volátil)
 │   └── layout.tsx + globals.css    # Tailwind + next-intl provider
 ├── components/                     # vacancy-table/cards, candidate-*, detail-modal, batch-bar, empty-state, cv-preview-form
@@ -171,7 +171,7 @@ w2talent/
 │   ├── search.ts                   # hybrid + demo-data fallback
 │   ├── demo-data.ts                # 10 vagas + 5 candidatos (staging sem Postgres)
 │   ├── taxonomy.ts                 # 500 skills + sinônimos
-│   ├── hygiene.ts                  # ttl 14/180 + nudges D150/165/175 + purge
+│   ├── hygiene.ts                  # ttl 14/180 + lembretes D150/165/175 + arquiva D180 + apaga D+30
 │   └── embeddings.ts               # multilingual-e5 stub
 ├── prisma/
 │   ├── schema.prisma               # CompanyProfile, CandidateProfile, Vacancy, Application, OtpCode, ConsentLog

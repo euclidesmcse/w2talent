@@ -1,3 +1,8 @@
+/**
+ * Higiene (1.5.15): regras puras, link assinado, textos dos e-mails, envio pelo Resend e a rota do Cron.
+ * O fluxo no banco está em tests/hygiene-db.test.ts.
+ */
+import { NextRequest } from "next/server";
 import {
   VACANCY_TTL_DAYS,
   CANDIDATE_TTL_DAYS,
@@ -9,24 +14,15 @@ import {
   isEligibleForPurge,
   withVacancyExpiry,
   withCandidateExpiry,
-  // task9
-  NUDGE_MARCOS,
-  runHygieneCron,
-  seedCandidateHygiene,
-  seedVacancyHygiene,
-  clearHygieneForTests,
-  hygieneEvents,
-  sentNudges,
-  hygieneCandidateStore,
-  hygieneVacancyStore,
-  purgeLog,
-  isSearchableCandidate,
-  isSearchableVacancy,
-  resolveChannel,
-  isWithinWabaWindow,
+  dueNudge,
+  isPlaceholderEmail,
 } from "../lib/hygiene";
+import { signRenewToken, verifyRenewToken } from "../lib/renew-token";
+import { renderHygieneEmail, emailLocale } from "../lib/email-templates";
+import { retryDelay, sendEmail, type EmailMessage } from "../lib/email";
 
 const DAY = 24 * 60 * 60 * 1000;
+const SECRET = "x".repeat(40);
 
 describe("Hygiene helpers — expiresAt defaults (C2)", () => {
   it("VACANCY_TTL=14d, CANDIDATE_TTL=180d, OTP_TTL=5min, PURGE=30d", () => {
@@ -79,147 +75,142 @@ describe("Hygiene helpers — expiresAt defaults (C2)", () => {
   });
 });
 
-// ── Task 9 TDD ────────────────────────────────────────────────────────────
-describe("Higiene + Nudges — Task 9 (TDD brief)", () => {
-  const now = new Date("2026-11-07T10:00:00Z");
-
-  beforeEach(() => clearHygieneForTests());
-
-  it("1. CV D150/165/175 dispara 1 nudge cada, D180 arquiva e sai do search", async () => {
-    // D150
-    const c150 = seedCandidateHygiene({ userId: "u150", createdAt: new Date(now.getTime() - 150 * DAY) });
-    // D165
-    const c165 = seedCandidateHygiene({ userId: "u165", createdAt: new Date(now.getTime() - 165 * DAY) });
-    const c175 = seedCandidateHygiene({ userId: "u175", createdAt: new Date(now.getTime() - 175 * DAY) });
-    const c180 = seedCandidateHygiene({ userId: "u180", createdAt: new Date(now.getTime() - 180 * DAY) });
-
-    const summary = await runHygieneCron(now);
-
-    expect(sentNudges.filter((n) => n.userId === "u150" && n.marco === NUDGE_MARCOS.D150)).toHaveLength(1);
-    expect(sentNudges.filter((n) => n.userId === "u165" && n.marco === NUDGE_MARCOS.D165)).toHaveLength(1);
-    expect(sentNudges.filter((n) => n.userId === "u175" && n.marco === NUDGE_MARCOS.D175)).toHaveLength(1);
-    // D180 nudge + arquiva
-    expect(sentNudges.filter((n) => n.userId === "u180" && n.marco === NUDGE_MARCOS.D180)).toHaveLength(1);
-    expect(summary.candidates.archived).toContain("u180");
-    const archived = hygieneCandidateStore.get("u180")!;
-    expect(archived.status).toBe("arquivado");
-    expect(isSearchableCandidate(archived)).toBe(false);
-    // D150 ainda searchable (não arquivado)
-    expect(isSearchableCandidate(c150)).toBe(true);
-    expect(isSearchableCandidate(c165)).toBe(true);
-    expect(isSearchableCandidate(c175)).toBe(true);
+describe("Marcos dos lembretes (faixas, não dia exato)", () => {
+  const now = new Date("2026-11-09T12:00:00Z");
+  const expiraEm = (diasDoCiclo: number) => new Date(now.getTime() + (CANDIDATE_TTL_DAYS - diasDoCiclo) * DAY);
+  it.each([
+    [149, null],
+    [150, "D150"],
+    [164, "D150"],
+    [165, "D165"],
+    [170, "D165"],
+    [175, "D175"],
+    [179, "D175"],
+  ])("dia %i do ciclo → %s", (dia, marco) => {
+    expect(dueNudge(expiraEm(dia as number), now)).toBe(marco);
   });
-
-  it("2. idempotência: rodar cron 2x no mesmo dia não duplica nudge (dedupe userId+marco+date)", async () => {
-    seedCandidateHygiene({ userId: "u-dedupe", createdAt: new Date(now.getTime() - 150 * DAY) });
-    await runHygieneCron(now);
-    const afterFirst = sentNudges.length;
-    const eventsAfterFirst = hygieneEvents.size;
-    expect(afterFirst).toBe(1);
-    await runHygieneCron(now);
-    expect(sentNudges.length).toBe(afterFirst);
-    expect(hygieneEvents.size).toBe(eventsAfterFirst);
-    // no dia seguinte permite novo nudge se marco mudar (D151 não tem marco, então continua 0)
-    // mas se ainda D150 no dia seguinte com outro date, poderia re-nudgar — testamos que mesmo marco em outra data gera novo evento
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    // muda candidato para 165 para ter novo marco amanhã? Simula: candidato ainda D151 (sem marco) não nudga.
-    // força: limpa e cria candidato D165 amanhã
-    clearHygieneForTests();
-    seedCandidateHygiene({ userId: "u-dedupe2", createdAt: new Date(tomorrow.getTime() - 150 * DAY) });
-    await runHygieneCron(tomorrow);
-    expect(sentNudges.filter((n) => n.date === "2026-11-08")).toHaveLength(1);
+  it("endereços de exemplo não recebem e-mail", () => {
+    expect(isPlaceholderEmail("cand@example.com")).toBe(true);
+    expect(isPlaceholderEmail("x@empresa.local")).toBe(true);
+    expect(isPlaceholderEmail("sem-arroba")).toBe(true);
+    expect(isPlaceholderEmail("ana@gmail.com")).toBe(false);
   });
+});
 
-  it("3. vaga D12 aviso, D14 arquiva", async () => {
-    const v12 = seedVacancyHygiene({ id: "v12", createdAt: new Date(now.getTime() - 12 * DAY) });
-    const v14 = seedVacancyHygiene({ id: "v14", createdAt: new Date(now.getTime() - 14 * DAY) });
-    const v10 = seedVacancyHygiene({ id: "v10", createdAt: new Date(now.getTime() - 10 * DAY) });
-    const summary = await runHygieneCron(now);
-    expect(summary.vacancies.warned).toContain("v12");
-    expect(summary.vacancies.archived).toContain("v14");
-    expect(summary.vacancies.warned).not.toContain("v10");
-    expect(summary.vacancies.archived).not.toContain("v10");
-    expect(hygieneVacancyStore.get("v14")!.status).toBe("arquivada");
-    expect(isSearchableVacancy(hygieneVacancyStore.get("v14")!)).toBe(false);
-    expect(isSearchableVacancy(v12)).toBe(true); // aviso não arquiva
+describe("Link 'Continuo procurando'", () => {
+  const now = new Date("2026-11-09T12:00:00Z");
+  it("assina e confere; vence em 30 dias", async () => {
+    const t = await signRenewToken("user_ção_1", SECRET, now);
+    expect(await verifyRenewToken(t, SECRET, now)).toEqual({ ok: true, userId: "user_ção_1" });
+    expect(await verifyRenewToken(t, SECRET, new Date(now.getTime() + 29 * DAY))).toEqual({ ok: true, userId: "user_ção_1" });
+    expect(await verifyRenewToken(t, SECRET, new Date(now.getTime() + 31 * DAY))).toEqual({ ok: false, erro: "link_vencido" });
   });
-
-  it("4. purge: arquivado há 30d -> hard-delete Postgres+vector+logs, não recuperável", async () => {
-    const eligible = seedCandidateHygiene({
-      userId: "u-purge30",
-      createdAt: new Date(now.getTime() - 220 * DAY),
-      status: "arquivado" as any,
-      arquivadoEm: new Date(now.getTime() - 30 * DAY),
-    } as any);
-    const notYet = seedCandidateHygiene({
-      userId: "u-purge29",
-      createdAt: new Date(now.getTime() - 219 * DAY),
-      status: "arquivado" as any,
-      arquivadoEm: new Date(now.getTime() - 29 * DAY),
-    } as any);
-    const purged = await runHygieneCron(now);
-    expect(purged.candidates.purged).toContain("u-purge30");
-    expect(purged.candidates.purged).not.toContain("u-purge29");
-    expect(hygieneCandidateStore.has("u-purge30")).toBe(false);
-    expect(hygieneCandidateStore.has("u-purge29")).toBe(true);
-    expect(purgeLog.find((p) => p.userId === "u-purge30")).toBeTruthy();
-    // não recuperável: tentar re-arquivar não encontra
-    expect(hygieneCandidateStore.get("u-purge30")).toBeUndefined();
+  it("recusa link adulterado, de outra chave ou sem chave", async () => {
+    const t = await signRenewToken("u1", SECRET, now);
+    const [, exp, sig] = t.split(".");
+    const outroUser = `${Buffer.from("u2").toString("base64url")}.${exp}.${sig}`;
+    expect(await verifyRenewToken(outroUser, SECRET, now)).toEqual({ ok: false, erro: "link_invalido" });
+    const maisPrazo = t.replace(`.${exp}.`, `.${Number(exp) + 999999}.`);
+    expect(await verifyRenewToken(maisPrazo, SECRET, now)).toEqual({ ok: false, erro: "link_invalido" });
+    expect(await verifyRenewToken(t, "y".repeat(40), now)).toEqual({ ok: false, erro: "link_invalido" });
+    expect(await verifyRenewToken(t, undefined, now)).toEqual({ ok: false, erro: "link_invalido" });
+    expect(await verifyRenewToken("lixo", SECRET, now)).toEqual({ ok: false, erro: "link_invalido" });
   });
+  it("não assina com chave curta", async () => {
+    await expect(signRenewToken("u1", "curta")).rejects.toThrow();
+  });
+});
 
-  it("5. WABA janela 24h: fora dela fallback e-mail (mock)", async () => {
-    // dentro da janela -> waba
-    const inside = seedCandidateHygiene({
-      userId: "u-waba-in",
-      createdAt: new Date(now.getTime() - 150 * DAY),
-      whatsappOpt: true,
-      lastWabaInteractionAt: new Date(now.getTime() - 2 * 60 * 60 * 1000), // 2h atrás
-    } as any);
-    expect(isWithinWabaWindow(inside, now)).toBe(true);
-    expect(resolveChannel(inside, now).channel).toBe("waba");
+describe("Textos dos e-mails", () => {
+  it("três idiomas, link no botão e no texto, nome escapado", () => {
+    for (const locale of ["pt-BR", "en", "es"] as const) {
+      const m = renderHygieneEmail({ marco: "D150", locale, nome: "<b>Ana</b> Souza", renewUrl: "https://w2.test/renovar?t=a.b&c", dias: 30 });
+      expect(m.subject).toMatch(/30/);
+      expect(m.html).toContain("https://w2.test/renovar?t=a.b&amp;c");
+      expect(m.text).toContain("https://w2.test/renovar?t=a.b&c");
+      expect(m.html).not.toContain("<b>Ana</b>");
+      expect(m.html).toContain("&lt;b&gt;Ana&lt;/b&gt;");
+    }
+    expect(renderHygieneEmail({ marco: "D180", locale: "pt-BR", nome: "Ana", renewUrl: "u", dias: 30 }).subject).toBe("Seu perfil saiu da busca");
+    expect(renderHygieneEmail({ marco: "D175", locale: "en", nome: "", renewUrl: "u", dias: 5 }).text.startsWith("Hi,")).toBe(true);
+  });
+  it("idioma do perfil → idioma do e-mail", () => {
+    expect(emailLocale("pt-BR")).toBe("pt-BR");
+    expect(emailLocale("en-US")).toBe("en");
+    expect(emailLocale("es")).toBe("es");
+    expect(emailLocale(null)).toBe("pt-BR");
+  });
+});
 
-    // fora da janela -> fallback email
-    const outside = seedCandidateHygiene({
-      userId: "u-waba-out",
-      createdAt: new Date(now.getTime() - 150 * DAY),
-      whatsappOpt: true,
-      lastWabaInteractionAt: new Date(now.getTime() - 25 * 60 * 60 * 1000), // 25h atrás
-    } as any);
-    expect(isWithinWabaWindow(outside, now)).toBe(false);
-    expect(resolveChannel(outside, now).channel).toBe("email");
+describe("Envio pelo Resend", () => {
+  const msg: EmailMessage = { to: "ana@gmail.com", subject: "Assunto", html: "<p>x</p>", text: "x", idempotencyKey: "higiene:u1:D150:2026-05-13" };
+  function fakeFetch(status: number, body: unknown) {
+    const calls: { url: string; init: RequestInit }[] = [];
+    const f = (async (url: string, init: RequestInit) => {
+      calls.push({ url, init });
+      return new Response(JSON.stringify(body), { status });
+    }) as unknown as typeof fetch;
+    return { f, calls };
+  }
+  it("sem chave ou em teste sem destino: não envia", async () => {
+    const { f, calls } = fakeFetch(200, { id: "1" });
+    expect(await sendEmail(msg, { fetch: f })).toEqual({ status: "pulado", motivo: "sem_chave" });
+    expect(await sendEmail(msg, { apiKey: "k", mode: "teste", fetch: f })).toEqual({ status: "pulado", motivo: "modo_teste_sem_destino" });
+    expect(calls).toHaveLength(0);
+  });
+  it("modo teste: vai só para EMAIL_TEST_TO, com [teste] no assunto e chave de idempotência", async () => {
+    const { f, calls } = fakeFetch(200, { id: "abc" });
+    expect(await sendEmail(msg, { apiKey: "k", mode: "teste", testTo: "dono@gmail.com", fetch: f })).toEqual({ status: "enviado", id: "abc" });
+    const body = JSON.parse(String(calls[0].init.body));
+    expect(body.to).toEqual(["dono@gmail.com"]);
+    expect(body.subject).toBe("[teste] Assunto");
+    expect(body.from).toBe("W2Talent <avisos@w2talent.com>");
+    expect((calls[0].init.headers as Record<string, string>)["Idempotency-Key"]).toBe(msg.idempotencyKey);
+  });
+  it("modo real: vai para o candidato", async () => {
+    const { f, calls } = fakeFetch(200, { id: "abc" });
+    await sendEmail(msg, { apiKey: "k", mode: "real", testTo: "dono@gmail.com", fetch: f });
+    expect(JSON.parse(String(calls[0].init.body)).to).toEqual(["ana@gmail.com"]);
+  });
+  it("429 e 5xx tentam de novo; 4xx não", async () => {
+    expect(await sendEmail(msg, { apiKey: "k", mode: "real", fetch: fakeFetch(429, { name: "daily_quota_exceeded" }).f })).toEqual({ status: "falhou", http: 429, codigo: "daily_quota_exceeded", tentarDeNovo: true });
+    expect((await sendEmail(msg, { apiKey: "k", mode: "real", fetch: fakeFetch(503, {}).f })) as { tentarDeNovo: boolean }).toMatchObject({ tentarDeNovo: true });
+    expect((await sendEmail(msg, { apiKey: "k", mode: "real", fetch: fakeFetch(403, { name: "validation_error" }).f })) as { tentarDeNovo: boolean }).toMatchObject({ tentarDeNovo: false });
+  });
+});
 
-    // sem opt -> sempre email
-    const noOpt = seedCandidateHygiene({
-      userId: "u-waba-noopt",
-      createdAt: new Date(now.getTime() - 150 * DAY),
-      whatsappOpt: false,
-      lastWabaInteractionAt: new Date(now.getTime() - 1 * 60 * 60 * 1000),
-    } as any);
-    expect(resolveChannel(noOpt, now).channel).toBe("email");
+describe("Espera da fila antes de tentar de novo", () => {
+  it("limite do dia espera a meia-noite UTC (máx. 12 h); 429 1 min; resto 5 min", () => {
+    expect(retryDelay("daily_quota_exceeded", 429, new Date("2026-11-09T12:05:00Z"))).toBe(43200);
+    expect(retryDelay("daily_quota_exceeded", 429, new Date("2026-11-09T20:00:00Z"))).toBe(4 * 3600 + 300);
+    expect(retryDelay("rate_limit_exceeded", 429)).toBe(60);
+    expect(retryDelay(undefined, 503)).toBe(300);
+  });
+});
 
-    // cron deve escolher canal correto e marcar fallbackFrom quando cai para email
-    clearHygieneForTests();
-    seedCandidateHygiene({
-      userId: "u-waba-in",
-      createdAt: new Date(now.getTime() - 150 * DAY),
-      whatsappOpt: true,
-      lastWabaInteractionAt: new Date(now.getTime() - 1 * 60 * 60 * 1000),
-      email: "in@example.com",
-      celular: "+5511999999999",
-    } as any);
-    seedCandidateHygiene({
-      userId: "u-waba-out",
-      createdAt: new Date(now.getTime() - 150 * DAY),
-      whatsappOpt: true,
-      lastWabaInteractionAt: new Date(now.getTime() - 30 * 60 * 60 * 1000),
-      email: "out@example.com",
-      celular: "+5511999999998",
-    } as any);
-    await runHygieneCron(now);
-    const nIn = sentNudges.find((n) => n.userId === "u-waba-in")!;
-    const nOut = sentNudges.find((n) => n.userId === "u-waba-out")!;
-    expect(nIn.channel).toBe("waba");
-    expect(nOut.channel).toBe("email");
-    expect(nOut.fallbackFrom).toBe("waba");
+describe("Rota do Cron", () => {
+  const env = { ...process.env };
+  afterEach(() => {
+    process.env = { ...env };
+  });
+  it("sem CRON_SECRET: 503; segredo só no cabeçalho", async () => {
+    const { POST } = await import("../app/api/cron/hygiene/route");
+    delete process.env.CRON_SECRET;
+    expect((await POST(new NextRequest("http://x/api/cron/hygiene", { method: "POST" }))).status).toBe(503);
+    process.env.CRON_SECRET = "s3gredo-do-cron";
+    expect((await POST(new NextRequest("http://x/api/cron/hygiene?cron_secret=s3gredo-do-cron", { method: "POST" }))).status).toBe(401);
+    expect((await POST(new NextRequest("http://x/api/cron/hygiene", { method: "POST", headers: { "x-cron-secret": "errado" } }))).status).toBe(401);
+  });
+});
+
+describe("Rota de renovação", () => {
+  it("link inválido ou ausente: 400 sem tocar no banco", async () => {
+    process.env.RENEW_LINK_SECRET = SECRET;
+    const { POST } = await import("../app/api/perfil/renovar/route");
+    const r = await POST(new NextRequest("http://x/api/perfil/renovar", { method: "POST", body: JSON.stringify({ t: "a.1.b" }) }));
+    expect(r.status).toBe(400);
+    expect(await r.json()).toEqual({ error: "link_invalido" });
+    const r2 = await POST(new NextRequest("http://x/api/perfil/renovar", { method: "POST", body: "{}" }));
+    expect(r2.status).toBe(400);
   });
 });

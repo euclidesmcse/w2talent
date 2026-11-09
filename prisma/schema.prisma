@@ -104,7 +104,8 @@ model CandidateProfile {
   idiomaOriginal String          @default("pt-BR")
 
   // higiene
-  expiresAt DateTime // now + 180d
+  expiresAt   DateTime // now + 180d
+  arquivadoEm DateTime? // quando a higiene arquivou; a exclusão definitiva conta 30 dias a partir daqui
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -121,6 +122,7 @@ model CandidateProfile {
   @@index([status])
   @@index([expiresAt])
   @@index([userId])
+  @@index([arquivadoEm])
 }
 
 // ── Vacancy ──────────────────────────────────────────────────────────
