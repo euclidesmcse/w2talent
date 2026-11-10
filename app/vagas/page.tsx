@@ -166,21 +166,35 @@ export default function VagasPage() {
     <div>
       <AppHeader area="candidato" active="/vagas" />
       <main>
-      <div className="mx-auto max-w-page px-4 pt-6 md:px-6">
-        <h1 className="text-xl font-semibold">{tr("vagas.title")}</h1>
-        <p className="mt-1 text-sm text-muted">{tr("vagas.subtitle")}</p>
-        <form role="search" onSubmit={submitSearch} className="mt-4 flex flex-wrap items-center gap-3">
-          <Input
-            type="search"
-            aria-label={tr("vagas.searchLabel")}
-            placeholder={tr("vagas.searchPlaceholder")}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            className="min-w-0 max-w-[560px] flex-[1_1_220px]"
-          />
-          <Button type="submit" variant="primary" size="md" disabled={!online} title={online ? undefined : tr("pwa.needsInternet")}>{tr("common.search")}</Button>
-          <span aria-live="polite" className="basis-full text-[13px] text-muted md:basis-auto">{searching && loaded ? tr("common.searching") : entendeu.length ? "" : tr("vagas.count", { count: total })}</span>
-        </form>
+      {/* Herói em bloco azul (visual "voltagem azul", 2026-11-10): busca à esquerda, total de vagas à direita */}
+      <section className="voltagem">
+        <div className="mx-auto grid max-w-page items-end gap-6 px-4 py-8 md:px-6 md:py-10 lg:grid-cols-[1.6fr_1fr]">
+          <div className="flex min-w-0 flex-col gap-1">
+            <h1 className="text-[28px] font-semibold leading-tight md:text-[32px]">{tr("vagas.title")}</h1>
+            <p className="voltagem-apoio text-[15px]">{tr("vagas.subtitle")}</p>
+            <form role="search" onSubmit={submitSearch} className="mt-4 flex flex-wrap items-center gap-3">
+              <Input
+                type="search"
+                aria-label={tr("vagas.searchLabel")}
+                placeholder={tr("vagas.searchPlaceholder")}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                className="min-w-0 max-w-[560px] flex-[1_1_220px] !rounded-pill !border-white !px-4 md:!h-11"
+              />
+              <Button type="submit" variant="inverse" size="md" className="md:!h-11" disabled={!online} title={online ? undefined : tr("pwa.needsInternet")}>{tr("common.search")}</Button>
+              <span aria-live="polite" className="voltagem-apoio basis-full text-[13px] lg:hidden">{searching && loaded ? tr("common.searching") : entendeu.length ? "" : tr("vagas.count", { count: total })}</span>
+            </form>
+          </div>
+          {/* Painel claro sobre o azul: o total da busca, em destaque (some no celular, onde a contagem fica na linha acima) */}
+          <div aria-live="polite" className="hidden rounded-card bg-surface p-5 text-ink lg:flex lg:flex-col lg:gap-1 relevo-caixa">
+            <span className="font-display text-[32px] font-semibold leading-none tabular-nums text-brand">
+              {searching && loaded ? "…" : total}
+            </span>
+            <span className="text-[13px] text-muted">{searching && loaded ? tr("common.searching") : tr("vagas.count", { count: total }).replace(/^[\d.,\s]+/, "")}</span>
+          </div>
+        </div>
+      </section>
+      <div className="mx-auto max-w-page px-4 pt-4 md:px-6">
         <IntentChips chips={entendeu} total={total} byMatch={items.some((it) => it.match != null)} onRemove={removeChip} />
       </div>
 
