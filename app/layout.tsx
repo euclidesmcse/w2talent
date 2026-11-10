@@ -43,11 +43,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap"
           rel="stylesheet"
         />
-        {/* Fonte do logo: só as letras de "W2Talent" (arquivo de poucos KB) */}
-        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&text=W2Talent&display=swap" rel="stylesheet" />
       </head>
       <body className="bg-canvas font-sans text-ink antialiased [padding-left:env(safe-area-inset-left)] [padding-right:env(safe-area-inset-right)]">
         <NextIntlClientProvider locale={locale} messages={messages}>

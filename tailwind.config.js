@@ -15,7 +15,7 @@ module.exports = {
     extend: {
       colors,
       fontFamily,
-      borderRadius: { DEFAULT: radius.control, control: radius.control, card: radius.card },
+      borderRadius: { DEFAULT: radius.control, control: radius.control, card: radius.card, pill: radius.pill },
       maxWidth: { page: "1180px" },
       spacing: {
         "safe-bottom": "env(safe-area-inset-bottom)",

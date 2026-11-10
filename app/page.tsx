@@ -15,27 +15,29 @@ export default async function HomePage() {
     <div className="min-h-screen">
       <AppHeader area="publico" />
 
-      <main className="mx-auto flex max-w-page flex-col gap-16 px-6 py-12 md:py-16">
-        <section className="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
+      <main className="flex flex-col gap-16 pb-12 md:pb-16">
+        {/* Herói em bloco azul (visual "voltagem azul", 2026-11-10): texto à esquerda, amostra do produto à direita */}
+        <section className="voltagem">
+        <div className="mx-auto grid max-w-page items-center gap-10 px-6 py-12 md:py-16 lg:grid-cols-[1.1fr_1fr]">
           <div className="flex flex-col gap-5">
-            <h1 className="text-[32px] font-semibold leading-[1.15] tracking-[-0.02em] md:text-[40px]">
-              {t.rich("title", { destaque: (c) => <span className="relevo-texto">{c}</span> })}
+            <h1 className="text-[32px] font-semibold leading-[1.15] tracking-[-0.02em] md:text-[44px]">
+              {t.rich("title", { destaque: (c) => <span className="voltagem-destaque">{c}</span> })}
             </h1>
-            <p className="max-w-[56ch] text-[17px] text-muted">
+            <p className="voltagem-apoio max-w-[56ch] text-[17px]">
               {t("lead")}
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/vagas" className={buttonClasses("primary", "lg", "hover:no-underline hover:text-white")}>
+              <Link href="/vagas" className={buttonClasses("inverse", "lg", "hover:no-underline")}>
                 {t("ctaBuscar")}
               </Link>
-              <Link href="/candidatos" className={buttonClasses("secondary", "lg", "hover:no-underline")}>
+              <Link href="/candidatos" className={buttonClasses("inverseOutline", "lg", "hover:no-underline hover:text-white")}>
                 {t("ctaRecrutador")}
               </Link>
             </div>
           </div>
 
           {/* Amostra do produto, no visual do protótipo */}
-          <Card className="flex flex-col gap-4 p-5" aria-label={t("sampleLabel")}>
+          <Card className="flex flex-col gap-4 p-5 text-ink" aria-label={t("sampleLabel")}>
             <div className="flex h-10 items-center rounded-control border border-line-strong px-3 text-[15px]">{t("sampleQuery")}</div>
             <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
               {t("sampleUnderstood")}
@@ -59,8 +61,10 @@ export default async function HomePage() {
               </div>
             ))}
           </Card>
+        </div>
         </section>
 
+        <div className="mx-auto flex w-full max-w-page flex-col gap-16 px-6">
         <section aria-labelledby="como-funciona" className="flex flex-col gap-5">
           <h2 id="como-funciona" className="text-xl font-semibold">
             {t("howTitle")}
@@ -157,6 +161,7 @@ export default async function HomePage() {
             ))}
           </dl>
         </section>
+        </div>
       </main>
 
       <footer className="border-t border-line bg-surface">

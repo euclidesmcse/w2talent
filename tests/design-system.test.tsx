@@ -14,6 +14,8 @@ describe("tokens do protótipo aprovado", () => {
     expect(colors.ink.DEFAULT).toBe("#111827");
     expect(fontFamily.sans[0]).toBe("Inter");
     expect(radius.control).toBe("6px");
+    expect(radius.card).toBe("4px");
+    expect(fontFamily.display[0]).toBe("Space Grotesk");
   });
 
   it("Tailwind lê os tokens da mesma fonte", () => {
@@ -37,7 +39,9 @@ describe("componentes base", () => {
     expect(html).toContain("bg-brand");
     expect(buttonClasses("secondary")).toContain("border-line-strong");
     expect(buttonClasses("ghost")).toContain("text-brand");
-    expect(buttonClasses("primary", "lg")).toContain("h-11");
+    expect(buttonClasses("primary", "lg")).toContain("h-12");
+    expect(buttonClasses("primary")).toContain("rounded-pill");
+    expect(buttonClasses("inverse")).toContain("focus-visible:outline-white");
   });
 
   it("Field + Input: rótulo envolve o campo e erro vira alerta", () => {
