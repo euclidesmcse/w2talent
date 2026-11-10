@@ -47,9 +47,11 @@ function origensConfiaveis(): string[] {
   return o.filter((x): x is string => !!x);
 }
 
-// Rotas do Better Auth que mexem na conta: bloqueadas enquanto falta o código do autenticador.
+// Enquanto falta o código do autenticador, a sessão só pode ler a si mesma, sair e digitar o código.
+// Todo o resto do Better Auth (inclusive tokens do Google/Microsoft) é recusado por padrão.
 const LIBERADAS_COM_MFA_PENDENTE = new Set(["/get-session", "/sign-out", "/two-factor/verify-totp", "/two-factor/verify-backup-code"]);
-const SENSIVEIS = ["/two-factor/", "/update-user", "/delete-user", "/link-social", "/unlink-account", "/list-accounts", "/revoke-", "/change-email", "/list-sessions"];
+// Começo do login: ainda não há sessão para conferir.
+const INICIO_DO_LOGIN = ["/sign-in/", "/callback/", "/oauth2/callback/", "/ok", "/error"];
 
 let instancia: ReturnType<typeof criar> | null = null;
 
@@ -105,12 +107,12 @@ function criar() {
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
         const caminho = ctx.path ?? "";
-        if (!SENSIVEIS.some((s) => caminho.startsWith(s))) return;
+        if (LIBERADAS_COM_MFA_PENDENTE.has(caminho) || INICIO_DO_LOGIN.some((s) => caminho === s || caminho.startsWith(s))) return;
         const s = await getSessionFromCtx(ctx).catch(() => null);
         if (!s) return;
         const sess = s.session as typeof s.session & { mfaPendente?: boolean | null };
         const user = s.user as typeof s.user & { perfil?: string | null };
-        if (sess.mfaPendente && !LIBERADAS_COM_MFA_PENDENTE.has(caminho)) {
+        if (sess.mfaPendente) {
           throw new APIError("FORBIDDEN", { message: "Digite o código do autenticador primeiro.", code: "MFA_PENDENTE" });
         }
         // Decisão 2: para recrutador o autenticador é obrigatório.
