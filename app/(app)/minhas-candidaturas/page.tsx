@@ -114,7 +114,7 @@ export default function MinhasCandidaturasPage() {
           <div role="status" className="empty rounded-card border border-line bg-surface px-6 py-10 text-center">
             <p className="font-semibold">{t("emptyTitle")}</p>
             <p className="mt-1 text-sm text-muted">{t("emptyBody")}</p>
-            <Link href={linkEntrar("/minhas-candidaturas")} className={buttonClasses("primary", "md", "mt-4 hover:no-underline hover:text-white")}>
+            <Link href="/vagas" className={buttonClasses("primary", "md", "mt-4 hover:no-underline hover:text-white")}>
               {t("emptyCta")}
             </Link>
           </div>

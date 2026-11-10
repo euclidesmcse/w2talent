@@ -713,6 +713,7 @@
     "newRecoveryCodes": "Generar nuevos códigos de recuperación",
     "mfaRequired": "Para reclutadores el autenticador es obligatorio.",
     "mfaRequiredBody": "Para buscar candidatos, activa el autenticador. Protege los datos de las personas que ves.",
-    "signOutError": "No se pudo cerrar sesión. Revisa la conexión e inténtalo de nuevo."
+    "signOutError": "No se pudo cerrar sesión. Revisa la conexión e inténtalo de nuevo.",
+    "errorTooMany": "Demasiados intentos hoy. Inténtalo de nuevo mañana."
   }
 }

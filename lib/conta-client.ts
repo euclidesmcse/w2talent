@@ -103,10 +103,20 @@ export function ehCandidato(i: InfoConta): boolean {
   return i.estado === "ok" && i.conta?.perfil === "candidato";
 }
 
-/** Só caminhos internos ("/vagas", nunca "//site" ou "https://..."). */
+/**
+ * Só caminhos internos ("/vagas", nunca "//site", "https://..." nem truques como "/\n/site").
+ * Normaliza como o navegador e o Next fazem (new URL) e confere a origem do resultado.
+ */
 export function voltaSegura(v: string | null | undefined, padrao = "/"): string {
-  if (!v || !v.startsWith("/") || v.startsWith("//") || v.startsWith("/\\")) return padrao;
-  return v;
+  if (!v || !v.startsWith("/") || /[\u0000-\u001f\u007f\\]/.test(v)) return padrao;
+  try {
+    const base = "https://w2talent.invalid";
+    const u = new URL(v, base);
+    if (u.origin !== base) return padrao;
+    return u.pathname + u.search + u.hash;
+  } catch {
+    return padrao;
+  }
 }
 
 export function linkEntrar(volta?: string): string {

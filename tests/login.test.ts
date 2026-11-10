@@ -16,7 +16,14 @@ jest.mock("../lib/auth-server", () => ({
   provedoresConfigurados: () => ({ google: true, microsoft: false }),
 }));
 const sessionUpdate = jest.fn(async () => ({}));
-jest.mock("../lib/prisma", () => ({ prisma: { session: { update: (...a: unknown[]) => sessionUpdate(...(a as [])) } } }));
+let tentativas = 0;
+jest.mock("../lib/prisma", () => ({
+  prisma: {
+    session: { update: (...a: unknown[]) => sessionUpdate(...(a as [])) },
+    // consumirUso: INSERT ... RETURNING total
+    $queryRaw: async () => [{ total: ++tentativas }],
+  },
+}));
 
 const SEGREDO = "segredo-de-teste-com-mais-de-32-caracteres";
 const conta = (c: Partial<Conta> = {}): Conta => ({ id: "u1", nome: "Ana", email: "ana@exemplo.com", perfil: "candidato", mfaLigado: false, mfaPendente: false, sessaoId: "s1", ...c });
@@ -61,6 +68,10 @@ describe("volta e próximo passo", () => {
     expect(voltaSegura("//mal.example")).toBe("/");
     expect(voltaSegura("https://mal.example")).toBe("/");
     expect(voltaSegura("/\\mal.example")).toBe("/");
+    expect(voltaSegura("/\n/mal.example")).toBe("/");
+    expect(voltaSegura("/\t/mal.example")).toBe("/");
+    expect(voltaSegura("/%2F%2Fmal.example")).toBe("/%2F%2Fmal.example");
+    expect(voltaSegura("/vagas/../candidatos#x")).toBe("/candidatos#x");
     expect(voltaSegura(null, "/vagas")).toBe("/vagas");
   });
   it("leva para o código, o perfil, o autenticador ou a volta", () => {
@@ -88,7 +99,7 @@ describe("volta e próximo passo", () => {
 describe("POST /api/conta/mfa", () => {
   const post = (body: unknown, c?: Parameters<typeof cookieDeTeste>[0]) =>
     new NextRequest("https://w2.test/api/conta/mfa", { method: "POST", headers: { "content-type": "application/json", ...(c ? { cookie: cookieDeTeste(c) } : {}) }, body: JSON.stringify(body) });
-  beforeEach(() => { verifyTOTP.mockReset(); verifyBackupCode.mockReset(); sessionUpdate.mockClear(); });
+  beforeEach(() => { verifyTOTP.mockReset(); verifyBackupCode.mockReset(); sessionUpdate.mockClear(); tentativas = 0; });
 
   it("sem login → 401; sem código pendente → ok sem conferir", async () => {
     const { POST } = await import("../app/api/conta/mfa/route");
@@ -115,6 +126,15 @@ describe("POST /api/conta/mfa", () => {
     const cookie = r.cookies.get("w2_aparelho");
     expect(cookie?.httpOnly).toBe(true);
     expect(await aparelhoConfiavel(cookie!.value, "u1", SEGREDO)).toBe(true);
+  });
+
+  it("depois de 10 tentativas no dia, recusa sem conferir", async () => {
+    const { POST } = await import("../app/api/conta/mfa/route");
+    verifyTOTP.mockRejectedValue(new Error("invalid"));
+    for (let i = 0; i < 10; i++) expect((await POST(post({ codigo: "000000" }, { id: "u1", mfaPendente: true }))).status).toBe(400);
+    verifyTOTP.mockClear();
+    expect((await POST(post({ codigo: "123456" }, { id: "u1", mfaPendente: true }))).status).toBe(429);
+    expect(verifyTOTP).not.toHaveBeenCalled();
   });
 
   it("código de recuperação usa a outra conferência", async () => {

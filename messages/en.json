@@ -713,6 +713,7 @@
     "newRecoveryCodes": "Generate new recovery codes",
     "mfaRequired": "The authenticator is required for recruiters.",
     "mfaRequiredBody": "To search candidates, turn on the authenticator. It protects the data of the people you see.",
-    "signOutError": "Could not sign out. Check your connection and try again."
+    "signOutError": "Could not sign out. Check your connection and try again.",
+    "errorTooMany": "Too many attempts today. Please try again tomorrow."
   }
 }

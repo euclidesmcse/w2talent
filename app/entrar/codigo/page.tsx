@@ -39,7 +39,7 @@ export default function CodigoPage() {
         body: JSON.stringify({ codigo: codigo.trim(), recuperacao, confiar }),
       });
       if (!r.ok) {
-        setErro(r.status === 401 ? t("errorSession") : t("errorCode"));
+        setErro(r.status === 401 ? t("errorSession") : r.status === 429 ? t("errorTooMany") : t("errorCode"));
         setOcupado(false);
         campo.current?.focus();
         return;
