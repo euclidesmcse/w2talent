@@ -4,6 +4,7 @@ import { APARELHO_DIAS, aparelhoConfiavel, assinarAparelho, lerCookie } from "..
 import { regrasDaConta, type Conta } from "../lib/sessao";
 import { destinoDoEstado, voltaSegura, CHAVES_LOCAIS } from "../lib/conta-client";
 import { cookieDeTeste } from "./helpers/sessao-mock";
+import { areaDoMenu } from "../components/nav-area";
 
 jest.mock("../lib/sessao", () => require("./helpers/sessao-mock").sessaoMock());
 
@@ -68,6 +69,14 @@ describe("volta e próximo passo", () => {
     expect(destinoDoEstado("mfa_obrigatorio", "/candidatos")).toBe("/conta/seguranca?volta=%2Fcandidatos");
     expect(destinoDoEstado("ok", "/vagas")).toBe("/vagas");
     expect(destinoDoEstado("anonimo", "/vagas")).toBeNull();
+  });
+  it("com login o menu é o do perfil da conta; sem login, o da tela; o admin fica no dele", () => {
+    expect(areaDoMenu("candidato", "ok", "recrutador")).toBe("recrutador");
+    expect(areaDoMenu("recrutador", "ok", "candidato")).toBe("candidato");
+    expect(areaDoMenu("recrutador", "mfa_obrigatorio", "recrutador")).toBe("recrutador");
+    expect(areaDoMenu("candidato", "anonimo", undefined)).toBe("candidato");
+    expect(areaDoMenu("candidato", "mfa", undefined)).toBe("candidato");
+    expect(areaDoMenu("admin", "ok", "candidato")).toBe("admin");
   });
   it("o Sair apaga tudo o que fica no navegador", () => {
     expect(CHAVES_LOCAIS).toEqual(

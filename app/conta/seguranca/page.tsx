@@ -25,7 +25,7 @@ async function post(caminho: string, corpo: Record<string, unknown> = {}): Promi
 export default function SegurancaPage() {
   const t = useTranslations("conta");
   const router = useRouter();
-  const info = useConta();
+  const info = useConta({ fresco: true });
   const volta = useVolta("/");
   const [config, setConfig] = React.useState<Config | null>(null);
   const [codigo, setCodigo] = React.useState("");

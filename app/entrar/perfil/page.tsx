@@ -15,7 +15,7 @@ export default function EscolherPerfilPage() {
   const t = useTranslations("conta");
   const locale = useLocale();
   const router = useRouter();
-  const info = useConta();
+  const info = useConta({ fresco: true });
   const volta = useVolta();
   const [perfil, setPerfil] = React.useState<PerfilConta | null>(null);
   const [aceites, setAceites] = React.useState<Record<TipoConsentimento, boolean>>({ tratamentoBusca: false, contatoProxy: false, nudges: false });

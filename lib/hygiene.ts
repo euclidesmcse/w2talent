@@ -164,12 +164,21 @@ export async function runHygiene(db: PrismaClient, deps: HygieneDeps): Promise<H
     });
     if (!perfis.length) break;
     cursor = perfis[perfis.length - 1].id;
-    const devidos = perfis
+    let devidos = perfis
       .map((p) => {
         const marco: Marco | null = p.status === "arquivado" ? "D180" : dueNudge(p.expiresAt, now);
         return marco ? { p, marco, ciclo: todayKey(candidateCycleStart(p.expiresAt)) } : null;
       })
       .filter((x): x is NonNullable<typeof x> => !!x && !isPlaceholderEmail(x.p.email));
+    // 1.5.5: os lembretes D150/D165/D175 só vão para quem aceitou "e-mails sobre a minha ficha" (nudges).
+    // O aviso D180 (ficha arquivada, será apagada em 30 dias) é aviso sobre os dados e vai sempre.
+    const pedemAceite = devidos.filter((d) => d.marco !== "D180").map((d) => d.p.userId);
+    const aceitaram = new Set(
+      pedemAceite.length
+        ? (await db.consentLog.findMany({ where: { userId: { in: pedemAceite }, tipo: "nudges" }, select: { userId: true } })).map((c) => c.userId)
+        : [],
+    );
+    devidos = devidos.filter((d) => d.marco === "D180" || aceitaram.has(d.p.userId));
     if (devidos.length) {
       const feitos = await db.hygieneEvent.findMany({
         where: { userId: { in: devidos.map((d) => d.p.userId) }, marco: { in: EMAIL_MARCOS } },

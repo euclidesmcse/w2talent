@@ -15,6 +15,7 @@ export function ContaMenu() {
   const info = useConta();
   const caminho = usePathname() ?? "/";
   const [aberto, setAberto] = React.useState(false);
+  const [erroSair, setErroSair] = React.useState(false);
   const painel = React.useId();
   const raiz = React.useRef<HTMLDivElement>(null);
 
@@ -64,9 +65,10 @@ export function ContaMenu() {
                 {t("security")}
               </Link>
             ) : null}
-            <button type="button" data-action="sair" className={buttonClasses("ghost", "sm", "-ml-2")} onClick={() => { void sair(); }}>
+            <button type="button" data-action="sair" className={buttonClasses("ghost", "sm", "-ml-2")} onClick={async () => { setErroSair(false); if (!(await sair())) setErroSair(true); }}>
               {t("signOut")}
             </button>
+            {erroSair ? <p role="alert" className="text-danger">{t("signOutError")}</p> : null}
           </div>
         </div>
       ) : null}

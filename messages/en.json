@@ -712,6 +712,7 @@
     "mfaTurnOff": "Turn off the authenticator",
     "newRecoveryCodes": "Generate new recovery codes",
     "mfaRequired": "The authenticator is required for recruiters.",
-    "mfaRequiredBody": "To search candidates, turn on the authenticator. It protects the data of the people you see."
+    "mfaRequiredBody": "To search candidates, turn on the authenticator. It protects the data of the people you see.",
+    "signOutError": "Could not sign out. Check your connection and try again."
   }
 }

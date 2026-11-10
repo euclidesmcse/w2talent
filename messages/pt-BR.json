@@ -712,6 +712,7 @@
     "mfaTurnOff": "Desligar o autenticador",
     "newRecoveryCodes": "Gerar novos códigos de recuperação",
     "mfaRequired": "Para recrutador o autenticador é obrigatório.",
-    "mfaRequiredBody": "Para buscar candidatos, ligue o autenticador. Ele protege os dados das pessoas que você vê."
+    "mfaRequiredBody": "Para buscar candidatos, ligue o autenticador. Ele protege os dados das pessoas que você vê.",
+    "signOutError": "Não foi possível sair. Verifique a internet e tente de novo."
   }
 }

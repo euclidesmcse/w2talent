@@ -24,27 +24,62 @@ export const CHAVES_LOCAIS = [
 ];
 
 const CARREGANDO: InfoConta = { estado: "carregando" };
+/** Quanto tempo uma leitura de /api/conta vale entre telas (a sessão pode acabar ou ser revogada). */
+const VALIDADE_MS = 30_000;
 let atual: InfoConta = CARREGANDO;
 let pedido: Promise<InfoConta> | null = null;
+let lidoEm = 0;
+let ouvindo = false;
 const ouvintes = new Set<() => void>();
 
+function avisar(info: InfoConta) {
+  atual = info;
+  ouvintes.forEach((f) => f());
+}
+
 export function recarregarConta(): Promise<InfoConta> {
-  pedido = fetch("/api/conta", { cache: "no-store" })
+  const p = fetch("/api/conta", { cache: "no-store" })
     .then((r) => (r.ok ? (r.json() as Promise<InfoConta>) : { estado: "erro" as const }))
     .catch(() => ({ estado: "erro" as const }))
     .then((info) => {
-      atual = info;
-      ouvintes.forEach((f) => f());
+      // Só a leitura mais nova vale (duas telas podem pedir ao mesmo tempo).
+      if (pedido === p) {
+        lidoEm = Date.now();
+        avisar(info);
+      }
       return info;
     });
-  return pedido;
+  pedido = p;
+  return p;
 }
 
+/** Usa a última leitura se for recente e não tiver falhado; senão lê de novo. */
 export function lerConta(): Promise<InfoConta> {
-  return pedido ?? recarregarConta();
+  if (pedido && atual.estado !== "erro" && (atual.estado === "carregando" || Date.now() - lidoEm < VALIDADE_MS)) return pedido;
+  return recarregarConta();
 }
 
-export function useConta(): InfoConta {
+/** O servidor recusou por login (401/403): a sessão pode ter acabado. Lê de novo. */
+export function contaRecusada(): void {
+  void recarregarConta();
+}
+
+function ouvirMudancas() {
+  if (ouvindo || typeof window === "undefined") return;
+  ouvindo = true;
+  // Voltou a internet ou a aba voltou a aparecer: confere se a sessão ainda vale.
+  window.addEventListener("online", () => { void recarregarConta(); });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && Date.now() - lidoEm >= VALIDADE_MS) void recarregarConta();
+  });
+}
+
+/**
+ * Estado do login para a tela. `fresco`: as telas de entrar leem sempre de novo e mostram
+ * "carregando" até lá, para não seguir uma sessão que já acabou.
+ */
+export function useConta(opcoes: { fresco?: boolean } = {}): InfoConta {
+  const fresco = !!opcoes.fresco;
   const info = React.useSyncExternalStore(
     (f) => {
       ouvintes.add(f);
@@ -53,7 +88,13 @@ export function useConta(): InfoConta {
     () => atual,
     () => CARREGANDO,
   );
-  React.useEffect(() => { void lerConta(); }, []);
+  React.useEffect(() => {
+    ouvirMudancas();
+    if (fresco) {
+      avisar(CARREGANDO);
+      void recarregarConta();
+    } else void lerConta();
+  }, [fresco]);
   return info;
 }
 
@@ -89,10 +130,18 @@ export function limparDadosLocais(): void {
   } catch {}
 }
 
-export async function sair(): Promise<void> {
+/**
+ * Sair: só apaga os dados do navegador e vai para o início depois que o servidor encerrou a sessão.
+ * Sem internet ou com erro, devolve false e a tela avisa (a sessão continuaria valendo).
+ */
+export async function sair(): Promise<boolean> {
   try {
-    await fetch("/api/auth/sign-out", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
-  } catch {}
+    const r = await fetch("/api/auth/sign-out", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+    if (!r.ok) return false;
+  } catch {
+    return false;
+  }
   limparDadosLocais();
   window.location.href = "/";
+  return true;
 }

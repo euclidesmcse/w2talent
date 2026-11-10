@@ -15,7 +15,7 @@ import { useGapText } from "@/components/vacancy-match";
 import { formatFaixa } from "@/lib/format";
 import { selectionStore } from "@/lib/selection-store";
 import { diaMes, podeEnviar, postEnvio } from "@/lib/envio-client";
-import { linkEntrar } from "@/lib/conta-client";
+import { contaRecusada, linkEntrar } from "@/lib/conta-client";
 import { useOnline } from "@/lib/pwa-client";
 import type { Ficha, FichaW2 } from "@/lib/ficha";
 import type { MatchResult } from "@/lib/match";
@@ -73,7 +73,10 @@ export default function AprovarPage() {
   const carregar = React.useCallback(async (ids: string[]) => {
     const r = await postEnvio("estado", { vacancyIds: ids });
     if (r.status === 404) return setFase("sem_perfil");
-    if (r.status === 401 || r.status === 403) return setFase("sem_login");
+    if (r.status === 401 || r.status === 403) {
+      contaRecusada();
+      return setFase("sem_login");
+    }
     if (!r.ok) return setFase("erro");
     const j = await r.json();
     setItens(j.itens);

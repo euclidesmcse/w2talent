@@ -13,7 +13,7 @@ import { destinoDoEstado, linkEntrar, recarregarConta, sair, useConta } from "@/
 export default function CodigoPage() {
   const t = useTranslations("conta");
   const router = useRouter();
-  const info = useConta();
+  const info = useConta({ fresco: true });
   const volta = useVolta();
   const [codigo, setCodigo] = React.useState("");
   const [recuperacao, setRecuperacao] = React.useState(false);
@@ -81,7 +81,7 @@ export default function CodigoPage() {
           <button type="button" className="text-sm text-brand" onClick={() => { setRecuperacao((v) => !v); setCodigo(""); setErro(null); }}>
             {recuperacao ? t("useAppCode") : t("useRecoveryCode")}
           </button>
-          <button type="button" className="text-sm text-muted" onClick={() => { void sair(); }}>
+          <button type="button" className="text-sm text-muted" onClick={async () => { if (!(await sair())) setErro(t("signOutError")); }}>
             {t("signOut")}
           </button>
         </div>

@@ -32,8 +32,10 @@ describeDb("Higiene no banco", () => {
     ...over,
   });
 
-  /** Perfil no dia `dia` do ciclo de 180 dias. */
-  async function perfil(userId: string, dia: number, extra: Record<string, unknown> = {}) {
+  /** Perfil no dia `dia` do ciclo de 180 dias. Por padrão a conta aceitou os lembretes (nudges, 1.5.5). */
+  async function perfil(userId: string, dia: number, extra: Record<string, unknown> = {}, aceitaLembretes = true) {
+    await db.user.create({ data: { id: userId, name: userId, email: `${userId}@hyg.test` } });
+    if (aceitaLembretes) await db.consentLog.create({ data: { userId, tipo: "nudges", versao: 1, texto: "x", baseLegal: "consentimento" } });
     return db.candidateProfile.create({
       data: {
         userId,
@@ -60,6 +62,7 @@ describeDb("Higiene no banco", () => {
     await db.candidateProfile.deleteMany();
     await db.vacancy.deleteMany();
     await db.companyProfile.deleteMany();
+    await db.user.deleteMany({ where: { email: { endsWith: "@hyg.test" } } });
   });
   afterAll(async () => {
     await db?.$disconnect();
@@ -82,6 +85,14 @@ describeDb("Higiene no banco", () => {
     expect(r2.emails.enfileirados).toBe(0);
     expect(fila).toHaveLength(3);
     expect(await db.hygieneEvent.count()).toBe(3);
+  });
+
+  it("sem o aceite de lembretes (nudges) não vai lembrete; o aviso de arquivamento vai", async () => {
+    await perfil("semAceite", 150, {}, false);
+    await perfil("arqSemAceite", 0, { status: "arquivado", arquivadoEm: new Date(NOW.getTime() - DAY) }, false);
+    const r = await runHygiene(db, deps());
+    expect(fila.map((m) => m.to)).toEqual(["arqSemAceite@gmail.com"]);
+    expect(r.emails.porMarco).toEqual({ D180: 1 });
   });
 
   it("o link do e-mail renova o perfil certo", async () => {

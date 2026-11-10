@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
 import { buttonClasses } from "@/components/ui/button";
 import { diaMes, postEnvio } from "@/lib/envio-client";
-import { ehCandidato, linkEntrar, useConta } from "@/lib/conta-client";
+import { contaRecusada, ehCandidato, linkEntrar, useConta } from "@/lib/conta-client";
 import { dataHoraCurta, lerCopia, salvarCopia } from "@/lib/pwa-client";
 
 /** Última lista de candidaturas, para ver sem internet (1.5.14). Fica só neste navegador. */
@@ -37,6 +37,7 @@ export default function MinhasCandidaturasPage() {
   const [loading, setLoading] = React.useState(true);
   const [needsLogin, setNeedsLogin] = React.useState(false);
   const conta = useConta();
+  const jaConferiu = React.useRef(false);
 
   // 1.5.5: as candidaturas da conta logada (candidato). Sem internet, a última lista salva neste navegador.
   React.useEffect(() => {
@@ -60,6 +61,8 @@ export default function MinhasCandidaturasPage() {
       const r = await postEnvio("enviadas", {});
       if (!vivo) return;
       if (!r.ok) {
+        // Uma vez por tela: a sessão pode ter acabado; a nova leitura roda este efeito de novo.
+        if ((r.status === 401 || r.status === 403) && !jaConferiu.current) { jaConferiu.current = true; contaRecusada(); }
         setNeedsLogin(r.status === 401 || r.status === 403);
         setItems([]);
         return;

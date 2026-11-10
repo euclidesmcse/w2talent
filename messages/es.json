@@ -712,6 +712,7 @@
     "mfaTurnOff": "Desactivar el autenticador",
     "newRecoveryCodes": "Generar nuevos códigos de recuperación",
     "mfaRequired": "Para reclutadores el autenticador es obligatorio.",
-    "mfaRequiredBody": "Para buscar candidatos, activa el autenticador. Protege los datos de las personas que ves."
+    "mfaRequiredBody": "Para buscar candidatos, activa el autenticador. Protege los datos de las personas que ves.",
+    "signOutError": "No se pudo cerrar sesión. Revisa la conexión e inténtalo de nuevo."
   }
 }

@@ -18,7 +18,7 @@ export default function EntrarPage() {
   const t = useTranslations("conta");
   const router = useRouter();
   const online = useOnline();
-  const info = useConta();
+  const info = useConta({ fresco: true });
   const voltaLida = useVolta();
   const volta = voltaLida ?? "/vagas";
   const [erro, setErro] = React.useState<string | null>(null);
