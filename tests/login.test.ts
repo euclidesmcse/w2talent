@@ -70,6 +70,9 @@ describe("volta e próximo passo", () => {
     expect(voltaSegura("/\\mal.example")).toBe("/");
     expect(voltaSegura("/\n/mal.example")).toBe("/");
     expect(voltaSegura("/\t/mal.example")).toBe("/");
+    expect(voltaSegura("/.//mal.example")).toBe("/");
+    expect(voltaSegura("/x/..//mal.example")).toBe("/");
+    expect(voltaSegura("/vagas//detalhe")).toBe("/vagas//detalhe");
     expect(voltaSegura("/%2F%2Fmal.example")).toBe("/%2F%2Fmal.example");
     expect(voltaSegura("/vagas/../candidatos#x")).toBe("/candidatos#x");
     expect(voltaSegura(null, "/vagas")).toBe("/vagas");

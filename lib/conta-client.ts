@@ -104,7 +104,7 @@ export function ehCandidato(i: InfoConta): boolean {
 }
 
 /**
- * Só caminhos internos ("/vagas", nunca "//site", "https://..." nem truques como "/\n/site").
+ * Só caminhos internos ("/vagas", nunca "//site", "https://..." nem truques como "/\n/site" ou "/.//site").
  * Normaliza como o navegador e o Next fazem (new URL) e confere a origem do resultado.
  */
 export function voltaSegura(v: string | null | undefined, padrao = "/"): string {
@@ -113,7 +113,10 @@ export function voltaSegura(v: string | null | undefined, padrao = "/"): string 
     const base = "https://w2talent.invalid";
     const u = new URL(v, base);
     if (u.origin !== base) return padrao;
-    return u.pathname + u.search + u.hash;
+    const caminho = u.pathname + u.search + u.hash;
+    // "/.//site" vira "//site" depois de normalizado: o roteador leria como outro site.
+    if (caminho.startsWith("//") || new URL(caminho, base).origin !== base) return padrao;
+    return caminho;
   } catch {
     return padrao;
   }
