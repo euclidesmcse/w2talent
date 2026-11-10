@@ -8,6 +8,8 @@ import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
 import { useOnline } from "@/lib/pwa-client";
+import Link from "next/link";
+import { linkEntrar } from "@/lib/conta-client";
 import { FichaW2Card } from "@/components/ficha-w2-card";
 import { Button, Card, Field, Input, Select, Textarea, cn } from "@/components/ui";
 import {
@@ -91,7 +93,9 @@ export default function MinhaFichaPage() {
     setCarregado(true);
     fetch("/api/ficha/publicar")
       .then((x) => x.json())
-      .then((j: { podePublicar?: boolean }) => setPodePublicar(j.podePublicar === true))
+      .then((j: { podePublicar?: boolean; publicado?: boolean }) => {
+        setPodePublicar(j.podePublicar === true);
+      })
       .catch(() => {});
   }, []);
 
@@ -578,7 +582,12 @@ export default function MinhaFichaPage() {
                   {t("publicado")}
                 </p>
               ) : !podePublicar ? (
-                <p className="text-sm text-muted">{t("publicarDepois")}</p>
+                <p className="text-sm text-muted">
+                  {t("publicarDepois")}{" "}
+                  <Link href={linkEntrar("/minha-ficha")} className="font-semibold">
+                    {t("publicarEntrar")}
+                  </Link>
+                </p>
               ) : null}
               <div className="flex flex-wrap gap-3">
                 {podePublicar && !publicado ? (

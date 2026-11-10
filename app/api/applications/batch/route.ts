@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { contaDoPedido } from "@/lib/sessao";
 import { requestHasSecret, webhookSecret } from "@/lib/secret";
 import {
   BATCH_LIMIT,
@@ -24,16 +24,13 @@ function isWebhookAuthorized(req: NextRequest): boolean {
 }
 
 /**
- * Quem está pedindo: só o login (JWT) vale em produção. `candidateId` no corpo ou na
- * query é ignorado — senão qualquer pessoa enviaria candidaturas ou leria as de outra
- * (IDOR). Em teste (NODE_ENV=test) aceita o cabeçalho x-candidate-id para os testes TDD.
+ * Quem está pedindo: só a sessão de candidato (1.5.5) vale em produção. `candidateId` no corpo ou
+ * na query é ignorado — senão qualquer pessoa enviaria candidaturas ou leria as de outra (IDOR).
+ * Em teste (NODE_ENV=test) aceita o cabeçalho x-candidate-id para os testes TDD.
  */
-function authenticatedCandidateId(req: NextRequest): string | null {
-  try {
-    const user = requireAuth(req);
-    const id = user?.userId ?? user?.celular;
-    if (id) return String(id);
-  } catch {}
+async function authenticatedCandidateId(req: NextRequest): Promise<string | null> {
+  const conta = await contaDoPedido(req).catch(() => null);
+  if (conta && !conta.mfaPendente && conta.perfil === "candidato") return conta.id;
   if (process.env.NODE_ENV === "test") {
     return req.headers.get("x-candidate-id") ?? req.headers.get("x-user-id") ?? null;
   }
@@ -55,7 +52,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `limite de ${BATCH_LIMIT} por lote`, code: 400 }, { status: 400 });
     }
 
-    const candidateId = authenticatedCandidateId(req);
+    const candidateId = await authenticatedCandidateId(req);
     if (!candidateId) {
       return NextResponse.json({ error: "não autorizado" }, { status: 401 });
     }
@@ -149,7 +146,7 @@ export async function PATCH(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     // Só as candidaturas de quem está logado; ?candidateId= de outra pessoa é ignorado (IDOR).
-    const filterId = authenticatedCandidateId(req);
+    const filterId = await authenticatedCandidateId(req);
     if (!filterId) {
       return NextResponse.json({ error: "não autorizado" }, { status: 401 });
     }

@@ -4,6 +4,7 @@ import { cn } from "@/components/ui/cn";
 import { BrandMark, BrandWordmark } from "@/components/brand-logo";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { InstallApp } from "@/components/install-app";
+import { ContaMenu, ConviteAutenticador, TrocaDeArea } from "@/components/conta-menu";
 import { AREA_NAME, AREA_SWITCH, NAV, type Area } from "@/lib/nav";
 
 /** Barra do topo: logo, o menu fixo da área (lib/nav.ts), idioma e o link para a outra área.
@@ -48,14 +49,12 @@ export function AppHeader({ area, active, right, suffix }: { area?: Area; active
         <div className="flex shrink-0 items-center gap-1 md:gap-3">
           <InstallApp />
           <LanguageSwitcher />
-          {troca ? (
-            <Link href={troca.href} data-area-switch={troca.href} className="hidden text-sm text-brand md:inline">
-              {t(troca.key)}
-            </Link>
-          ) : null}
+          {troca ? <TrocaDeArea href={troca.href}>{t(troca.key)}</TrocaDeArea> : null}
+          {area !== "admin" ? <ContaMenu /> : null}
           {right}
         </div>
       </div>
+      <ConviteAutenticador />
     </header>
   );
 }

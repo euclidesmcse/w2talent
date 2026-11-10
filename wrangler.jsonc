@@ -14,7 +14,12 @@
 		"EMAIL_MODE": "teste",
 		"EMAIL_FROM": "W2Talent <avisos@w2talent.com>",
 		// Endereço usado nos links dos e-mails ("Continuo procurando").
-		"APP_URL": "https://w2talent.euclidespns.workers.dev"
+		"APP_URL": "https://w2talent.euclidespns.workers.dev",
+		// Login (1.5.5): endereço público do Better Auth (os redirect URIs do Google/Microsoft usam este).
+		// Segredos (wrangler secret put): BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID/SECRET, MICROSOFT_CLIENT_ID/SECRET, TURNSTILE_SECRET_KEY.
+		"BETTER_AUTH_URL": "https://w2talent.euclidespns.workers.dev",
+		// Chave pública do Turnstile; só vale quando o Secret TURNSTILE_SECRET_KEY existe.
+		"TURNSTILE_SITE_KEY": ""
 	},
 	// Higiene diária às 12:00 UTC = 9h de Brasília (custom-worker.ts → /api/cron/hygiene).
 	"triggers": { "crons": ["0 12 * * *"] },

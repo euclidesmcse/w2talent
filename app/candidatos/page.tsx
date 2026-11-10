@@ -9,12 +9,17 @@ import { DetailModal } from "@/components/detail-modal";
 import { BatchBar } from "@/components/batch-bar";
 import { EmptyState } from "@/components/empty-state";
 import { selectionStore } from "@/lib/selection-store";
+import { buttonClasses } from "@/components/ui/button";
+import { linkEntrar, useConta } from "@/lib/conta-client";
 
 type Item = any;
 
 export default function CandidatosPage() {
   const tr = useTranslations();
   const locale = useLocale();
+  // 1.5.5 (decisão 4): candidatos só para recrutador logado, com o autenticador ligado.
+  const conta = useConta();
+  const liberado = conta.estado === "ok" && conta.conta?.perfil === "recrutador";
   const [q, setQ] = React.useState("");
   const [draft, setDraft] = React.useState("");
   const [searching, setSearching] = React.useState(false);
@@ -61,7 +66,7 @@ export default function CandidatosPage() {
     setLoaded(true);
   }, [locale]);
 
-  React.useEffect(() => { setSearching(true); fetchPage(q, page).catch(() => {}).finally(() => { setLoaded(true); setSearching(false); }); }, [q, page, fetchPage]);
+  React.useEffect(() => { if (!liberado) return; setSearching(true); fetchPage(q, page).catch(() => {}).finally(() => { setLoaded(true); setSearching(false); }); }, [q, page, fetchPage, liberado]);
 
   const handleClearFilters = () => { setDraft(""); setQ(""); setPage(1); };
   const handleUseSuggestion = (s: string) => { setDraft(s); setQ(s); setPage(1); };
@@ -76,6 +81,37 @@ export default function CandidatosPage() {
   const closeModal = () => setModalOpen(false);
   const selectedSet = React.useMemo(() => new Set(selected), [selected]);
   const isEmpty = loaded && items.length === 0;
+
+  if (!liberado) {
+    const proximo =
+      conta.estado === "mfa" ? `/entrar/codigo?volta=%2Fcandidatos`
+      : conta.estado === "sem_perfil" ? `/entrar/perfil?volta=%2Fcandidatos`
+      : conta.estado === "mfa_obrigatorio" ? `/conta/seguranca?volta=%2Fcandidatos`
+      : conta.estado === "ok" ? null
+      : linkEntrar("/candidatos");
+    const corpo = conta.estado === "ok" ? tr("candidatos.gateCandidate") : conta.estado === "mfa_obrigatorio" ? tr("conta.mfaRequiredBody") : tr("candidatos.gateBody");
+    return (
+      <div>
+        <AppHeader area="recrutador" active="/candidatos" />
+        <main className="mx-auto max-w-page px-4 py-6 md:px-6">
+          <h1 className="text-xl font-semibold">{tr("candidatos.title")}</h1>
+          {conta.estado === "carregando" ? (
+            <p aria-busy="true" className="mt-4 text-sm text-muted">{tr("common.loading")}</p>
+          ) : (
+            <div role="status" data-testid="so-recrutador" className="mt-4 rounded-card border border-line bg-surface px-6 py-10 text-center">
+              <p className="font-semibold">{tr("candidatos.gateTitle")}</p>
+              <p className="mt-1 text-sm text-muted">{corpo}</p>
+              {proximo ? (
+                <a href={proximo} className={buttonClasses("primary", "md", "mt-4 hover:no-underline hover:text-white")}>
+                  {conta.estado === "mfa_obrigatorio" ? tr("conta.mfaStart") : tr("conta.signIn")}
+                </a>
+              ) : null}
+            </div>
+          )}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div>

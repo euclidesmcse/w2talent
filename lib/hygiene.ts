@@ -19,7 +19,6 @@ import { renewSecretOk, signRenewToken } from "./renew-token";
 
 export const VACANCY_TTL_DAYS = 14;
 export const CANDIDATE_TTL_DAYS = 180;
-export const OTP_TTL_MINUTES = 5;
 export const PURGE_AFTER_ARCHIVED_DAYS = 30;
 export const CANDIDATE_NUDGE_DAYS = [150, 165, 175] as const;
 export const CANDIDATE_ARCHIVE_DAY = 180;
@@ -37,9 +36,6 @@ export function vacancyExpiresAt(from: Date = new Date()): Date {
 }
 export function candidateExpiresAt(from: Date = new Date()): Date {
   return new Date(from.getTime() + CANDIDATE_TTL_DAYS * DAY);
-}
-export function otpExpiresAt(from: Date = new Date()): Date {
-  return new Date(from.getTime() + OTP_TTL_MINUTES * 60 * 1000);
 }
 export function isEligibleForPurge(status: string, arquivadoEm: Date | null, now: Date = new Date()): boolean {
   if (status !== "arquivado" || !arquivadoEm) return false;

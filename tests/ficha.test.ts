@@ -1,5 +1,8 @@
 /** Ficha do candidato (1.5.10 + 1.5.11): formato, ficha mínima, leitura do CV e Ficha W2. Sem rede. */
 import { NextRequest } from "next/server";
+import { cookieDeTeste } from "./helpers/sessao-mock";
+
+jest.mock("../lib/sessao", () => require("./helpers/sessao-mock").sessaoMock());
 import {
   anosExperiencia,
   camposFaltando,
@@ -304,12 +307,17 @@ describe("rotas da ficha (sem banco)", () => {
     expect(j.falta).toContain("email");
   });
 
-  it("publicar: só o admin", async () => {
+  it("publicar: só o candidato logado, sem código pendente", async () => {
     const { POST, GET } = await import("../app/api/ficha/publicar/route");
-    delete process.env.ADMIN_SECRET;
-    expect((await POST(post("/api/ficha/publicar", {}))).status).toBe(503);
-    process.env.ADMIN_SECRET = "uma-senha-de-admin-bem-comprida-123";
     expect((await POST(post("/api/ficha/publicar", { ficha: fichaCompleta() }))).status).toBe(401);
+    const recrutador = { cookie: cookieDeTeste({ id: "r1", perfil: "recrutador", mfaLigado: true }) };
+    expect((await POST(post("/api/ficha/publicar", { ficha: fichaCompleta() }, recrutador))).status).toBe(403);
+    const pendente = { cookie: cookieDeTeste({ id: "c1", mfaPendente: true }) };
+    expect((await POST(post("/api/ficha/publicar", { ficha: fichaCompleta() }, pendente))).status).toBe(401);
+    const semPerfil = { cookie: cookieDeTeste({ id: "c1", perfil: null }) };
+    expect((await POST(post("/api/ficha/publicar", { ficha: fichaCompleta() }, semPerfil))).status).toBe(403);
+    // logado como candidato, a ficha incompleta é recusada antes do banco
+    expect((await POST(post("/api/ficha/publicar", { ficha: {} }, { cookie: cookieDeTeste({ id: "c1" }) }))).status).toBe(422);
     const g = await GET(new NextRequest("http://w2.test/api/ficha/publicar"));
     expect(await g.json()).toEqual({ podePublicar: false });
   });

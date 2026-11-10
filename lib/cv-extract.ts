@@ -6,7 +6,7 @@
  * Obs: leitura de PDF/DOCX (Workers AI toMarkdown, lib/doc-to-text) fica no ingest — aqui recebe raw text.
  */
 import { normalizeSkill, getSkill, SKILLS } from "./taxonomy";
-import { normalizeCelular, isValidCelularBR } from "./auth";
+import { normalizeCelular, isValidCelularBR } from "./celular";
 
 export const FALLBACK_WARNING = "não foi possível extrair, preencha manual";
 export const MIN_TEXT_LENGTH = 30;

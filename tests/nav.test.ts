@@ -16,6 +16,7 @@ const TELAS: Record<string, string> = {
   "app/(app)/minhas-candidaturas/page.tsx": "/minhas-candidaturas",
   "app/candidatos/page.tsx": "/candidatos",
   "app/admin/ia/page.tsx": "/admin/ia",
+  "components/tela-conta.tsx": "/entrar",
 };
 
 describe("menu por área", () => {
@@ -28,6 +29,8 @@ describe("menu por área", () => {
     expect(areaOf("/candidatos")).toBe("recrutador");
     expect(areaOf("/admin/ia")).toBe("admin");
     expect(areaOf("/vagasx")).toBe("publico");
+    expect(areaOf("/entrar")).toBe("publico");
+    expect(areaOf("/conta/seguranca")).toBe("publico");
   });
 
   it("nenhum menu de área tem link de outra área", () => {

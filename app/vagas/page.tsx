@@ -11,7 +11,8 @@ import { EmptyState } from "@/components/empty-state";
 import { selectionStore } from "@/lib/selection-store";
 import { IntentChips } from "@/components/intent-chips";
 import { removeChipFromQuery, type IntentChip } from "@/lib/query-intent";
-import { emailDaFichaLocal, enviadasDoPerfil, podeEnviar } from "@/lib/envio-client";
+import { enviadasDoPerfil } from "@/lib/envio-client";
+import { ehCandidato, linkEntrar, useConta } from "@/lib/conta-client";
 import { useRouter } from "next/navigation";
 import { dataHoraCurta, lerCopia, salvarCopia, useOnline } from "@/lib/pwa-client";
 
@@ -45,22 +46,23 @@ export default function VagasPage() {
   const [modalOpen, setModalOpen] = React.useState(false);
   const [activeTrigger, setActiveTrigger] = React.useState<React.RefObject<HTMLElement | null> | undefined>(undefined);
   const router = useRouter();
-  // 1.5.13: envio ligado só no modo de teste do admin; vagas já enviadas não podem ser marcadas.
-  const [envioLigado, setEnvioLigado] = React.useState(false);
+  // 1.5.5: selecionar e enviar só com login de candidato; vagas já enviadas não podem ser marcadas.
+  const conta = useConta();
+  const envioLigado = ehCandidato(conta);
   const [enviadas, setEnviadas] = React.useState<Record<string, string>>({});
+  const [soCandidato, setSoCandidato] = React.useState(false);
 
   React.useEffect(() => {
+    if (!envioLigado) return;
     let vivo = true;
     (async () => {
-      if (!(await podeEnviar())) return;
-      if (vivo) setEnvioLigado(true);
-      const env = await enviadasDoPerfil(emailDaFichaLocal());
+      const env = await enviadasDoPerfil();
       if (!vivo) return;
       setEnviadas(env);
       for (const id of Object.keys(env)) if (selectionStore.getState().selectedIds.includes(id)) selectionStore.remove(id);
     })().catch(() => {});
     return () => { vivo = false; };
-  }, []);
+  }, [envioLigado]);
 
   React.useEffect(() => {
     const sync = () => { try { setSelected([...selectionStore.getState().selectedIds]); } catch {} };
@@ -140,7 +142,15 @@ export default function VagasPage() {
 
   const handleClearFilters = () => runSearch("");
   const handleUseSuggestion = (s: string) => runSearch(s);
-  const toggle = (id: string) => { if (enviadas[id]) return; const it = items.find((x) => String(x.id ?? x.userId) === id); if (it) selectionStore.rememberLabel(id, it.titulo); const res = selectionStore.toggle(id); setSelected([...selectionStore.getState().selectedIds]); void res; };
+  const toggle = (id: string) => {
+    if (enviadas[id]) return;
+    // Sem login (ou sem perfil/código): vai entrar e volta para esta busca. Recrutador não se candidata.
+    if (!selectedSet.has(id) && conta.estado !== "carregando" && conta.estado !== "erro" && !envioLigado) {
+      if (conta.estado === "ok") { setSoCandidato(true); return; }
+      router.push(linkEntrar(window.location.pathname + window.location.search));
+      return;
+    } const it = items.find((x) => String(x.id ?? x.userId) === id); if (it) selectionStore.rememberLabel(id, it.titulo); const res = selectionStore.toggle(id); setSelected([...selectionStore.getState().selectedIds]); void res;
+  };
   const openDetail = (id: string) => {
     const item = items.find((x) => x.id === id) ?? null;
     setModalItem(item); setModalOpen(true);
@@ -175,6 +185,7 @@ export default function VagasPage() {
       </div>
 
       <div className="mx-auto max-w-page px-4 pt-4 pb-24 md:px-6">
+        {soCandidato ? <div role="status" data-testid="so-candidato" className="mb-3 rounded-card border border-line bg-surface px-3.5 py-2.5 text-[13px]">{tr("vagas.onlyCandidates")}</div> : null}
         {copiaDe ? <div role="status" data-testid="copia-busca" className="mb-3 rounded-card border border-warning bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning-ink">{tr("pwa.savedSearch", { date: dataHoraCurta(copiaDe, locale) })}</div> : null}
         {suggestion ? <div role="status" data-testid="sugestao" className="mb-3 rounded-card border border-line bg-brand-soft px-3.5 py-2.5 text-[13px] text-brand-ink">{tr("empty.didYouMean", { suggestion })} <Button variant="ghost" size="sm" onClick={() => handleUseSuggestion(suggestion)}>{tr("empty.viewSuggestion")}</Button></div> : null}
         {isEmpty && !online && !copiaDe ? <div role="status" className="rounded-card border border-line bg-surface px-6 py-10 text-center text-sm"><p className="font-semibold">{tr("pwa.needsInternet")}</p><p className="mt-1 text-muted">{tr("pwa.offlineBody")}</p></div> : null}

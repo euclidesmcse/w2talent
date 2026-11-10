@@ -14,7 +14,8 @@ import { skillName } from "@/components/skill-chips";
 import { useGapText } from "@/components/vacancy-match";
 import { formatFaixa } from "@/lib/format";
 import { selectionStore } from "@/lib/selection-store";
-import { diaMes, emailDaFichaLocal, podeEnviar, postEnvio } from "@/lib/envio-client";
+import { diaMes, podeEnviar, postEnvio } from "@/lib/envio-client";
+import { linkEntrar } from "@/lib/conta-client";
 import { useOnline } from "@/lib/pwa-client";
 import type { Ficha, FichaW2 } from "@/lib/ficha";
 import type { MatchResult } from "@/lib/match";
@@ -47,7 +48,7 @@ type Item = {
   paraEmpresa: Ficha | null;
 };
 type Resultado = { vacancyId: string; status: string; email?: boolean };
-type Fase = "carregando" | "sem_admin" | "sem_perfil" | "sem_selecao" | "sem_rede" | "erro" | "revisar" | "feito";
+type Fase = "carregando" | "sem_login" | "sem_perfil" | "sem_selecao" | "sem_rede" | "erro" | "revisar" | "feito";
 
 const textos = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.trim() !== "") : []);
 const skillIds = (v: unknown): string[] =>
@@ -60,7 +61,6 @@ export default function AprovarPage() {
   const locale = useLocale();
   const gapText = useGapText();
   const [fase, setFase] = React.useState<Fase>("carregando");
-  const [email, setEmail] = React.useState("");
   const [itens, setItens] = React.useState<Item[]>([]);
   const [w2, setW2] = React.useState<FichaW2 | null>(null);
   const [limites, setLimites] = React.useState({ lote: 10, dia: 30, usadas24h: 0 });
@@ -70,10 +70,10 @@ export default function AprovarPage() {
   const [resultado, setResultado] = React.useState<Resultado[]>([]);
   const tituloRef = React.useRef<HTMLHeadingElement>(null);
 
-  const carregar = React.useCallback(async (mail: string, ids: string[]) => {
-    const r = await postEnvio("estado", { email: mail, vacancyIds: ids });
+  const carregar = React.useCallback(async (ids: string[]) => {
+    const r = await postEnvio("estado", { vacancyIds: ids });
     if (r.status === 404) return setFase("sem_perfil");
-    if (r.status === 401 || r.status === 503) return setFase("sem_admin");
+    if (r.status === 401 || r.status === 403) return setFase("sem_login");
     if (!r.ok) return setFase("erro");
     const j = await r.json();
     setItens(j.itens);
@@ -92,13 +92,10 @@ export default function AprovarPage() {
     if (fase !== "carregando") return;
     (async () => {
       if (!navigator.onLine) return setFase("sem_rede");
-      if (!(await podeEnviar())) return setFase(navigator.onLine ? "sem_admin" : "sem_rede");
-      const mail = emailDaFichaLocal();
-      if (!mail) return setFase("sem_perfil");
-      setEmail(mail);
+      if (!(await podeEnviar())) return setFase(navigator.onLine ? "sem_login" : "sem_rede");
       const ids = [...(selectionStore.getState().selectedIds ?? [])];
       if (!ids.length) return setFase("sem_selecao");
-      await carregar(mail, ids);
+      await carregar(ids);
     })().catch(() => setFase(navigator.onLine ? "erro" : "sem_rede"));
   }, [carregar, fase]);
 
@@ -120,13 +117,13 @@ export default function AprovarPage() {
     setOcupado(true);
     setErro(null);
     try {
-      const r = await postEnvio("aprovar", { email, vacancyId: atual.vacancyId, aprovar, hash: atual.hash });
+      const r = await postEnvio("aprovar", { vacancyId: atual.vacancyId, aprovar, hash: atual.hash });
       if (r.ok) {
         setItens((xs) => xs.map((x) => (x.vacancyId === atual.vacancyId ? { ...x, estado: aprovar ? "aprovada" : "nova", campos: undefined } : x)));
         if (aprovar && idx < itens.length - 1) proxima();
       } else {
         // A vaga mudou, venceu ou já foi enviada enquanto a tela estava aberta: recarrega o estado.
-        await carregar(email, itens.map((i) => i.vacancyId));
+        await carregar(itens.map((i) => i.vacancyId));
       }
     } catch {
       setErro(t("error"));
@@ -138,7 +135,7 @@ export default function AprovarPage() {
   const tirar = () => {
     if (!atual) return;
     selectionStore.remove(atual.vacancyId);
-    if (atual.estado === "aprovada") void postEnvio("aprovar", { email, vacancyId: atual.vacancyId, aprovar: false });
+    if (atual.estado === "aprovada") void postEnvio("aprovar", { vacancyId: atual.vacancyId, aprovar: false });
     const resto = itens.filter((x) => x.vacancyId !== atual.vacancyId);
     setItens(resto);
     setIdx((i) => Math.max(0, Math.min(i, resto.length - 1)));
@@ -149,7 +146,7 @@ export default function AprovarPage() {
     setOcupado(true);
     setErro(null);
     try {
-      const r = await postEnvio("enviar", { email, vacancyIds: aprovadas.map((a) => a.vacancyId), loteId: selectionStore.getState().loteId || undefined });
+      const r = await postEnvio("enviar", { vacancyIds: aprovadas.map((a) => a.vacancyId), loteId: selectionStore.getState().loteId || undefined });
       const j = await r.json().catch(() => ({}));
       if (r.status === 429) {
         setErro(t("limitDay", { max: j.max ?? limites.dia, left: j.restantes ?? 0 }));
@@ -197,7 +194,7 @@ export default function AprovarPage() {
 
   let corpo: React.ReactNode = null;
   if (fase === "carregando") corpo = <p className="text-muted" aria-busy="true">{t("loading")}</p>;
-  else if (fase === "sem_admin") corpo = vazio(t("adminOnlyTitle"), t("adminOnlyBody"));
+  else if (fase === "sem_login") corpo = vazio(t("loginTitle"), t("loginBody"), { href: linkEntrar("/vagas/aprovar"), label: t("loginCta") });
   else if (fase === "sem_perfil") corpo = vazio(t("noProfileTitle"), t("noProfileBody"), { href: "/minha-ficha", label: t("noProfileCta") });
   else if (fase === "sem_selecao") corpo = vazio(t("emptyTitle"), t("emptyBody"));
   else if (fase === "sem_rede") corpo = vazio(tp("needsInternet"), tp("reviewOffline"));

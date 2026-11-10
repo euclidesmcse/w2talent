@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchCandidates, PAGE_SIZE } from "@/lib/search";
 import { isValidLocale, defaultLocale, type Locale } from "@/i18n";
+import { exigirConta, NO_STORE } from "@/lib/sessao";
 
+/** Busca de candidatos: só recrutador logado, com o autenticador (1.5.5, decisões 2 e 4). */
 export async function GET(req: NextRequest) {
+  const acesso = await exigirConta(req, { perfil: "recrutador" });
+  if ("erro" in acesso) return acesso.erro;
   const start = Date.now();
   const url = new URL(req.url);
   const q = url.searchParams.get("q") ?? undefined;
@@ -31,6 +35,6 @@ export async function GET(req: NextRequest) {
       emptyCTA: result.emptyCTA ?? null,
       tookMs: result.tookMs ?? tookMs,
     },
-    { status: 200, headers: { "x-took-ms": String(tookMs) } }
+    { status: 200, headers: { ...NO_STORE, "x-took-ms": String(tookMs) } }
   );
 }

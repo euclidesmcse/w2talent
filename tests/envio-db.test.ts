@@ -1,9 +1,10 @@
 /** Aprovar antes de enviar (1.5.13) no banco de verdade. Só roda num Postgres local. */
 import type { PrismaClient } from "@prisma/client";
 import { NextRequest } from "next/server";
-import { ADMIN_COOKIE, signAdminSession } from "../lib/admin-auth";
+import { cookieDeTeste } from "./helpers/sessao-mock";
 import type { EmailMessage } from "../lib/email";
 
+jest.mock("../lib/sessao", () => require("./helpers/sessao-mock").sessaoMock());
 jest.mock("../lib/background", () => ({ runInBackground: () => {} }));
 const filaEmails: EmailMessage[] = [];
 jest.mock("../lib/notifications", () => ({ enqueueEmail: async (m: EmailMessage) => { filaEmails.push(m); } }));
@@ -14,10 +15,9 @@ import {
   enviarCandidaturas,
   estadoDasVagas,
   hashVaga,
-  perfilDoEmail,
+  perfilDaConta,
   reenviarEmailsPendentes,
   snapshotVaga,
-  userIdDoEmail,
   type PerfilEnvio,
 } from "../lib/envio";
 
@@ -31,6 +31,7 @@ function localDb(url: string | undefined): boolean {
 const describeDb = localDb(process.env.DATABASE_URL) ? describe : describe.skip;
 
 const EMAIL = "bia.envio@exemplo.com";
+const CONTA = "conta-bia-envio";
 const NOW = new Date("2026-11-09T15:00:00Z");
 const DIA = 86_400_000;
 
@@ -67,7 +68,7 @@ describeDb("Aprovar antes de enviar", () => {
     semContatoId = (await db.companyProfile.create({ data: { nome: "Envio Teste Sem Contato" } })).id;
     await db.candidateProfile.create({
       data: {
-        userId: await userIdDoEmail(EMAIL),
+        userId: CONTA,
         nome: "Beatriz Souza Lima",
         email: EMAIL,
         celular: "+5511988887777",
@@ -86,7 +87,7 @@ describeDb("Aprovar antes de enviar", () => {
         expiresAt: new Date(NOW.getTime() + 180 * DIA),
       },
     });
-    perfil = (await perfilDoEmail(db, EMAIL.toUpperCase()))!;
+    perfil = (await perfilDaConta(db, CONTA))!;
   });
 
   afterAll(async () => {
@@ -105,14 +106,14 @@ describeDb("Aprovar antes de enviar", () => {
     return aprovarVaga(db, perfil.id, id, it.hash ?? "", NOW);
   };
 
-  it("acha o perfil pelo e-mail e nunca devolve o contato para a empresa", async () => {
+  it("acha o perfil pela conta e nunca devolve o contato para a empresa", async () => {
     expect(perfil.ficha.nome).toBe("Beatriz Souza Lima");
     const v = await vaga("Analista Cloud PJ");
     const [it] = await estadoDasVagas(db, perfil, [v.id], NOW);
     expect(it.estado).toBe("nova");
     // o perfil pede PJ ≥ 13.000 e a vaga paga até 15.000: sem lacuna de faixa
     expect(it.match!.gaps.find((g) => g.kind === "faixa")).toBeUndefined();
-    expect(await perfilDoEmail(db, "ninguem@exemplo.com")).toBeNull();
+    expect(await perfilDaConta(db, "conta-sem-perfil")).toBeNull();
   });
 
   it("o hash não muda com renovação e contadores, e muda com o conteúdo", async () => {
@@ -261,10 +262,8 @@ describeDb("Aprovar antes de enviar", () => {
     expect(await db.application.count({ where: { vacancyId: v.id } })).toBe(1);
   });
 
-  it("rotas: só o admin, e o estado não traz contato", async () => {
-    const SECRET = "uma-senha-de-admin-bem-comprida-123";
-    process.env.ADMIN_SECRET = SECRET;
-    const cookie = `${ADMIN_COOKIE}=${encodeURIComponent((await signAdminSession(SECRET)).value)}`;
+  it("rotas: só o candidato logado, o perfil vem da sessão e o estado não traz contato", async () => {
+    const cookie = cookieDeTeste({ id: CONTA });
     const v = await vaga("Pela rota");
     const post = (path: string, body: unknown, h: Record<string, string> = { cookie }) =>
       new NextRequest(`http://w2.test${path}`, { method: "POST", headers: { ...h, "content-type": "application/json" }, body: JSON.stringify(body) });
@@ -275,7 +274,9 @@ describeDb("Aprovar antes de enviar", () => {
     const enviadas = (await import("../app/api/envio/enviadas/route")).POST;
 
     expect((await estado(post("/api/envio/estado", { email: EMAIL, vacancyIds: [v.id] }, {}))).status).toBe(401);
-    expect((await estado(post("/api/envio/estado", { email: "outra@exemplo.com", vacancyIds: [v.id] }))).status).toBe(404);
+    expect((await estado(post("/api/envio/estado", { vacancyIds: [v.id] }, { cookie: cookieDeTeste({ id: "conta-sem-perfil" }) }))).status).toBe(404);
+    expect((await estado(post("/api/envio/estado", { vacancyIds: [v.id] }, { cookie: cookieDeTeste({ id: CONTA, perfil: "recrutador", mfaLigado: true }) }))).status).toBe(403);
+    expect((await estado(post("/api/envio/estado", { vacancyIds: [v.id] }, { cookie: cookieDeTeste({ id: CONTA, mfaPendente: true }) }))).status).toBe(401);
 
     const r1 = await estado(post("/api/envio/estado", { email: EMAIL, vacancyIds: [v.id] }));
     const j1 = await r1.json();

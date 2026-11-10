@@ -59,7 +59,7 @@ Fora do MVP (Fase 2/3 no spec): coach IA `objetivoCrescimento`, ranking `94% mat
 - **i18n/PWA:** `next-intl` 3.26, `public/manifest.json`, `icons/`
 - **DB:** Prisma 6.5 + Postgres `pgvector:pg16` (`vector(1024)` + `tsvector`, `postgresqlExtensions`)
 - **Busca:** `lib/search.ts` (tsvector + pgvector hybrid), `lib/embeddings.ts`, `lib/taxonomy.ts` (500 skills)
-- **Auth/LGPD:** OTP 5min (E.164 BR) + JWT `w2talent_token` + 4 consentimentos versionados (`lib/auth.ts`)
+- **Login/LGPD (1.5.5):** Better Auth com Google e Microsoft, autenticador (TOTP + 10 códigos de recuperação), Turnstile opcional; perfil candidato ou recrutador; consentimentos versionados no `ConsentLog` (`lib/auth-server.ts`, `lib/sessao.ts`, `lib/consentimento.ts`)
 - **Proxy/Lote:** `lib/proxy.ts` (`via.w2talent.com`, `thr_*`, `app_*`, `BATCH 10 / DAILY 30`)
 - **Demo sem banco:** `lib/demo-data.ts` (10 vagas + 5 candidatos) — fallback quando `vacancyStore` e DB vazios (Workers isolates)
 - **Deploy:** Cloudflare Pages/Workers via OpenNext (`@opennextjs/cloudflare`, `wrangler.jsonc`, `open-next.config.ts`)
@@ -92,7 +92,7 @@ npm ci
 
 ```bash
 export DATABASE_URL="postgresql://w2talent:w2talent@localhost:5437/w2talent"
-export JWT_SECRET="local-dev-jwt-change-me"
+export BETTER_AUTH_SECRET="local-dev-better-auth-secret-change-me-123"
 export CRON_SECRET="local-dev-cron-change-me"
 ```
 
@@ -134,7 +134,11 @@ Sem Postgres, o app ainda sobe e lista o demo estático — ideal para o `worker
 | Key | Local (dummy) | Produção (obrigatório) |
 |-----|---------------|------------------------|
 | `DATABASE_URL` | `postgresql://w2talent:w2talent@localhost:5437/w2talent` | Não usada: o Worker conecta no Neon pelo binding `HYPERDRIVE` (`wrangler.jsonc`); migrations pelo segredo `NEON_DATABASE_URL` no GitHub |
-| `JWT_SECRET` | `local-dev-jwt-*` | `openssl rand -base64 32` (throw em prod se ausente; build permite `NEXT_PHASE=phase-production-build`) |
+| `BETTER_AUTH_SECRET` | `local-dev-*` (mínimo 32) | Worker Secret: `npx wrangler secret put BETTER_AUTH_SECRET` (`openssl rand -base64 32`); sem ele o login dá erro em produção |
+| `BETTER_AUTH_URL` | — | `https://w2talent.euclidespns.workers.dev` (var) |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | — | Worker Secrets; sem eles o botão do Google não aparece |
+| `MICROSOFT_CLIENT_ID` / `MICROSOFT_CLIENT_SECRET` | — | Worker Secrets (tenant `common`); sem eles o botão da Microsoft não aparece |
+| `TURNSTILE_SECRET_KEY` / `TURNSTILE_SITE_KEY` | — | Secret + var pública; sem eles o Turnstile fica desligado |
 | `CRON_SECRET` | `local-dev-cron-*` | `openssl rand -base64 32` (protege `GET /api/cron/hygiene` + `PATCH` webhooks) |
 | `WEBHOOK_SECRET` | — | opcional, fallback para `CRON_SECRET` |
 | `PROXY_DOMAIN` | `via.w2talent.com` | `via.w2talent.com` |
@@ -155,11 +159,12 @@ w2talent/
 │   ├── candidatos/page.tsx         # busca candidatos (header sage)
 │   ├── (app)/minhas-candidaturas/  # status enviado > visualizado > respondido
 │   ├── api/
-│   │   ├── auth/otp|verify         # OTP 5min + JWT
+│   │   ├── auth/[...all]           # Better Auth (Google, Microsoft, autenticador)
+│   │   ├── conta(|/perfil|/mfa)    # estado do login, escolher perfil, código do autenticador
 │   │   ├── candidates(|/[id]|/ingest)  # CV canônico (pdf-parse/mammoth)
 │   │   ├── vacancies(|/[id]|/[id]/renew) # vaga canônica 14d + renew idempotente
 │   │   ├── search/{vacancies,candidates} # hybrid tsvector+vector
-│   │   ├── applications/batch      # POST lote 10/30 + PATCH webhook + GET (IDOR fix: exige JWT em prod)
+│   │   ├── applications/batch      # POST lote 10/30 + PATCH webhook + GET (IDOR fix: exige login de candidato)
 │   │   ├── contacts/batch          # POST RH lote 1 template + PATCH proxy B
 │   │   ├── cron/hygiene            # POST higiene diária (Cron Trigger), idempotente
 │   │   └── seed/demo               # POST semeia demo (staging volátil)
@@ -167,7 +172,8 @@ w2talent/
 ├── components/                     # vacancy-table/cards, candidate-*, detail-modal, batch-bar, empty-state, cv-preview-form
 ├── lib/
 │   ├── proxy.ts                    # Map in-memory MVP + Resend mock (TODO: Prisma+Redis)
-│   ├── auth.ts                     # OTP + JWT + LGPD 4 flags
+│   ├── auth-server.ts              # Better Auth (login social + autenticador)
+│   ├── sessao.ts                   # conta do pedido + regras de acesso
 │   ├── search.ts                   # hybrid + demo-data fallback
 │   ├── demo-data.ts                # 10 vagas + 5 candidatos (staging sem Postgres)
 │   ├── taxonomy.ts                 # 500 skills + sinônimos

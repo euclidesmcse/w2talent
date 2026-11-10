@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      JWT_SECRET: dummy-ci-jwt
+      BETTER_AUTH_SECRET: dummy-ci-better-auth-secret-0123456789abcdef
       CRON_SECRET: dummy-ci-cron
       NEXT_TELEMETRY_DISABLED: "1"
     steps:

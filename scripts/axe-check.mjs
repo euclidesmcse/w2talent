@@ -6,7 +6,7 @@ import { chromium } from "playwright-core";
 import { AxeBuilder } from "@axe-core/playwright";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3999";
-const TELAS = ["/", "/vagas", "/candidatos", "/minha-ficha", "/minhas-candidaturas"];
+const TELAS = ["/", "/vagas", "/candidatos", "/minha-ficha", "/minhas-candidaturas", "/entrar", "/entrar/perfil", "/entrar/codigo"];
 const LARGURAS = [1280, 390]; // computador e celular
 const IDIOMAS = (process.env.IDIOMAS ?? "pt-BR,en,es").split(",");
 const TAGS = ["wcag2a", "wcag2aa", "wcag21aa", "best-practice"];
@@ -25,12 +25,7 @@ for (const tela of TELAS) {
     // "load", não "networkidle": Minhas candidaturas faz polling
     await page.goto(BASE + tela, { waitUntil: "load" });
     await page.waitForTimeout(1500);
-    // Marca duas linhas para auditar também a barra de seleção visível
-    let marcadas = 0;
-    for (const box of await page.$$('input[type=checkbox][data-select-id]')) {
-      if (marcadas >= 2) break;
-      if (await box.isVisible()) { await box.check().catch(() => {}); marcadas++; }
-    }
+    // Desde o login (1.5.5) marcar uma vaga sem conta leva para /entrar, que também é auditada.
     const r = await new AxeBuilder({ page }).withTags(TAGS).analyze();
     total += r.violations.length;
     const lang = await page.getAttribute("html", "lang");
