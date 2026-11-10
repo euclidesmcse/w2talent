@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { adminGuard } from "@/lib/admin-request";
+import { exigirConta, NO_STORE } from "@/lib/sessao";
 import { camposFaltando, fichaToProfile, sanitizeFicha, sanitizeFichaW2 } from "@/lib/ficha";
 import { candidateExpiresAt } from "@/lib/hygiene";
 import { runInBackground } from "@/lib/background";
-import { userIdDoEmail } from "@/lib/envio";
 
 /**
- * "Minha ficha", Publicar (1.5.10, decisão D1): até existir o login novo (1.5.5), só o admin publica,
- * para criar perfis de teste. O perfil entra na busca com a Ficha W2 e é indexado em segundo plano.
+ * "Minha ficha", Publicar (1.5.10): o candidato logado (1.5.5) publica o próprio perfil.
+ * O perfil entra na busca com a Ficha W2 e é indexado em segundo plano.
  */
 export async function POST(req: NextRequest) {
-  const guard = await adminGuard(req, { write: true });
-  if (guard) return guard;
+  const r = await exigirConta(req, { perfil: "candidato" });
+  if ("erro" in r) return r.erro;
   const body = (await req.json().catch(() => ({}))) as { ficha?: unknown; fichaW2?: unknown };
   const ficha = sanitizeFicha(body.ficha);
   const falta = camposFaltando(ficha);
@@ -20,8 +19,8 @@ export async function POST(req: NextRequest) {
   const w2 = sanitizeFichaW2(body.fichaW2);
   if (!w2) return NextResponse.json({ error: "ficha_w2_ausente" }, { status: 422 });
 
-  // userId aparece na busca: vai o hash do e-mail, nunca o e-mail.
-  const userId = await userIdDoEmail(ficha.email);
+  // Um perfil por conta: userId é o id da conta (aleatório, não é o e-mail).
+  const userId = r.conta.id;
   const now = new Date();
   const dados = {
     ...fichaToProfile(ficha),
@@ -48,10 +47,12 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/** A tela pergunta se pode mostrar o botão Publicar (só para o admin, até o login novo). */
+/** A tela pergunta se pode mostrar o botão Publicar (candidato logado) e se já há perfil publicado. */
 export async function GET(req: NextRequest) {
-  const guard = await adminGuard(req);
-  return NextResponse.json({ podePublicar: !guard }, { headers: { "cache-control": "no-store" } });
+  const r = await exigirConta(req, { perfil: "candidato" });
+  if ("erro" in r) return NextResponse.json({ podePublicar: false }, { headers: NO_STORE });
+  const p = await prisma.candidateProfile.findUnique({ where: { userId: r.conta.id }, select: { id: true, status: true } }).catch(() => null);
+  return NextResponse.json({ podePublicar: true, publicado: !!p && p.status === "ativo" }, { headers: NO_STORE });
 }
 
 export const dynamic = "force-dynamic";

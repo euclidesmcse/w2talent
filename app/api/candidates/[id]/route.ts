@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateForPublish, publishDraft, buildTsvectorText } from "@/lib/cv-extract";
 import { runInBackground } from "@/lib/background";
 import { indexCandidate } from "@/lib/indexing";
+import { exigirConta } from "@/lib/sessao";
 
+/** Publicar pelo id (rota antiga da Task 3): só o próprio candidato logado (1.5.5). */
 export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const params = await ctx.params;
+  const acesso = await exigirConta(req, { perfil: "candidato" });
+  if ("erro" in acesso) return acesso.erro;
+  if (acesso.conta.id !== params.id) return NextResponse.json({ error: "perfil" }, { status: 403 });
   try {
     const body = await req.json().catch(() => ({} as any));
     const canonico = body.canonico ?? body.draft ?? body;

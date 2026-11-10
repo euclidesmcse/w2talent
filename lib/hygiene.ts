@@ -19,7 +19,6 @@ import { renewSecretOk, signRenewToken } from "./renew-token";
 
 export const VACANCY_TTL_DAYS = 14;
 export const CANDIDATE_TTL_DAYS = 180;
-export const OTP_TTL_MINUTES = 5;
 export const PURGE_AFTER_ARCHIVED_DAYS = 30;
 export const CANDIDATE_NUDGE_DAYS = [150, 165, 175] as const;
 export const CANDIDATE_ARCHIVE_DAY = 180;
@@ -37,9 +36,6 @@ export function vacancyExpiresAt(from: Date = new Date()): Date {
 }
 export function candidateExpiresAt(from: Date = new Date()): Date {
   return new Date(from.getTime() + CANDIDATE_TTL_DAYS * DAY);
-}
-export function otpExpiresAt(from: Date = new Date()): Date {
-  return new Date(from.getTime() + OTP_TTL_MINUTES * 60 * 1000);
 }
 export function isEligibleForPurge(status: string, arquivadoEm: Date | null, now: Date = new Date()): boolean {
   if (status !== "arquivado" || !arquivadoEm) return false;
@@ -168,12 +164,21 @@ export async function runHygiene(db: PrismaClient, deps: HygieneDeps): Promise<H
     });
     if (!perfis.length) break;
     cursor = perfis[perfis.length - 1].id;
-    const devidos = perfis
+    let devidos = perfis
       .map((p) => {
         const marco: Marco | null = p.status === "arquivado" ? "D180" : dueNudge(p.expiresAt, now);
         return marco ? { p, marco, ciclo: todayKey(candidateCycleStart(p.expiresAt)) } : null;
       })
       .filter((x): x is NonNullable<typeof x> => !!x && !isPlaceholderEmail(x.p.email));
+    // 1.5.5: os lembretes D150/D165/D175 só vão para quem aceitou "e-mails sobre a minha ficha" (nudges).
+    // O aviso D180 (ficha arquivada, será apagada em 30 dias) é aviso sobre os dados e vai sempre.
+    const pedemAceite = devidos.filter((d) => d.marco !== "D180").map((d) => d.p.userId);
+    const aceitaram = new Set(
+      pedemAceite.length
+        ? (await db.consentLog.findMany({ where: { userId: { in: pedemAceite }, tipo: "nudges" }, select: { userId: true } })).map((c) => c.userId)
+        : [],
+    );
+    devidos = devidos.filter((d) => d.marco === "D180" || aceitaram.has(d.p.userId));
     if (devidos.length) {
       const feitos = await db.hygieneEvent.findMany({
         where: { userId: { in: devidos.map((d) => d.p.userId) }, marco: { in: EMAIL_MARCOS } },

@@ -6,11 +6,9 @@ import { NextRequest } from "next/server";
 import {
   VACANCY_TTL_DAYS,
   CANDIDATE_TTL_DAYS,
-  OTP_TTL_MINUTES,
   PURGE_AFTER_ARCHIVED_DAYS,
   vacancyExpiresAt,
   candidateExpiresAt,
-  otpExpiresAt,
   isEligibleForPurge,
   withVacancyExpiry,
   withCandidateExpiry,
@@ -25,10 +23,9 @@ const DAY = 24 * 60 * 60 * 1000;
 const SECRET = "x".repeat(40);
 
 describe("Hygiene helpers — expiresAt defaults (C2)", () => {
-  it("VACANCY_TTL=14d, CANDIDATE_TTL=180d, OTP_TTL=5min, PURGE=30d", () => {
+  it("VACANCY_TTL=14d, CANDIDATE_TTL=180d, PURGE=30d", () => {
     expect(VACANCY_TTL_DAYS).toBe(14);
     expect(CANDIDATE_TTL_DAYS).toBe(180);
-    expect(OTP_TTL_MINUTES).toBe(5);
     expect(PURGE_AFTER_ARCHIVED_DAYS).toBe(30);
   });
 
@@ -40,11 +37,6 @@ describe("Hygiene helpers — expiresAt defaults (C2)", () => {
   it("candidateExpiresAt = from +180d", () => {
     const from = new Date("2026-11-01T00:00:00Z");
     expect(candidateExpiresAt(from).toISOString()).toBe("2027-04-30T00:00:00.000Z");
-  });
-
-  it("otpExpiresAt = from +5min", () => {
-    const from = new Date("2026-11-07T10:00:00Z");
-    expect(otpExpiresAt(from).toISOString()).toBe("2026-11-07T10:05:00.000Z");
   });
 
   it("withVacancyExpiry auto-preenche se ausente, preserva se presente", () => {

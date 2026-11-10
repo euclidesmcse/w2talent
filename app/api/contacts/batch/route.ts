@@ -30,15 +30,19 @@ export async function POST(req: NextRequest) {
     let rhId: string | null = null;
     let companyId: string | null = body.companyId ?? body.company_id ?? null;
     let authOk = false;
-    try {
-      const { requireAuth } = require("@/lib/auth");
-      const user = requireAuth(req);
-      if (user?.userId) rhId = String(user.userId);
-      // a empresa do login vence a do corpo (não dá para agir em nome de outra empresa)
-      if (user?.companyId) companyId = String(user.companyId);
-      if (user?.celular) rhId = rhId ?? String(user.celular);
+    // 1.5.5: só recrutador logado (com autenticador). A conta ainda não tem empresa ligada
+    // (isso entra com o 2.1): até lá a empresa do corpo não vale fora dos testes.
+    const { exigirConta } = await import("@/lib/sessao");
+    const r = await exigirConta(req, { perfil: "recrutador" });
+    if ("conta" in r) {
+      rhId = r.conta.id;
       authOk = true;
-    } catch {}
+      if (process.env.NODE_ENV !== "test") {
+        return NextResponse.json({ error: "recrutador_sem_empresa" }, { status: 403 });
+      }
+    } else if (process.env.NODE_ENV !== "test") {
+      return r.erro;
+    }
     if (!authOk && process.env.NODE_ENV === "test") {
       if (!rhId) rhId = body.rhId ?? req.headers.get("x-rh-id") ?? req.headers.get("x-user-id") ?? null;
       if (!companyId) companyId = req.headers.get("x-company-id") ?? null;

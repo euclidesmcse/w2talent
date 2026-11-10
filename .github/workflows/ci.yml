@@ -26,7 +26,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql://w2talent:w2talent@localhost:5432/w2talent?sslmode=disable
-      JWT_SECRET: dummy-ci-jwt
+      BETTER_AUTH_SECRET: dummy-ci-better-auth-secret-0123456789abcdef
       CRON_SECRET: dummy-ci-cron
     steps:
       - uses: actions/checkout@v4

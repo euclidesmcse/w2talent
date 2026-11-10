@@ -1,28 +1,12 @@
 /**
- * Lado do navegador do envio (1.5.13), no modo de teste do admin: o perfil é o publicado em
- * "Minha ficha" com o e-mail do rascunho guardado neste navegador. Sai quando entrar o login.
+ * Lado do navegador do envio (1.5.13). Desde o login (1.5.5) o perfil é o da conta logada:
+ * o servidor lê a sessão e nunca aceita e-mail ou id no corpo.
  */
-export const FICHA_KEY = "w2talent:ficha";
+import { ehCandidato, lerConta } from "./conta-client";
 
-export function emailDaFichaLocal(): string {
-  try {
-    const raw = window.localStorage.getItem(FICHA_KEY);
-    const email = raw ? (JSON.parse(raw) as { ficha?: { email?: unknown } })?.ficha?.email : "";
-    return typeof email === "string" ? email.trim().toLowerCase() : "";
-  } catch {
-    return "";
-  }
-}
-
-/** O botão de envio só aparece para o admin, até o login. */
+/** Selecionar, aprovar e enviar: só candidato logado (com o código do autenticador, se ligado). */
 export async function podeEnviar(): Promise<boolean> {
-  try {
-    const r = await fetch("/api/ficha/publicar");
-    const j = (await r.json()) as { podePublicar?: boolean };
-    return j.podePublicar === true;
-  } catch {
-    return false;
-  }
+  return ehCandidato(await lerConta());
 }
 
 export function postEnvio(path: "estado" | "aprovar" | "enviar" | "enviadas", body: Record<string, unknown>): Promise<Response> {
@@ -38,11 +22,10 @@ export function diaMes(iso: string, locale: string): string {
   }
 }
 
-/** Vagas já enviadas por este perfil: id → data do envio. Vazio fora do modo de teste. */
-export async function enviadasDoPerfil(email: string): Promise<Record<string, string>> {
-  if (!email) return {};
+/** Vagas já enviadas pela conta: id → data do envio. Vazio sem login de candidato. */
+export async function enviadasDoPerfil(): Promise<Record<string, string>> {
   try {
-    const r = await postEnvio("enviadas", { email });
+    const r = await postEnvio("enviadas", {});
     if (!r.ok) return {};
     const j = (await r.json()) as { applications?: { vacancyId: string | null; createdAt: string }[] };
     const out: Record<string, string> = {};

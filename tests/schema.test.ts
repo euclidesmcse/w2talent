@@ -71,12 +71,13 @@ describe("Prisma schema — estrutura canônica", () => {
     expect(schema).toMatch(/postgresqlExtensions/);
   });
 
-  it("define models CompanyProfile, CandidateProfile, Vacancy, Application, OtpCode, ConsentLog, HygieneEvent", () => {
+  it("define models CompanyProfile, CandidateProfile, Vacancy, Application, ConsentLog, HygieneEvent e as do login (1.5.5)", () => {
     expect(schema).toMatch(/model CompanyProfile/);
     expect(schema).toMatch(/model CandidateProfile/);
     expect(schema).toMatch(/model Vacancy/);
     expect(schema).toMatch(/model Application/);
-    expect(schema).toMatch(/model OtpCode/);
+    expect(schema).not.toMatch(/model OtpCode/); // OTP por SMS saiu no 1.5.5
+    for (const m of ["User", "Session", "Account", "Verification", "TwoFactor"]) expect(schema).toMatch(new RegExp(`model ${m} \\{`));
     expect(schema).toMatch(/model ConsentLog/);
     expect(schema).toMatch(/model HygieneEvent/);
   });
@@ -132,10 +133,10 @@ describe("Prisma schema — estrutura canônica", () => {
     expect(schema).toMatch(/expiresAt\s+DateTime/);
   });
 
-  it("OtpCode: expiraEm, tentativas, bloqueio", () => {
-    expect(schema).toMatch(/expiraEm/);
-    expect(schema).toMatch(/tentativas/);
-    expect(schema).toMatch(/bloqueioAte/);
+  it("login: perfil da conta, código pendente na sessão e ConsentLog ligado à conta", () => {
+    expect(schema).toMatch(/perfil\s+String\?/);
+    expect(schema).toMatch(/mfaPendente\s+Boolean\?/);
+    expect(schema).toMatch(/user\s+User\s+@relation\(fields: \[userId\], references: \[id\], onDelete: Cascade\)/);
   });
 
   it("datasource usa postgresql e env DATABASE_URL", () => {
@@ -145,7 +146,7 @@ describe("Prisma schema — estrutura canônica", () => {
 });
 
 describe("Prisma Client — models gerados", () => {
-  it("PrismaClient expõe prisma.companyProfile/candidateProfile/vacancy/application/otpCode/consentLog", async () => {
+  it("PrismaClient expõe prisma.companyProfile/candidateProfile/vacancy/application/consentLog/user", async () => {
     const { createPrismaClient } = await import("@/lib/prisma");
     // Não conecta: o adapter só abre conexão na primeira query.
     const prisma: any = createPrismaClient("postgresql://u:p@localhost:5432/none");
@@ -160,14 +161,14 @@ describe("Prisma Client — models gerados", () => {
       typeof prisma.company !== "undefined";
     const hasVacancy = typeof prisma.vacancy !== "undefined";
     const hasApplication = typeof prisma.application !== "undefined";
-    const hasOtp = typeof prisma.otpCode !== "undefined" || typeof prisma.otpcode !== "undefined";
+    const hasUser = typeof prisma.user !== "undefined" && typeof prisma.session !== "undefined";
     const hasConsent = typeof prisma.consentLog !== "undefined" || typeof prisma.consentlog !== "undefined";
 
     expect(hasCandidate).toBe(true);
     expect(hasCompany).toBe(true);
     expect(hasVacancy).toBe(true);
     expect(hasApplication).toBe(true);
-    expect(hasOtp).toBe(true);
+    expect(hasUser).toBe(true);
     expect(hasConsent).toBe(true);
 
     await prisma.$disconnect().catch(() => {});
@@ -221,9 +222,4 @@ describe("Regras de negócio — datas e purge", () => {
     expect(isEligibleForPurge("purgado", arquivadoHa30, now)).toBe(false);
   });
 
-  it("OtpCode expira em 5 minutos", () => {
-    const createdAt = new Date("2026-11-07T10:00:00Z");
-    const expiraEm = new Date(createdAt.getTime() + 5 * 60 * 1000);
-    expect(expiraEm.toISOString()).toBe("2026-11-07T10:05:00.000Z");
-  });
 });

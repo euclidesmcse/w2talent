@@ -99,18 +99,14 @@ export function vagaDisponivel(v: Pick<VagaRow, "status" | "expiresAt">, now: Da
   return v.status === "ativa" && v.expiresAt.getTime() > now.getTime();
 }
 
-// ── perfil do candidato (modo de teste do admin até o login) ─────────────
-
-/** O mesmo userId que "Minha ficha" usa ao publicar (hash do e-mail). */
-export async function userIdDoEmail(email: string): Promise<string> {
-  return `teste:${(await sha256Hex(`w2-perfil:${email.trim().toLowerCase()}`)).slice(0, 24)}`;
-}
+// ── perfil do candidato (1.5.5: o da conta logada) ─────────────
 
 export type PerfilEnvio = { id: string; ficha: Ficha; w2: FichaW2 | null; idioma: string };
 
-export async function perfilDoEmail(db: PrismaClient, email: unknown): Promise<PerfilEnvio | null> {
-  if (typeof email !== "string" || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return null;
-  const row = await db.candidateProfile.findUnique({ where: { userId: await userIdDoEmail(email) } });
+/** O perfil publicado em "Minha ficha" pela conta (CandidateProfile.userId = id da conta). */
+export async function perfilDaConta(db: PrismaClient, userId: string): Promise<PerfilEnvio | null> {
+  if (!userId) return null;
+  const row = await db.candidateProfile.findUnique({ where: { userId } });
   if (!row) return null;
   return { id: row.id, ficha: sanitizeFicha(row), w2: sanitizeFichaW2(row.fichaW2), idioma: row.idiomaOriginal };
 }

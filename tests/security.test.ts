@@ -61,17 +61,16 @@ describe("IDOR em /api/applications/batch (como em produção)", () => {
   const env = { ...process.env };
   let proxy: any;
   let route: any;
-  let auth: any;
   const future = () => new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
 
   beforeEach(() => {
     jest.resetModules();
     (process.env as any).NODE_ENV = "production";
-    process.env.JWT_SECRET = "jwt-de-teste";
+    // A sessão do Better Auth vira um cookie de teste (tests/helpers/sessao-mock.ts).
+    jest.doMock("../lib/sessao", () => require("./helpers/sessao-mock").sessaoMock());
     proxy = require("../lib/proxy");
     proxy.clearAllForTests?.();
     route = require("../app/api/applications/batch/route");
-    auth = require("../lib/auth");
     proxy.seedVacancy({ id: "vac-a", companyId: "comp-1", titulo: "A", status: "ativa", expiresAt: future() });
     proxy.seedVacancy({ id: "vac-b", companyId: "comp-1", titulo: "B", status: "ativa", expiresAt: future() });
     proxy.seedCandidate({ userId: "ana", nome: "Ana", titulo: "Cloud", email: "ana@t.com", celular: "+5511999990001" });
@@ -79,9 +78,10 @@ describe("IDOR em /api/applications/batch (como em produção)", () => {
   });
   afterEach(() => {
     process.env = { ...env };
+    jest.dontMock("../lib/sessao");
   });
 
-  const bearer = (userId: string) => ({ authorization: `Bearer ${auth.signJwt({ userId, celular: "+5511999990000" })}` });
+  const bearer = (userId: string) => ({ cookie: require("./helpers/sessao-mock").cookieDeTeste({ id: userId }) });
 
   it("POST sem login, mesmo com candidateId no corpo, é recusado", async () => {
     const res = await route.POST(

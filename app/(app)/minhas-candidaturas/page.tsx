@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
 import { buttonClasses } from "@/components/ui/button";
-import { diaMes, emailDaFichaLocal, podeEnviar, postEnvio } from "@/lib/envio-client";
+import { diaMes, postEnvio } from "@/lib/envio-client";
+import { contaRecusada, ehCandidato, linkEntrar, useConta } from "@/lib/conta-client";
 import { dataHoraCurta, lerCopia, salvarCopia } from "@/lib/pwa-client";
 
 /** Última lista de candidaturas, para ver sem internet (1.5.14). Fica só neste navegador. */
@@ -31,81 +32,52 @@ export default function MinhasCandidaturasPage() {
   const tp = useTranslations("pwa");
   const locale = useLocale();
   const [copiaDe, setCopiaDe] = React.useState<string | null>(null);
-  // 1.5.13: no modo de teste do admin, lê do banco as candidaturas do perfil de "Minha ficha".
-  const [testeEmail, setTesteEmail] = React.useState("");
   const statusLabel = (s: string) => ((STATUS_KEYS as readonly string[]).includes(s) ? t(s as (typeof STATUS_KEYS)[number]) : s);
   const [items, setItems] = React.useState<AppRow[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [needsLogin, setNeedsLogin] = React.useState(false);
-  const [candidateId, setCandidateId] = React.useState<string>("");
+  const conta = useConta();
+  const jaConferiu = React.useRef(false);
 
+  // 1.5.5: as candidaturas da conta logada (candidato). Sem internet, a última lista salva neste navegador.
   React.useEffect(() => {
-    const cid = (() => {
-      try {
-        const raw = typeof window !== "undefined" ? window.localStorage.getItem("w2talent:candidateId") : null;
-        if (raw) return raw.replace(/"/g, "");
-      } catch {}
-      return "";
-    })();
-    if (cid) setCandidateId(cid);
-  }, []);
-
-  const fetchApps = React.useCallback(async () => {
-    setLoading(true);
-    try {
-      const email = emailDaFichaLocal();
-      // Sem internet: mostra a última lista salva deste perfil, com a data.
-      const copia = email && !navigator.onLine ? lerCopia<{ email: string; applications: AppRow[] }>(COPIA_ENVIADAS) : null;
-      if (copia && copia.dados.email === email) {
-        setTesteEmail(email);
-        setNeedsLogin(false);
-        setItems(copia.dados.applications ?? []);
-        setCopiaDe(copia.salvoEm);
-        return;
-      }
-      if (email && (await podeEnviar())) {
-        const r = await postEnvio("enviadas", { email });
-        if (r.ok) {
-          const j = (await r.json()) as { applications: AppRow[] };
-          setTesteEmail(email);
+    if (conta.estado === "carregando") return;
+    let vivo = true;
+    (async () => {
+      if (!navigator.onLine || conta.estado === "erro") {
+        const copia = lerCopia<{ applications: AppRow[] }>(COPIA_ENVIADAS);
+        if (copia) {
+          if (!vivo) return;
           setNeedsLogin(false);
-          setItems(j.applications ?? []);
-          setCopiaDe(null);
-          salvarCopia(COPIA_ENVIADAS, { email, applications: j.applications ?? [] });
+          setItems(copia.dados.applications ?? []);
+          setCopiaDe(copia.salvoEm);
           return;
         }
       }
-      const qs = candidateId ? `?candidateId=${encodeURIComponent(candidateId)}` : "";
-      // tenta api batch listing; fallback para mock
-      const res = await fetch(`/api/applications/batch${qs}`, { method: "GET" }).catch(() => null as any);
-      let data: any = null;
-      setNeedsLogin(res?.status === 401);
-      if (res && res.ok) data = await res.json().catch(() => null);
-      if (data?.applications?.length) {
-        setItems(data.applications);
-      } else if (data?.results?.length) {
-        setItems(
-          data.results.map((r: any) => ({
-            id: r.id ?? r.applicationId,
-            vacancyId: r.vacancyId,
-            proxyThreadId: r.proxyThreadId,
-            status: r.status,
-            origem: "candidaturaLote",
-          }))
-        );
-      } else {
-        setItems([]);
+      if (!ehCandidato(conta)) {
+        if (vivo) { setNeedsLogin(true); setItems([]); }
+        return;
       }
-    } catch {
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [candidateId]);
-
-  React.useEffect(() => {
-    if (candidateId !== undefined) fetchApps();
-  }, [fetchApps, candidateId]);
+      const r = await postEnvio("enviadas", {});
+      if (!vivo) return;
+      if (!r.ok) {
+        // Uma vez por tela: a sessão pode ter acabado; a nova leitura roda este efeito de novo.
+        if ((r.status === 401 || r.status === 403) && !jaConferiu.current) { jaConferiu.current = true; contaRecusada(); }
+        setNeedsLogin(r.status === 401 || r.status === 403);
+        setItems([]);
+        return;
+      }
+      const j = (await r.json()) as { applications: AppRow[] };
+      if (!vivo) return;
+      setNeedsLogin(false);
+      setItems(j.applications ?? []);
+      setCopiaDe(null);
+      salvarCopia(COPIA_ENVIADAS, { applications: j.applications ?? [] });
+    })()
+      .catch(() => { if (vivo) setItems([]); })
+      .finally(() => { if (vivo) setLoading(false); });
+    return () => { vivo = false; };
+  }, [conta]);
 
   if (loading)
     return (
@@ -134,7 +106,7 @@ export default function MinhasCandidaturasPage() {
           <div role="status" className="rounded-card border border-line bg-surface px-6 py-10 text-center">
             <p className="font-semibold">{t("loginTitle")}</p>
             <p className="mt-1 text-sm text-muted">{t("loginBody")}</p>
-            <Link href="/vagas" className={buttonClasses("primary", "md", "mt-4 hover:no-underline hover:text-white")}>
+            <Link href={linkEntrar("/minhas-candidaturas")} className={buttonClasses("primary", "md", "mt-4 hover:no-underline hover:text-white")}>
               {t("loginCta")}
             </Link>
           </div>
@@ -224,7 +196,6 @@ export default function MinhasCandidaturasPage() {
           </>
         )}
         <p className="text-xs text-muted">{t("footnote")}</p>
-        {testeEmail ? <p className="text-xs text-muted">{t("testMode", { email: testeEmail })}</p> : null}
       </main>
     </div>
   );

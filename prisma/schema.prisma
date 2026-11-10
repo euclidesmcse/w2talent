@@ -116,8 +116,8 @@ model CandidateProfile {
   // higiene
   expiresAt   DateTime // now + 180d
   arquivadoEm DateTime? // quando a higiene arquivou; a exclusão definitiva conta 30 dias a partir daqui
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   // busca (1.5.9: vetor do bge-m3; índices HNSW/GIN criados na migração, fora do Prisma)
   searchVector   Unsupported("tsvector")?
@@ -126,7 +126,6 @@ model CandidateProfile {
   embeddingHash  String?
   embeddedAt     DateTime?
 
-  consentLogs  ConsentLog[]
   applications Application[]
   aprovacoes   ApplicationApproval[]
 
@@ -228,30 +227,17 @@ model ApplicationApproval {
 }
 
 // ── OtpCode ──────────────────────────────────────────────────────────
-model OtpCode {
-  id          String    @id @default(cuid())
-  userId      String // celular E.164
-  codigoHash  String
-  codigo      String? // only for testing/debug, not in prod — kept hashed normally
-  expiraEm    DateTime
-  tentativas  Int       @default(0)
-  bloqueioAte DateTime?
-  createdAt   DateTime  @default(now())
-
-  @@index([userId])
-  @@index([expiraEm])
-}
-
 // ── ConsentLog ───────────────────────────────────────────────────────
 model ConsentLog {
-  id        String            @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
-  candidate CandidateProfile? @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  /// 1.5.5: ligado à conta (antes apontava para CandidateProfile.userId e não gravava).
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   versao    Int
   tipo      String // tratamentoBusca | contatoProxy | nudges | iaReescrita
-  texto     String            @db.Text
+  texto     String   @db.Text
   baseLegal String
-  createdAt DateTime          @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
 }
@@ -381,4 +367,84 @@ model QueryEmbedding {
   createdAt DateTime                    @default(now())
 
   @@index([createdAt])
+}
+
+// ── Login (1.5.5): tabelas do Better Auth ───────────────────────────
+// Nomes e campos são os que o Better Auth espera (adaptador Prisma). Ver lib/auth-server.ts.
+
+model User {
+  id               String       @id
+  name             String
+  email            String       @unique
+  emailVerified    Boolean      @default(false)
+  image            String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  twoFactorEnabled Boolean?     @default(false)
+  /// "candidato" | "recrutador"; vazio até a pessoa escolher na primeira entrada (decisão 3).
+  perfil           String?
+  sessions         Session[]
+  accounts         Account[]
+  twoFactors       TwoFactor[]
+  consentLogs      ConsentLog[]
+}
+
+model Session {
+  id          String   @id
+  expiresAt   DateTime
+  token       String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  ipAddress   String?
+  userAgent   String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// true enquanto falta o código do autenticador nesta sessão (login social com autenticador ligado).
+  mfaPendente Boolean? @default(false)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+model TwoFactor {
+  id                      String    @id
+  secret                  String
+  backupCodes             String
+  userId                  String
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified                Boolean?  @default(true)
+  failedVerificationCount Int?      @default(0)
+  lockedUntil             DateTime?
+
+  @@index([secret])
+  @@index([userId])
 }
