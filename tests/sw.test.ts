@@ -26,7 +26,7 @@ describe("service worker: rotas", () => {
   });
 
   it("as quatro telas do D2 (e a inicial) abrem sem internet; outras páginas caem na offline", () => {
-    for (const p of ["/vagas", "/vagas/aprovar", "/minha-ficha", "/minhas-candidaturas", "/", "/offline"]) {
+    for (const p of ["/vagas", "/vagas/aprovar", "/painel", "/minha-ficha", "/minhas-candidaturas", "/", "/offline"]) {
       expect([p, sw.rota(`${O}${p}`, "GET", "navigate", O)]).toEqual([p, "tela"]);
     }
     expect(sw.rota(`${O}/vagas/?q=devops`, "GET", "navigate", O)).toBe("tela");
@@ -59,6 +59,7 @@ describe("service worker: rotas", () => {
       "/": "app/page.tsx",
       "/vagas": "app/vagas/page.tsx",
       "/vagas/aprovar": "app/vagas/aprovar/page.tsx",
+      "/painel": "app/painel/page.tsx",
       "/minha-ficha": "app/minha-ficha/page.tsx",
       "/minhas-candidaturas": "app/(app)/minhas-candidaturas/page.tsx",
       "/offline": "app/offline/page.tsx",

@@ -12,6 +12,7 @@ export const metadata = { robots: { index: false } };
 export default async function OfflinePage() {
   const t = await getTranslations("pwa");
   const telas: Array<[string, string]> = [
+    ["/painel", t("screenPainel")],
     ["/vagas", t("screenVagas")],
     ["/minha-ficha", t("screenFicha")],
     ["/minhas-candidaturas", t("screenMinhas")],
