@@ -63,9 +63,10 @@ export default function PainelPage() {
       .then((j: { publicado?: boolean }) => { if (vivo) setPublicada(j.publicado === true); })
       .catch(() => {});
     postEnvio("enviadas", {})
-      .then((r) => (r.ok ? (r.json() as Promise<{ applications?: { status?: string }[] }>) : null))
-      .then((j) => { if (vivo && j) setApps(contarCandidaturas(j.applications ?? [])); })
-      .catch(() => {});
+      // Sem ficha publicada a rota responde 404 (perfil_nao_publicado): ainda não há candidaturas.
+      .then((r) => (r.ok ? (r.json() as Promise<{ applications?: { status?: string }[] }>) : { applications: [] }))
+      .then((j) => { if (vivo) setApps(contarCandidaturas(j.applications ?? [])); })
+      .catch(() => { if (vivo) setApps(contarCandidaturas([])); });
     return () => { vivo = false; };
   }, [candidato]);
 
@@ -79,7 +80,9 @@ export default function PainelPage() {
         ? t("leadVazia")
         : ficha.faltas.length
           ? t("leadFaltam", { feitos: ficha.feitos, total: ficha.total, n: ficha.faltas.length })
-          : t("leadCompleta");
+          : ficha.etapas.w2
+            ? t("leadW2Pronta")
+            : t("leadCompleta");
 
   const etapas: { chave: string; feito: boolean }[] = ficha
     ? [

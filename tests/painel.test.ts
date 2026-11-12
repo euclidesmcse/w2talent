@@ -58,6 +58,18 @@ describe("resumo da ficha no painel", () => {
   });
 });
 
+describe("competências em linhas, como a Minha ficha edita", () => {
+  it("as linhas (texto + anos) valem mais que o stack guardado", () => {
+    const semStack = { ...fichaCompleta, stack: [] };
+    const r = resumoDaFicha({ passo: "conferir", ficha: semStack, skills: [{ texto: "Kubernetes", anos: 4 }] });
+    expect(r.faltas).not.toContain("stack");
+    // linha sem anos: a competência ainda falta, mesmo com o stack antigo preenchido
+    expect(resumoDaFicha({ passo: "conferir", ficha: fichaCompleta, skills: [{ texto: "Kubernetes", anos: 0 }] }).faltas).toContain("stack");
+    // texto fora da taxonomia fica de fora
+    expect(resumoDaFicha({ passo: "conferir", ficha: semStack, skills: [{ texto: "algo inventado", anos: 3 }] }).faltas).toContain("stack");
+  });
+});
+
 describe("candidaturas no painel", () => {
   it("respondida também conta como vista", () => {
     expect(contarCandidaturas([{ status: "enviado" }, { status: "visualizado" }, { status: "respondido" }, { status: "arquivado" }])).toEqual({
@@ -72,7 +84,7 @@ describe("candidaturas no painel", () => {
 describe("textos do painel", () => {
   const src = fs.readFileSync(path.join(ROOT, "app/painel/page.tsx"), "utf-8");
   // chaves montadas na tela (etapas e números) que o teste do catálogo não enxerga
-  const dinamicas = ["etapaCv", "etapaCampos", "etapaW2", "etapaPublicada", "enviadas", "vistas", "respondidas"];
+  const dinamicas = ["leadW2Pronta", "etapaCv", "etapaCampos", "etapaW2", "etapaPublicada", "enviadas", "vistas", "respondidas"];
 
   it.each(["pt-BR", "en", "es"])("%s tem todas as chaves do painel", (loc) => {
     const cat = JSON.parse(fs.readFileSync(path.join(ROOT, "messages", `${loc}.json`), "utf-8"));

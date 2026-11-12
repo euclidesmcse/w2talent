@@ -4,6 +4,7 @@
  * mínima está pronto e o que falta para publicar. Funções puras: testadas sem navegador.
  */
 import { CAMPOS_MINIMOS, camposFaltando, sanitizeFicha, sanitizeFichaW2, type CampoMinimo } from "./ficha";
+import { normalizeSkill } from "./taxonomy";
 
 export type EtapaPainel = "cv" | "campos" | "w2" | "publicada";
 
@@ -19,7 +20,16 @@ export type ResumoFicha = {
 /** O rascunho como a "Minha ficha" guarda em localStorage (w2talent:ficha). Aceita qualquer coisa. */
 export function resumoDaFicha(rascunho: unknown): ResumoFicha {
   const o = (rascunho && typeof rascunho === "object" ? rascunho : {}) as Record<string, unknown>;
-  const ficha = sanitizeFicha(o.ficha);
+  // A "Minha ficha" edita as competências em linhas (texto + anos) e só monta a ficha ao publicar:
+  // as linhas valem mais que o stack guardado, como na tela (montarFicha).
+  const bruta = (o.ficha && typeof o.ficha === "object" ? { ...(o.ficha as Record<string, unknown>) } : {}) as Record<string, unknown>;
+  if (Array.isArray(o.skills)) {
+    bruta.stack = (o.skills as unknown[])
+      .map((r) => (r && typeof r === "object" ? (r as { texto?: unknown; anos?: unknown }) : {}))
+      .map((r) => ({ skillId: typeof r.texto === "string" ? normalizeSkill(r.texto) : null, anos: r.anos }))
+      .filter((r) => r.skillId);
+  }
+  const ficha = sanitizeFicha(bruta);
   const faltas = camposFaltando(ficha);
   const total = CAMPOS_MINIMOS.length;
   const passou = o.passo === "conferir" || o.passo === "w2";
