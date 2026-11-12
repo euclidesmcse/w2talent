@@ -164,7 +164,8 @@ function spanOf(span: Tok[]): Span {
   return { source: span.map((t) => t.text).join(" "), start: span[0].start, end: span[span.length - 1].end };
 }
 
-function hasOr(q: string): boolean {
+/** Busca com "or": vale o texto inteiro, sem chips. */
+export function hasOr(q: string): boolean {
   return /(^|\s)or(\s|$)/i.test(q);
 }
 

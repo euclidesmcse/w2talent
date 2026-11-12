@@ -13,7 +13,7 @@ import { CaixaDeBusca } from "@/components/intent-chips";
 import { AreasDeBusca } from "@/components/areas-busca";
 import { acrescentarNaBusca, semCriterioRepetido } from "@/lib/areas";
 import { getSkill } from "@/lib/taxonomy";
-import { parseQueryIntent, removeChipFromQuery, type IntentChip } from "@/lib/query-intent";
+import { hasOr, parseQueryIntent, removeChipFromQuery, type IntentChip } from "@/lib/query-intent";
 import { enviadasDoPerfil } from "@/lib/envio-client";
 import { ehCandidato, linkEntrar, useConta } from "@/lib/conta-client";
 import { useRouter } from "next/navigation";
@@ -103,7 +103,8 @@ export default function VagasPage() {
   const intent = React.useMemo(() => parseQueryIntent(q), [q]);
   const submitSearch = () => runSearch(intent.chips.length ? acrescentarNaBusca(q, draft) : draft);
   const removeChip = (chip: IntentChip) => runSearch(removeChipFromQuery(q, chip));
-  const addSkill = (id: string) => runSearch(acrescentarNaBusca(q, getSkill(id)?.label ?? id));
+  // Busca com "or" não vira chips: a área só mostra o aviso (marcar não teria como desmarcar).
+  const addSkill = (id: string) => { if (!hasOr(q)) runSearch(acrescentarNaBusca(q, getSkill(id)?.label ?? id)); };
   const removeSkill = (id: string) => {
     const chip = intent.chips.find((c) => c.kind === "skill" && c.value === id);
     if (chip) removeChip(chip);
@@ -202,7 +203,7 @@ export default function VagasPage() {
         </div>
       </section>
       <div className="mx-auto max-w-page px-4 pt-4 md:px-6">
-        <AreasDeBusca skillsNaBusca={intent.skills} onAdicionar={addSkill} onTirar={removeSkill} disabled={!online} />
+        <AreasDeBusca skillsNaBusca={intent.skills} onAdicionar={addSkill} onTirar={removeSkill} disabled={!online} comOu={hasOr(q)} />
       </div>
 
       <div className="mx-auto max-w-page px-4 pt-4 pb-24 md:px-6">

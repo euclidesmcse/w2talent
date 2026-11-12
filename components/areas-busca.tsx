@@ -15,12 +15,15 @@ export function AreasDeBusca({
   onAdicionar,
   onTirar,
   disabled,
+  comOu,
 }: {
   /** Competências que a busca atual já tem (ids da taxonomia). */
   skillsNaBusca: string[];
   onAdicionar: (skillId: string) => void;
   onTirar: (skillId: string) => void;
   disabled?: boolean;
+  /** Busca com "or" não vira chips: marcar uma competência não teria como ser desfeito aqui. */
+  comOu?: boolean;
 }) {
   const t = useTranslations("areas");
   const [aberta, setAberta] = React.useState<AreaId | null>(null);
@@ -54,7 +57,7 @@ export function AreasDeBusca({
       </div>
       {area ? (
         <div id="area-competencias" className="flex flex-col gap-2 rounded-card border border-line bg-surface p-4" data-testid="area-competencias">
-          <p className="text-[13px] text-muted">{t("escolha", { area: t(area.id) })}</p>
+          <p className="text-[13px] text-muted" data-testid="area-aviso">{comOu ? t("comOu") : t("escolha", { area: t(area.id) })}</p>
           <div className="flex flex-wrap gap-2">
             {area.skills.map((id) => {
               const marcada = skillsNaBusca.includes(id);
@@ -63,7 +66,7 @@ export function AreasDeBusca({
                   key={id}
                   type="button"
                   aria-pressed={marcada}
-                  disabled={disabled}
+                  disabled={disabled || comOu}
                   data-skill={id}
                   onClick={() => (marcada ? onTirar(id) : onAdicionar(id))}
                   className={cn(

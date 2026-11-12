@@ -768,6 +768,7 @@
     "seguranca": "Segurança",
     "qa": "QA e testes",
     "erp": "ERP e CRM",
-    "produto": "Produto e agilidade"
+    "produto": "Produto e agilidade",
+    "comOu": "Sua busca usa \"or\". Para marcar competências aqui, tire o \"or\" da busca."
   }
 }

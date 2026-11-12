@@ -2,7 +2,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { AREAS, acrescentarNaBusca, semCriterioRepetido, skillsDaAreaNaBusca } from "../lib/areas";
-import { parseQueryIntent, removeChipFromQuery } from "../lib/query-intent";
+import { hasOr, parseQueryIntent, removeChipFromQuery } from "../lib/query-intent";
 import { getSkill } from "../lib/taxonomy";
 
 const ROOT = path.join(__dirname, "..");
@@ -42,6 +42,7 @@ describe("áreas da busca", () => {
   it.each(["pt-BR", "en", "es"])("%s tem o nome de toda área", (loc) => {
     const cat = JSON.parse(fs.readFileSync(path.join(ROOT, "messages", `${loc}.json`), "utf-8"));
     for (const a of AREAS) expect([loc, a.id, typeof cat.areas[a.id]]).toEqual([loc, a.id, "string"]);
+    for (const k of ["title", "escolha", "comOu"]) expect([loc, k, typeof cat.areas[k]]).toEqual([loc, k, "string"]);
   });
 });
 
@@ -70,5 +71,15 @@ describe("critério repetido não fica escondido", () => {
       const chips = parseQueryIntent(limpo).chips;
       expect(chips.map((c) => c.source).join(" ")).toBe(limpo);
     }
+  });
+});
+
+describe("busca com or", () => {
+  it("não vira chips, então a área não oferece marcar", () => {
+    expect(hasOr("java or python")).toBe(true);
+    expect(parseQueryIntent("java or python").chips).toEqual([]);
+    expect(hasOr("oracle remoto")).toBe(false);
+    const src = fs.readFileSync(path.join(ROOT, "components/areas-busca.tsx"), "utf-8");
+    expect(src).toMatch(/disabled=\{disabled \|\| comOu\}/);
   });
 });

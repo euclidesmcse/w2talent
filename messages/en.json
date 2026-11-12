@@ -768,6 +768,7 @@
     "seguranca": "Security",
     "qa": "QA and testing",
     "erp": "ERP and CRM",
-    "produto": "Product and agile"
+    "produto": "Product and agile",
+    "comOu": "Your search uses \"or\". To pick skills here, remove \"or\" from the search."
   }
 }
