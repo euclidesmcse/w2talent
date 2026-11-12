@@ -115,7 +115,8 @@
     "untitled": "Empleo sin título",
     "detailFallback": "Detalles del empleo",
     "sentOn": "Enviada el {date}",
-    "onlyCandidates": "Las postulaciones son para cuentas de candidato. Esta cuenta es de reclutador."
+    "onlyCandidates": "Las postulaciones son para cuentas de candidato. Esta cuenta es de reclutador.",
+    "searchMore": "Otro término"
   },
   "candidatos": {
     "title": "Candidatos",
@@ -752,5 +753,21 @@
     "verCandidaturas": "Ver postulaciones",
     "entrar": "Iniciar sesión",
     "leadW2Pronta": "Tu ficha y la Ficha W2 están listas. Falta publicar."
+  },
+  "areas": {
+    "title": "Áreas",
+    "escolha": "Competencias más pedidas en {area}. Marca para incluir en la búsqueda.",
+    "cloud": "Cloud",
+    "devops": "DevOps",
+    "backend": "Backend",
+    "frontend": "Frontend",
+    "mobile": "Mobile",
+    "dados": "Datos",
+    "ia": "IA y ML",
+    "bancos": "Bases de datos",
+    "seguranca": "Seguridad",
+    "qa": "QA y pruebas",
+    "erp": "ERP y CRM",
+    "produto": "Producto y agilidad"
   }
 }

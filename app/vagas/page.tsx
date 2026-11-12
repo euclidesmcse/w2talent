@@ -2,19 +2,27 @@
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
-import { Button, Input } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { VacancyTable } from "@/components/vacancy-table";
 import { VacancyCards } from "@/components/vacancy-cards";
 import { DetailModal } from "@/components/detail-modal";
 import { BatchBar } from "@/components/batch-bar";
 import { EmptyState } from "@/components/empty-state";
 import { selectionStore } from "@/lib/selection-store";
-import { IntentChips } from "@/components/intent-chips";
-import { removeChipFromQuery, type IntentChip } from "@/lib/query-intent";
+import { CaixaDeBusca } from "@/components/intent-chips";
+import { AreasDeBusca } from "@/components/areas-busca";
+import { acrescentarNaBusca } from "@/lib/areas";
+import { getSkill } from "@/lib/taxonomy";
+import { parseQueryIntent, removeChipFromQuery, type IntentChip } from "@/lib/query-intent";
 import { enviadasDoPerfil } from "@/lib/envio-client";
 import { ehCandidato, linkEntrar, useConta } from "@/lib/conta-client";
 import { useRouter } from "next/navigation";
 import { dataHoraCurta, lerCopia, salvarCopia, useOnline } from "@/lib/pwa-client";
+
+/** O campo fica vazio quando a busca virou chips (eles aparecem dentro da caixa); senão, mostra o texto. */
+function campoDaBusca(q: string): string {
+  return parseQueryIntent(q).chips.length ? "" : q;
+}
 
 /** Últimos resultados de busca, para abrir a tela sem internet (1.5.14). Só vagas públicas, nada pessoal. */
 const COPIA_BUSCA = "w2talent:ultima-busca";
@@ -38,7 +46,6 @@ export default function VagasPage() {
   const [emptyCTA, setEmptyCTA] = React.useState<string | null>(null);
   const [loaded, setLoaded] = React.useState(false);
   const [ready, setReady] = React.useState(false);
-  const [entendeu, setEntendeu] = React.useState<IntentChip[]>([]);
   const [selected, setSelected] = React.useState<string[]>(() => {
     try { return selectionStore.getState().selectedIds ?? []; } catch { return []; }
   });
@@ -75,7 +82,7 @@ export default function VagasPage() {
   React.useEffect(() => {
     try {
       const initial = (new URLSearchParams(window.location.search).get("q") ?? "").trim().replace(/\s+/g, " ");
-      if (initial) { setDraft(initial); setQ(initial); }
+      if (initial) { setDraft(campoDaBusca(initial)); setQ(initial); }
     } catch {}
     setReady(true);
   }, []);
@@ -83,15 +90,22 @@ export default function VagasPage() {
   // Busca ao apertar Enter ou "Buscar" (decisão de 09/11: os chips não piscam enquanto digita).
   const runSearch = (next: string) => {
     const clean = next.trim().replace(/\s+/g, " ");
-    setDraft(clean); setQ(clean); setPage(1);
+    setDraft(campoDaBusca(clean)); setQ(clean); setPage(1);
     try {
       const url = new URL(window.location.href);
       if (clean) url.searchParams.set("q", clean); else url.searchParams.delete("q");
       window.history.replaceState(null, "", url.toString());
     } catch {}
   };
-  const submitSearch = (e: React.FormEvent) => { e.preventDefault(); runSearch(draft); };
+  // Com chips na caixa, o campo traz só o termo novo: ele entra junto com o que já estava buscado.
+  const intent = React.useMemo(() => parseQueryIntent(q), [q]);
+  const submitSearch = () => runSearch(intent.chips.length ? acrescentarNaBusca(q, draft) : draft);
   const removeChip = (chip: IntentChip) => runSearch(removeChipFromQuery(q, chip));
+  const addSkill = (id: string) => runSearch(acrescentarNaBusca(q, getSkill(id)?.label ?? id));
+  const removeSkill = (id: string) => {
+    const chip = intent.chips.find((c) => c.kind === "skill" && c.value === id);
+    if (chip) removeChip(chip);
+  };
 
   const fetchPage = React.useCallback(async (query: string, p: number) => {
     const lang = locale;
@@ -111,7 +125,7 @@ export default function VagasPage() {
       setCopiaDe(copia.salvoEm);
       // A busca mostrada passa a ser a da cópia (texto, página e endereço), para Buscar/voltar a rede usarem a mesma.
       if (copia.dados.q !== query || copia.dados.page !== p) {
-        setDraft(copia.dados.q); setQ(copia.dados.q); setPage(copia.dados.page || 1);
+        setDraft(campoDaBusca(copia.dados.q)); setQ(copia.dados.q); setPage(copia.dados.page || 1);
         try {
           const url = new URL(window.location.href);
           if (copia.dados.q) url.searchParams.set("q", copia.dados.q); else url.searchParams.delete("q");
@@ -124,7 +138,6 @@ export default function VagasPage() {
     setTotalPages(data.totalPages ?? 1);
     setSuggestion(data.suggestion ?? null);
     setEmptyCTA(data.emptyCTA ?? null);
-    setEntendeu(Array.isArray(data.entendeu) ? data.entendeu : []);
     setLoaded(true);
   }, [locale]);
 
@@ -172,18 +185,10 @@ export default function VagasPage() {
           <div className="flex min-w-0 flex-col gap-1">
             <h1 className="text-[28px] font-semibold leading-tight md:text-[32px]">{tr("vagas.title")}</h1>
             <p className="voltagem-apoio text-[15px]">{tr("vagas.subtitle")}</p>
-            <form role="search" onSubmit={submitSearch} className="mt-4 flex flex-wrap items-center gap-3">
-              <Input
-                type="search"
-                aria-label={tr("vagas.searchLabel")}
-                placeholder={tr("vagas.searchPlaceholder")}
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                className="min-w-0 max-w-[560px] flex-[1_1_220px] !rounded-pill !border-white !px-4 md:!h-11"
-              />
-              <Button type="submit" variant="inverse" size="md" className="md:!h-11" disabled={!online} title={online ? undefined : tr("pwa.needsInternet")}>{tr("common.search")}</Button>
-              <span aria-live="polite" className="voltagem-apoio basis-full text-[13px] lg:hidden">{searching && loaded ? tr("common.searching") : entendeu.length ? "" : tr("vagas.count", { count: total })}</span>
-            </form>
+            <CaixaDeBusca chips={intent.chips} draft={draft} onDraft={setDraft} onSubmit={submitSearch} onRemove={removeChip} disabled={!online} disabledTitle={tr("pwa.needsInternet")} />
+            <span aria-live="polite" className={`voltagem-apoio text-[13px] ${intent.chips.length ? "" : "lg:hidden"}`}>
+              {searching && loaded ? tr("common.searching") : intent.chips.length ? (items.some((it) => it.match != null) ? tr("match.countByMatch", { count: total }) : tr("match.countByRelevance", { count: total })) : tr("vagas.count", { count: total })}
+            </span>
           </div>
           {/* Painel claro sobre o azul: o total da busca, em destaque (some no celular, onde a contagem fica na linha acima) */}
           <div aria-live="polite" className="hidden rounded-card bg-surface p-5 text-ink lg:flex lg:flex-col lg:gap-1 relevo-caixa">
@@ -195,7 +200,7 @@ export default function VagasPage() {
         </div>
       </section>
       <div className="mx-auto max-w-page px-4 pt-4 md:px-6">
-        <IntentChips chips={entendeu} total={total} byMatch={items.some((it) => it.match != null)} onRemove={removeChip} />
+        <AreasDeBusca skillsNaBusca={intent.skills} onAdicionar={addSkill} onTirar={removeSkill} disabled={!online} />
       </div>
 
       <div className="mx-auto max-w-page px-4 pt-4 pb-24 md:px-6">

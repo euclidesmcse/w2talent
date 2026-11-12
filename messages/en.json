@@ -115,7 +115,8 @@
     "untitled": "Untitled job",
     "detailFallback": "Job details",
     "sentOn": "Sent on {date}",
-    "onlyCandidates": "Applications are for candidate accounts. This is a recruiter account."
+    "onlyCandidates": "Applications are for candidate accounts. This is a recruiter account.",
+    "searchMore": "Add another term"
   },
   "candidatos": {
     "title": "Candidates",
@@ -752,5 +753,21 @@
     "verCandidaturas": "See applications",
     "entrar": "Sign in",
     "leadW2Pronta": "Your profile and W2 Profile are ready. Publish to finish."
+  },
+  "areas": {
+    "title": "Areas",
+    "escolha": "Most requested skills in {area}. Select to add to the search.",
+    "cloud": "Cloud",
+    "devops": "DevOps",
+    "backend": "Backend",
+    "frontend": "Frontend",
+    "mobile": "Mobile",
+    "dados": "Data",
+    "ia": "AI and ML",
+    "bancos": "Databases",
+    "seguranca": "Security",
+    "qa": "QA and testing",
+    "erp": "ERP and CRM",
+    "produto": "Product and agile"
   }
 }
