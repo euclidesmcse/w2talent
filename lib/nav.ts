@@ -14,6 +14,7 @@ export const NAV: Record<Area, NavLink[]> = {
     { href: "/candidatos", key: "recrutadores", shortKey: "recrutadoresCurto" },
   ],
   candidato: [
+    { href: "/painel", key: "painel" },
     { href: "/vagas", key: "vagas" },
     { href: "/minha-ficha", key: "minhaFicha", shortKey: "minhaFichaCurto" },
     { href: "/minhas-candidaturas", key: "minhasCandidaturas", shortKey: "minhasCandidaturasCurto" },
@@ -35,6 +36,7 @@ export const AREA_SWITCH: Partial<Record<Area, NavLink>> = {
 const PREFIXES: [string, Area][] = [
   ["/admin", "admin"],
   ["/candidatos", "recrutador"],
+  ["/painel", "candidato"],
   ["/vagas", "candidato"],
   ["/minha-ficha", "candidato"],
   ["/minhas-candidaturas", "candidato"],

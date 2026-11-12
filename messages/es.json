@@ -27,7 +27,8 @@
     "paraCandidatos": "Para candidatos",
     "areaRecrutadores": "Reclutadores",
     "areaAdmin": "Admin",
-    "ia": "IA"
+    "ia": "IA",
+    "painel": "Panel"
   },
   "lang": {
     "label": "Idioma",
@@ -641,7 +642,8 @@
     "retry": "Intentar de nuevo",
     "savedCopy": "Sin conexión: esta es la lista guardada el {date}.",
     "savedSearch": "Sin conexión: estos son los resultados guardados el {date}.",
-    "reviewOffline": "La revisión necesita internet para verificar la versión actual de cada vacante. Tus vacantes seleccionadas siguen guardadas."
+    "reviewOffline": "La revisión necesita internet para verificar la versión actual de cada vacante. Tus vacantes seleccionadas siguen guardadas.",
+    "screenPainel": "Panel"
   },
   "conta": {
     "signIn": "Iniciar sesión",
@@ -715,5 +717,39 @@
     "mfaRequiredBody": "Para buscar candidatos, activa el autenticador. Protege los datos de las personas que ves.",
     "signOutError": "No se pudo cerrar sesión. Revisa la conexión e inténtalo de nuevo.",
     "errorTooMany": "Demasiados intentos hoy. Inténtalo de nuevo mañana."
+  },
+  "painel": {
+    "title": "Tu panel",
+    "titleNome": "Hola, {nome}",
+    "leadVazia": "Empieza por tu ficha: sube tu CV y la IA completa casi todo.",
+    "leadFaltam": "Tu ficha tiene {feitos} de {total} ítems. {n, plural, one {Falta # para publicar.} other {Faltan # para publicar.}}",
+    "leadCompleta": "Tu ficha está completa. Falta generar la Ficha W2 y publicar.",
+    "leadPublicada": "Tu ficha está publicada y aparece en la búsqueda de los reclutadores.",
+    "fichaTitle": "Tu ficha",
+    "progressoLabel": "Ítems obligatorios de la ficha completados",
+    "progresso": "{feitos} de {total} ítems obligatorios",
+    "etapaCv": "CV enviado y leído",
+    "etapaCampos": "Ítems obligatorios revisados",
+    "etapaW2": "Ficha W2 generada",
+    "etapaPublicada": "Ficha publicada",
+    "feito": "hecho",
+    "pendente": "pendiente",
+    "comecarFicha": "Empezar la ficha",
+    "continuarFicha": "Continuar la ficha",
+    "faltaTitle": "Qué falta para publicar",
+    "faltaLead": "Sin estos ítems la ficha no se puede publicar.",
+    "faltaNada": "No falta nada. Todos los ítems obligatorios están completos.",
+    "preencher": "Completar en Mi ficha",
+    "enviosTitle": "Tus postulaciones",
+    "enviadas": "Enviadas",
+    "vistas": "Vistas",
+    "respondidas": "Respondidas",
+    "entrarParaVer": "Inicia sesión como candidato para ver tus postulaciones.",
+    "selecionadas": "{n, plural, one {# vacante seleccionada esperando tu aprobación.} other {# vacantes seleccionadas esperando tu aprobación.}}",
+    "nenhumaSelecionada": "Ninguna vacante seleccionada ahora.",
+    "revisar": "Revisar y aprobar",
+    "buscar": "Buscar vacantes",
+    "verCandidaturas": "Ver postulaciones",
+    "entrar": "Iniciar sesión"
   }
 }

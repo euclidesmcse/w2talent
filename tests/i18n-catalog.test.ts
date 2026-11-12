@@ -30,6 +30,7 @@ describe("catálogos de idioma", () => {
       "app/vagas/aprovar/page.tsx",
       "app/candidatos/page.tsx",
       "app/(app)/minhas-candidaturas/page.tsx",
+      "app/painel/page.tsx",
       "components/vacancy-table.tsx",
       "components/vacancy-cards.tsx",
       "components/candidate-table.tsx",

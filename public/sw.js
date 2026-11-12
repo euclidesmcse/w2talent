@@ -17,14 +17,14 @@
  */
 
 /* eslint-disable no-restricted-globals */
-var VERSAO = "w2-1";
+var VERSAO = "w2-2";
 var CACHE_ESTATICO = VERSAO + "-estatico";
 var CACHE_TELAS = VERSAO + "-telas";
 var MAX_ESTATICOS = 400;
 
 var OFFLINE = "/offline";
 // D2: telas que abrem sem internet com o que está salvo no aparelho.
-var TELAS_OFFLINE = ["/", "/vagas", "/vagas/aprovar", "/minha-ficha", "/minhas-candidaturas", OFFLINE];
+var TELAS_OFFLINE = ["/", "/vagas", "/vagas/aprovar", "/painel", "/minha-ficha", "/minhas-candidaturas", OFFLINE];
 var PRECACHE = [OFFLINE, "/manifest.json", "/icons/icon.svg", "/icons/icon-192.png", "/icons/apple-touch-icon.png"];
 var FONTES = ["fonts.googleapis.com", "fonts.gstatic.com"];
 
