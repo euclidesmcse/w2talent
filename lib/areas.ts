@@ -62,14 +62,22 @@ export function semCriterioRepetido(q: string): string {
     const chips = parseQueryIntent(atual).chips.filter((c) => c.kind !== "texto" && c.kind !== "idioma");
     let mudou = false;
     for (const c of chips) {
-      const sem = removeChipFromQuery(atual, c);
+      // Tira o chip visível pelo trecho exato e guarda onde ficou a emenda, para achar o repetido
+      // pela posição (nunca por busca de texto: "Java" não pode cortar "JavaScript").
+      const esq = atual.slice(0, c.start).trimEnd();
+      const dir = atual.slice(c.end).trimStart();
+      const sep = esq && dir ? 1 : 0;
+      const sem = esq + (sep ? " " : "") + dir;
       const repetido = parseQueryIntent(sem).chips.find((d) => mesmoCriterio(c, d));
       if (!repetido) continue;
-      // o chip visível fica; o repetido (escondido) sai
-      const i = atual.indexOf(repetido.source, c.end);
-      const j = i >= 0 ? i : atual.indexOf(repetido.source);
-      if (j < 0) continue;
-      atual = (atual.slice(0, j) + " " + atual.slice(j + repetido.source.length)).replace(/\s+/g, " ").trim();
+      const iniDir = esq.length + sep;
+      const paraAtual = (p: number) => (p >= iniDir ? p - iniDir + (atual.length - dir.length) : p);
+      // trecho que atravessa a emenda não existe no texto original
+      if (repetido.start < iniDir && repetido.end > esq.length) continue;
+      const ini = paraAtual(repetido.start);
+      const fim = paraAtual(repetido.end);
+      if (atual.slice(ini, fim) !== repetido.source) continue;
+      atual = (atual.slice(0, ini) + " " + atual.slice(fim)).replace(/\s+/g, " ").trim();
       mudou = true;
       break;
     }

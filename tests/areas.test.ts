@@ -58,6 +58,10 @@ describe("critério repetido não fica escondido", () => {
     expect(semCriterioRepetido("React React")).toBe("React");
     expect(semCriterioRepetido("react node remoto")).toBe("react node remoto");
     expect(semCriterioRepetido("")).toBe("");
+    // o repetido sai pela posição, sem cortar uma competência mais longa que começa igual
+    expect(semCriterioRepetido("Java JavaScript Java")).toBe("Java JavaScript");
+    expect(semCriterioRepetido("SQL SQL Server SQL")).toBe("SQL SQL Server");
+    expect(semCriterioRepetido("remoto react presencial")).toBe("remoto react");
   });
 
   it("todo termo que sobra aparece como chip", () => {
