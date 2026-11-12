@@ -99,10 +99,12 @@ export default function PainelPage() {
             <h1 className="text-[28px] font-semibold leading-tight md:text-[32px]">
               {primeiroNome && candidato ? t("titleNome", { nome: primeiroNome }) : t("title")}
             </h1>
-            <p className="voltagem-apoio min-h-[1.5em] text-[15px]" aria-live="polite">{resumo}</p>
+            <p className="voltagem-apoio min-h-[3em] text-[15px] md:min-h-[1.5em]" aria-live="polite">{resumo}</p>
           </div>
         </section>
 
+        {/* Os cartões só aparecem depois de ler a ficha deste navegador: aparecer não desloca a tela, trocar de conteúdo sim. */}
+        {ficha ? (
         <div className="mx-auto grid max-w-page gap-4 px-4 py-6 md:px-6 lg:grid-cols-[5fr_7fr]">
           {/* Sua ficha: progresso e as quatro etapas da "Minha ficha" */}
           <section aria-labelledby="painel-ficha" className="flex flex-col gap-4 self-start rounded-card border border-line bg-surface p-5">
@@ -195,6 +197,7 @@ export default function PainelPage() {
             </section>
           </div>
         </div>
+        ) : null}
       </main>
     </div>
   );
