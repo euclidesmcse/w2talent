@@ -396,6 +396,12 @@ export async function listarEnviadas(db: PrismaClient, candidateId: string): Pro
   }));
 }
 
+/** Quantas candidaturas o perfil tem em cada status, no histórico todo (a lista acima para em 200). */
+export async function contarEnviadasPorStatus(db: PrismaClient, candidateId: string): Promise<{ status: string; n: number }[]> {
+  const g = await db.application.groupBy({ by: ["status"], where: { candidateId, origem: "candidaturaLote" }, _count: { _all: true } });
+  return g.map((r) => ({ status: r.status, n: r._count._all }));
+}
+
 /** Monta o e-mail da candidatura para a empresa (só o que a Ficha W2 mostra; sem contato). */
 export function mensagemCandidatura(perfil: PerfilEnvio, e: EmailCandidatura): EmailMessage | null {
   const to = e.vaga.company.emailContato;

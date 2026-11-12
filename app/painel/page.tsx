@@ -13,7 +13,7 @@ import { cn } from "@/components/ui/cn";
 import { postEnvio } from "@/lib/envio-client";
 import { ehCandidato, linkEntrar, useConta } from "@/lib/conta-client";
 import { selectionStore } from "@/lib/selection-store";
-import { contarCandidaturas, resumoDoTexto, type ResumoFicha } from "@/lib/painel";
+import { contarCandidaturas, resumoDoTexto, type ContagemCandidaturas, type ResumoFicha } from "@/lib/painel";
 
 const CHAVE_FICHA = "w2talent:ficha";
 
@@ -38,7 +38,7 @@ export default function PainelPage() {
   const candidato = ehCandidato(conta);
   const [ficha, setFicha] = React.useState<ResumoFicha | null>(null);
   const [publicada, setPublicada] = React.useState<boolean | null>(null);
-  const [apps, setApps] = React.useState<{ total: number; vistas: number; respondidas: number } | null>(null);
+  const [apps, setApps] = React.useState<ContagemCandidaturas | null>(null);
   const [selecionadas, setSelecionadas] = React.useState(0);
 
   React.useEffect(() => {
@@ -64,8 +64,9 @@ export default function PainelPage() {
       .catch(() => {});
     postEnvio("enviadas", {})
       // Sem ficha publicada a rota responde 404 (perfil_nao_publicado): ainda não há candidaturas.
-      .then((r) => (r.ok ? (r.json() as Promise<{ applications?: { status?: string }[] }>) : { applications: [] }))
-      .then((j) => { if (vivo) setApps(contarCandidaturas(j.applications ?? [])); })
+      .then((r) => (r.ok ? (r.json() as Promise<{ applications?: { status?: string }[]; contagem?: ContagemCandidaturas }>) : { applications: [] }))
+      // contagem cobre o histórico todo; a lista para nas 200 mais recentes.
+      .then((j) => { if (vivo) setApps(j.contagem ?? contarCandidaturas(j.applications ?? [])); })
       .catch(() => { if (vivo) setApps(contarCandidaturas([])); });
     return () => { vivo = false; };
   }, [candidato]);

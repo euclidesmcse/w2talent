@@ -2,7 +2,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { CAMPOS_MINIMOS } from "../lib/ficha";
-import { contarCandidaturas, resumoDaFicha, resumoDoTexto } from "../lib/painel";
+import { contarCandidaturas, contarPorStatus, resumoDaFicha, resumoDoTexto } from "../lib/painel";
 
 const ROOT = path.join(__dirname, "..");
 
@@ -78,6 +78,14 @@ describe("candidaturas no painel", () => {
       respondidas: 1,
     });
     expect(contarCandidaturas([])).toEqual({ total: 0, vistas: 0, respondidas: 0 });
+  });
+
+  it("contagem por status cobre o histórico todo, além das 200 da lista", () => {
+    expect(contarPorStatus([{ status: "enviado", n: 250 }, { status: "visualizado", n: 30 }, { status: "respondido", n: 5 }])).toEqual({
+      total: 285,
+      vistas: 35,
+      respondidas: 5,
+    });
   });
 });
 

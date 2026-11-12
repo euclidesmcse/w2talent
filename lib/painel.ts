@@ -54,13 +54,21 @@ export function resumoDoTexto(raw: string | null): ResumoFicha {
 }
 
 /** Contagem das candidaturas por andamento (o que a tela mostra em números). */
-export function contarCandidaturas(apps: { status?: string }[]): { total: number; vistas: number; respondidas: number } {
+export type ContagemCandidaturas = { total: number; vistas: number; respondidas: number };
+
+/** Números do painel a partir da contagem por status (respondida também foi vista pela empresa). */
+export function contarPorStatus(grupos: { status?: string; n: number }[]): ContagemCandidaturas {
+  let total = 0;
   let vistas = 0;
   let respondidas = 0;
-  for (const a of apps) {
-    // respondida também foi vista pela empresa
-    if (a.status === "respondido") respondidas++;
-    if (a.status === "respondido" || a.status === "visualizado") vistas++;
+  for (const g of grupos) {
+    total += g.n;
+    if (g.status === "respondido") respondidas += g.n;
+    if (g.status === "respondido" || g.status === "visualizado") vistas += g.n;
   }
-  return { total: apps.length, vistas, respondidas };
+  return { total, vistas, respondidas };
+}
+
+export function contarCandidaturas(apps: { status?: string }[]): ContagemCandidaturas {
+  return contarPorStatus(apps.map((a) => ({ status: a.status, n: 1 })));
 }
