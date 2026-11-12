@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/empty-state";
 import { selectionStore } from "@/lib/selection-store";
 import { CaixaDeBusca } from "@/components/intent-chips";
 import { AreasDeBusca } from "@/components/areas-busca";
-import { acrescentarNaBusca } from "@/lib/areas";
+import { acrescentarNaBusca, semCriterioRepetido } from "@/lib/areas";
 import { getSkill } from "@/lib/taxonomy";
 import { parseQueryIntent, removeChipFromQuery, type IntentChip } from "@/lib/query-intent";
 import { enviadasDoPerfil } from "@/lib/envio-client";
@@ -82,14 +82,16 @@ export default function VagasPage() {
   React.useEffect(() => {
     try {
       const initial = (new URLSearchParams(window.location.search).get("q") ?? "").trim().replace(/\s+/g, " ");
-      if (initial) { setDraft(campoDaBusca(initial)); setQ(initial); }
+      const inicial = semCriterioRepetido(initial);
+      if (inicial) { setDraft(campoDaBusca(inicial)); setQ(inicial); }
     } catch {}
     setReady(true);
   }, []);
 
   // Busca ao apertar Enter ou "Buscar" (decisão de 09/11: os chips não piscam enquanto digita).
   const runSearch = (next: string) => {
-    const clean = next.trim().replace(/\s+/g, " ");
+    // Critério repetido ("remoto presencial") sairia escondido: não vira chip e o campo fica vazio.
+    const clean = semCriterioRepetido(next);
     setDraft(campoDaBusca(clean)); setQ(clean); setPage(1);
     try {
       const url = new URL(window.location.href);

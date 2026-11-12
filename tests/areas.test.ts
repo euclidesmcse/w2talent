@@ -1,7 +1,7 @@
 // Áreas da busca de vagas (ideia do portal emagine, aprovada em 2026-11-12).
 import * as fs from "fs";
 import * as path from "path";
-import { AREAS, acrescentarNaBusca, skillsDaAreaNaBusca } from "../lib/areas";
+import { AREAS, acrescentarNaBusca, semCriterioRepetido, skillsDaAreaNaBusca } from "../lib/areas";
 import { parseQueryIntent, removeChipFromQuery } from "../lib/query-intent";
 import { getSkill } from "../lib/taxonomy";
 
@@ -42,5 +42,29 @@ describe("áreas da busca", () => {
   it.each(["pt-BR", "en", "es"])("%s tem o nome de toda área", (loc) => {
     const cat = JSON.parse(fs.readFileSync(path.join(ROOT, "messages", `${loc}.json`), "utf-8"));
     for (const a of AREAS) expect([loc, a.id, typeof cat.areas[a.id]]).toEqual([loc, a.id, "string"]);
+  });
+});
+
+describe("critério repetido não fica escondido", () => {
+  it("outro modelo, regime ou nível troca o antigo", () => {
+    expect(acrescentarNaBusca("remoto", "presencial")).toBe("presencial");
+    expect(acrescentarNaBusca("react remoto PJ", "CLT")).toBe("react remoto CLT");
+    const it = parseQueryIntent(acrescentarNaBusca("devops remoto sênior", "pleno"));
+    expect([it.modo, it.nivel]).toEqual(["remoto", "Pleno"]);
+  });
+
+  it("busca digitada com repetição fica com o primeiro, que é o que a busca entende", () => {
+    expect(semCriterioRepetido("remoto presencial react")).toBe("remoto react");
+    expect(semCriterioRepetido("React React")).toBe("React");
+    expect(semCriterioRepetido("react node remoto")).toBe("react node remoto");
+    expect(semCriterioRepetido("")).toBe("");
+  });
+
+  it("todo termo que sobra aparece como chip", () => {
+    for (const q of ["remoto presencial", "PJ CLT react", "React React vue"]) {
+      const limpo = semCriterioRepetido(q);
+      const chips = parseQueryIntent(limpo).chips;
+      expect(chips.map((c) => c.source).join(" ")).toBe(limpo);
+    }
   });
 });

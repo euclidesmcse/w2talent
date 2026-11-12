@@ -5,6 +5,8 @@
  * As competências vêm da taxonomia (lib/taxonomy.ts); o teste confere que todas existem e que a
  * busca entende cada uma.
  */
+import { parseQueryIntent, removeChipFromQuery, type IntentChip } from "@/lib/query-intent";
+
 export type AreaId =
   | "cloud"
   | "devops"
@@ -46,7 +48,46 @@ export function skillsDaAreaNaBusca(area: AreaBusca, skillsDaBusca: string[]): n
   return area.skills.filter((s) => skillsDaBusca.includes(s)).length;
 }
 
-/** Acrescenta uma competência ao texto buscado (pelo nome que a busca entende). */
+/** Critérios de um valor só: a busca entende o primeiro e ignora os outros. */
+const UNICOS = new Set<IntentChip["kind"]>(["regime", "modo", "nivel", "faixa"]);
+const mesmoCriterio = (a: IntentChip, b: IntentChip) => a.kind === b.kind && (UNICOS.has(a.kind) || (a.kind === "skill" && a.value === b.value));
+
+/**
+ * Tira da busca o que a busca ignoraria por repetir um critério ("remoto presencial", "React React").
+ * Sem isso o termo repetido ficava escondido: não vira chip e o campo fica vazio quando há chips.
+ */
+export function semCriterioRepetido(q: string): string {
+  let atual = q.trim().replace(/\s+/g, " ");
+  for (let volta = 0; volta < 20; volta++) {
+    const chips = parseQueryIntent(atual).chips.filter((c) => c.kind !== "texto" && c.kind !== "idioma");
+    let mudou = false;
+    for (const c of chips) {
+      const sem = removeChipFromQuery(atual, c);
+      const repetido = parseQueryIntent(sem).chips.find((d) => mesmoCriterio(c, d));
+      if (!repetido) continue;
+      // o chip visível fica; o repetido (escondido) sai
+      const i = atual.indexOf(repetido.source, c.end);
+      const j = i >= 0 ? i : atual.indexOf(repetido.source);
+      if (j < 0) continue;
+      atual = (atual.slice(0, j) + " " + atual.slice(j + repetido.source.length)).replace(/\s+/g, " ").trim();
+      mudou = true;
+      break;
+    }
+    if (!mudou) break;
+  }
+  return atual;
+}
+
+/**
+ * Acrescenta um termo ao texto buscado (pelo nome que a busca entende). Se o termo novo troca um
+ * critério de um valor só (outro modelo, regime, nível ou faixa), o novo vale e o antigo sai.
+ */
 export function acrescentarNaBusca(q: string, termo: string): string {
-  return `${q} ${termo}`.replace(/\s+/g, " ").trim();
+  let base = q;
+  for (const novo of parseQueryIntent(termo).chips) {
+    if (!UNICOS.has(novo.kind)) continue;
+    const antigo = parseQueryIntent(base).chips.find((c) => c.kind === novo.kind);
+    if (antigo) base = removeChipFromQuery(base, antigo);
+  }
+  return semCriterioRepetido(`${base} ${termo}`);
 }

@@ -41,7 +41,7 @@ export function AreasDeBusca({
               data-area={a.id}
               onClick={() => setAberta(on ? null : a.id)}
               className={cn(
-                "inline-flex h-9 shrink-0 items-center gap-2 whitespace-nowrap rounded-pill border px-3.5 text-[13px] font-medium",
+                "inline-flex h-11 shrink-0 items-center md:h-9 gap-2 whitespace-nowrap rounded-pill border px-3.5 text-[13px] font-medium",
                 on ? "border-ink bg-ink text-white" : n ? "border-brand bg-brand-soft text-brand-ink" : "border-line-strong bg-surface text-ink hover:border-brand",
               )}
             >
@@ -67,7 +67,7 @@ export function AreasDeBusca({
                   data-skill={id}
                   onClick={() => (marcada ? onTirar(id) : onAdicionar(id))}
                   className={cn(
-                    "inline-flex h-9 items-center rounded-pill border px-3.5 text-[13px] font-medium disabled:cursor-not-allowed disabled:opacity-50",
+                    "inline-flex h-11 items-center rounded-pill md:h-9 border px-3.5 text-[13px] font-medium disabled:cursor-not-allowed disabled:opacity-50",
                     marcada ? "border-brand bg-brand text-white" : "border-line-strong bg-surface text-ink hover:border-brand",
                   )}
                 >
