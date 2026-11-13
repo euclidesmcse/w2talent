@@ -96,6 +96,13 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef }
         }
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
+        // Foco no próprio diálogo (ou num controle que sumiu, como uma vaga parecida aberta): Tab e
+        // Shift+Tab continuam dentro, em vez de sair para a página atrás.
+        if (!focusable.includes(document.activeElement as HTMLElement)) {
+          e.preventDefault();
+          (e.shiftKey ? last : first).focus();
+          return;
+        }
         if (e.shiftKey) {
           if (document.activeElement === first) {
             e.preventDefault();
