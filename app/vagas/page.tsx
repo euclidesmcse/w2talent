@@ -6,6 +6,7 @@ import { Button } from "@/components/ui";
 import { VacancyTable } from "@/components/vacancy-table";
 import { VacancyCards } from "@/components/vacancy-cards";
 import { DetailModal } from "@/components/detail-modal";
+import { AvisoEnviada, VagasParecidas } from "@/components/vagas-parecidas";
 import { BatchBar } from "@/components/batch-bar";
 import { EmptyState } from "@/components/empty-state";
 import { selectionStore } from "@/lib/selection-store";
@@ -174,7 +175,8 @@ export default function VagasPage() {
     const btn = Array.from(document.querySelectorAll<HTMLElement>(`[data-detail-id="${CSS.escape(id)}"]`)).find((el) => el.offsetParent !== null);
     if (btn) setActiveTrigger({ current: btn });
   };
-  const closeModal = () => setModalOpen(false);
+  // Estável: o efeito do detalhe depende de onClose, e uma função nova a cada render devolvia o foco ao gatilho.
+  const closeModal = React.useCallback(() => setModalOpen(false), []);
   const selectedSet = React.useMemo(() => new Set(selected), [selected]);
   const isEmpty = loaded && items.length === 0;
 
@@ -242,7 +244,15 @@ export default function VagasPage() {
             </div>
           </nav>
         ) : null}
-        <DetailModal open={modalOpen} onClose={closeModal} item={modalItem} triggerRef={activeTrigger} title={modalItem?.titulo ?? tr("vagas.detailFallback")} />
+        <DetailModal open={modalOpen} onClose={closeModal} item={modalItem} triggerRef={activeTrigger} title={modalItem?.titulo ?? tr("vagas.detailFallback")}>
+          {modalItem?.id ? (
+            <>
+              <AvisoEnviada em={enviadas[modalItem.id]} />
+              {/* Abrir uma parecida troca o conteúdo do detalhe; usa a vaga completa quando ela está na lista */}
+              <VagasParecidas id={modalItem.id} sentAt={enviadas} onAbrir={(v) => setModalItem(items.find((x) => x.id === v.id) ?? v)} />
+            </>
+          ) : null}
+        </DetailModal>
         <BatchBar variant="vagas" actionEnabled={envioLigado} onAction={() => router.push("/vagas/aprovar")} />
       </div>
       </main>

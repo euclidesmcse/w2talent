@@ -116,7 +116,9 @@
     "detailFallback": "Detalhes da vaga",
     "sentOn": "Enviada em {date}",
     "onlyCandidates": "Candidaturas são para contas de candidato. Esta conta é de recrutador.",
-    "searchMore": "Mais um termo"
+    "searchMore": "Mais um termo",
+    "jaEnviada": "Você já se candidatou a esta vaga em {date}.",
+    "parecidas": "Vagas parecidas"
   },
   "candidatos": {
     "title": "Candidatos",

@@ -116,7 +116,7 @@ export function VacancyTable({
                     </span>
                   ) : null}
                 </div>
-                {enviadaEm ? <div data-enviada={row.id} className="mt-1 text-xs font-medium text-success-ink">{t("vagas.sentOn", { date: diaMes(enviadaEm, locale) })}</div> : null}
+                {enviadaEm ? <div className="mt-1.5"><span data-enviada={row.id} className="inline-flex items-center gap-1 rounded-pill bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success-ink"><span aria-hidden>✓</span>{t("vagas.sentOn", { date: diaMes(enviadaEm, locale) })}</span></div> : null}
               </td>
               <td className="px-2 py-3.5 align-top text-ink-soft">
                 <SkillChips ids={skillIds} limit={3} />

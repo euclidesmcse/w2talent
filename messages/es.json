@@ -116,7 +116,9 @@
     "detailFallback": "Detalles del empleo",
     "sentOn": "Enviada el {date}",
     "onlyCandidates": "Las postulaciones son para cuentas de candidato. Esta cuenta es de reclutador.",
-    "searchMore": "Otro término"
+    "searchMore": "Otro término",
+    "jaEnviada": "Ya te postulaste a esta vacante el {date}.",
+    "parecidas": "Vacantes similares"
   },
   "candidatos": {
     "title": "Candidatos",

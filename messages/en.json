@@ -116,7 +116,9 @@
     "detailFallback": "Job details",
     "sentOn": "Sent on {date}",
     "onlyCandidates": "Applications are for candidate accounts. This is a recruiter account.",
-    "searchMore": "Add another term"
+    "searchMore": "Add another term",
+    "jaEnviada": "You already applied to this job on {date}.",
+    "parecidas": "Similar jobs"
   },
   "candidatos": {
     "title": "Candidates",
