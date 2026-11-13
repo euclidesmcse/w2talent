@@ -175,7 +175,8 @@ export default function VagasPage() {
     const btn = Array.from(document.querySelectorAll<HTMLElement>(`[data-detail-id="${CSS.escape(id)}"]`)).find((el) => el.offsetParent !== null);
     if (btn) setActiveTrigger({ current: btn });
   };
-  const closeModal = () => setModalOpen(false);
+  // Estável: o efeito do detalhe depende de onClose, e uma função nova a cada render devolvia o foco ao gatilho.
+  const closeModal = React.useCallback(() => setModalOpen(false), []);
   const selectedSet = React.useMemo(() => new Set(selected), [selected]);
   const isEmpty = loaded && items.length === 0;
 

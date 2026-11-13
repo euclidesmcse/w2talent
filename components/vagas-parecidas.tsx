@@ -51,7 +51,14 @@ export function VagasParecidas({ id, sentAt, onAbrir }: { id: string; sentAt?: R
               <button
                 type="button"
                 data-parecida={v.id}
-                onClick={() => onAbrir(v)}
+                onClick={(e) => {
+                  // A lista some enquanto busca as parecidas da nova vaga: leva o foco e a rolagem ao topo
+                  // do detalhe (o próprio diálogo), para a nova vaga aparecer e o foco não sair do diálogo.
+                  const dialogo = e.currentTarget.closest<HTMLElement>('[role="dialog"]');
+                  dialogo?.focus({ preventScroll: true });
+                  onAbrir(v);
+                  requestAnimationFrame(() => dialogo?.scrollTo({ top: 0 }));
+                }}
                 className="flex w-full flex-col gap-0.5 rounded-card border border-line bg-surface px-3.5 py-2.5 text-left hover:border-brand"
               >
                 <span className="font-semibold text-ink">{v.titulo}</span>
