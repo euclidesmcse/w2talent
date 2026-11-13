@@ -28,12 +28,22 @@ describe("vagas parecidas por competência", () => {
     expect(parecidasPorCompetencia(alvo, lista, 5, agora).map((x) => x.id)).toEqual(["nova", "velha"]);
   });
 
-  it("no máximo cinco e só os campos da lista (sem contato)", () => {
+  it("no máximo cinco e só os campos da lista e do detalhe (sem contato)", () => {
     const alvo = DEMO_VACANCIES.find((x) => x.id === "demo-v-01")!;
     const r = parecidasPorCompetencia(alvo, DEMO_VACANCIES.map((x) => ({ ...x, email: "rh@empresa.com" })));
     expect(r.length).toBeGreaterThan(0);
     expect(r.length).toBeLessThanOrEqual(MAX_PARECIDAS);
-    for (const x of r) expect(Object.keys(x).sort()).toEqual(["faixaAte", "faixaDe", "faixaMoeda", "id", "localidade", "nivel", "regime", "stack", "titulo"]);
+    for (const x of r) expect(Object.keys(x).sort()).toEqual(["createdAt", "descricaoBullets", "faixaAte", "faixaDe", "faixaMoeda", "id", "localidade", "nivel", "regime", "stack", "titulo", "updatedAt"]);
     expect(resumoDaVaga({ id: 1, stack: ["aws"] }).stack).toEqual([{ skillId: "aws" }]);
+  });
+});
+
+describe("parecida aberta no detalhe", () => {
+  it("traz a descrição e as datas que o detalhe mostra", () => {
+    const r = resumoDaVaga({ id: "v1", titulo: "DevOps", stack: [{ skillId: "aws" }], descricaoBullets: ["AWS", 3, "Remoto"], createdAt: new Date("2026-11-01T00:00:00Z"), updatedAt: "2026-11-10T00:00:00Z" });
+    expect(r.descricaoBullets).toEqual(["AWS", "Remoto"]);
+    expect(r.createdAt).toBe("2026-11-01T00:00:00.000Z");
+    expect(r.updatedAt).toBe("2026-11-10T00:00:00.000Z");
+    expect(resumoDaVaga({ id: "v2", titulo: "x" })).toMatchObject({ descricaoBullets: [], createdAt: null, updatedAt: null });
   });
 });

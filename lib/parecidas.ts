@@ -15,6 +15,10 @@ export type VagaResumo = {
   faixaAte: number | null;
   faixaMoeda: string | null;
   stack: { skillId: string }[];
+  /** Campos que o detalhe mostra: abrir uma parecida fora da página atual não perde a descrição. */
+  descricaoBullets: string[];
+  createdAt: string | null;
+  updatedAt: string | null;
 };
 
 type VagaQualquer = Record<string, any>;
@@ -22,6 +26,12 @@ type VagaQualquer = Record<string, any>;
 function skillsDe(v: VagaQualquer): string[] {
   const s = Array.isArray(v?.stack) ? v.stack : [];
   return s.map((x: any) => (typeof x === "string" ? x : x?.skillId)).filter((x: unknown): x is string => typeof x === "string");
+}
+
+function quandoISO(d: unknown): string | null {
+  if (!d) return null;
+  const t = new Date(d as any);
+  return Number.isNaN(t.getTime()) ? null : t.toISOString();
 }
 
 export function resumoDaVaga(v: VagaQualquer): VagaResumo {
@@ -35,6 +45,9 @@ export function resumoDaVaga(v: VagaQualquer): VagaResumo {
     faixaAte: typeof v.faixaAte === "number" ? v.faixaAte : null,
     faixaMoeda: v.faixaMoeda ?? null,
     stack: skillsDe(v).map((skillId) => ({ skillId })),
+    descricaoBullets: (Array.isArray(v.descricaoBullets) ? v.descricaoBullets : []).filter((b: unknown): b is string => typeof b === "string"),
+    createdAt: quandoISO(v.createdAt),
+    updatedAt: quandoISO(v.updatedAt),
   };
 }
 

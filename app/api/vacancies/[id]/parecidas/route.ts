@@ -3,9 +3,9 @@ import { MAX_PARECIDAS, parecidasPorCompetencia, resumoDaVaga, type VagaResumo }
 
 /**
  * Vagas parecidas (ideia do portal emagine, 2026-11-12). Público, como a busca de vagas:
- * só vagas ativas e só os campos da lista (sem contato).
+ * só vagas ativas e só os campos da lista e a descrição que o detalhe mostra (sem contato).
  */
-const CAMPOS = `id, titulo, nivel, localidade, regime, "faixaDe", "faixaAte", "faixaMoeda", stack, "updatedAt", "createdAt", status, "expiresAt"`;
+const CAMPOS = `id, titulo, nivel, localidade, regime, "faixaDe", "faixaAte", "faixaMoeda", stack, "descricaoBullets", "updatedAt", "createdAt", status, "expiresAt"`;
 
 async function doBanco(id: string): Promise<VagaResumo[] | null> {
   const { prisma } = await import("@/lib/prisma");
