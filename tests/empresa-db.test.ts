@@ -159,6 +159,18 @@ describeDb("empresa do recrutador e vagas com login", () => {
     ]);
   });
 
+  it("vagas parecidas também trazem a empresa (sem o id dela)", async () => {
+    const fim = new Date(Date.now() + 86400000);
+    const a = await db.vacancy.create({ data: { companyId: "emp-teste-outra", titulo: "Par A", stack: [{ skillId: "kotlin" }], expiresAt: fim } });
+    const b = await db.vacancy.create({ data: { companyId: empresaA, titulo: "Par B", stack: [{ skillId: "kotlin" }], expiresAt: fim } });
+    const { GET } = await import("../app/api/vacancies/[id]/parecidas/route");
+    const j = await (await GET(req(`/api/vacancies/${a.id}/parecidas`, "GET", null), ctx(a.id))).json();
+    const par = j.items.find((x: { id: string }) => x.id === b.id);
+    expect(par.company).toEqual({ nome: "Acme", verificada: false });
+    expect(par.companyId).toBeUndefined();
+    await db.vacancy.deleteMany({ where: { id: { in: [a.id, b.id] } } });
+  });
+
   it("mudar o nome de empresa validada volta para verificação", async () => {
     const { decidirEmpresa } = await import("../lib/empresa");
     await decidirEmpresa(db, empresaA, "validar");
@@ -179,6 +191,46 @@ describeDb("empresa do recrutador e vagas com login", () => {
     const res = await POST(req("/api/vacancies", "POST", rec(REC_A), { titulo: "Nova" }));
     expect(res.status).toBe(403);
     expect((await res.json()).error).toBe("empresa_rejeitada");
+  });
+
+  it("edição atrasada não desfaz a recusa do admin; empresa recusada não muda pelo PATCH", async () => {
+    const { atualizarEmpresa, EmpresaErro } = await import("../lib/empresa");
+    const atual = await db.companyProfile.findUniqueOrThrow({ where: { id: empresaA } });
+    expect(atual.validacaoStatus).toBe("rejeitado");
+    // Simula a leitura feita antes da recusa (situação ainda "validado").
+    const leituraAntiga = { findUnique: async () => ({ company: { ...atual, validacaoStatus: "validado" } }) };
+    const atrasado = new Proxy(db, { get: (t, k) => (k === "companyMember" ? leituraAntiga : Reflect.get(t, k, t)) });
+    await expect(atualizarEmpresa(atrasado, REC_A, { nome: atual.nome, site: null, cnpj: atual.cnpj, emailContato: null })).rejects.toEqual(new EmpresaErro("mudou"));
+    expect((await db.companyProfile.findUniqueOrThrow({ where: { id: empresaA } })).validacaoStatus).toBe("rejeitado");
+    const { PATCH } = await import("../app/api/conta/empresa/route");
+    const r = await PATCH(req("/api/conta/empresa", "PATCH", rec(REC_A), { nome: "Outro nome" }));
+    expect(r.status).toBe(403);
+    expect((await r.json()).error).toBe("rejeitada");
+  });
+
+  it("lista do admin traz as pendentes primeiro, de 50 em 50", async () => {
+    const { signAdminSession, ADMIN_COOKIE } = await import("../lib/admin-auth");
+    const antes = process.env.ADMIN_SECRET;
+    process.env.ADMIN_SECRET = SECRET;
+    try {
+      const s = await signAdminSession(SECRET);
+      const cookie = `${ADMIN_COOKIE}=${encodeURIComponent(s.value)}`;
+      const { GET } = await import("../app/api/admin/empresas/route");
+      const total = await db.companyProfile.count();
+      const vistos: { id: string; status: string }[] = [];
+      for (let p = 1; p <= Math.ceil(total / 50); p++) {
+        const j = await (await GET(req(`/api/admin/empresas?pagina=${p}`, "GET", null, undefined, { cookie }))).json();
+        vistos.push(...j.empresas);
+        expect(j.temMais).toBe(p < Math.ceil(total / 50));
+      }
+      expect(vistos.length).toBe(total);
+      expect(new Set(vistos.map((v) => v.id)).size).toBe(total);
+      const ordem = { pendente: 0, validado: 1, rejeitado: 2 } as Record<string, number>;
+      for (let i = 1; i < vistos.length; i++) expect(ordem[vistos[i - 1].status]).toBeLessThanOrEqual(ordem[vistos[i].status]);
+      expect((await GET(req("/api/admin/empresas", "GET", null))).status).toBe(401);
+    } finally {
+      process.env.ADMIN_SECRET = antes;
+    }
   });
 
   it("dois cadastros ao mesmo tempo deixam uma empresa só para a conta", async () => {

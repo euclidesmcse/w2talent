@@ -79,6 +79,7 @@ export default function EmpresaPage() {
       if (j.error === "campo_invalido" && j.campo) setErro({ campo: j.campo, texto: t(`erros.${j.campo}`) });
       else if (j.error === "cnpj_em_uso") setErro({ campo: "cnpj", texto: t("erros.cnpj_em_uso") });
       else if (j.error === "ja_tem_empresa") setErro({ texto: t("erros.ja_tem_empresa") });
+      else if (j.error === "mudou" || j.error === "rejeitada") setErro({ texto: t("erros.mudou") });
       else setErro({ texto: t("erros.generic") });
     } catch {
       setErro({ texto: t("erros.generic") });

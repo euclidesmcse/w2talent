@@ -33,7 +33,7 @@ describe("vagas parecidas por competência", () => {
     const r = parecidasPorCompetencia(alvo, DEMO_VACANCIES.map((x) => ({ ...x, email: "rh@empresa.com" })));
     expect(r.length).toBeGreaterThan(0);
     expect(r.length).toBeLessThanOrEqual(MAX_PARECIDAS);
-    for (const x of r) expect(Object.keys(x).sort()).toEqual(["createdAt", "descricaoBullets", "faixaAte", "faixaDe", "faixaMoeda", "id", "localidade", "nivel", "regime", "stack", "titulo", "updatedAt"]);
+    for (const x of r) expect(Object.keys(x).sort()).toEqual(["companyId", "createdAt", "descricaoBullets", "faixaAte", "faixaDe", "faixaMoeda", "id", "localidade", "nivel", "regime", "stack", "titulo", "updatedAt"]);
     expect(resumoDaVaga({ id: 1, stack: ["aws"] }).stack).toEqual([{ skillId: "aws" }]);
   });
 });

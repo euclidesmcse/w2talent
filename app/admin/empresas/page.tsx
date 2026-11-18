@@ -33,17 +33,29 @@ export default function AdminEmpresasPage() {
   const { show } = useToast();
   const [auth, setAuth] = React.useState<"loading" | "login" | "disabled" | "ok">("loading");
   const [linhas, setLinhas] = React.useState<Linha[]>([]);
+  const [paginas, setPaginas] = React.useState(1);
+  const [temMais, setTemMais] = React.useState(false);
   const [confirmando, setConfirmando] = React.useState<string | null>(null);
   const [ocupado, setOcupado] = React.useState<string | null>(null);
 
-  const load = React.useCallback(async () => {
+  /** Recarrega as páginas já abertas (até `ate`), para a lista não encolher depois de uma decisão. */
+  const load = React.useCallback(async (ate = 1) => {
     try {
-      const res = await fetch("/api/admin/empresas", { cache: "no-store" });
-      const j = (await res.json().catch(() => ({}))) as { empresas?: Linha[]; error?: string };
-      if (res.status === 401) return setAuth("login");
-      if (j.error === "admin_desligado") return setAuth("disabled");
-      if (!res.ok) throw new Error(j.error ?? "erro");
-      setLinhas(j.empresas ?? []);
+      const todas: Linha[] = [];
+      let mais = false;
+      for (let p = 1; p <= ate; p++) {
+        const res = await fetch(`/api/admin/empresas?pagina=${p}`, { cache: "no-store" });
+        const j = (await res.json().catch(() => ({}))) as { empresas?: Linha[]; temMais?: boolean; error?: string };
+        if (res.status === 401) return setAuth("login");
+        if (j.error === "admin_desligado") return setAuth("disabled");
+        if (!res.ok) throw new Error(j.error ?? "erro");
+        for (const e of j.empresas ?? []) if (!todas.some((x) => x.id === e.id)) todas.push(e);
+        mais = !!j.temMais;
+        if (!mais) break;
+      }
+      setLinhas(todas);
+      setTemMais(mais);
+      setPaginas(ate);
       setAuth("ok");
     } catch {
       setAuth((a) => (a === "loading" ? "login" : a));
@@ -66,7 +78,7 @@ export default function AdminEmpresasPage() {
       if (!res.ok) throw new Error();
       show(acao === "validar" ? t("validada") : t("rejeitada", { count: j.arquivadas ?? 0 }), "success");
       setConfirmando(null);
-      await load();
+      await load(paginas);
     } catch {
       show(t("erro"), "error");
     } finally {
@@ -100,7 +112,7 @@ export default function AdminEmpresasPage() {
             <p role="alert" className="text-sm">{ta("login.disabled")}</p>
           </Card>
         ) : null}
-        {auth === "login" ? <AdminLoginCard onDone={load} titulo={t("loginTitle")} /> : null}
+        {auth === "login" ? <AdminLoginCard onDone={() => load()} titulo={t("loginTitle")} /> : null}
         {auth === "ok" ? (
           linhas.length === 0 ? (
             <p className="text-sm text-muted">{t("vazio")}</p>
@@ -158,6 +170,11 @@ export default function AdminEmpresasPage() {
                   ))}
                 </tbody>
               </Table>
+              {temMais ? (
+                <div className="border-t border-line-soft p-4">
+                  <Button variant="secondary" size="sm" onClick={() => load(paginas + 1)}>{t("mais")}</Button>
+                </div>
+              ) : null}
             </Card>
           )
         ) : null}

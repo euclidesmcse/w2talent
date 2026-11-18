@@ -27,7 +27,7 @@ async function gravar(req: NextRequest, modo: "criar" | "atualizar") {
     const empresa = modo === "criar" ? await cadastrarEmpresa(prisma, r.conta.id, v.dados) : await atualizarEmpresa(prisma, r.conta.id, v.dados);
     return json({ empresa }, modo === "criar" ? 201 : 200);
   } catch (e) {
-    if (e instanceof EmpresaErro) return json({ error: e.codigo }, e.codigo === "sem_empresa" ? 404 : 409);
+    if (e instanceof EmpresaErro) return json({ error: e.codigo }, e.codigo === "sem_empresa" ? 404 : e.codigo === "rejeitada" ? 403 : 409);
     console.error("conta/empresa", (e as { code?: string })?.code ?? (e as Error)?.name ?? "erro");
     return json({ error: "erro_interno" }, 500);
   }

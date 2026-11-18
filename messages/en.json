@@ -861,7 +861,8 @@
       "emailContato": "Invalid email.",
       "cnpj_em_uso": "This CNPJ is already registered by another account. Contact contato@w2talent.com.",
       "ja_tem_empresa": "Your account already has a company.",
-      "generic": "Could not save. Try again."
+      "generic": "Could not save. Try again.",
+      "mudou": "The company status changed while you were editing. Reload the page."
     }
   },
   "adminEmpresas": {
@@ -880,6 +881,7 @@
     "validada": "Company verified.",
     "rejeitada": "Company declined. {count, plural, =0 {No active jobs} one {# job archived} other {# jobs archived}}.",
     "erro": "Could not save. Try again.",
-    "confirmar": "Decline {name}? Its active jobs will be archived."
+    "confirmar": "Decline {name}? Its active jobs will be archived.",
+    "mais": "Show more"
   }
 }

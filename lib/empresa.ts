@@ -80,7 +80,7 @@ export async function empresaDaConta(db: Db, userId: string): Promise<Empresa | 
 }
 
 export class EmpresaErro extends Error {
-  constructor(public codigo: "ja_tem_empresa" | "cnpj_em_uso" | "sem_empresa") {
+  constructor(public codigo: "ja_tem_empresa" | "cnpj_em_uso" | "sem_empresa" | "mudou" | "rejeitada") {
     super(codigo);
   }
 }
@@ -119,15 +119,18 @@ export async function cadastrarEmpresa(db: Db, userId: string, dados: DadosEmpre
 export async function atualizarEmpresa(db: Db, userId: string, dados: DadosEmpresa): Promise<Empresa> {
   const atual = await empresaDaConta(db, userId);
   if (!atual) throw new EmpresaErro("sem_empresa");
+  if (atual.validacaoStatus === "rejeitado") throw new EmpresaErro("rejeitada");
   const mudouIdentidade = atual.nome !== dados.nome || (atual.cnpj ?? null) !== dados.cnpj;
-  const validacaoStatus: StatusEmpresa =
-    atual.validacaoStatus === "rejeitado" ? "rejeitado" : mudouIdentidade ? "pendente" : atual.validacaoStatus;
+  const validacaoStatus: StatusEmpresa = mudouIdentidade ? "pendente" : atual.validacaoStatus;
   try {
-    const c = await db.companyProfile.update({
-      where: { id: atual.id },
+    // Só grava se a situação ainda for a que foi lida: uma decisão do admin no meio do caminho
+    // (ex.: recusar) não é desfeita por uma edição atrasada.
+    const r = await db.companyProfile.updateMany({
+      where: { id: atual.id, validacaoStatus: atual.validacaoStatus },
       data: { ...dados, validacaoStatus, ...(validacaoStatus !== atual.validacaoStatus ? { validacaoData: null } : {}) },
-      select: SELECT,
     });
+    if (r.count === 0) throw new EmpresaErro("mudou");
+    const c = await db.companyProfile.findUniqueOrThrow({ where: { id: atual.id }, select: SELECT });
     return c as Empresa;
   } catch (e) {
     if (campoUnico(e).includes("cnpj")) throw new EmpresaErro("cnpj_em_uso");

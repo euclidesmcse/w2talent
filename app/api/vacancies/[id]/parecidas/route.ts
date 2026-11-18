@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { anexarEmpresas } from "@/lib/empresa";
 import { MAX_PARECIDAS, parecidasPorCompetencia, resumoDaVaga, type VagaResumo } from "@/lib/parecidas";
 
 /**
  * Vagas parecidas (ideia do portal emagine, 2026-11-12). Público, como a busca de vagas:
  * só vagas ativas e só os campos da lista e a descrição que o detalhe mostra (sem contato).
  */
-const CAMPOS = `id, titulo, nivel, localidade, regime, "faixaDe", "faixaAte", "faixaMoeda", stack, "descricaoBullets", "updatedAt", "createdAt", status, "expiresAt"`;
+const CAMPOS = `id, "companyId", titulo, nivel, localidade, regime, "faixaDe", "faixaAte", "faixaMoeda", stack, "descricaoBullets", "updatedAt", "createdAt", status, "expiresAt"`;
 
 async function doBanco(id: string): Promise<VagaResumo[] | null> {
   const { prisma } = await import("@/lib/prisma");
@@ -22,16 +23,19 @@ async function doBanco(id: string): Promise<VagaResumo[] | null> {
       id,
     )
     .catch(() => [] as any[]);
-  if (porVetor.length) return porVetor.map(resumoDaVaga);
   // 2. Sem vetor: pelas competências em comum, entre as vagas ativas mais recentes.
-  const ativas = await prisma.vacancy.findMany({ where: { status: "ativa", expiresAt: { gt: new Date() } }, orderBy: { updatedAt: "desc" }, take: 300 });
-  return parecidasPorCompetencia(alvo, ativas);
+  const lista = porVetor.length
+    ? porVetor.map(resumoDaVaga)
+    : parecidasPorCompetencia(alvo, await prisma.vacancy.findMany({ where: { status: "ativa", expiresAt: { gt: new Date() } }, orderBy: { updatedAt: "desc" }, take: 300 }));
+  // 2.1a (D2): nome da empresa e a etiqueta "Empresa não verificada" também ao abrir uma parecida.
+  const comEmpresa = await anexarEmpresas(prisma, lista).catch(() => lista);
+  return comEmpresa.map(({ companyId: _c, ...v }) => v);
 }
 
 async function daDemonstracao(id: string): Promise<VagaResumo[] | null> {
   const { DEMO_VACANCIES } = await import("@/lib/demo-data");
   const alvo = DEMO_VACANCIES.find((v) => v.id === id);
-  return alvo ? parecidasPorCompetencia(alvo, DEMO_VACANCIES) : null;
+  return alvo ? parecidasPorCompetencia(alvo, DEMO_VACANCIES).map(({ companyId: _c, ...v }) => v) : null;
 }
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {

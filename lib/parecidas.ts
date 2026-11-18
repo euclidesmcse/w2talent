@@ -19,6 +19,9 @@ export type VagaResumo = {
   descricaoBullets: string[];
   createdAt: string | null;
   updatedAt: string | null;
+  /** 2.1a: a rota troca pelo nome da empresa e se ela é verificada (anexarEmpresas). */
+  companyId?: string | null;
+  company?: { nome: string; verificada: boolean };
 };
 
 type VagaQualquer = Record<string, any>;
@@ -48,6 +51,7 @@ export function resumoDaVaga(v: VagaQualquer): VagaResumo {
     descricaoBullets: (Array.isArray(v.descricaoBullets) ? v.descricaoBullets : []).filter((b: unknown): b is string => typeof b === "string"),
     createdAt: quandoISO(v.createdAt),
     updatedAt: quandoISO(v.updatedAt),
+    ...(typeof v.companyId === "string" ? { companyId: v.companyId } : {}),
   };
 }
 

@@ -861,7 +861,8 @@
       "emailContato": "E-mail inválido.",
       "cnpj_em_uso": "Este CNPJ já foi cadastrado por outra conta. Fale com contato@w2talent.com.",
       "ja_tem_empresa": "Sua conta já tem uma empresa.",
-      "generic": "Não deu para salvar. Tente de novo."
+      "generic": "Não deu para salvar. Tente de novo.",
+      "mudou": "A situação da empresa mudou enquanto você editava. Recarregue a página."
     }
   },
   "adminEmpresas": {
@@ -880,6 +881,7 @@
     "validada": "Empresa validada.",
     "rejeitada": "Empresa recusada. {count, plural, =0 {Nenhuma vaga ativa} one {# vaga arquivada} other {# vagas arquivadas}}.",
     "erro": "Não deu para salvar. Tente de novo.",
-    "confirmar": "Recusar {name}? As vagas ativas dela serão arquivadas."
+    "confirmar": "Recusar {name}? As vagas ativas dela serão arquivadas.",
+    "mais": "Mostrar mais"
   }
 }
