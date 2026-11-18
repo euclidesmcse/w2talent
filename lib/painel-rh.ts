@@ -29,7 +29,9 @@ export type MetricasRh = {
   vagasAtivas: number;
   vencendo: number;
   candidaturas: number;
+  /** Na etapa Nova agora (pode incluir quem voltou para Nova depois de respondida). */
   novas: number;
+  /** Já respondidas alguma vez (respondidaEm), na etapa que estiverem. */
   respondidas: number;
   /** Horas, em média, da candidatura até a primeira resposta; null sem nenhuma resposta. */
   tempoMedioHoras: number | null;
@@ -79,7 +81,8 @@ export function montarResumo(
     return { id: v.id, titulo: v.titulo, situacao: situacaoDaVaga(v, now), expiresAt: v.expiresAt.toISOString(), total, novas: porEtapa.nova, porEtapa };
   });
   lista.sort((a, b) => ORDEM_SITUACAO[a.situacao] - ORDEM_SITUACAO[b.situacao] || (a.situacao === "vencendo" ? a.expiresAt.localeCompare(b.expiresAt) : 0));
-  const respondidas = candidaturas - novas;
+  // Resposta = a candidatura já saiu de "nova" alguma vez (respondidaEm), mesmo que tenha voltado.
+  const respondidas = Math.min(respostas.n, candidaturas);
   return {
     metricas: {
       vagasAtivas: totaisVagas?.ativas ?? lista.filter((v) => v.situacao === "ativa" || v.situacao === "vencendo").length,

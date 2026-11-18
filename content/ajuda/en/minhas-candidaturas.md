@@ -11,9 +11,9 @@ ordem: 9
 ## Statuses
 
 - **Sent:** the application reached the company.
-- **Seen:** the company opened your profile.
-- **Answered:** the company replied.
-- **Archived:** the job or the application is no longer active.
+- **Seen:** the company opened your profile or started reviewing it.
+- **Answered:** the company wants to move forward with you (interview or offer).
+- **Closed:** the company is not moving forward with this application, or it is no longer active.
 
 ## Protected contact
 
