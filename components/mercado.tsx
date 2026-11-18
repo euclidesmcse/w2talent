@@ -42,7 +42,10 @@ export function MercadoTela() {
     setPronto(true);
   }, []);
 
+  // Só a resposta do pedido mais novo vale: trocar o filtro no meio do caminho não deixa a antiga por cima.
+  const pedidoAtual = React.useRef(0);
   const carregar = React.useCallback(async (skill: string | null, m: ModoMercado | null) => {
+    const meu = ++pedidoAtual.current;
     setEstado({ t: "carregando" });
     const q = new URLSearchParams();
     if (skill) q.set("skill", skill);
@@ -51,9 +54,10 @@ export function MercadoTela() {
       const qs = q.toString();
       const r = await fetch(`/api/mercado${qs ? `?${qs}` : ""}`);
       if (!r.ok) throw new Error(String(r.status));
-      setEstado({ t: "ok", dados: (await r.json()) as MercadoApi });
+      const dados = (await r.json()) as MercadoApi;
+      if (meu === pedidoAtual.current) setEstado({ t: "ok", dados });
     } catch {
-      setEstado({ t: "erro" });
+      if (meu === pedidoAtual.current) setEstado({ t: "erro" });
     }
   }, []);
 
