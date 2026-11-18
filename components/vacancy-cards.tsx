@@ -3,7 +3,8 @@ import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { formatFaixa, formatTempo, maskEmail, maskPhone } from "@/lib/format";
 import { diaMes } from "@/lib/envio-client";
-import type { VacancyRow } from "./vacancy-table";
+import { useOriginais, type VacancyRow } from "./vacancy-table";
+import { TraducaoAviso, textoExibido } from "@/components/traducao-aviso";
 import { buttonClasses } from "@/components/ui/button";
 import { SkillChips } from "@/components/skill-chips";
 import { MatchCell } from "@/components/vacancy-match";
@@ -35,6 +36,7 @@ export function VacancyCards({
   }, [selectedIds]);
   const t = useTranslations();
   const locale = useLocale();
+  const [originais, alternarOriginal] = useOriginais();
 
   if (items.length === 0) {
     return (
@@ -55,18 +57,19 @@ export function VacancyCards({
         const emailRaw = row.email ?? row.contato?.email ?? "";
         const telRaw = row.telefone ?? row.contato?.telefone ?? "";
         const contatoMascarado = [emailRaw ? maskEmail(emailRaw) : "", telRaw ? maskPhone(telRaw) : ""].filter(Boolean).join(" · ");
+        const texto = textoExibido(row, originais.has(row.id));
         return (
           <li
             key={row.id}
             data-vacancy-id={row.id}
-            aria-label={t("vagas.itemLabel", { title: row.titulo })}
+            aria-label={t("vagas.itemLabel", { title: texto.titulo })}
             onClick={(e) => { if (enviadaEm || (e.target as HTMLElement).closest("button, a, input, label")) return; onToggle?.(row.id); }}
             className={`cursor-pointer vacancy-card rounded-card border p-4 ${isSelected ? "selected border-brand bg-[#F5F8FF]" : "border-line bg-surface"}`}
           >
             <div className="card-header flex items-start gap-3">
               <input
                 type="checkbox"
-                aria-label={t("table.selectItem", { name: row.titulo })}
+                aria-label={t("table.selectItem", { name: texto.titulo })}
                   data-select-id={row.id}
                 checked={isSelected}
                 disabled={!!enviadaEm}
@@ -74,8 +77,9 @@ export function VacancyCards({
                 className="mt-1 h-5 w-5 shrink-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 accent-brand"
               />
               <div className="min-w-0 flex-1">
-                <strong className="block font-semibold leading-snug">{row.titulo}</strong>
+                <strong className="block font-semibold leading-snug" lang={texto.lang}>{texto.titulo}</strong>
                 <span className="text-[13px] text-muted">{[row.company?.nome, row.nivel].filter(Boolean).join(" · ")}</span>
+                {texto.traduzida ? <span className="mt-1 block"><TraducaoAviso verOriginal={originais.has(row.id)} onAlternar={() => alternarOriginal(row.id)} /></span> : null}
                 {row.company?.verificada === false ? <span className="mt-1.5 block"><NaoVerificada company={row.company} /></span> : null}
                 {enviadaEm ? <span data-enviada={row.id} className="mt-1.5 inline-flex items-center gap-1 rounded-pill bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success-ink"><span aria-hidden>✓</span>{t("vagas.sentOn", { date: diaMes(enviadaEm, locale) })}</span> : null}
               </div>

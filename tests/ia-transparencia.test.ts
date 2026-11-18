@@ -24,7 +24,7 @@ describe("2.0 Transparência — /ia", () => {
 
   it("as tarefas de IA usadas nas telas estão documentadas", () => {
     const usadas = new Set(LINHAS_IA.flatMap((l) => l.tarefas));
-    for (const t of ["extract_cv", "ficha_w2", "extract_vacancy", "review_bias", "interview_questions", "support_chat", "embed"]) expect(usadas.has(t as never)).toBe(true);
+    for (const t of ["extract_cv", "ficha_w2", "extract_vacancy", "review_bias", "interview_questions", "support_chat", "embed", "translate_content"]) expect(usadas.has(t as never)).toBe(true);
   });
 
   it("o texto de revisão leva o e-mail em todos os idiomas", () => {
@@ -34,7 +34,7 @@ describe("2.0 Transparência — /ia", () => {
 
   it("os selos apontam para âncoras que existem", () => {
     const ancoras = new Set(LINHAS_IA.map((l) => l.ancora));
-    for (const arq of ["components/ficha-w2-card.tsx", "components/vagas-parecidas.tsx", "components/ajuda-pergunta.tsx"]) {
+    for (const arq of ["components/ficha-w2-card.tsx", "components/vagas-parecidas.tsx", "components/ajuda-pergunta.tsx", "components/traducao-aviso.tsx"]) {
       const src = fs.readFileSync(path.join(__dirname, "..", arq), "utf-8");
       const m = [...src.matchAll(/IaLink ancora="([^"]+)"/g)].map((x) => x[1]);
       expect(m.length).toBeGreaterThan(0);

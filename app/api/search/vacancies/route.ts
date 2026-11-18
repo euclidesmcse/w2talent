@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchVacancies, PAGE_SIZE } from "@/lib/search";
 import { anexarEmpresas } from "@/lib/empresa";
+import { anexarTraducoes } from "@/lib/traducao-anexar";
 import { isValidLocale, defaultLocale, type Locale } from "@/i18n";
 
 export async function GET(req: NextRequest) {
@@ -23,9 +24,11 @@ export async function GET(req: NextRequest) {
   // hybrid tsvector + pgvector where status=ativo only handled inside searchVacancies
   const result = await searchVacancies(params);
   // 2.1a (D2): nome da empresa e se ela já foi validada (etiqueta "Empresa não verificada").
-  const items = await import("@/lib/prisma")
-    .then(({ prisma }) => anexarEmpresas(prisma, result.items as { companyId?: string | null }[]))
-    .catch(() => result.items);
+  const comEmpresa = await import("@/lib/prisma")
+    .then(({ prisma }) => anexarEmpresas(prisma, result.items as { id?: string | null; companyId?: string | null }[]))
+    .catch(() => result.items as { id?: string | null; companyId?: string | null }[]);
+  // 2.7a: tradução automática no idioma de quem vê (campo à parte; o original não muda).
+  const items = await anexarTraducoes(comEmpresa, lang);
 
   const tookMs = Date.now() - start;
   // p95 budget header
