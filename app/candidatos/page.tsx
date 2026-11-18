@@ -272,7 +272,7 @@ export default function CandidatosPage() {
         {painelAberto ? <FichaPainel item={itemDetalhe} titulo={tituloDetalhe} antes={matchDoDetalhe} onClose={closeModal} triggerRef={activeTrigger} focoVolta={focoVolta} /> : null}
         </div>
         {!painelLado ? <DetailModal open={modalOpen} onClose={closeModal} item={itemDetalhe} triggerRef={activeTrigger} title={tituloDetalhe} antes={matchDoDetalhe} /> : null}
-        <BatchBar variant="candidatos" onAction={(ids) => { void ids; }} />
+        <BatchBar variant="candidatos" onAction={(ids) => { void ids; }} compararHref={`/candidatos/comparar${filtros.vaga ? `?vaga=${encodeURIComponent(filtros.vaga)}` : ""}`} />
       </div>
       </main>
     </div>

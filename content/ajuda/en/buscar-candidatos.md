@@ -2,7 +2,7 @@
 titulo: Searching candidates
 resumo: Search, reference job, filters and the W2 Profile on the side.
 areas: recrutador
-telas: /candidatos
+telas: /candidatos, /candidatos/comparar
 ordem: 13
 ---
 
@@ -25,3 +25,7 @@ Filters stay in the page address, so you can save or share the search.
 ## Viewing the W2 Profile
 
 On a computer, "View" opens the W2 Profile next to the list. On a phone, it opens in a window. With a job picked, the top shows "For the X job: 87%" and everything missing.
+
+## Compare
+
+Select up to 10 candidates and use "Compare" in the bottom bar. The screen shows the candidates side by side, with the W2 Profile fields in rows and, with a job chosen, the match and what is missing. Contact details are masked, as in search. "Remove" takes someone out of the comparison and the selection.

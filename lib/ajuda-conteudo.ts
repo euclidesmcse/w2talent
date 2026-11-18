@@ -187,10 +187,11 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
         "recrutador"
       ],
       "telas": [
-        "/candidatos"
+        "/candidatos",
+        "/candidatos/comparar"
       ],
       "ordem": 13,
-      "corpo": "[Candidatos](/candidatos) é só para recrutador com login e autenticador.\n\n## Buscar\n\nEscreva o que procura, por exemplo \"analista cloud AWS\". A busca entende sinônimos: AWS e Cloud aparecem juntos.\n\n## Para a vaga\n\nEscolha uma vaga ativa da sua empresa em \"Para a vaga\". A lista passa a sair pelo [match](/ajuda/match) com ela, e cada linha mostra o que falta.\n\n## Filtros\n\nEm \"Filtros\" você combina competências (a ficha precisa ter todas), senioridade, modelo, regime, pretensão mensal até, idioma e nível, quando pode começar e ficha atualizada. Quem não informou disponibilidade ou pretensão continua aparecendo.\n\nOs filtros ficam no endereço da página, então dá para guardar ou compartilhar a busca.\n\n## Ver a Ficha W2\n\nNo computador, \"Ver\" abre a Ficha W2 ao lado da lista. No celular, abre numa janela. Com uma vaga escolhida, o topo mostra \"Para a vaga X: 87%\" e tudo o que falta."
+      "corpo": "[Candidatos](/candidatos) é só para recrutador com login e autenticador.\n\n## Buscar\n\nEscreva o que procura, por exemplo \"analista cloud AWS\". A busca entende sinônimos: AWS e Cloud aparecem juntos.\n\n## Para a vaga\n\nEscolha uma vaga ativa da sua empresa em \"Para a vaga\". A lista passa a sair pelo [match](/ajuda/match) com ela, e cada linha mostra o que falta.\n\n## Filtros\n\nEm \"Filtros\" você combina competências (a ficha precisa ter todas), senioridade, modelo, regime, pretensão mensal até, idioma e nível, quando pode começar e ficha atualizada. Quem não informou disponibilidade ou pretensão continua aparecendo.\n\nOs filtros ficam no endereço da página, então dá para guardar ou compartilhar a busca.\n\n## Ver a Ficha W2\n\nNo computador, \"Ver\" abre a Ficha W2 ao lado da lista. No celular, abre numa janela. Com uma vaga escolhida, o topo mostra \"Para a vaga X: 87%\" e tudo o que falta.\n\n## Comparar\n\nMarque até 10 candidatos e use \"Comparar\" na barra de baixo. A tela mostra os candidatos lado a lado, com os campos da Ficha W2 em linhas e, com uma vaga escolhida, o match e o que falta. O contato aparece mascarado, como na busca. \"Tirar\" remove alguém da comparação e da seleção."
     },
     {
       "slug": "instalar-app",
@@ -409,10 +410,11 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
         "recrutador"
       ],
       "telas": [
-        "/candidatos"
+        "/candidatos",
+        "/candidatos/comparar"
       ],
       "ordem": 13,
-      "corpo": "[Candidates](/candidatos) is only for recruiters signed in with the authenticator.\n\n## Search\n\nType what you look for, for example \"cloud analyst AWS\". Search understands synonyms: AWS and Cloud show up together.\n\n## For the job\n\nPick an active job of your company in \"For the job\". The list is then sorted by [match](/ajuda/match) with it, and each row shows what is missing.\n\n## Filters\n\nIn \"Filters\" you combine skills (the profile must have all of them), seniority, work model, contract type, monthly expected pay up to, language and level, start date and profile updated. People who did not give availability or expected pay still show up.\n\nFilters stay in the page address, so you can save or share the search.\n\n## Viewing the W2 Profile\n\nOn a computer, \"View\" opens the W2 Profile next to the list. On a phone, it opens in a window. With a job picked, the top shows \"For the X job: 87%\" and everything missing."
+      "corpo": "[Candidates](/candidatos) is only for recruiters signed in with the authenticator.\n\n## Search\n\nType what you look for, for example \"cloud analyst AWS\". Search understands synonyms: AWS and Cloud show up together.\n\n## For the job\n\nPick an active job of your company in \"For the job\". The list is then sorted by [match](/ajuda/match) with it, and each row shows what is missing.\n\n## Filters\n\nIn \"Filters\" you combine skills (the profile must have all of them), seniority, work model, contract type, monthly expected pay up to, language and level, start date and profile updated. People who did not give availability or expected pay still show up.\n\nFilters stay in the page address, so you can save or share the search.\n\n## Viewing the W2 Profile\n\nOn a computer, \"View\" opens the W2 Profile next to the list. On a phone, it opens in a window. With a job picked, the top shows \"For the X job: 87%\" and everything missing.\n\n## Compare\n\nSelect up to 10 candidates and use \"Compare\" in the bottom bar. The screen shows the candidates side by side, with the W2 Profile fields in rows and, with a job chosen, the match and what is missing. Contact details are masked, as in search. \"Remove\" takes someone out of the comparison and the selection."
     },
     {
       "slug": "instalar-app",
@@ -631,10 +633,11 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
         "recrutador"
       ],
       "telas": [
-        "/candidatos"
+        "/candidatos",
+        "/candidatos/comparar"
       ],
       "ordem": 13,
-      "corpo": "[Candidatos](/candidatos) es solo para reclutadores con sesión iniciada y autenticador.\n\n## Buscar\n\nEscribe lo que buscas, por ejemplo \"analista cloud AWS\". La búsqueda entiende sinónimos: AWS y Cloud aparecen juntos.\n\n## Para la vacante\n\nElige una vacante activa de tu empresa en \"Para la vacante\". La lista se ordena por el [match](/ajuda/match) con ella, y cada fila muestra lo que falta.\n\n## Filtros\n\nEn \"Filtros\" combinas competencias (la ficha debe tenerlas todas), seniority, modalidad, régimen, pretensión mensual hasta, idioma y nivel, cuándo puede empezar y ficha actualizada. Quien no informó disponibilidad o pretensión sigue apareciendo.\n\nLos filtros quedan en la dirección de la página, así puedes guardar o compartir la búsqueda.\n\n## Ver la Ficha W2\n\nEn la computadora, \"Ver\" abre la Ficha W2 al lado de la lista. En el celular, se abre en una ventana. Con una vacante elegida, arriba aparece \"Para la vacante X: 87%\" y todo lo que falta."
+      "corpo": "[Candidatos](/candidatos) es solo para reclutadores con sesión iniciada y autenticador.\n\n## Buscar\n\nEscribe lo que buscas, por ejemplo \"analista cloud AWS\". La búsqueda entiende sinónimos: AWS y Cloud aparecen juntos.\n\n## Para la vacante\n\nElige una vacante activa de tu empresa en \"Para la vacante\". La lista se ordena por el [match](/ajuda/match) con ella, y cada fila muestra lo que falta.\n\n## Filtros\n\nEn \"Filtros\" combinas competencias (la ficha debe tenerlas todas), seniority, modalidad, régimen, pretensión mensual hasta, idioma y nivel, cuándo puede empezar y ficha actualizada. Quien no informó disponibilidad o pretensión sigue apareciendo.\n\nLos filtros quedan en la dirección de la página, así puedes guardar o compartir la búsqueda.\n\n## Ver la Ficha W2\n\nEn la computadora, \"Ver\" abre la Ficha W2 al lado de la lista. En el celular, se abre en una ventana. Con una vacante elegida, arriba aparece \"Para la vacante X: 87%\" y todo lo que falta.\n\n## Comparar\n\nMarca hasta 10 candidatos y usa \"Comparar\" en la barra de abajo. La pantalla muestra los candidatos lado a lado, con los campos de la Ficha W2 en filas y, con una vacante elegida, el match y lo que falta. El contacto aparece enmascarado, como en la búsqueda. \"Quitar\" saca a alguien de la comparación y de la selección."
     },
     {
       "slug": "instalar-app",
