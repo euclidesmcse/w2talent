@@ -3,10 +3,11 @@
  * 2.3a Comparar candidatos (plano 2.3, aprovado pelo Euclides em 2026-11-18): os selecionados em
  * Candidatos (até 10) lado a lado, candidatos em colunas e campos da Ficha W2 em linhas (D2),
  * com o match da vaga de referência escolhida. Contato só mascarado (D3).
+ * 2.3b: exporta a mesma tabela em CSV, Excel ou PDF (impressão), tudo no navegador (D4).
  */
 import * as React from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
 import { Button, Field, Select } from "@/components/ui";
 import { buttonClasses } from "@/components/ui/button";
@@ -15,12 +16,24 @@ import { selectionStore } from "@/lib/selection-store";
 import { useLinhasComparacao } from "@/components/comparar-linhas";
 import type { VagaOpcao } from "@/components/candidatos-filtros";
 import type { ItemComparacao } from "@/lib/comparar";
+import { gerarCsv, gerarXlsx, nomeArquivo, separadorCsv, tabelaPorCandidato } from "@/lib/exportar";
 
 type Estado =
   | { t: "carregando" }
   | { t: "vazio" }
   | { t: "erro" }
   | { t: "pronto"; itens: ItemComparacao[]; fora: number; vaga: { id: string; titulo: string } | null };
+
+function baixar(dados: BlobPart, tipo: string, nome: string) {
+  const url = URL.createObjectURL(new Blob([dados], { type: tipo }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nome;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 function lerSelecao(): string[] {
   try {
@@ -33,6 +46,7 @@ function lerSelecao(): string[] {
 export default function CompararPage() {
   const t = useTranslations("comparar");
   const tr = useTranslations();
+  const locale = useLocale();
   const conta = useConta();
   const liberado = conta.estado === "ok" && conta.conta?.perfil === "recrutador";
   const [vaga, setVaga] = React.useState<string | undefined>(undefined);
@@ -103,6 +117,24 @@ export default function CompararPage() {
   const linhas = useLinhasComparacao(itens, comVaga);
   const voltar = `/candidatos${vaga ? `?vaga=${encodeURIComponent(vaga)}` : ""}`;
 
+  // 2.3b: o sinal "exportou" vai em segundo plano; o arquivo não depende dele.
+  const avisarExportou = (formato: "csv" | "xlsx" | "pdf") => {
+    if (estado.t !== "pronto") return;
+    fetch("/api/candidates/exportou", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ids: estado.itens.map((it) => it.id), vaga: estado.vaga?.id, formato }),
+      keepalive: true,
+    }).catch(() => {});
+  };
+  const tabela = () => tabelaPorCandidato(t("campo_nome"), itens.map((it) => it.nome), linhas);
+  const exportar = (formato: "csv" | "xlsx" | "pdf") => {
+    if (formato === "csv") baixar(gerarCsv(tabela(), separadorCsv(locale)), "text/csv;charset=utf-8", nomeArquivo("csv"));
+    else if (formato === "xlsx") baixar(gerarXlsx(tabela(), estado.t === "pronto" && estado.vaga ? estado.vaga.titulo : t("title")), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", nomeArquivo("xlsx"));
+    else window.print();
+    avisarExportou(formato);
+  };
+
   const tirar = (id: string) => {
     try { selectionStore.remove(id); } catch {}
     setEstado((e) => {
@@ -136,15 +168,18 @@ export default function CompararPage() {
 
   return (
     <div>
-      <AppHeader area="recrutador" active="/candidatos" />
-      <main className="mx-auto max-w-[1480px] px-4 py-6 md:px-6">
-        <Link href={voltar} className="text-[13px] font-medium text-brand underline underline-offset-2">{t("voltar")}</Link>
+      <div className="print:hidden"><AppHeader area="recrutador" active="/candidatos" /></div>
+      {/* PDF: a impressão sai deitada, só com o título, a vaga e a tabela. */}
+      <style>{"@media print{@page{size:A4 landscape;margin:12mm}}"}</style>
+      <main className="mx-auto max-w-[1480px] px-4 py-6 md:px-6 print:max-w-none print:p-0">
+        <Link href={voltar} className="text-[13px] font-medium text-brand underline underline-offset-2 print:hidden">{t("voltar")}</Link>
         <h1 className="mt-2 text-xl font-semibold">{t("title")}</h1>
         <p className="mt-1 text-sm text-muted" aria-live="polite">
           {estado.t === "pronto" ? t("lead", { n: estado.itens.length }) : estado.t === "carregando" ? tr("common.loading") : ""}
         </p>
 
-        <div className="mt-4 flex flex-wrap items-end gap-3">
+        {estado.t === "pronto" && estado.vaga ? <p className="mt-1 hidden text-sm print:block">{t("paraVaga", { vaga: estado.vaga.titulo })}</p> : null}
+        <div className="mt-4 flex flex-wrap items-end gap-3 print:hidden">
           <Field label={tr("candidatos.filtros.vaga")} className="min-w-0 max-w-[420px] flex-[1_1_260px]">
             <Select data-testid="comparar-vaga" value={vaga ?? ""} onChange={(e) => { setVagaSumiu(false); setVaga(e.target.value || undefined); }} disabled={!vagas?.length}>
               <option value="">{tr("candidatos.filtros.vagaNenhuma")}</option>
@@ -153,6 +188,13 @@ export default function CompararPage() {
               ))}
             </Select>
           </Field>
+          {estado.t === "pronto" ? (
+            <div role="group" aria-label={t("exportar")} className="flex flex-wrap gap-2" data-testid="comparar-exportar">
+              <Button variant="secondary" size="md" data-action="exportar-csv" onClick={() => exportar("csv")}>{t("baixarCsv")}</Button>
+              <Button variant="secondary" size="md" data-action="exportar-xlsx" onClick={() => exportar("xlsx")}>{t("baixarXlsx")}</Button>
+              <Button variant="secondary" size="md" data-action="exportar-pdf" onClick={() => exportar("pdf")}>{t("imprimirPdf")}</Button>
+            </div>
+          ) : null}
         </div>
         {vagaSumiu ? <p role="status" className="mt-2 text-[13px] text-danger">{tr("candidatos.filtros.vagaSumiu")}</p> : null}
         {estado.t === "pronto" && estado.fora > 0 ? <p role="status" className="mt-2 text-[13px] text-muted">{t("fora", { n: estado.fora })}</p> : null}
@@ -168,7 +210,7 @@ export default function CompararPage() {
 
         {estado.t === "pronto" && (
           <>
-            <div className="mt-5 overflow-x-auto rounded-card border border-line bg-surface" data-testid="comparar-tabela">
+            <div className="mt-5 overflow-x-auto rounded-card border border-line bg-surface print:overflow-visible print:border-0" data-testid="comparar-tabela">
               <table className="w-full border-collapse text-sm">
                 <caption className="sr-only">{t("caption", { n: itens.length })}</caption>
                 <thead>
@@ -179,7 +221,7 @@ export default function CompararPage() {
                     {itens.map((it) => (
                       <th key={it.id} scope="col" className="min-w-[200px] px-3 py-3 text-left align-top" data-comparar-id={it.id}>
                         <span className="block font-semibold text-ink">{it.nome}</span>
-                        <Button variant="ghost" size="sm" className="-ml-2 mt-1" aria-label={t("tirar", { nome: it.nome })} onClick={() => tirar(it.id)}>
+                        <Button variant="ghost" size="sm" className="-ml-2 mt-1 print:hidden" aria-label={t("tirar", { nome: it.nome })} onClick={() => tirar(it.id)}>
                           {t("tirarCurto")}
                         </Button>
                       </th>
@@ -198,7 +240,7 @@ export default function CompararPage() {
                 </tbody>
               </table>
             </div>
-            <p className="mt-3 text-[13px] text-muted">
+            <p className="mt-3 text-[13px] text-muted print:hidden">
               {t("rodape")}{" "}
               {comVaga ? <a href="/ia#match" className="text-brand underline">{tr("candidatos.match.comoFunciona")}</a> : null}
             </p>

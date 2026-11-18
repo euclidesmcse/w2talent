@@ -103,4 +103,26 @@ describeDb("POST /api/candidates/comparar", () => {
     expect(j.itens[1].gaps).toContainEqual({ kind: "skill", skill: "kubernetes" });
     expect((await pedir(rec(REC_A), { ids: [IDS[0]], vaga: vagaB })).status).toBe(404);
   });
+
+  it("2.3b: exportar grava um sinal por candidato ativo, sem conteúdo da ficha", async () => {
+    const { POST } = await import("../app/api/candidates/exportou/route");
+    const exportou = (conta: ContaTeste | null, body: unknown) =>
+      POST(new NextRequest("https://w2.test/api/candidates/exportou", { method: "POST", headers: { "content-type": "application/json", ...(conta ? { cookie: cookieDeTeste(conta) } : {}) }, body: JSON.stringify(body) }));
+    expect((await exportou(null, { ids: [IDS[0]], formato: "csv" })).status).toBe(401);
+    expect((await exportou(rec(REC_A), { ids: [IDS[0]], formato: "docx" })).status).toBe(422);
+    await db.feedbackSignal.deleteMany({ where: { candidateId: { in: IDS }, tipo: "exportou" } });
+    const r = await exportou(rec(REC_A), { ids: [IDS[0], IDS[1], IDS[2]], vaga: vagaA, formato: "xlsx" });
+    expect(await r.json()).toEqual({ ok: true, sinais: 2 });
+    // Vaga de outra empresa não entra no sinal.
+    await exportou(rec(REC_A), { ids: [IDS[0]], vaga: vagaB, formato: "pdf" });
+    const sinais = await db.feedbackSignal.findMany({ where: { candidateId: { in: IDS }, tipo: "exportou" }, orderBy: { createdAt: "asc" } });
+    expect(sinais.map((s) => [s.candidateId, s.vacancyId, s.ator, s.dados])).toEqual(
+      expect.arrayContaining([
+        [IDS[0], vagaA, "recrutador", { formato: "xlsx" }],
+        [IDS[1], vagaA, "recrutador", { formato: "xlsx" }],
+        [IDS[0], null, "recrutador", { formato: "pdf" }],
+      ]),
+    );
+    expect(sinais).toHaveLength(3);
+  });
 });

@@ -29,3 +29,5 @@ On a computer, "View" opens the W2 Profile next to the list. On a phone, it open
 ## Compare
 
 Select up to 10 candidates and use "Compare" in the bottom bar. The screen shows the candidates side by side, with the W2 Profile fields in rows and, with a job chosen, the match and what is missing. Contact details are masked, as in search. "Remove" takes someone out of the comparison and the selection.
+
+"Download CSV" and "Download Excel" save the table with one row per candidate; "Print or PDF" opens the browser's print dialog, where you can save as PDF. The files are built in your browser and carry masked contact details. W2Talent only records that an export happened, not its content.

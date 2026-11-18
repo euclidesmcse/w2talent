@@ -1175,6 +1175,12 @@
     "campo_resumo": "Summary",
     "campo_destaques": "Highlights",
     "campo_contato": "Contact",
-    "campo_atualizado": "Updated"
+    "campo_atualizado": "Updated",
+    "campo_nome": "Name",
+    "exportar": "Export the comparison",
+    "baixarCsv": "Download CSV",
+    "baixarXlsx": "Download Excel",
+    "imprimirPdf": "Print or PDF",
+    "paraVaga": "For the job: {vaga}"
   }
 }

@@ -10,6 +10,7 @@ export const TIPOS_SINAL = [
   "aprovacao_desfeita", // candidato tirou a aprovação
   "aprovacao_caiu", // a vaga mudou depois da aprovação e ela caiu no envio
   "candidatura_enviada", // a candidatura saiu no lote
+  "exportou", // 2.3b: o recrutador exportou a comparação com este candidato (formato em dados)
 ] as const;
 export type TipoSinal = (typeof TIPOS_SINAL)[number];
 
