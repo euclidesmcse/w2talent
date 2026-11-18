@@ -13,6 +13,7 @@ import { HYBRID_WEIGHTS, searchVacanciesDb, searchCandidatesDb, type DbSearchPag
 import { normalizeSkill, SKILLS, getSkill } from "./taxonomy";
 import { parseQueryIntent, skillTextTerms, type IntentChip } from "./query-intent";
 import { hasCriteria, matchVacancy } from "./match";
+import { vizinhasDe } from "./taxonomia-proximas";
 
 // ── Constantes ─────────────────────────────────────────────────────────
 export const PAGE_SIZE = 20;
@@ -449,11 +450,13 @@ export async function searchVacancies(params: SearchParams, dataSource?: any[]):
 
   const page = Math.max(1, params.page ?? 1);
   const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, params.pageSize ?? PAGE_SIZE));
-  const anyTerms = intent.skills.flatMap(skillTextTerms);
+  // 2.2a: vagas que pedem uma competência próxima também entram na lista (com metade dos pontos no match).
+  const anyTerms = [...new Set(intent.skills.flatMap(vizinhasDe))].flatMap(skillTextTerms);
   const r = await searchKind("vacancy", { ...params, page: 1, pageSize: MATCH_POOL }, dataSource, {
     textQ: intent.rest,
     anyTerms,
-    memoryQ: [intent.rest, ...intent.skills.map((s) => getSkill(s)?.label ?? s)].filter(Boolean).join(" "),
+    // Na busca em memória (demonstração e testes), as vizinhas também entram no texto buscado.
+    memoryQ: [intent.rest, ...[...new Set(intent.skills.flatMap(vizinhasDe))].map((s) => getSkill(s)?.label ?? s)].filter(Boolean).join(" "),
     pool: MATCH_POOL,
   });
   const now = Date.now();
