@@ -1,5 +1,5 @@
 // 2.1c: reescrita sem viés e perguntas de entrevista (IA falsa; sem rede).
-import { gerarPerguntas, perguntasPorModelo, reescreverSemVies, sanitizarPerguntas, type ChatExtraFn } from "@/lib/vaga-ia-extra";
+import { gerarPerguntas, MAX_ITEM_REVISAR, perguntasPorModelo, reescreverSemVies, sanitizarPerguntas, textoParaRevisar, type ChatExtraFn } from "@/lib/vaga-ia-extra";
 import { rascunhoVazio } from "@/lib/vaga-campos";
 
 const resposta = (obj: unknown): ChatExtraFn => async () => ({ text: JSON.stringify(obj) });
@@ -23,6 +23,16 @@ describe("reescrita sem viés", () => {
     const p = await reescreverSemVies(texto, resposta({ titulo: "", descricaoBullets: ["Pessoa proativa"], beneficios: [] }));
     expect(p?.titulo).toBe("Vendedor");
     expect(p?.beneficios).toEqual(["VR"]);
+  });
+
+  it("texto longo vai inteiro (nada de cortar em 12 itens ou 200 letras); acima do limite, recusa", async () => {
+    const longo = { titulo: "Vendedor", descricaoBullets: [...Array.from({ length: 13 }, (_, i) => `Item ${i + 1}`), "Buscamos pessoa jovem"], beneficios: ["B".repeat(318)] };
+    expect(textoParaRevisar(longo)).toEqual(longo);
+    expect(textoParaRevisar({ ...longo, beneficios: ["x".repeat(MAX_ITEM_REVISAR + 1)] })).toBeNull();
+    expect(textoParaRevisar({ ...longo, descricaoBullets: [1, 2] })).toBeNull();
+    const p = await reescreverSemVies(longo, resposta({ ...longo, descricaoBullets: longo.descricaoBullets.map((b) => b.replace("jovem", "proativa")) }));
+    expect(p?.descricaoBullets).toHaveLength(14);
+    expect(p?.beneficios[0]).toHaveLength(318);
   });
 
   it("IA quebrada, sem JSON ou sem mudança: null", async () => {
@@ -64,5 +74,11 @@ describe("perguntas de entrevista", () => {
     const m = perguntasPorModelo(vaga, "pt-BR");
     expect(m.map((x) => x.competencia)).toEqual(["React", "TypeScript", "Manter o front-end", ""]);
     expect(m[0].pergunta).toContain("React");
+  });
+
+  it("responsabilidade com viés não vira pergunta nos modelos fixos", () => {
+    const m = perguntasPorModelo({ stack: [], descricaoBullets: ["Boa aparência", "Sem filhos", "Atender clientes"] }, "pt-BR");
+    expect(m.map((x) => x.competencia)).toEqual(["Atender clientes", ""]);
+    expect(sanitizarPerguntas(m)).toHaveLength(2);
   });
 });

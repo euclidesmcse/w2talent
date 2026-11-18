@@ -10,7 +10,6 @@ import type { ChatRequest, ChatResult } from "./ai/types";
 import { redactContacts } from "./ai/redact";
 import { parseJsonObject } from "./ficha-ai";
 import { getSkill } from "./taxonomy";
-import { sanitizarRascunho } from "./vaga-ai";
 import type { RascunhoVaga } from "./vaga-campos";
 import { revisarVies, type AvisoVies } from "./vaga-vies";
 
@@ -27,6 +26,37 @@ export function avisosDoTexto(v: TextoVaga): AvisoVies[] {
 }
 
 // ── Reescrita sem viés ─────────────────────────────────────────────────────
+
+/** Limites da reescrita: folgados, para não cortar texto que a tela e a vaga aceitam. */
+export const MAX_TITULO_REVISAR = 200;
+export const MAX_ITENS_REVISAR = 60;
+export const MAX_ITEM_REVISAR = 2000;
+
+function itens(v: unknown): string[] | null {
+  if (!Array.isArray(v)) return v === undefined || v === null ? [] : null;
+  const out: string[] = [];
+  for (const x of v) {
+    if (typeof x !== "string") return null;
+    const s = x.replace(/[ \t]+/g, " ").trim();
+    if (s.length > MAX_ITEM_REVISAR) return null;
+    if (s) out.push(s);
+  }
+  return out.length > MAX_ITENS_REVISAR ? null : out;
+}
+
+/**
+ * Texto da vaga para revisar, inteiro. Null quando passa dos limites (nunca corta em silêncio:
+ * usar uma proposta cortada apagaria requisitos ou benefícios).
+ */
+export function textoParaRevisar(input: unknown): TextoVaga | null {
+  const o = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
+  const titulo = typeof o.titulo === "string" ? o.titulo.replace(/\s+/g, " ").trim() : "";
+  if (titulo.length > MAX_TITULO_REVISAR) return null;
+  const descricaoBullets = itens(o.descricaoBullets);
+  const beneficios = itens(o.beneficios);
+  if (!descricaoBullets || !beneficios) return null;
+  return { titulo, descricaoBullets, beneficios };
+}
 
 const SYSTEM_VIES = `You edit job postings to remove exclusionary language. Reply with one JSON object only.
 Rewrite only what is needed so the posting does not filter people by age, gender, appearance, national origin or native language, marital or family status, health or disability, or religion.
@@ -57,7 +87,13 @@ export async function reescreverSemVies(v: TextoVaga, chat: ChatExtraFn): Promis
     });
     const obj = parseJsonObject(r.text);
     if (!obj) return null;
-    const limpo = sanitizarRascunho({ titulo: obj.titulo, descricaoBullets: obj.descricaoBullets, beneficios: obj.beneficios });
+    const lido = textoParaRevisar(obj);
+    if (!lido) return null;
+    const limpo: TextoVaga = {
+      titulo: redactContacts(lido.titulo),
+      descricaoBullets: lido.descricaoBullets.map(redactContacts),
+      beneficios: lido.beneficios.map(redactContacts),
+    };
     const out: TextoVaga = {
       titulo: limpo.titulo || v.titulo,
       // Lista vazia quase sempre é resposta quebrada: mantém a do recrutador.
@@ -125,7 +161,9 @@ export function perguntasPorModelo(v: Pick<RascunhoVaga, "stack" | "descricaoBul
     const nome = nomeSkill(id);
     return { competencia: nome, pergunta: p.replace("{x}", nome), observar: o };
   });
-  for (const b of v.descricaoBullets.slice(0, 2)) {
+  // Responsabilidade que cai no revisor de viés ("Boa aparência", "Sem filhos") não vira pergunta.
+  const tarefas = v.descricaoBullets.filter((b) => !revisarVies({ descricao: b }).length);
+  for (const b of tarefas.slice(0, 2)) {
     const x = b.length > 120 ? `${b.slice(0, 117)}...` : b;
     out.push({ competencia: x, pergunta: m.tarefa[0].replace("{x}", x), observar: m.tarefa[1] });
   }

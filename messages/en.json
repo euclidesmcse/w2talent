@@ -1019,7 +1019,9 @@
       "erros": {
         "ia_indisponivel": "AI did not answer right now. Use the replacements above or edit the text.",
         "limite_dia": "You reached today's rewrite limit. Use the replacements above or edit the text.",
-        "sem_avisos": "There are no flagged terms to rewrite."
+        "sem_avisos": "There are no flagged terms to rewrite.",
+        "mudou": "The text changed while AI was answering. Ask again to get a proposal for the current text.",
+        "texto_longo": "The text is too long for AI to review. Use the replacements above or edit the text."
       }
     },
     "perguntas": {

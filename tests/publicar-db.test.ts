@@ -198,6 +198,8 @@ describeDb("publicar vaga", () => {
     const sem = await POST(req("/api/vacancies/revisar", "POST", rec(REC_A), { titulo: "Analista", descricaoBullets: ["AWS"], beneficios: [] }));
     expect(sem.status).toBe(422);
     expect((await sem.json()).error).toBe("sem_avisos");
+    const longo = await POST(req("/api/vacancies/revisar", "POST", rec(REC_A), { ...corpo, beneficios: ["x".repeat(3000)] }));
+    expect(longo.status).toBe(413);
     const r = await POST(req("/api/vacancies/revisar", "POST", rec(REC_A), corpo));
     expect(r.status).toBe(503);
     expect((await r.json()).error).toBe("ia_indisponivel");

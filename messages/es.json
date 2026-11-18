@@ -1019,7 +1019,9 @@
       "erros": {
         "ia_indisponivel": "La IA no respondió ahora. Usa los cambios de arriba o edita el texto.",
         "limite_dia": "Llegaste al límite de reescrituras de hoy. Usa los cambios de arriba o edita el texto.",
-        "sem_avisos": "No hay términos señalados para reescribir."
+        "sem_avisos": "No hay términos señalados para reescribir.",
+        "mudou": "El texto cambió mientras la IA respondía. Pide de nuevo para ver una propuesta del texto actual.",
+        "texto_longo": "El texto es demasiado largo para que la IA lo revise. Usa los cambios de arriba o edita el texto."
       }
     },
     "perguntas": {

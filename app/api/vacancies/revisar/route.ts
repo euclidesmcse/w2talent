@@ -6,8 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { acessoVaga } from "@/lib/empresa";
 import { NO_STORE } from "@/lib/sessao";
 import { chaveUso, consumirUso, LIMITE_REVISOES_VAGA_DIA } from "@/lib/uso-diario";
-import { sanitizarRascunho } from "@/lib/vaga-ai";
-import { avisosDoTexto, reescreverSemVies, type ChatExtraFn } from "@/lib/vaga-ia-extra";
+import { avisosDoTexto, reescreverSemVies, textoParaRevisar, type ChatExtraFn } from "@/lib/vaga-ia-extra";
 
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: NO_STORE });
 
@@ -16,8 +15,9 @@ export async function POST(req: NextRequest) {
   const a = await acessoVaga(req, prisma);
   if ("erro" in a) return a.erro;
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-  const r = sanitizarRascunho({ titulo: body.titulo, descricaoBullets: body.descricaoBullets, beneficios: body.beneficios });
-  const texto = { titulo: r.titulo, descricaoBullets: r.descricaoBullets, beneficios: r.beneficios };
+  // O texto vai inteiro (sem o corte da leitura da vaga); longo demais é recusado, nunca cortado.
+  const texto = textoParaRevisar(body);
+  if (!texto) return json({ error: "texto_longo" }, 413);
   // Sem aviso das regras, não há o que reescrever (e não gasta IA).
   if (!avisosDoTexto(texto).length) return json({ error: "sem_avisos" }, 422);
 

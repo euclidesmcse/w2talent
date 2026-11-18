@@ -1019,7 +1019,9 @@
       "erros": {
         "ia_indisponivel": "A IA não respondeu agora. Use as trocas acima ou edite o texto.",
         "limite_dia": "Você chegou ao limite de reescritas de hoje. Use as trocas acima ou edite o texto.",
-        "sem_avisos": "Não há termos apontados para reescrever."
+        "sem_avisos": "Não há termos apontados para reescrever.",
+        "mudou": "O texto mudou enquanto a IA respondia. Peça de novo para ver uma proposta do texto atual.",
+        "texto_longo": "O texto está longo demais para a IA revisar. Use as trocas acima ou edite o texto."
       }
     },
     "perguntas": {

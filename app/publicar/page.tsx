@@ -20,7 +20,7 @@ import { aplicarTroca, revisarVies, type AvisoVies, type CampoVies } from "@/lib
 
 type Duplicada = { id: string; titulo: string; updatedAt: string };
 type Faixa = { de: number; ate: number; base: number; moeda: string };
-type Proposta = { titulo: string; descricaoBullets: string[]; beneficios: string[]; restantes: number };
+type Proposta = { titulo: string; descricaoBullets: string[]; beneficios: string[]; restantes: number; chave: string };
 type Pergunta = { competencia: string; pergunta: string; observar: string };
 type Empresa = { nome: string; validacaoStatus: "pendente" | "validado" | "rejeitado" } | null;
 
@@ -166,12 +166,20 @@ export default function PublicarPage() {
     [form.titulo, form.descricao, form.beneficios],
   );
   const CAMPO_FORM: Record<CampoVies, "titulo" | "descricao" | "beneficios"> = { titulo: "titulo", descricao: "descricao", beneficios: "beneficios" };
+  // A proposta da IA vale só para o texto de onde saiu: mudou o texto, ela some.
+  const chaveTexto = JSON.stringify([form.titulo, form.descricao, form.beneficios]);
+  const chaveAtual = React.useRef(chaveTexto);
+  chaveAtual.current = chaveTexto;
+  React.useEffect(() => {
+    setProposta((p) => (p && p.chave !== chaveTexto ? null : p));
+  }, [chaveTexto]);
   const trocar = (a: AvisoVies) => setForm((f) => ({ ...f, [CAMPO_FORM[a.campo]]: aplicarTroca(f[CAMPO_FORM[a.campo]], a) }));
 
   const reescrever = async () => {
     setErroVies(null);
     setProposta(null);
     setReescrevendo(true);
+    const chave = chaveTexto;
     try {
       const r = await fetch("/api/vacancies/revisar", {
         method: "POST",
@@ -179,9 +187,12 @@ export default function PublicarPage() {
         body: JSON.stringify({ titulo: rascunho.titulo, descricaoBullets: rascunho.descricaoBullets, beneficios: rascunho.beneficios }),
       });
       const j = (await r.json().catch(() => ({}))) as { proposta?: Proposta; error?: string };
-      if (r.ok && j.proposta) return setProposta(j.proposta);
+      if (r.ok && j.proposta) {
+        if (chaveAtual.current !== chave) return setErroVies(t("vies.erros.mudou"));
+        return setProposta({ ...j.proposta, chave });
+      }
       if (r.status === 401 || r.status === 403) contaRecusada();
-      setErroVies(t(`vies.erros.${j.error === "limite_dia" || j.error === "sem_avisos" ? j.error : "ia_indisponivel"}`));
+      setErroVies(t(`vies.erros.${j.error === "limite_dia" || j.error === "sem_avisos" || j.error === "texto_longo" ? j.error : "ia_indisponivel"}`));
     } catch {
       setErroVies(t("vies.erros.ia_indisponivel"));
     } finally {
