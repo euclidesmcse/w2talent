@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchVacancies, PAGE_SIZE } from "@/lib/search";
+import { anexarEmpresas } from "@/lib/empresa";
 import { isValidLocale, defaultLocale, type Locale } from "@/i18n";
 
 export async function GET(req: NextRequest) {
@@ -21,6 +22,10 @@ export async function GET(req: NextRequest) {
 
   // hybrid tsvector + pgvector where status=ativo only handled inside searchVacancies
   const result = await searchVacancies(params);
+  // 2.1a (D2): nome da empresa e se ela já foi validada (etiqueta "Empresa não verificada").
+  const items = await import("@/lib/prisma")
+    .then(({ prisma }) => anexarEmpresas(prisma, result.items as { companyId?: string | null }[]))
+    .catch(() => result.items);
 
   const tookMs = Date.now() - start;
   // p95 budget header
@@ -30,7 +35,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json(
     {
-      items: result.items,
+      items,
       total: result.total,
       page: result.page,
       pageSize: result.pageSize,

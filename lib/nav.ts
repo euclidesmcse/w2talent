@@ -19,9 +19,15 @@ export const NAV: Record<Area, NavLink[]> = {
     { href: "/minha-ficha", key: "minhaFicha", shortKey: "minhaFichaCurto" },
     { href: "/minhas-candidaturas", key: "minhasCandidaturas", shortKey: "minhasCandidaturasCurto" },
   ],
-  // "Publicar vaga" e "Painel" entram aqui quando existirem
-  recrutador: [{ href: "/candidatos", key: "candidatos" }],
-  admin: [{ href: "/admin/ia", key: "ia" }],
+  // "Publicar vaga" (2.1b) e "Painel" entram aqui quando existirem
+  recrutador: [
+    { href: "/candidatos", key: "candidatos" },
+    { href: "/empresa", key: "empresa", shortKey: "empresaCurto" },
+  ],
+  admin: [
+    { href: "/admin/ia", key: "ia" },
+    { href: "/admin/empresas", key: "empresas" },
+  ],
 };
 
 /** Nome ao lado do logo. Candidato é a área padrão e não leva nome. */
@@ -36,6 +42,7 @@ export const AREA_SWITCH: Partial<Record<Area, NavLink>> = {
 const PREFIXES: [string, Area][] = [
   ["/admin", "admin"],
   ["/candidatos", "recrutador"],
+  ["/empresa", "recrutador"],
   ["/painel", "candidato"],
   ["/vagas", "candidato"],
   ["/minha-ficha", "candidato"],

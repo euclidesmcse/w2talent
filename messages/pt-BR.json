@@ -28,7 +28,10 @@
     "areaRecrutadores": "Recrutadores",
     "areaAdmin": "Admin",
     "ia": "IA",
-    "painel": "Painel"
+    "painel": "Painel",
+    "empresa": "Minha empresa",
+    "empresaCurto": "Empresa",
+    "empresas": "Empresas"
   },
   "lang": {
     "label": "Idioma",
@@ -118,7 +121,8 @@
     "onlyCandidates": "Candidaturas são para contas de candidato. Esta conta é de recrutador.",
     "searchMore": "Mais um termo",
     "jaEnviada": "Você já se candidatou a esta vaga em {date}.",
-    "parecidas": "Vagas parecidas"
+    "parecidas": "Vagas parecidas",
+    "naoVerificada": "Empresa não verificada"
   },
   "candidatos": {
     "title": "Candidatos",
@@ -819,5 +823,65 @@
     "seloParecidas": "Como escolhemos",
     "footerLink": "Como usamos IA",
     "voltar": "Ver vagas"
+  },
+  "empresa": {
+    "title": "Minha empresa",
+    "intro": "As vagas que você publicar saem em nome desta empresa. Até o W2Talent conferir os dados, elas aparecem com a etiqueta \"Empresa não verificada\".",
+    "nome": "Nome da empresa",
+    "site": "Site",
+    "siteHint": "Ex.: empresa.com.br",
+    "cnpj": "CNPJ (opcional)",
+    "cnpjHint": "Com ou sem pontuação. Ajuda na verificação.",
+    "emailContato": "E-mail para receber candidaturas",
+    "emailContatoHint": "Cada candidatura que o candidato aprovar chega neste e-mail.",
+    "criar": "Cadastrar empresa",
+    "salvar": "Salvar alterações",
+    "criada": "Empresa cadastrada.",
+    "salva": "Dados salvos.",
+    "statusLabel": "Situação",
+    "status": {
+      "pendente": "Em verificação",
+      "validado": "Verificada",
+      "rejeitado": "Recusada"
+    },
+    "statusHint": {
+      "pendente": "Suas vagas já aparecem, com a etiqueta \"Empresa não verificada\".",
+      "validado": "Suas vagas aparecem sem etiqueta.",
+      "rejeitado": "Não deu para verificar a empresa e as vagas dela foram arquivadas. Fale com contato@w2talent.com."
+    },
+    "reverificar": "Mudar o nome ou o CNPJ manda a empresa para nova verificação.",
+    "gateTitle": "Cadastro de empresa é para recrutadores",
+    "gateBody": "Entre com uma conta de recrutador para cadastrar a sua empresa.",
+    "gateCandidate": "Esta conta é de candidato. Para cadastrar uma empresa, entre com uma conta de recrutador.",
+    "mfaBody": "Para cadastrar a empresa, ligue o autenticador. Ele protege as vagas e os dados das pessoas.",
+    "erros": {
+      "nome": "Escreva o nome da empresa (de 2 a 120 letras).",
+      "site": "Endereço do site inválido.",
+      "cnpj": "CNPJ inválido. Confira os 14 números.",
+      "emailContato": "E-mail inválido.",
+      "cnpj_em_uso": "Este CNPJ já foi cadastrado por outra conta. Fale com contato@w2talent.com.",
+      "ja_tem_empresa": "Sua conta já tem uma empresa.",
+      "generic": "Não deu para salvar. Tente de novo.",
+      "mudou": "A situação da empresa mudou enquanto você editava. Recarregue a página."
+    }
+  },
+  "adminEmpresas": {
+    "title": "Empresas",
+    "intro": "Confira os dados de cada empresa antes de validar. Recusar arquiva as vagas ativas dela.",
+    "loginTitle": "Entrar no admin",
+    "vazio": "Nenhuma empresa cadastrada.",
+    "cnpj": "CNPJ",
+    "site": "Site",
+    "membros": "Cadastrada por",
+    "vagas": "Vagas ativas",
+    "criada": "Cadastro",
+    "acoes": "Ações",
+    "validar": "Validar",
+    "rejeitar": "Recusar",
+    "validada": "Empresa validada.",
+    "rejeitada": "Empresa recusada. {count, plural, =0 {Nenhuma vaga ativa} one {# vaga arquivada} other {# vagas arquivadas}}.",
+    "erro": "Não deu para salvar. Tente de novo.",
+    "confirmar": "Recusar {name}? As vagas ativas dela serão arquivadas.",
+    "mais": "Mostrar mais"
   }
 }

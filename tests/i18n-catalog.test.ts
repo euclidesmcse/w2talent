@@ -51,6 +51,10 @@ describe("catálogos de idioma", () => {
       "app/entrar/perfil/page.tsx",
       "app/entrar/codigo/page.tsx",
       "app/conta/seguranca/page.tsx",
+      "app/empresa/page.tsx",
+      "app/admin/empresas/page.tsx",
+      "components/admin-login.tsx",
+      "components/empresa-etiqueta.tsx",
     ];
     // namespaces passados para useTranslations/getTranslations em cada arquivo
     const missing: string[] = [];

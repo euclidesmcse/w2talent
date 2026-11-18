@@ -3,11 +3,18 @@ import { buildVacancyPayload, canCreateForCompany, validateVacancy } from "@/lib
 import { vacancyExpiresAt } from "@/lib/hygiene";
 import { runInBackground } from "@/lib/background";
 import { indexVacancy } from "@/lib/indexing";
+import { acessoVaga } from "@/lib/empresa";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({} as any));
-    // validate
+    const { prisma } = await import("@/lib/prisma");
+
+    // 2.1a (D3): só o recrutador logado (empresa do vínculo) ou o admin cria vaga.
+    const a = await acessoVaga(req, prisma);
+    if ("erro" in a) return a.erro;
+    if (a.acesso.tipo === "recrutador") body.companyId = a.acesso.empresa.id;
+
     try {
       validateVacancy(body);
     } catch (e: any) {
@@ -15,29 +22,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: e.message }, { status });
     }
 
-    // I1: enforce canCreateForCompany — lookup CompanyProfile
-    try {
-      const { prisma } = await import("@/lib/prisma");
-      const company = await (prisma as any).companyProfile.findUnique({ where: { id: String(body.companyId).trim() } }).catch(() => null);
-      if (!company) {
-        if (process.env.NODE_ENV !== "test") {
-          return NextResponse.json({ error: "empresa não encontrada" }, { status: 404 });
-        }
-        // fallback only under NODE_ENV=test: allow creation without DB
-      } else {
-        const check = canCreateForCompany(company as any);
-        if (!check.allowed) {
-          return NextResponse.json({ error: check.reason ?? "empresa rejeitada, não pode criar vagas" }, { status: 403 });
-        }
-        // propagate company validacao to payload
-        body.company = company;
-      }
-    } catch {
-      if (process.env.NODE_ENV !== "test") {
-        // if prisma import fails outside test, still allow? treat as DB unavailable -> 500 unless test
-        // but keep fallback only for test as per I1
-      }
-    }
+    const company = await prisma.companyProfile.findUnique({ where: { id: String(body.companyId).trim() } });
+    if (!company) return NextResponse.json({ error: "empresa não encontrada" }, { status: 404 });
+    const check = canCreateForCompany(company as any);
+    if (!check.allowed) return NextResponse.json({ error: check.reason ?? "empresa rejeitada, não pode criar vagas" }, { status: 403 });
+    body.company = company;
 
     const now = new Date();
     // vacancyExpiresAt centraliza TTL 14d
@@ -45,41 +34,27 @@ export async function POST(req: NextRequest) {
     // garante expiresAt via hygiene (explicit for route contract check)
     const expiresAt = payload.expiresAt ?? vacancyExpiresAt(now);
 
-    // Tenta persistir via Prisma — fallback para in-memory se DB indisponível (test env)
-    let created: any = null;
-    try {
-      const { prisma } = await import("@/lib/prisma");
-      // canonicalize stack para JSON [{skillId}]
-      created = await prisma.vacancy.create({
-        data: {
-          companyId: payload.companyId,
-          titulo: payload.titulo,
-          stack: payload.stack as any,
-          nivel: payload.nivel ?? undefined,
-          regime: payload.regime ?? undefined,
-          localidade: payload.localidade ?? undefined,
-          faixaDe: payload.faixaDe,
-          faixaAte: payload.faixaAte,
-          faixaMoeda: payload.faixaMoeda,
-          descricaoBullets: payload.descricaoBullets as any,
-          beneficios: payload.beneficios as any,
-          tipoContrato: payload.tipoContrato ?? undefined,
-          expiresAt,
-          status: "ativa",
-          renovacoes: 0,
-        },
-      });
-      // 1.5.9: vetor + tsvector em segundo plano (a resposta não espera o modelo).
-      const vacancyId = created.id;
-      runInBackground("indexar vaga", () => indexVacancy(vacancyId));
-    } catch {
-      // fallback sem DB (ex: test sem DATABASE_URL)
-      created = {
-        id: `vac_${Date.now()}`,
-        ...payload,
+    const created = await prisma.vacancy.create({
+      data: {
+        companyId: payload.companyId,
+        titulo: payload.titulo,
+        stack: payload.stack as any,
+        nivel: payload.nivel ?? undefined,
+        regime: payload.regime ?? undefined,
+        localidade: payload.localidade ?? undefined,
+        faixaDe: payload.faixaDe,
+        faixaAte: payload.faixaAte,
+        faixaMoeda: payload.faixaMoeda,
+        descricaoBullets: payload.descricaoBullets as any,
+        beneficios: payload.beneficios as any,
+        tipoContrato: payload.tipoContrato ?? undefined,
         expiresAt,
-      };
-    }
+        status: "ativa",
+        renovacoes: 0,
+      },
+    });
+    // 1.5.9: vetor + tsvector em segundo plano (a resposta não espera o modelo).
+    runInBackground("indexar vaga", () => indexVacancy(created.id));
 
     return NextResponse.json(
       {
@@ -93,8 +68,8 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (e: any) {
-    const status = e.status ?? e.statusCode ?? 500;
-    return NextResponse.json({ error: e.message ?? "erro interno vacancies POST" }, { status });
+    console.error("POST /api/vacancies", e?.code ?? e?.name ?? "erro");
+    return NextResponse.json({ error: "erro interno" }, { status: 500 });
   }
 }
 

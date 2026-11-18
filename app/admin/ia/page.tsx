@@ -8,6 +8,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
 import { Button, Card, CardBody, CardHeader, Field, Input, Select, Table, THead, Th, Tr, Td, useToast } from "@/components/ui";
 import { intlTag } from "@/lib/locale";
+import { AdminLoginCard } from "@/components/admin-login";
 
 type TestCell = { ok: boolean; detalhe?: string | null; latenciaMs?: number | null };
 type Tests = Partial<Record<TestName, TestCell>>;
@@ -137,7 +138,7 @@ export default function AdminIaPage() {
             </CardBody>
           </Card>
         ) : null}
-        {auth === "login" ? <LoginCard onDone={load} /> : null}
+        {auth === "login" ? <AdminLoginCard onDone={load} /> : null}
         {auth === "ok" && state ? (
           <>
             <ProvidersCard state={state} reload={load} errorText={errorText} />
@@ -151,55 +152,6 @@ export default function AdminIaPage() {
 }
 
 type CardProps = { state: State; reload: () => Promise<void>; errorText: (e: unknown) => string };
-
-function LoginCard({ onDone }: { onDone: () => Promise<void> }) {
-  const t = useTranslations("admin");
-  const locale = useLocale();
-  const [senha, setSenha] = React.useState("");
-  const [error, setError] = React.useState<string | undefined>();
-  const [busy, setBusy] = React.useState(false);
-
-  const submit = async (ev: React.FormEvent) => {
-    ev.preventDefault();
-    setBusy(true);
-    setError(undefined);
-    try {
-      const res = await fetch("/api/admin/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ senha }) });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        setSenha("");
-        await onDone();
-        return;
-      }
-      if (data.error === "bloqueado" && data.ate) {
-        setError(t("login.locked", { time: new Date(data.ate).toLocaleTimeString(intlTag(locale), { hour: "2-digit", minute: "2-digit" }) }));
-      } else if (data.error === "admin_desligado") setError(t("login.disabled"));
-      else if (data.error === "senha_errada") setError(t("login.wrong"));
-      else setError(t("errors.generic"));
-    } catch {
-      setError(t("errors.generic"));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <Card className="max-w-md">
-      <CardHeader title={t("login.title")} />
-      <CardBody>
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          <p className="text-sm text-muted">{t("login.hint")}</p>
-          <Field label={t("login.password")} error={error}>
-            <Input type="password" autoComplete="current-password" value={senha} onChange={(e) => setSenha(e.target.value)} aria-invalid={!!error} required />
-          </Field>
-          <div>
-            <Button type="submit" disabled={busy || !senha}>{t("login.submit")}</Button>
-          </div>
-        </form>
-      </CardBody>
-    </Card>
-  );
-}
 
 function ProvidersCard({ state, reload, errorText }: CardProps) {
   const t = useTranslations("admin");

@@ -7,6 +7,7 @@ import { SkillChips } from "@/components/skill-chips";
 import { MatchCell } from "@/components/vacancy-match";
 import type { MatchGap } from "@/lib/match";
 import { diaMes } from "@/lib/envio-client";
+import { NaoVerificada } from "@/components/empresa-etiqueta";
 // breakpoints: 360 / 768 / 1024 / 1280 — Tailwind screens xs/md/lg/xl (see tailwind.config.js)
 // next-intl: colunas via messages/pt-BR.json, en.json — fallback PT-BR (i18n.ts t())
 // PWA: manifest.json linked in layout.tsx
@@ -24,7 +25,7 @@ export type VacancyRow = {
   faixaMoeda?: string | null;
   updatedAt?: string | Date | null;
   createdAt?: string | Date | null;
-  company?: { nome?: string };
+  company?: { nome?: string; verificada?: boolean };
   contato?: { email?: string; telefone?: string };
   email?: string;
   telefone?: string;
@@ -116,6 +117,7 @@ export function VacancyTable({
                     </span>
                   ) : null}
                 </div>
+                {row.company?.verificada === false ? <div className="mt-1.5"><NaoVerificada company={row.company} /></div> : null}
                 {enviadaEm ? <div className="mt-1.5"><span data-enviada={row.id} className="inline-flex items-center gap-1 rounded-pill bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success-ink"><span aria-hidden>✓</span>{t("vagas.sentOn", { date: diaMes(enviadaEm, locale) })}</span></div> : null}
               </td>
               <td className="px-2 py-3.5 align-top text-ink-soft">
