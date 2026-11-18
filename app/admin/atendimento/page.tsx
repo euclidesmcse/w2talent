@@ -60,14 +60,20 @@ export default function AdminAtendimentoPage() {
     }
   }, [show, t]);
 
+  // Só a resposta da conversa selecionada por último vale: uma resposta atrasada de outra é descartada.
+  const selecionada = React.useRef<string | null>(null);
   const carregarConversa = React.useCallback(async (id: string) => {
+    selecionada.current = id;
     try {
       const res = await fetch(`/api/admin/atendimento?id=${encodeURIComponent(id)}`, { cache: "no-store" });
       const j = await lerJson(res);
+      if (selecionada.current !== id) return;
       if (res.status === 401) return setAuth("login");
       if (!res.ok) throw new Error();
-      setAtual(j.conversa as ConversaAdmin);
+      const c = j.conversa as ConversaAdmin;
+      setAtual(c && c.id === id ? c : null);
     } catch {
+      if (selecionada.current !== id) return;
       setAtual(null);
       show(t("erro"), "error");
     }
@@ -102,14 +108,16 @@ export default function AdminAtendimentoPage() {
   };
 
   const agir = async (acao: "responder" | "encerrar") => {
-    if (!atualId) return;
+    // Age sobre a conversa que está na tela, não só sobre a selecionada.
+    if (!atual || atual.id !== atualId) return;
+    const id = atual.id;
     if (acao === "responder" && !resposta.trim()) return;
     setOcupado(true);
     try {
       const res = await fetch("/api/admin/atendimento", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(acao === "responder" ? { id: atualId, acao, texto: resposta.trim() } : { id: atualId, acao }),
+        body: JSON.stringify(acao === "responder" ? { id, acao, texto: resposta.trim() } : { id, acao }),
       });
       const j = await lerJson(res);
       if (res.status === 401) return setAuth("login");

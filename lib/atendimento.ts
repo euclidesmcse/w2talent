@@ -265,12 +265,16 @@ export async function responderConversa(
   const codigo = gerarCodigo();
   const tokenHash = await hashCodigo(codigo);
   const r = await db.$transaction(async (tx) => {
-    const c = await tx.conversa.findUnique({ where: { id }, select: { status: true, email: true, idioma: true } });
-    if (!c) return { erro: "nao_encontrada" as const };
-    if (c.status === "encerrada") return { erro: "encerrada" as const };
+    // Trava a conversa com um update condicional antes de gravar: se outra pessoa da equipe encerrar
+    // ao mesmo tempo, um dos dois espera o outro e a resposta não entra numa conversa já encerrada.
+    const n = await tx.conversa.updateMany({ where: { id, status: "aberta" }, data: { ultimaDe: "equipe", ultimaEm: now } });
+    if (n.count === 0) {
+      const existe = await tx.conversa.findUnique({ where: { id }, select: { id: true } });
+      return { erro: existe ? ("encerrada" as const) : ("nao_encontrada" as const) };
+    }
+    const c = await tx.conversa.findUniqueOrThrow({ where: { id }, select: { email: true, idioma: true } });
     const m = await tx.conversaMensagem.create({ data: { conversaId: id, autor: "equipe", texto: texto.trim(), createdAt: now }, select: { id: true } });
     await tx.conversaCodigo.create({ data: { tokenHash, conversaId: id, createdAt: now } });
-    await tx.conversa.update({ where: { id }, data: { ultimaDe: "equipe", ultimaEm: now } });
     return { c, m };
   });
   if ("erro" in r) return { ok: false, erro: r.erro! };
@@ -281,8 +285,7 @@ export async function responderConversa(
 }
 
 export async function encerrarConversa(db: PrismaClient, id: string, now: Date = new Date()): Promise<boolean> {
-  const c = await db.conversa.findUnique({ where: { id }, select: { status: true } });
-  if (!c) return false;
-  if (c.status !== "encerrada") await db.conversa.update({ where: { id }, data: { status: "encerrada", encerradaEm: now } });
-  return true;
+  const n = await db.conversa.updateMany({ where: { id, status: "aberta" }, data: { status: "encerrada", encerradaEm: now } });
+  if (n.count > 0) return true;
+  return !!(await db.conversa.findUnique({ where: { id }, select: { id: true } }));
 }
