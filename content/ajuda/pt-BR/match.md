@@ -2,7 +2,7 @@
 titulo: Como o match é calculado
 resumo: Os pesos do match, as competências próximas e o que "falta" quer dizer.
 areas: candidato, recrutador
-telas: /vagas, /candidatos
+telas: /vagas, /candidatos, /painel
 ordem: 7
 ---
 
@@ -25,6 +25,10 @@ Uma competência parecida conta metade. Exemplo: quem tem OpenShift ganha meio p
 ## O que "falta" quer dizer
 
 Ao lado do número aparece a primeira coisa que faltou, a de maior peso. Um critério que a vaga não pediu conta como atendido.
+
+## No seu painel
+
+Com a ficha publicada, o [painel](/painel) mostra o que mais falta nela para as vagas abertas mais parecidas (até 30, com match de 40% ou mais): as competências que faltam, as que você tem só uma parecida, e nível, regime ou modelo quando pesam. A faixa salarial não entra, para ninguém se sentir empurrado a pedir menos. Nada disso fica guardado.
 
 ## Para o recrutador
 

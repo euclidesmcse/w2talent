@@ -102,10 +102,11 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
       ],
       "telas": [
         "/vagas",
-        "/candidatos"
+        "/candidatos",
+        "/painel"
       ],
       "ordem": 7,
-      "corpo": "O match é uma conta com pesos fixos. Não é IA e não usa idade, gênero, foto ou endereço.\n\n| Parte | Peso |\n| --- | --- |\n| Competências | 40 |\n| Nível | 20 |\n| Regime, modelo de trabalho e faixa | 20 |\n| Atualizada há pouco | 10 |\n| Cadastro completo | 10 |\n\nNa busca de vagas, as duas últimas linhas olham para a vaga: vaga publicada ou renovada há pouco e com todos os campos preenchidos. Para o recrutador, em Candidatos, olham para a ficha do candidato.\n\n## Competências próximas\n\nUma competência parecida conta metade. Exemplo: quem tem OpenShift ganha meio ponto numa vaga que pede Kubernetes. O texto mostra \"Kubernetes: tem OpenShift (próxima)\".\n\n## O que \"falta\" quer dizer\n\nAo lado do número aparece a primeira coisa que faltou, a de maior peso. Um critério que a vaga não pediu conta como atendido.\n\n## Para o recrutador\n\nEm [Candidatos](/candidatos), escolha uma vaga em \"Para a vaga\" e a lista passa a sair pelo match com ela. É a mesma conta, olhando da vaga para a ficha."
+      "corpo": "O match é uma conta com pesos fixos. Não é IA e não usa idade, gênero, foto ou endereço.\n\n| Parte | Peso |\n| --- | --- |\n| Competências | 40 |\n| Nível | 20 |\n| Regime, modelo de trabalho e faixa | 20 |\n| Atualizada há pouco | 10 |\n| Cadastro completo | 10 |\n\nNa busca de vagas, as duas últimas linhas olham para a vaga: vaga publicada ou renovada há pouco e com todos os campos preenchidos. Para o recrutador, em Candidatos, olham para a ficha do candidato.\n\n## Competências próximas\n\nUma competência parecida conta metade. Exemplo: quem tem OpenShift ganha meio ponto numa vaga que pede Kubernetes. O texto mostra \"Kubernetes: tem OpenShift (próxima)\".\n\n## O que \"falta\" quer dizer\n\nAo lado do número aparece a primeira coisa que faltou, a de maior peso. Um critério que a vaga não pediu conta como atendido.\n\n## No seu painel\n\nCom a ficha publicada, o [painel](/painel) mostra o que mais falta nela para as vagas abertas mais parecidas (até 30, com match de 40% ou mais): as competências que faltam, as que você tem só uma parecida, e nível, regime ou modelo quando pesam. A faixa salarial não entra, para ninguém se sentir empurrado a pedir menos. Nada disso fica guardado.\n\n## Para o recrutador\n\nEm [Candidatos](/candidatos), escolha uma vaga em \"Para a vaga\" e a lista passa a sair pelo match com ela. É a mesma conta, olhando da vaga para a ficha."
     },
     {
       "slug": "aprovar-e-enviar",
@@ -323,10 +324,11 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
       ],
       "telas": [
         "/vagas",
-        "/candidatos"
+        "/candidatos",
+        "/painel"
       ],
       "ordem": 7,
-      "corpo": "The match is a calculation with fixed weights. It is not AI and does not use age, gender, photo or address.\n\n| Part | Weight |\n| --- | --- |\n| Skills | 40 |\n| Level | 20 |\n| Contract type, work model and pay range | 20 |\n| Updated recently | 10 |\n| Complete listing | 10 |\n\nIn job search, the last two rows look at the job: posted or renewed recently and with every field filled in. For recruiters, in Candidates, they look at the candidate's profile.\n\n## Close skills\n\nA similar skill counts half. Example: someone with OpenShift gets half a point in a job that asks for Kubernetes. The text shows \"Kubernetes: has OpenShift (close)\".\n\n## What \"missing\" means\n\nNext to the number you see the first thing missing, the one with the highest weight. A criterion the job did not ask for counts as met.\n\n## For recruiters\n\nIn [Candidates](/candidatos), pick a job in \"For the job\" and the list is sorted by the match with it. It is the same calculation, looking from the job to the profile."
+      "corpo": "The match is a calculation with fixed weights. It is not AI and does not use age, gender, photo or address.\n\n| Part | Weight |\n| --- | --- |\n| Skills | 40 |\n| Level | 20 |\n| Contract type, work model and pay range | 20 |\n| Updated recently | 10 |\n| Complete listing | 10 |\n\nIn job search, the last two rows look at the job: posted or renewed recently and with every field filled in. For recruiters, in Candidates, they look at the candidate's profile.\n\n## Close skills\n\nA similar skill counts half. Example: someone with OpenShift gets half a point in a job that asks for Kubernetes. The text shows \"Kubernetes: has OpenShift (close)\".\n\n## What \"missing\" means\n\nNext to the number you see the first thing missing, the one with the highest weight. A criterion the job did not ask for counts as met.\n\n## On your dashboard\n\nWith your profile published, the [dashboard](/painel) shows what it most lacks for the closest open jobs (up to 30, with a match of 40% or more): missing skills, skills where you only have a close one, and level, contract type or work model when they weigh. The salary range is left out, so nobody feels pushed to ask for less. None of this is stored.\n\n## For recruiters\n\nIn [Candidates](/candidatos), pick a job in \"For the job\" and the list is sorted by the match with it. It is the same calculation, looking from the job to the profile."
     },
     {
       "slug": "aprovar-e-enviar",
@@ -544,10 +546,11 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
       ],
       "telas": [
         "/vagas",
-        "/candidatos"
+        "/candidatos",
+        "/painel"
       ],
       "ordem": 7,
-      "corpo": "El match es una cuenta con pesos fijos. No es IA y no usa edad, género, foto ni dirección.\n\n| Parte | Peso |\n| --- | --- |\n| Competencias | 40 |\n| Nivel | 20 |\n| Régimen, modalidad y rango salarial | 20 |\n| Actualizada hace poco | 10 |\n| Registro completo | 10 |\n\nEn la búsqueda de empleos, las dos últimas filas miran la vacante: vacante publicada o renovada hace poco y con todos los campos llenos. Para el reclutador, en Candidatos, miran la ficha del candidato.\n\n## Competencias cercanas\n\nUna competencia parecida cuenta la mitad. Ejemplo: quien tiene OpenShift suma medio punto en una vacante que pide Kubernetes. El texto muestra \"Kubernetes: tiene OpenShift (cercana)\".\n\n## Qué quiere decir \"falta\"\n\nJunto al número aparece lo primero que faltó, lo de mayor peso. Un criterio que la vacante no pidió cuenta como cumplido.\n\n## Para el reclutador\n\nEn [Candidatos](/candidatos), elige una vacante en \"Para la vacante\" y la lista se ordena por el match con ella. Es la misma cuenta, mirando de la vacante a la ficha."
+      "corpo": "El match es una cuenta con pesos fijos. No es IA y no usa edad, género, foto ni dirección.\n\n| Parte | Peso |\n| --- | --- |\n| Competencias | 40 |\n| Nivel | 20 |\n| Régimen, modalidad y rango salarial | 20 |\n| Actualizada hace poco | 10 |\n| Registro completo | 10 |\n\nEn la búsqueda de empleos, las dos últimas filas miran la vacante: vacante publicada o renovada hace poco y con todos los campos llenos. Para el reclutador, en Candidatos, miran la ficha del candidato.\n\n## Competencias cercanas\n\nUna competencia parecida cuenta la mitad. Ejemplo: quien tiene OpenShift suma medio punto en una vacante que pide Kubernetes. El texto muestra \"Kubernetes: tiene OpenShift (cercana)\".\n\n## Qué quiere decir \"falta\"\n\nJunto al número aparece lo primero que faltó, lo de mayor peso. Un criterio que la vacante no pidió cuenta como cumplido.\n\n## En tu panel\n\nCon la ficha publicada, el [panel](/painel) muestra lo que más le falta para las vacantes abiertas más parecidas (hasta 30, con match de 40% o más): las competencias que faltan, las que solo tienes parecidas, y nivel, régimen o modalidad cuando pesan. El rango salarial no entra, para que nadie se sienta empujado a pedir menos. Nada de esto se guarda.\n\n## Para el reclutador\n\nEn [Candidatos](/candidatos), elige una vacante en \"Para la vacante\" y la lista se ordena por el match con ella. Es la misma cuenta, mirando de la vacante a la ficha."
     },
     {
       "slug": "aprovar-e-enviar",
