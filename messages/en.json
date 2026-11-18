@@ -193,7 +193,10 @@
       "gapModoNone": "work model not given",
       "gapFaixa": "expectation {have}, above the range",
       "explica": "Match is a calculation with fixed weights, not AI.",
-      "comoFunciona": "How it works"
+      "comoFunciona": "How it works",
+      "paraVaga": "For the {vaga} job: {pct}%",
+      "paraEstaVaga": "For the selected job: {pct}%",
+      "semLacunas": "Meets everything the job asks for."
     }
   },
   "table": {

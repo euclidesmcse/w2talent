@@ -193,7 +193,10 @@
       "gapModoNone": "modelo não informado",
       "gapFaixa": "pretensão {have}, acima da faixa",
       "explica": "O match é uma conta com pesos fixos, não é IA.",
-      "comoFunciona": "Como funciona"
+      "comoFunciona": "Como funciona",
+      "paraVaga": "Para a vaga {vaga}: {pct}%",
+      "paraEstaVaga": "Para a vaga escolhida: {pct}%",
+      "semLacunas": "Atende tudo o que a vaga pede."
     }
   },
   "table": {
