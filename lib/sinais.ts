@@ -15,6 +15,7 @@ export const TIPOS_SINAL = [
   "entrevista_oferecida", // 2.5a: o recrutador ofereceu horários (quantos, duração)
   "entrevista_marcada", // 2.5a: o candidato escolheu ou trocou o horário
   "entrevista_cancelada", // 2.5a: entrevista cancelada (por quem, em que status estava)
+  "ficha_vista", // 2.8: o recrutador abriu a ficha da candidatura pela primeira vez
 ] as const;
 export type TipoSinal = (typeof TIPOS_SINAL)[number];
 

@@ -13,7 +13,7 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { withoutContacts } from "./search";
 import { matchCandidato, type GapCandidato } from "./match-candidato";
-import { gravarSinais } from "./sinais";
+import { gravarSinais, registrarSinal } from "./sinais";
 import { ETAPAS, type Etapa } from "./painel-rh";
 import { emailLocale, renderEntrevistaEmail } from "./email-templates";
 import { entrevistasDasCandidaturas, type ResumoEntrevista } from "./entrevista";
@@ -218,6 +218,11 @@ export async function marcarVista(db: PrismaClient, companyId: string, applicati
     where: { id: applicationId, companyId, origem: "candidaturaLote", status: "enviado" },
     data: { status: "visualizado" },
   });
-  if (r.count > 0) return true;
+  if (r.count > 0) {
+    // 2.8: a primeira vez que o recrutador abre a ficha da candidatura (só nessa vez, sem repetir).
+    const a = await db.application.findUnique({ where: { id: applicationId }, select: { candidateId: true, vacancyId: true } });
+    if (a) await registrarSinal(db, { tipo: "ficha_vista", ator: "recrutador", candidateId: a.candidateId, vacancyId: a.vacancyId, applicationId });
+    return true;
+  }
   return (await db.application.count({ where: { id: applicationId, companyId, origem: "candidaturaLote" } })) > 0;
 }

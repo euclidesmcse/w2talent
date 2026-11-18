@@ -174,6 +174,11 @@ describeDb("candidaturas da vaga (2.4b/2.4c)", () => {
     const a = await db.application.findUniqueOrThrow({ where: { id: apps[CANDS[2]] } });
     expect([a.status, a.etapa, a.respondidaEm]).toEqual(["visualizado", "nova", null]);
     expect((await mudar(rec(REC_B), apps[CANDS[2]], { visto: true })).status).toBe(404);
+    // 2.8: um sinal só na primeira abertura.
+    expect((await mudar(rec(REC_A), apps[CANDS[2]], { visto: true })).status).toBe(200);
+    const vistas = await db.feedbackSignal.findMany({ where: { applicationId: apps[CANDS[2]], tipo: "ficha_vista" } });
+    expect(vistas).toHaveLength(1);
+    expect(vistas[0]).toMatchObject({ ator: "recrutador", vacancyId: vagaA });
   });
 
   it("se a fila falhar, o aviso fica guardado e o Cron manda depois", async () => {
