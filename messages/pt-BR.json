@@ -70,7 +70,7 @@
     "faq1q": "Preciso pagar para me candidatar?",
     "faq1a": "Não. Candidatos usam de graça.",
     "faq2q": "Meu telefone e e-mail ficam expostos?",
-    "faq2a": "Não. O contato fica protegido até você responder a uma empresa.",
+    "faq2a": "Não. O contato fica protegido até você responder a uma empresa ou ser chamado para uma entrevista; aí só a empresa daquela vaga vê seu e-mail e telefone, e você recebe um aviso.",
     "faq3q": "Funciona no celular?",
     "faq3a": "Sim. A mesma conta funciona no computador e no celular, e dá para instalar como app.",
     "faq4q": "O w2talent.com já está no ar?",
@@ -272,7 +272,7 @@
     "visualizado": "Vista",
     "respondido": "Respondida",
     "arquivado": "Encerrada",
-    "footnote": "Seu contato fica protegido: a empresa fala com você por um endereço do W2Talent até você responder.",
+    "footnote": "Seu contato fica protegido. Se uma empresa chamar você para uma entrevista, só ela passa a ver seu e-mail e telefone, e você recebe um aviso por e-mail.",
     "sentOn": "Enviada em {date}"
   },
   "time": {
@@ -646,7 +646,7 @@
     "usage": "{used} de {max} enviadas nas últimas 24 h",
     "jobTitle": "A vaga",
     "companyGets": "O que a empresa vai receber",
-    "companyGetsHint": "Sem seu e-mail, telefone ou links. A pretensão vai só a do regime da vaga.",
+    "companyGetsHint": "Sem seu e-mail, telefone ou links. A pretensão vai só a do regime da vaga. Se a empresa chamar você para uma entrevista, ela passa a ver seu e-mail e telefone, e você recebe um aviso.",
     "skills": "Competências",
     "description": "Descrição",
     "benefits": "Benefícios",
@@ -1251,6 +1251,8 @@
     "maisDe": "Mostrando as {n} primeiras.",
     "selecaoCheia": "A seleção já tem {max}. Tire alguém ou limpe a seleção.",
     "selecionadosDica": "{n} de {max} selecionados (a seleção vale também em Candidatos).",
-    "limparSelecao": "Limpar seleção"
+    "limparSelecao": "Limpar seleção",
+    "contatoEmail": "Enviar e-mail para {nome}",
+    "contatoTel": "Ligar para {nome}"
   }
 }

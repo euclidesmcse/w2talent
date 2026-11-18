@@ -27,4 +27,5 @@ Em "Ver candidaturas" aparecem as pessoas que se candidataram, da maior para a m
 
 - **Etapa:** Nova, Em análise, Entrevista, Proposta, Contratada ou Não seguiu. Mude com um clique; não há formulário.
 - **O que o candidato vê:** "Vista" quando você abre a ficha ou move para Em análise, "Respondida" a partir de Entrevista e "Encerrada" em Não seguiu. As etapas internas não aparecem para ele.
+- **Contato:** ao mover para Entrevista (ou depois), o e-mail e o telefone do candidato aparecem na lista, só para a sua empresa, e ele recebe um aviso por e-mail. Liberado uma vez, fica liberado.
 - **Comparar:** marque até 10 pessoas para compará-las lado a lado e exportar.

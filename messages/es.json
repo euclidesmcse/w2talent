@@ -70,7 +70,7 @@
     "faq1q": "¿Tengo que pagar para postularme?",
     "faq1a": "No. Los candidatos lo usan gratis.",
     "faq2q": "¿Mi teléfono y correo quedan expuestos?",
-    "faq2a": "No. Tu contacto queda protegido hasta que respondas a una empresa.",
+    "faq2a": "No. Tu contacto queda protegido hasta que respondas a una empresa o te llamen a una entrevista; entonces solo la empresa de esa vacante ve tu e-mail y teléfono, y recibes un aviso.",
     "faq3q": "¿Funciona en el celular?",
     "faq3a": "Sí. La misma cuenta funciona en la computadora y en el celular, y se puede instalar como app.",
     "faq4q": "¿w2talent.com ya está en línea?",
@@ -272,7 +272,7 @@
     "visualizado": "Vista",
     "respondido": "Respondida",
     "arquivado": "Cerrada",
-    "footnote": "Tu contacto queda protegido: la empresa habla contigo por una dirección de W2Talent hasta que respondas.",
+    "footnote": "Tu contacto queda protegido. Si una empresa te llama a una entrevista, solo ella puede ver tu e-mail y teléfono, y recibes un aviso por e-mail.",
     "sentOn": "Enviada el {date}"
   },
   "time": {
@@ -646,7 +646,7 @@
     "usage": "{used} de {max} enviadas en las últimas 24 h",
     "jobTitle": "La vacante",
     "companyGets": "Lo que recibirá la empresa",
-    "companyGetsHint": "Sin tu e-mail, teléfono ni enlaces. Solo la pretensión del régimen de la vacante.",
+    "companyGetsHint": "Sin tu e-mail, teléfono ni enlaces. Solo la pretensión del régimen de la vacante. Si la empresa te llama a una entrevista, puede ver tu e-mail y teléfono, y recibes un aviso.",
     "skills": "Habilidades",
     "description": "Descripción",
     "benefits": "Beneficios",
@@ -1251,6 +1251,8 @@
     "maisDe": "Mostrando las {n} primeras.",
     "selecaoCheia": "La selección ya tiene {max}. Quita a alguien o límpiala.",
     "selecionadosDica": "{n} de {max} seleccionados (la selección también vale en Candidatos).",
-    "limparSelecao": "Limpiar selección"
+    "limparSelecao": "Limpiar selección",
+    "contatoEmail": "Enviar e-mail a {nome}",
+    "contatoTel": "Llamar a {nome}"
   }
 }
