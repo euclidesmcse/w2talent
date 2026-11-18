@@ -111,7 +111,7 @@ export function VacancyTable({
               key={row.id}
               data-vacancy-id={row.id}
               onClick={(e) => { if (enviadaEm || (e.target as HTMLElement).closest("button, a, input, label")) return; onToggle?.(row.id); }}
-              className={`cursor-pointer border-t border-line-soft ${isSelected ? "selected bg-[#F5F8FF]" : "bg-surface hover:bg-canvas"}`}
+              className={`cursor-pointer border-t border-line-soft ${isSelected ? "selected bg-brand-faint" : "bg-surface hover:bg-canvas"}`}
             >
               <td className="py-3.5 pl-4 pr-2 align-top">
                 <input

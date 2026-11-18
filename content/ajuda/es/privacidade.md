@@ -12,7 +12,7 @@ En la búsqueda de candidatos, el correo y el teléfono aparecen enmascarados (p
 
 ## Sistema de selección de la empresa
 
-Algunas empresas activan la integración con su sistema de selección (ATS). En ese caso, la postulación que envíes también va a ese sistema, con el mismo contenido que aprobaste: la Ficha W2, sin e-mail, teléfono ni enlaces. Allí, sigue las reglas de privacidad de la empresa.
+Algunas empresas activan la integración con su sistema de selección (ATS). En ese caso, la postulación que envíes también va a ese sistema, con el mismo contenido que aprobaste: la Ficha W2, sin e-mail, teléfono ni enlaces. El sistema también se entera cuando la empresa cambia la etapa de tu postulación, y tu e-mail y teléfono solo van allí después de que te llama a entrevista. Allí, la postulación sigue las reglas de privacidad de la empresa.
 
 ## Pretensión salarial
 

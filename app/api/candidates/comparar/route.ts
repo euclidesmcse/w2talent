@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { exigirConta, NO_STORE } from "@/lib/sessao";
 import { empresaDaConta } from "@/lib/empresa";
-import { withoutContacts } from "@/lib/search";
-import { matchCandidato } from "@/lib/match-candidato";
-import { idsDoPedido, itemDaComparacao } from "@/lib/comparar";
+import { idsDoPedido } from "@/lib/comparar";
+import { montarComparacao, vagaDaEmpresa } from "@/lib/comparar-montar";
 import { comTraducaoDasFichas, idiomaDoPedido } from "@/lib/traducao";
 
 /**
@@ -22,29 +21,10 @@ export async function POST(req: NextRequest) {
     let vaga = null;
     if (typeof body.vaga === "string" && body.vaga) {
       const empresa = await empresaDaConta(prisma, acesso.conta.id);
-      vaga = empresa
-        ? await prisma.vacancy.findFirst({
-            // Mesmo critério da busca de Candidatos: vaga ativa, no prazo e da empresa de quem pede.
-            where: { id: body.vaga, companyId: empresa.id, status: "ativa", expiresAt: { gt: new Date() } },
-            select: { id: true, titulo: true, stack: true, nivel: true, regime: true, localidade: true, faixaDe: true, faixaAte: true, faixaMoeda: true, descricaoBullets: true, updatedAt: true, createdAt: true },
-          })
-        : null;
+      vaga = await vagaDaEmpresa(prisma, body.vaga, empresa?.id);
       if (!vaga) return NextResponse.json({ error: "vaga_nao_encontrada" }, { status: 404, headers: NO_STORE });
     }
-
-    const now = new Date();
-    // Como na busca: perfil vencido (antes da higiene arquivar) também fica de fora.
-    const perfis = await prisma.candidateProfile.findMany({ where: { id: { in: ids }, status: "ativo", expiresAt: { gt: now } } });
-    const porId = new Map(perfis.map((p) => [p.id, p]));
-    // Na ordem em que o recrutador selecionou; quem saiu do ar (arquivado, apagado) vem em "fora".
-    const itens = ids
-      .filter((id) => porId.has(id))
-      .map((id) => {
-        const p = porId.get(id)!;
-        const m = vaga ? matchCandidato(p, vaga, now.getTime()) : null;
-        return itemDaComparacao(withoutContacts(p), m ? { match: m.pct, gaps: m.gaps } : null, now);
-      });
-    const fora = ids.filter((id) => !porId.has(id));
+    const { itens, fora } = await montarComparacao(prisma, ids, vaga);
     // 2.7b: a tela mostra a tradução; os arquivos exportados saem com o texto original (vem junto).
     const comTraducao = await comTraducaoDasFichas(prisma, itens, idiomaDoPedido(req, body.lang));
     return NextResponse.json({ vaga: vaga ? { id: vaga.id, titulo: vaga.titulo } : null, itens: comTraducao, fora }, { headers: NO_STORE });

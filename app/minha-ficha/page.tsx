@@ -11,6 +11,8 @@ import { useOnline } from "@/lib/pwa-client";
 import Link from "next/link";
 import { linkEntrar } from "@/lib/conta-client";
 import { FichaW2Card } from "@/components/ficha-w2-card";
+import { FichaViesAviso } from "@/components/ficha-vies-aviso";
+import { revisarViesFicha, trocarViesFicha, type AvisoFichaVies } from "@/lib/ficha-vies";
 import { Button, Card, Field, Input, Select, Textarea, cn } from "@/components/ui";
 import {
   camposFaltando,
@@ -116,6 +118,13 @@ export default function MinhaFichaPage() {
   // Publicado vale para o rascunho daquele momento: qualquer mudança na ficha ou na Ficha W2 pede publicar de novo.
   React.useEffect(() => setPublicado(false), [r.ficha, r.skills, r.w2]);
   const set = <K extends keyof Ficha>(k: K, v: Ficha[K]) => setR((x) => ({ ...x, ficha: { ...x.ficha, [k]: v } }));
+  // Revisor de viés (mesmas regras das vagas): só avisa, nunca bloqueia gerar, salvar ou publicar.
+  const trocarVies = (a: AvisoFichaVies) =>
+    setR((x) => {
+      const novo = trocarViesFicha({ titulo: x.ficha.titulo, objetivo: x.ficha.objetivo, resumo: x.w2?.resumo, destaques: x.w2?.destaques }, a);
+      const w2 = x.w2 && (novo.resumo !== x.w2.resumo || novo.destaques !== x.w2.destaques) ? { ...x.w2, resumo: novo.resumo ?? "", destaques: novo.destaques ?? [], editada: true } : x.w2;
+      return { ...x, ficha: { ...x.ficha, titulo: novo.titulo ?? "", objetivo: novo.objetivo ?? "" }, w2 };
+    });
   // Marcar um regime abre a linha da pretensão dele; desmarcar tira as duas coisas.
   const marcarRegime = (g: string, on: boolean) =>
     setR((x) => {
@@ -260,7 +269,7 @@ export default function MinhaFichaPage() {
         <ol className="mt-5 flex flex-wrap gap-x-4 gap-y-1 text-[13px]" aria-label={t("passo", { n: nPasso })}>
           {passos.map(([p, rot], i) => (
             <li key={p} aria-current={p === r.passo ? "step" : undefined} className={cn("flex items-center gap-1.5", p === r.passo ? "font-semibold text-ink" : "text-muted")}>
-              <span className={cn("grid h-5 w-5 place-items-center rounded-full text-[11px] tabular-nums", p === r.passo ? "bg-brand text-white" : "bg-neutral-soft text-muted")}>{i + 1}</span>
+              <span className={cn("grid h-5 w-5 place-items-center rounded-full text-[11px] tabular-nums", p === r.passo ? "bg-brand-solid text-white" : "bg-neutral-soft text-muted")}>{i + 1}</span>
               {rot}
             </li>
           ))}
@@ -547,6 +556,8 @@ export default function MinhaFichaPage() {
                 </Field>
               </div>
 
+              <FichaViesAviso avisos={revisarViesFicha({ titulo: r.ficha.titulo, objetivo: r.ficha.objetivo })} onTrocar={trocarVies} />
+
               <label className="flex items-start gap-2 text-sm text-ink">
                 <input type="checkbox" data-aceite="w2" className="mt-0.5 h-4 w-4 accent-brand" checked={r.aceite} onChange={(e) => setR((x) => ({ ...x, aceite: e.target.checked }))} />
                 <span>{t("aceiteW2")}</span>
@@ -575,7 +586,13 @@ export default function MinhaFichaPage() {
                   }}
                 />
               ) : (
-                <FichaW2Card ficha={fichaAtual} w2={r.w2} />
+                <>
+                  <FichaW2Card ficha={fichaAtual} w2={r.w2} />
+                  <FichaViesAviso
+                    avisos={revisarViesFicha({ titulo: r.ficha.titulo, objetivo: r.ficha.objetivo, resumo: r.w2.resumo, destaques: r.w2.destaques })}
+                    onTrocar={trocarVies}
+                  />
+                </>
               )}
               {publicado ? (
                 <p role="status" className="text-sm text-success">
@@ -638,6 +655,14 @@ function EditarW2({ w2, onSalvar }: { w2: FichaW2; onSalvar: (w2: FichaW2) => vo
           <Input maxLength={160} value={d} onChange={(e) => setDestaques((x) => x.map((v, j) => (j === i ? e.target.value : v)))} />
         </Field>
       ))}
+      <FichaViesAviso
+        avisos={revisarViesFicha({ resumo, destaques })}
+        onTrocar={(a) => {
+          const novo = trocarViesFicha({ resumo, destaques }, a);
+          setResumo(novo.resumo);
+          setDestaques(novo.destaques);
+        }}
+      />
       <Button
         className="self-start"
         disabled={!resumo.trim()}

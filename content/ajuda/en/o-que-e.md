@@ -21,6 +21,10 @@ W2Talent connects tech candidates with jobs. Candidates find jobs, check each on
 - You post a job by pasting its text, and AI fills in the fields.
 - You search candidates and sort them by match with one of your jobs.
 
+## Light or dark theme
+
+The site follows your device theme, light or dark. To keep one of them, use the theme button at the top, next to the language: each tap goes through Follow system, Light and Dark. The choice is saved only in this browser.
+
 ## Talk to a person
 
 Could not find the answer in Help? In [Talk to a person](/ajuda/conversa), you write to the W2Talent team, signed in or not.

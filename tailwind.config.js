@@ -1,9 +1,13 @@
 /** @type {import('tailwindcss').Config} */
 // Tokens do design system v2 (protótipo aprovado em 2026-11-08). Os valores vivem em
 // lib/design-tokens.js para o código e os testes usarem a mesma fonte.
-const { colors, fontFamily, radius } = require("./lib/design-tokens");
+const { colors, claro, escuro, variaveis, fontFamily, radius } = require("./lib/design-tokens");
 
 module.exports = {
+  // Tema escuro (2026-11-18): o script do <head> (lib/tema.ts) põe data-theme="light|dark" no <html> antes da
+  // primeira pintura, seguindo o sistema ou a escolha da pessoa. Quase tudo troca pelas variáveis --cor-*;
+  // `dark:` fica para as poucas exceções.
+  darkMode: ["selector", '[data-theme="dark"]'],
   content: ["./app/**/*.{js,ts,jsx,tsx,mdx}", "./components/**/*.{js,ts,jsx,tsx,mdx}", "./lib/**/*.{js,ts}"],
   theme: {
     screens: {
@@ -22,5 +26,13 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // Variáveis das cores: valores do claro em :root, do escuro com data-theme="dark".
+    function ({ addBase }) {
+      addBase({
+        ":root": { ...variaveis(claro), "color-scheme": "light" },
+        ':root[data-theme="dark"]': { ...variaveis(escuro), "color-scheme": "dark" },
+      });
+    },
+  ],
 };

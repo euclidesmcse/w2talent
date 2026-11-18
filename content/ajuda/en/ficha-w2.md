@@ -21,6 +21,10 @@ AI neither receives nor writes the full name, email or phone. Contact details st
 
 Candidates can create the W2 Profile again after changing their profile. Learn more in [How we use AI](/ia#ficha-w2).
 
+## Sensitive data warning
+
+The same rules as the job bias reviewer check the role, goal, summary and highlights. If the text tells your age, marital status, children, religion, health, looks or origin (for example "young", "married", "good appearance", "native English"), a warning shows up next to it, with "Remove" or "Replace with" when there is a good replacement. These details do not help with the job and may work against you. It is only a warning: you decide, and the profile saves and publishes either way. The rules run in your browser, without AI. See [How we use AI](/ia#revisor-vies).
+
 ## Automatic translation
 
 For recruiters using the site in another language, the AI translates the title, summary, highlights and job titles of the published W2 Profile. Names, companies, cities, numbers and skills stay as they are, and the name, email and phone never go to the AI. Recruiters see the note "Automatic translation" and can open the original. Candidates keep seeing their profile as they wrote it. If the profile changes, the translation is redone.

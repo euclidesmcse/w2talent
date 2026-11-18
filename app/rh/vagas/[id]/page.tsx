@@ -240,7 +240,7 @@ export default function CandidaturasDaVagaPage() {
                   onClick={() => setFiltro(e)}
                   className={cn(
                     "inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium",
-                    ativo ? "border-ink bg-ink text-white" : "border-line bg-surface text-ink hover:bg-line-soft",
+                    ativo ? "border-ink bg-ink text-surface" : "border-line bg-surface text-ink hover:bg-line-soft",
                   )}
                 >
                   {e ? nomeEtapa(e) : t("todas")}

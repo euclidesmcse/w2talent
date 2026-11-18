@@ -48,6 +48,13 @@
     "en": "English",
     "es": "Español"
   },
+  "tema": {
+    "label": "Tema",
+    "sistema": "Seguir el sistema",
+    "claro": "Claro",
+    "escuro": "Oscuro",
+    "botao": "Tema: {atual}. Cambiar a: {proximo}"
+  },
   "home": {
     "title": "Postúlate a <destaque>varios empleos a la vez</destaque>, sin perder el control",
     "lead": "Tú encuentras los empleos, revisas cada uno y lo apruebas. W2Talent envía en lote solo los que aprobaste, con un resumen de tu perfil que el reclutador entiende en segundos.",
@@ -648,7 +655,30 @@
     "w2Rodape": "Ficha generada por IA, revisada por el candidato",
     "w2RodapeIa": "Ficha generada por IA",
     "w2Mudanca": "acepta mudanza",
-    "publicarEntrar": "Iniciar sesión"
+    "publicarEntrar": "Iniciar sesión",
+    "vies": {
+      "titulo": "{count, plural, one {1 frase puede exponer un dato sensible} other {# frases pueden exponer datos sensibles}}",
+      "intro": "Solo un aviso: estos términos cuentan algo que la vacante no necesita saber y pueden perjudicarte. Tú decides qué cambiar, y la ficha se guarda igual.",
+      "comoFunciona": "Cómo funciona",
+      "campos": {
+        "titulo": "cargo",
+        "objetivo": "objetivo",
+        "resumo": "resumen",
+        "destaque": "destacado {n}"
+      },
+      "cat": {
+        "idade": "muestra tu edad.",
+        "genero": "menciona el género.",
+        "aparencia": "habla de tu apariencia o pide foto.",
+        "origem": "muestra tu origen; para idiomas, prefiere el nivel de fluidez.",
+        "familia": "cuenta sobre familia o estado civil.",
+        "saude": "cuenta sobre salud o discapacidad.",
+        "religiao": "menciona religión."
+      },
+      "trocarPor": "Cambiar por \"{troca}\"",
+      "tirar": "Quitar \"{trecho}\"",
+      "reescrever": "Reescribe esta parte, si quieres."
+    }
   },
   "aprovar": {
     "title": "Revisar y aprobar",
@@ -923,10 +953,10 @@
     "vagaFaz": "Completa los campos de la vacante a partir del texto pegado, avisa de una vacante parecida ya publicada por la empresa y sugiere el rango salarial por la mediana de 5 o más vacantes parecidas.",
     "vagaDados": "El texto de la vacante, sin correo ni teléfono.",
     "vagaDecide": "El reclutador revisa cada campo y decide si publica.",
-    "viesTarefa": "Revisor de sesgo (reclutador)",
-    "viesFaz": "Reglas fijas señalan en el texto de la vacante términos que excluyen a personas por edad, género, apariencia, origen, familia, salud o religión, y sugieren un cambio. Si el reclutador lo pide, la IA propone el texto reescrito sin esos términos.",
-    "viesDados": "El título, la descripción y los beneficios de la vacante, sin correo ni teléfono. Las reglas corren en el navegador; la IA solo recibe el texto cuando el reclutador lo pide.",
-    "viesDecide": "El reclutador. El aviso no impide publicar, y la propuesta de la IA solo se usa si él la elige.",
+    "viesTarefa": "Revisor de sesgo (reclutador y candidato)",
+    "viesFaz": "Reglas fijas señalan en el texto de la vacante términos que excluyen a personas por edad, género, apariencia, origen, familia, salud o religión, y sugieren un cambio. Si el reclutador lo pide, la IA propone el texto reescrito sin esos términos. Las mismas reglas revisan el cargo, el objetivo, el resumen y los destacados de la Ficha W2 y avisan al candidato cuando el texto expone uno de esos datos; en la Ficha W2 no hay reescritura por IA.",
+    "viesDados": "El título, la descripción y los beneficios de la vacante, sin correo ni teléfono; en la Ficha W2, el cargo, el objetivo, el resumen y los destacados. Las reglas corren en el navegador; la IA solo recibe el texto de la vacante cuando el reclutador lo pide, y el texto de la Ficha W2 no va a la IA por este revisor.",
+    "viesDecide": "Quien escribe. El aviso no impide publicar la vacante ni guardar o publicar la Ficha W2, y la propuesta de la IA solo se usa si el reclutador la elige.",
     "perguntasTarefa": "Preguntas de entrevista (reclutador)",
     "perguntasFaz": "Sugiere de 6 a 8 preguntas, iguales para todos los candidatos, a partir de las competencias y responsabilidades de la vacante, y qué observar en la respuesta.",
     "perguntasDados": "Título, nivel, competencias y responsabilidades de la vacante. Nada sobre candidatos.",
@@ -1015,7 +1045,7 @@
     },
     "ats": {
       "title": "Integración con ATS",
-      "intro": "¿Quieres las postulaciones en tu sistema de selección (ATS)? Indica una dirección https. Con cada postulación recibida, W2Talent envía allí un aviso firmado con la Ficha W2, sin e-mail ni teléfono.",
+      "intro": "¿Quieres las postulaciones en tu sistema de selección (ATS)? Indica una dirección https. Con cada postulación recibida y cada cambio de etapa, W2Talent envía allí un aviso firmado con la Ficha W2. E-mail y teléfono solo después de la Entrevista.",
       "ajuda": "Cómo funciona",
       "carregando": "Cargando…",
       "soDono": "Solo quien registró la empresa configura la integración.",
@@ -1023,6 +1053,10 @@
       "statusLabel": "Situación",
       "ativa": "Activa",
       "desligada": "Desactivada",
+      "pausada": "Pausada",
+      "pausadaTitulo": "Pausamos la integración el {data}.",
+      "pausadaTituloSemData": "Pausamos la integración.",
+      "pausadaTexto": "{n} entregas seguidas fallaron y no se envía nada más. Revisa la dirección y tu sistema, usa \"Enviar prueba\" y haz clic en Activar. Lo que pasó durante la pausa no se reenvía.",
       "url": "Dirección que recibe los avisos",
       "urlHint": "Solo https y dirección pública. Ej.: https://ats.tuempresa.com/w2talent",
       "criar": "Guardar y activar",
@@ -1063,6 +1097,7 @@
         "url": "Dirección inválida",
         "segredo": "Error en el secreto",
         "candidatura_apagada": "Postulación borrada",
+        "pausado": "Integración pausada",
         "outro": "Falló"
       },
       "erros": {
@@ -1437,7 +1472,25 @@
     "baixarCsv": "Descargar CSV",
     "baixarXlsx": "Descargar Excel",
     "imprimirPdf": "Imprimir o PDF",
-    "paraVaga": "Para la vacante: {vaga}"
+    "paraVaga": "Para la vacante: {vaga}",
+    "link": {
+      "copiar": "Copiar enlace",
+      "criando": "Creando el enlace…",
+      "copiado": "Enlace copiado. Vale hasta el {data} y solo se abre con una cuenta de reclutador de tu empresa.",
+      "copieAbaixo": "Copia el enlace de abajo. Vale hasta el {data} y solo se abre para personas de tu empresa.",
+      "semEmpresa": "Para compartir, vincula tu cuenta a una empresa.",
+      "irEmpresa": "Ir a Mi empresa",
+      "erro": "No se pudo crear el enlace ahora. Inténtalo de nuevo.",
+      "gate": "Este enlace de comparación solo se abre para reclutadores de la empresa que lo creó.",
+      "aberto": "Comparación compartida por alguien de tu empresa. El enlace vale hasta el {data}.",
+      "vencidoTitle": "Este enlace venció",
+      "vencidoBody": "Los enlaces de comparación valen 14 días. Pide uno nuevo a quien lo compartió.",
+      "semAcessoTitle": "Sin acceso a esta comparación",
+      "semAcessoBody": "El enlace solo se abre para personas de la empresa que lo creó.",
+      "invalidoTitle": "Enlace inválido",
+      "invalidoBody": "El enlace está incompleto o fue modificado. Pide uno nuevo a quien lo compartió.",
+      "irCandidatos": "Ir a Candidatos"
+    }
   },
   "rh": {
     "title": "Panel de RR. HH.",

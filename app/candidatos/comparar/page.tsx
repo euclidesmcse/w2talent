@@ -4,6 +4,8 @@
  * Candidatos (até 10) lado a lado, candidatos em colunas e campos da Ficha W2 em linhas (D2),
  * com o match da vaga de referência escolhida. Contato só mascarado (D3).
  * 2.3b: exporta a mesma tabela em CSV, Excel ou PDF (impressão), tudo no navegador (D4).
+ * Link compartilhado (#link=...): a mesma tabela para quem é da empresa que criou o link, por 14 dias;
+ * a vaga vem do link e "Tirar" só tira da tela (a seleção de quem abre não muda).
  */
 import * as React from "react";
 import Link from "next/link";
@@ -18,11 +20,13 @@ import { aplicarTraducaoFicha, TraducaoFichaAviso } from "@/components/traducao-
 import type { VagaOpcao } from "@/components/candidatos-filtros";
 import type { ItemComparacao } from "@/lib/comparar";
 import { gerarCsv, gerarXlsx, nomeArquivo, separadorCsv, tabelaPorCandidato } from "@/lib/exportar";
+import { AvisoLinkComparacao, CompartilharComparacao, guardarTokenParaLogin, tokenDoEndereco, useDataLonga, type ErroLink } from "@/components/comparar-compartilhar";
 
 type Estado =
   | { t: "carregando" }
   | { t: "vazio" }
   | { t: "erro" }
+  | { t: "link"; erro: ErroLink }
   | { t: "pronto"; itens: ItemComparacao[]; fora: number; vaga: { id: string; titulo: string } | null };
 
 function baixar(dados: BlobPart, tipo: string, nome: string) {
@@ -55,36 +59,81 @@ export default function CompararPage() {
   const [vagas, setVagas] = React.useState<VagaOpcao[] | null>(null);
   const [vagaSumiu, setVagaSumiu] = React.useState(false);
   const [estado, setEstado] = React.useState<Estado>({ t: "carregando" });
+  // Link compartilhado: token do "#link=" e até quando vale.
+  const [link, setLink] = React.useState<string | null>(null);
+  const [linkExpira, setLinkExpira] = React.useState<string | null>(null);
+  const dataLonga = useDataLonga();
 
   React.useEffect(() => {
-    try {
-      setVaga(new URLSearchParams(window.location.search).get("vaga") || undefined);
-    } catch {}
+    const token = tokenDoEndereco();
+    setLink(token);
+    if (!token) {
+      try {
+        setVaga(new URLSearchParams(window.location.search).get("vaga") || undefined);
+      } catch {}
+    }
     setPronto(true);
+    // Outro link colado na mesma aba só muda o "#": acompanha a troca para a tabela seguir o link do endereço.
+    const naTroca = () => {
+      const novo = tokenDoEndereco();
+      if (novo) {
+        setLinkExpira(null);
+        setLink(novo);
+      }
+    };
+    window.addEventListener("hashchange", naTroca);
+    return () => window.removeEventListener("hashchange", naTroca);
   }, []);
 
-  // A vaga escolhida fica na URL, como em Candidatos.
+  // A vaga escolhida fica na URL, como em Candidatos (no link compartilhado, a vaga vem do link).
   React.useEffect(() => {
-    if (!pronto) return;
+    if (!pronto || link) return;
     try {
       const url = new URL(window.location.href);
       if (vaga) url.searchParams.set("vaga", vaga);
       else url.searchParams.delete("vaga");
       window.history.replaceState(null, "", url.toString());
     } catch {}
-  }, [vaga, pronto]);
+  }, [vaga, pronto, link]);
 
   React.useEffect(() => {
-    if (!liberado) return;
+    if (!liberado || link) return;
     fetch("/api/conta/empresa/vagas", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : { vagas: [] }))
       .then((d) => setVagas(Array.isArray(d.vagas) ? d.vagas : []))
       .catch(() => setVagas([]));
-  }, [liberado]);
+  }, [liberado, link]);
 
   const ultimo = React.useRef(0);
   React.useEffect(() => {
     if (!liberado || !pronto) return;
+    if (link) {
+      const meu = ++ultimo.current;
+      fetch("/api/candidates/comparar/link/abrir", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ t: link, lang: locale }),
+      })
+        .then(async (r) => {
+          if (meu !== ultimo.current) return;
+          const j = (await r.json().catch(() => ({}))) as {
+            error?: string;
+            itens?: ItemComparacao[];
+            fora?: string[];
+            vaga?: { id: string; titulo: string } | null;
+            vagaSumiu?: boolean;
+            expira?: string;
+          };
+          if (meu !== ultimo.current) return;
+          if (j.error === "link_vencido" || j.error === "link_invalido" || j.error === "sem_acesso") return setEstado({ t: "link", erro: j.error });
+          if (!r.ok || !j.itens) return setEstado({ t: "erro" });
+          setVagaSumiu(!!j.vagaSumiu);
+          setLinkExpira(j.expira ?? null);
+          setEstado(j.itens.length ? { t: "pronto", itens: j.itens, fora: j.fora?.length ?? 0, vaga: j.vaga ?? null } : { t: "vazio" });
+        })
+        .catch(() => { if (meu === ultimo.current) setEstado({ t: "erro" }); });
+      return;
+    }
     const ids = lerSelecao();
     if (!ids.length) return setEstado({ t: "vazio" });
     const meu = ++ultimo.current;
@@ -111,7 +160,7 @@ export default function CompararPage() {
         setEstado(itensAtuais.length ? { t: "pronto", itens: itensAtuais, fora: j.fora.length, vaga: j.vaga } : { t: "vazio" });
       })
       .catch(() => { if (meu === ultimo.current) setEstado({ t: "erro" }); });
-  }, [liberado, pronto, vaga, locale]);
+  }, [liberado, pronto, vaga, locale, link]);
 
   const itens = estado.t === "pronto" ? estado.itens : [];
   const comVaga = estado.t === "pronto" && !!estado.vaga;
@@ -142,7 +191,9 @@ export default function CompararPage() {
   };
 
   const tirar = (id: string) => {
-    try { selectionStore.remove(id); } catch {}
+    if (!link) {
+      try { selectionStore.remove(id); } catch {}
+    }
     setEstado((e) => {
       if (e.t !== "pronto") return e;
       const resto = e.itens.filter((it) => it.id !== id);
@@ -162,8 +213,15 @@ export default function CompararPage() {
             <div role="status" className="mt-4 rounded-card border border-line bg-surface px-6 py-10 text-center" data-testid="so-recrutador">
               <p className="font-semibold">{tr("candidatos.gateTitle")}</p>
               <p className="mt-1 text-sm text-muted">{conta.estado === "ok" ? tr("candidatos.gateCandidate") : tr("candidatos.gateBody")}</p>
+              {link ? <p className="mt-1 text-sm text-muted">{t("link.gate")}</p> : null}
               {conta.estado !== "ok" ? (
-                <a href={linkEntrar("/candidatos")} className={buttonClasses("primary", "md", "mt-4 hover:no-underline hover:text-white")}>{tr("conta.signIn")}</a>
+                <a
+                  href={link ? linkEntrar("/candidatos/comparar?compartilhado=1") : linkEntrar("/candidatos")}
+                  onClick={() => { if (link) guardarTokenParaLogin(link); }}
+                  className={buttonClasses("primary", "md", "mt-4 hover:no-underline hover:text-white")}
+                >
+                  {tr("conta.signIn")}
+                </a>
               ) : null}
             </div>
           )}
@@ -184,16 +242,19 @@ export default function CompararPage() {
           {estado.t === "pronto" ? t("lead", { n: estado.itens.length }) : estado.t === "carregando" ? tr("common.loading") : ""}
         </p>
 
-        {estado.t === "pronto" && estado.vaga ? <p className="mt-1 hidden text-sm print:block">{t("paraVaga", { vaga: estado.vaga.titulo })}</p> : null}
+        {estado.t === "pronto" && estado.vaga ? <p className={`mt-1 text-sm print:block ${link ? "" : "hidden"}`}>{t("paraVaga", { vaga: estado.vaga.titulo })}</p> : null}
+        {link && linkExpira && estado.t === "pronto" ? (
+          <p className="mt-1 text-[13px] text-muted print:hidden" data-testid="comparar-compartilhado">{t("link.aberto", { data: dataLonga(linkExpira) })}</p>
+        ) : null}
         <div className="mt-4 flex flex-wrap items-end gap-3 print:hidden">
-          <Field label={tr("candidatos.filtros.vaga")} className="min-w-0 max-w-[420px] flex-[1_1_260px]">
+          {link ? null : <Field label={tr("candidatos.filtros.vaga")} className="min-w-0 max-w-[420px] flex-[1_1_260px]">
             <Select data-testid="comparar-vaga" value={vaga ?? ""} onChange={(e) => { setVagaSumiu(false); setVaga(e.target.value || undefined); }} disabled={!vagas?.length}>
               <option value="">{tr("candidatos.filtros.vagaNenhuma")}</option>
               {(vagas ?? []).map((v) => (
                 <option key={v.id} value={v.id}>{v.titulo}</option>
               ))}
             </Select>
-          </Field>
+          </Field>}
           {estado.t === "pronto" ? (
             <div role="group" aria-label={t("exportar")} className="flex flex-wrap gap-2" data-testid="comparar-exportar">
               <Button variant="secondary" size="md" data-action="exportar-csv" onClick={() => exportar("csv")}>{t("baixarCsv")}</Button>
@@ -202,6 +263,11 @@ export default function CompararPage() {
             </div>
           ) : null}
         </div>
+        {estado.t === "pronto" ? (
+          <div className="mt-3">
+            <CompartilharComparacao ids={estado.itens.map((it) => it.id)} vaga={estado.vaga?.id ?? null} />
+          </div>
+        ) : null}
         {vagaSumiu ? <p role="status" className="mt-2 text-[13px] text-danger">{tr("candidatos.filtros.vagaSumiu")}</p> : null}
         {estado.t === "pronto" && estado.fora > 0 ? <p role="status" className="mt-2 text-[13px] text-muted">{t("fora", { n: estado.fora })}</p> : null}
 
@@ -213,6 +279,7 @@ export default function CompararPage() {
           </div>
         )}
         {estado.t === "erro" && <p role="alert" className="mt-6 text-sm text-danger">{t("erro")}</p>}
+        {estado.t === "link" && <AvisoLinkComparacao erro={estado.erro} />}
 
         {estado.t === "pronto" && (
           <>

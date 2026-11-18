@@ -32,6 +32,8 @@ Marca hasta 10 candidatos y usa "Comparar" en la barra de abajo. La pantalla mue
 
 "Descargar CSV" y "Descargar Excel" guardan la tabla con una fila por candidato; "Imprimir o PDF" abre la impresión del navegador, donde puedes guardar en PDF. Los archivos se arman en tu navegador y llevan el contacto enmascarado. W2Talent solo guarda que hubo una exportación, sin el contenido.
 
+"Copiar enlace" crea una dirección para enviar la comparación a colegas: abre la misma tabla, con la misma vacante, solo para quien entra con una cuenta de reclutador de tu empresa, y vale 14 días. Quien es de otra empresa o no inició sesión no ve ningún candidato. Pasados 14 días el enlace vence y hay que crear otro. El enlace guarda solo qué candidatos y qué vacante; la tabla se arma de nuevo al abrirlo, así que los perfiles que salieron del aire no aparecen.
+
 ## Traducción automática
 
 Cuando la Ficha W2 se escribió en otro idioma, la lista, la ficha y la comparación muestran el título, el resumen, los destacados y los cargos traducidos al idioma del sitio, con el aviso "Traducción automática". "Ver original" muestra el texto como lo escribió el candidato. Nombre, empresas, ciudades, números y competencias no se traducen. Los archivos descargados (CSV, Excel y PDF) siempre mantienen el texto original.

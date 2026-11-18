@@ -3,15 +3,15 @@ import * as fs from "fs";
 import * as path from "path";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { renderToStaticMarkup } = require("react-dom/server") as { renderToStaticMarkup: (el: unknown) => string };
-import { colors, fontFamily, radius } from "../lib/design-tokens";
+import { claro, escuro, colors, variaveis, fontFamily, radius } from "../lib/design-tokens";
 import { Button, buttonClasses, Card, Chip, Field, Input, MatchBar, StatusBadge, Table, THead, Th, Tr, Td, ToastProvider } from "../components/ui";
 
 describe("tokens do protótipo aprovado", () => {
   it("cor de ação, fundo, bordas, texto e fonte", () => {
-    expect(colors.brand.DEFAULT).toBe("#1F4FD8");
-    expect(colors.canvas).toBe("#F7F8FA");
-    expect(colors.line.DEFAULT).toBe("#E5E7EB");
-    expect(colors.ink.DEFAULT).toBe("#111827");
+    expect(claro.brand.DEFAULT).toBe("#1F4FD8");
+    expect(claro.canvas).toBe("#F7F8FA");
+    expect(claro.line.DEFAULT).toBe("#E5E7EB");
+    expect(claro.ink.DEFAULT).toBe("#111827");
     // fontes servidas pelo site (next/font): a variável vem primeiro, o nome fica de reserva
     expect(fontFamily.sans.slice(0, 2)).toEqual(["var(--font-inter)", "Inter"]);
     expect(radius.control).toBe("6px");
@@ -19,10 +19,43 @@ describe("tokens do protótipo aprovado", () => {
     expect(fontFamily.display.slice(0, 2)).toEqual(["var(--font-grotesk)", "Space Grotesk"]);
   });
 
-  it("Tailwind lê os tokens da mesma fonte", () => {
+  it("Tailwind lê os tokens da mesma fonte (variáveis --cor-*, claro em :root e escuro com data-theme)", () => {
     const cfg = require("../tailwind.config.js");
-    expect(cfg.theme.extend.colors.brand.DEFAULT).toBe("#1F4FD8");
+    expect(cfg.theme.extend.colors.brand.DEFAULT).toBe("rgb(var(--cor-brand) / <alpha-value>)");
+    expect(cfg.theme.extend.colors.brand.soft).toBe("rgb(var(--cor-brand-soft) / <alpha-value>)");
     expect(cfg.theme.extend.fontFamily.sans[0]).toBe("var(--font-inter)");
+    expect(cfg.darkMode).toEqual(["selector", '[data-theme="dark"]']);
+    expect(variaveis(claro)["--cor-brand"]).toBe("31 79 216");
+    expect(variaveis(claro)["--cor-canvas"]).toBe("247 248 250");
+    let base: Record<string, Record<string, string>> = {};
+    cfg.plugins[0]({ addBase: (b: typeof base) => (base = b) });
+    expect(base[":root"]["--cor-surface"]).toBe("255 255 255");
+    expect(base[':root[data-theme="dark"]']["--cor-surface"]).toBe(variaveis(escuro)["--cor-surface"]);
+  });
+
+  it("claro e escuro têm as mesmas cores", () => {
+    expect(Object.keys(variaveis(escuro)).sort()).toEqual(Object.keys(variaveis(claro)).sort());
+    expect(Object.keys(colors)).toEqual(expect.arrayContaining(Object.keys(claro)));
+  });
+
+  it("escuro: texto passa AA (4,5:1) sobre fundo, cartão e tons suaves", () => {
+    const lum = (hex: string) => {
+      const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+      return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    };
+    const razao = (a: string, b: string) => {
+      const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+      return (x + 0.05) / (y + 0.05);
+    };
+    for (const tema of [claro, escuro]) {
+      const fundos = [tema.canvas, tema.surface, tema.neutral.soft, tema.line.soft];
+      for (const texto of [tema.ink.DEFAULT, tema.ink.soft, tema.muted.DEFAULT, tema.brand.DEFAULT, tema.danger.DEFAULT, tema.success.ink, tema.warning.ink]) {
+        for (const fundo of fundos) expect([texto, fundo, razao(texto, fundo) >= 4.5]).toEqual([texto, fundo, true]);
+      }
+      for (const [texto, fundo] of [[tema.brand.ink, tema.brand.soft], [tema.success.ink, tema.success.soft], [tema.warning.ink, tema.warning.soft], [tema.danger.ink, tema.danger.soft], ["#FFFFFF", tema.brand.solid], ["#FFFFFF", tema.danger.solid], [tema.surface, tema.ink.DEFAULT]]) {
+        expect([texto, fundo, razao(texto, fundo) >= 4.5]).toEqual([texto, fundo, true]);
+      }
+    }
   });
 
   it("o visual antigo saiu da landing e das listas", () => {
@@ -94,7 +127,7 @@ describe("componentes base", () => {
       </Table>
     );
     expect(html).toContain('scope="col"');
-    expect(html).toContain("bg-[#F5F8FF]");
+    expect(html).toContain("bg-brand-faint");
   });
 
   it("Card e ToastProvider renderizam (região de avisos acessível)", () => {

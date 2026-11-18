@@ -2,7 +2,8 @@ name: Qualidade — Lighthouse + axe
 
 # Roda a cada PR nas quatro telas (início, Vagas, Candidatos, Minhas candidaturas).
 # Falha se acessibilidade < 100 ou desempenho < 90 (Lighthouse, mediana de 3 execuções),
-# ou se o axe encontrar qualquer violação de acessibilidade.
+# ou se o axe encontrar qualquer violação de acessibilidade. O axe roda no tema claro e no escuro
+# (scripts/axe-check.mjs; o Lighthouse fica no claro).
 on:
   pull_request:
     branches: [main]
@@ -12,7 +13,7 @@ on:
 jobs:
   auditoria:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       BETTER_AUTH_SECRET: dummy-ci-better-auth-secret-0123456789abcdef
       CRON_SECRET: dummy-ci-cron
@@ -42,7 +43,7 @@ jobs:
             console.log(`${r.finalUrl} perf=${Math.round(r.categories.performance.score * 100)} FCP=${m("first-contentful-paint")} LCP=${m("largest-contentful-paint")} TBT=${m("total-blocking-time")} CLS=${m("cumulative-layout-shift")} SI=${m("speed-index")} LCP-el=${lcp.slice(0, 100)}`);
             for (const i of a["layout-shifts"]?.details?.items ?? []) console.log(`    deslocamento ${i.score?.toFixed?.(3)} ${(i.node?.snippet ?? "").slice(0, 160)} ${i.node?.selector ?? ""}`);
           }'
-      - name: axe
+      - name: axe (tema claro e escuro)
         run: |
           npx next start -p 3999 &
           for i in $(seq 1 30); do curl -sf http://localhost:3999/ >/dev/null && break; sleep 2; done

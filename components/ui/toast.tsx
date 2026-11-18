@@ -7,10 +7,11 @@ export type ToastTone = "success" | "info" | "warning" | "error";
 type ToastItem = { id: number; tone: ToastTone; message: string };
 
 const toneCls: Record<ToastTone, string> = {
-  success: "border-[#A7F3D0] bg-[#ECFDF5] text-[#065F46]",
+  // `dark:`: no tema escuro os avisos usam os tons escuros dos tokens (o claro segue igual ao protótipo)
+  success: "border-[#A7F3D0] bg-[#ECFDF5] text-[#065F46] dark:border-success/50 dark:bg-success-soft dark:text-success-ink",
   info: "border-line bg-surface text-ink",
-  warning: "border-[#F59E0B] bg-[#FFFBEB] text-[#92400E]",
-  error: "border-[#FECDCA] bg-danger-soft text-danger-ink",
+  warning: "border-[#F59E0B] bg-[#FFFBEB] text-[#92400E] dark:border-warning dark:bg-warning-soft dark:text-warning-ink",
+  error: "border-[#FECDCA] bg-danger-soft text-danger-ink dark:border-danger/50",
 };
 
 const ToastContext = React.createContext<{ show: (message: string, tone?: ToastTone) => void } | null>(null);

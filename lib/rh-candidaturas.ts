@@ -9,6 +9,8 @@
  *   telefone da ficha só para a empresa daquela vaga (contatoLiberadoEm) e avisa o candidato por e-mail.
  *   Liberado uma vez, fica liberado, mesmo que a etapa volte. O aviso fica guardado em emailPendente na
  *   mesma transação; quem chama limpa depois de pôr na fila, e o Cron diário tenta de novo se a fila falhar.
+ * - 3.4b: depois do commit, a mudança vira o evento "candidatura.etapa" do webhook da empresa (se ligado).
+ *   Falha da fila nunca desfaz nem atrapalha a mudança.
  */
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { withoutContacts } from "./search";
@@ -20,6 +22,7 @@ import { ETAPAS, type Etapa } from "./painel-rh";
 import { emailLocale, renderEntrevistaEmail } from "./email-templates";
 import { entrevistasDasCandidaturas, type ResumoEntrevista } from "./entrevista";
 import type { EmailMessage } from "./email";
+import type { MensagemWebhook } from "./fila";
 
 /** Etapas que liberam o contato (D4): a partir da Entrevista. */
 export const ETAPAS_COM_CONTATO: readonly Etapa[] = ["entrevista", "proposta", "contratada"];
@@ -155,7 +158,27 @@ export async function mudarEtapa(
   de: Etapa,
   para: Etapa,
   now = new Date(),
-  opts: { appUrl?: string } = {},
+  opts: { appUrl?: string; enviarWebhook?: (m: MensagemWebhook) => Promise<void> } = {},
+): Promise<ResultadoEtapa> {
+  const res = await mudarEtapaNoBanco(db, companyId, applicationId, de, para, now, opts);
+  // 3.4b: o sistema da empresa (ATS) fica sabendo. Depois do commit; enfileirarEtapa não lança.
+  if (res.ok && de !== para && opts.enviarWebhook) {
+    const enviarWebhook = opts.enviarWebhook;
+    await import("./webhook")
+      .then(({ enfileirarEtapa }) => enfileirarEtapa(db, { applicationId, companyId, de, para }, enviarWebhook, now))
+      .catch((err) => console.error("[rh/candidaturas] webhook da etapa não entrou na fila:", err instanceof Error ? err.message : err));
+  }
+  return res;
+}
+
+function mudarEtapaNoBanco(
+  db: PrismaClient,
+  companyId: string,
+  applicationId: string,
+  de: Etapa,
+  para: Etapa,
+  now: Date,
+  opts: { appUrl?: string },
 ): Promise<ResultadoEtapa> {
   return db.$transaction(async (tx) => {
     const app = await tx.application.findFirst({

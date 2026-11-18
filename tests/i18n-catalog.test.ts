@@ -41,6 +41,7 @@ describe("catálogos de idioma", () => {
       "components/batch-bar.tsx",
       "components/detail-modal.tsx",
       "components/language-switcher.tsx",
+      "components/tema-switcher.tsx",
       "components/pwa.tsx",
       "components/install-app.tsx",
       "app/offline/page.tsx",
@@ -65,6 +66,9 @@ describe("catálogos de idioma", () => {
       "app/ajuda/minhas-conversas/layout.tsx",
       "app/admin/atendimento/page.tsx",
       "components/empresa-webhook.tsx",
+      "components/ficha-vies-aviso.tsx",
+      "app/candidatos/comparar/page.tsx",
+      "components/comparar-compartilhar.tsx",
     ];
     // namespaces passados para useTranslations/getTranslations em cada arquivo
     const missing: string[] = [];

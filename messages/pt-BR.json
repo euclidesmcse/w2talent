@@ -48,6 +48,13 @@
     "en": "English",
     "es": "Español"
   },
+  "tema": {
+    "label": "Tema",
+    "sistema": "Seguir o sistema",
+    "claro": "Claro",
+    "escuro": "Escuro",
+    "botao": "Tema: {atual}. Mudar para: {proximo}"
+  },
   "home": {
     "title": "Candidate-se a <destaque>várias vagas de uma vez</destaque>, sem perder o controle",
     "lead": "Você encontra as vagas, confere cada uma e aprova. O W2Talent envia em lote só as que você aprovou, com um resumo do seu perfil que o recrutador entende em segundos.",
@@ -648,7 +655,30 @@
     "w2Rodape": "Ficha gerada pela IA, revisada pelo candidato",
     "w2RodapeIa": "Ficha gerada pela IA",
     "w2Mudanca": "aceita mudança",
-    "publicarEntrar": "Entrar"
+    "publicarEntrar": "Entrar",
+    "vies": {
+      "titulo": "{count, plural, one {1 trecho pode expor um dado sensível} other {# trechos podem expor dados sensíveis}}",
+      "intro": "Só um aviso: esses termos contam algo que a vaga não precisa saber e podem atrapalhar você. Você decide o que muda, e a ficha salva do mesmo jeito.",
+      "comoFunciona": "Como funciona",
+      "campos": {
+        "titulo": "cargo",
+        "objetivo": "objetivo",
+        "resumo": "resumo",
+        "destaque": "destaque {n}"
+      },
+      "cat": {
+        "idade": "mostra sua idade.",
+        "genero": "cita gênero.",
+        "aparencia": "fala da sua aparência ou pede foto.",
+        "origem": "mostra sua origem; para idioma, prefira o nível de fluência.",
+        "familia": "conta sobre família ou estado civil.",
+        "saude": "conta sobre saúde ou deficiência.",
+        "religiao": "cita religião."
+      },
+      "trocarPor": "Trocar por \"{troca}\"",
+      "tirar": "Tirar \"{trecho}\"",
+      "reescrever": "Reescreva este trecho, se quiser."
+    }
   },
   "aprovar": {
     "title": "Revisar e aprovar",
@@ -923,10 +953,10 @@
     "vagaFaz": "Preenche os campos da vaga a partir do texto colado, avisa vaga parecida já publicada pela empresa e sugere a faixa salarial pela mediana de 5 ou mais vagas parecidas.",
     "vagaDados": "O texto da vaga, sem e-mail nem telefone.",
     "vagaDecide": "O recrutador confere cada campo e decide se publica.",
-    "viesTarefa": "Revisor de viés (recrutador)",
-    "viesFaz": "Regras fixas apontam no texto da vaga termos que excluem pessoas por idade, gênero, aparência, origem, família, saúde ou religião, e sugerem uma troca. Se o recrutador pedir, a IA propõe o texto reescrito sem esses termos.",
-    "viesDados": "O título, a descrição e os benefícios da vaga, sem e-mail nem telefone. As regras rodam no navegador; a IA só recebe o texto quando o recrutador pede.",
-    "viesDecide": "O recrutador. O aviso não impede a publicação, e a proposta da IA só entra se ele escolher.",
+    "viesTarefa": "Revisor de viés (recrutador e candidato)",
+    "viesFaz": "Regras fixas apontam no texto da vaga termos que excluem pessoas por idade, gênero, aparência, origem, família, saúde ou religião, e sugerem uma troca. Se o recrutador pedir, a IA propõe o texto reescrito sem esses termos. As mesmas regras olham o cargo, o objetivo, o resumo e os destaques da Ficha W2 e avisam o candidato quando o texto expõe um desses dados; na Ficha W2 não há reescrita pela IA.",
+    "viesDados": "O título, a descrição e os benefícios da vaga, sem e-mail nem telefone; na Ficha W2, o cargo, o objetivo, o resumo e os destaques. As regras rodam no navegador; a IA só recebe o texto da vaga quando o recrutador pede, e o texto da Ficha W2 não vai para a IA por causa deste revisor.",
+    "viesDecide": "Quem escreve. O aviso não impede publicar a vaga nem salvar ou publicar a Ficha W2, e a proposta da IA só entra se o recrutador escolher.",
     "perguntasTarefa": "Perguntas de entrevista (recrutador)",
     "perguntasFaz": "Sugere de 6 a 8 perguntas iguais para todos os candidatos, a partir das competências e responsabilidades da vaga, e o que observar na resposta.",
     "perguntasDados": "Título, nível, competências e responsabilidades da vaga. Nada sobre candidatos.",
@@ -1015,7 +1045,7 @@
     },
     "ats": {
       "title": "Integração com ATS",
-      "intro": "Quer as candidaturas no seu sistema de seleção (ATS)? Informe um endereço https. A cada candidatura recebida, o W2Talent manda um aviso assinado para lá, com a Ficha W2, sem e-mail nem telefone.",
+      "intro": "Quer as candidaturas no seu sistema de seleção (ATS)? Informe um endereço https. A cada candidatura recebida e a cada mudança de etapa, o W2Talent manda um aviso assinado para lá, com a Ficha W2. E-mail e telefone só depois da Entrevista.",
       "ajuda": "Como funciona",
       "carregando": "Carregando…",
       "soDono": "Só quem cadastrou a empresa configura a integração.",
@@ -1023,6 +1053,10 @@
       "statusLabel": "Situação",
       "ativa": "Ativa",
       "desligada": "Desativada",
+      "pausada": "Pausada",
+      "pausadaTitulo": "Pausamos a integração em {data}.",
+      "pausadaTituloSemData": "Pausamos a integração.",
+      "pausadaTexto": "{n} entregas seguidas não deram certo, e nada mais é enviado. Confira o endereço e o seu sistema, use \"Enviar teste\" e clique em Ativar. O que aconteceu durante a pausa não é reenviado.",
       "url": "Endereço que recebe os avisos",
       "urlHint": "Só https e endereço público. Ex.: https://ats.suaempresa.com.br/w2talent",
       "criar": "Salvar e ativar",
@@ -1063,6 +1097,7 @@
         "url": "Endereço inválido",
         "segredo": "Erro no segredo",
         "candidatura_apagada": "Candidatura apagada",
+        "pausado": "Integração pausada",
         "outro": "Falhou"
       },
       "erros": {
@@ -1437,7 +1472,25 @@
     "baixarCsv": "Baixar CSV",
     "baixarXlsx": "Baixar Excel",
     "imprimirPdf": "Imprimir ou PDF",
-    "paraVaga": "Para a vaga: {vaga}"
+    "paraVaga": "Para a vaga: {vaga}",
+    "link": {
+      "copiar": "Copiar link",
+      "criando": "Criando o link…",
+      "copiado": "Link copiado. Vale até {data} e abre só para quem entra com uma conta de recrutador da sua empresa.",
+      "copieAbaixo": "Copie o link abaixo. Vale até {data} e abre só para quem é da sua empresa.",
+      "semEmpresa": "Para compartilhar, ligue a sua conta a uma empresa.",
+      "irEmpresa": "Ir para Minha empresa",
+      "erro": "Não deu para criar o link agora. Tente de novo.",
+      "gate": "Este link de comparação abre só para recrutadores da empresa que o criou.",
+      "aberto": "Comparação compartilhada por alguém da sua empresa. O link vale até {data}.",
+      "vencidoTitle": "Este link venceu",
+      "vencidoBody": "Links de comparação valem 14 dias. Peça um novo a quem compartilhou.",
+      "semAcessoTitle": "Sem acesso a esta comparação",
+      "semAcessoBody": "O link abre só para quem é da empresa que o criou.",
+      "invalidoTitle": "Link inválido",
+      "invalidoBody": "O link está incompleto ou foi alterado. Peça um novo a quem compartilhou.",
+      "irCandidatos": "Ir para Candidatos"
+    }
   },
   "rh": {
     "title": "Painel RH",
