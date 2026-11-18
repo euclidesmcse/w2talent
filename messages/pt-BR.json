@@ -920,7 +920,11 @@
     "ajudaTarefa": "Perguntas na Ajuda",
     "ajudaFaz": "Acha nos artigos de ajuda os trechos mais próximos da pergunta e escreve uma resposta curta só com eles, com o link do artigo. Se os artigos não respondem, diz que não sabe e oferece mandar a pergunta para a equipe.",
     "ajudaDados": "A pergunta, sem e-mail nem telefone, e os artigos de ajuda. Nada da sua conta. Pergunta sem resposta fica guardada por 90 dias, sem IP nem conta, para melhorarmos os artigos.",
-    "ajudaDecide": "Você confere no artigo do link. O que a IA não sabe, a equipe responde."
+    "ajudaDecide": "Você confere no artigo do link. O que a IA não sabe, a equipe responde.",
+    "traducaoTarefa": "Tradução automática",
+    "traducaoFaz": "Traduz o título, a descrição e os benefícios das vagas para português, inglês e espanhol, para cada pessoa ler no idioma do site. Nomes de tecnologia, números e contatos não mudam; a tradução que mexe neles é descartada.",
+    "traducaoDados": "Só o texto da vaga, sem e-mail nem telefone.",
+    "traducaoDecide": "Você. A tradução aparece marcada e o botão \"Ver original\" mostra o texto escrito pela empresa. Quem publicou continua vendo só o original."
   },
   "empresa": {
     "title": "Minha empresa",
@@ -1326,5 +1330,10 @@
     "erroPrazo": "Não dá mais para mudar esta entrevista por aqui.",
     "erroGeral": "Não deu para carregar ou salvar agora. Tente de novo.",
     "minhas": "Ver minhas candidaturas"
+  },
+  "traducao": {
+    "aviso": "Tradução automática",
+    "verOriginal": "Ver original",
+    "verTraducao": "Ver tradução"
   }
 }

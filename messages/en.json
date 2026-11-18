@@ -920,7 +920,11 @@
     "ajudaTarefa": "Questions in Help",
     "ajudaFaz": "Finds the help article passages closest to the question and writes a short answer using only them, with the article link. If the articles do not answer it, it says so and offers to send the question to the team.",
     "ajudaDados": "The question, without email or phone, and the help articles. Nothing from your account. Unanswered questions are kept for 90 days, without IP or account, so we can improve the articles.",
-    "ajudaDecide": "You check the linked article. The team answers what AI does not know."
+    "ajudaDecide": "You check the linked article. The team answers what AI does not know.",
+    "traducaoTarefa": "Automatic translation",
+    "traducaoFaz": "Translates the title, description and benefits of job openings into Portuguese, English and Spanish, so each person reads them in the site language. Technology names, numbers and contacts stay the same; a translation that changes them is discarded.",
+    "traducaoDados": "Only the job opening text, without email or phone.",
+    "traducaoDecide": "You. The translation is labeled and the \"Show original\" button shows the text the company wrote. Whoever posted it still sees only the original."
   },
   "empresa": {
     "title": "My company",
@@ -1326,5 +1330,10 @@
     "erroPrazo": "This interview can no longer be changed here.",
     "erroGeral": "Could not load or save right now. Try again.",
     "minhas": "See my applications"
+  },
+  "traducao": {
+    "aviso": "Automatic translation",
+    "verOriginal": "Show original",
+    "verTraducao": "Show translation"
   }
 }

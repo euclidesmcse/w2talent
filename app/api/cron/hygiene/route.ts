@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { enqueueEmail } from "@/lib/notifications";
 import { reenviarEmailsPendentes } from "@/lib/envio";
 import { reenviarEmailsEntrevista } from "@/lib/entrevista";
+import { chatDeTraducao, traduzirPendentes } from "@/lib/traducao";
 
 /**
  * Higiene diária (1.5.15). Chamada pelo Cron Trigger do Worker (custom-worker.ts) às 9h de Brasília,
@@ -31,7 +32,15 @@ export async function POST(req: NextRequest) {
       console.error("[agenda] reenvio falhou:", e instanceof Error ? e.name : e);
       return { enviados: 0, falhas: -1 };
     });
-    return NextResponse.json({ ok: true, ...summary, emailsCandidatura: candidaturas, emailsAgenda: agenda }, { status: 200 });
+    // 2.7a: vagas ativas sem tradução atual (inclui as anteriores ao 2.7), até 30 por dia.
+    const chat = await chatDeTraducao();
+    const traducoes = chat
+      ? await traduzirPendentes(prisma, chat, 30).catch((e) => {
+          console.error("[traducao] cron falhou:", e instanceof Error ? e.name : e);
+          return { traduzidas: 0, mesmoIdioma: 0, falhas: -1, semLimite: false, vagas: 0 };
+        })
+      : null;
+    return NextResponse.json({ ok: true, ...summary, emailsCandidatura: candidaturas, emailsAgenda: agenda, traducoes }, { status: 200 });
   } catch (e) {
     console.error("[higiene] falhou:", e instanceof Error ? `${e.name}: ${e.message}` : e);
     return NextResponse.json({ error: "hygiene_failed" }, { status: 500 });

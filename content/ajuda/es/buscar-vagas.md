@@ -27,3 +27,7 @@ Las píldoras debajo de la búsqueda (Cloud, Datos, Front-end...) traen las comp
 ## Vacantes similares
 
 Al abrir una vacante, aparecen hasta 5 vacantes similares al final del detalle.
+
+## Traducción automática
+
+Las vacantes escritas en otro idioma aparecen traducidas al idioma del sitio, con el aviso "Traducción automática". Haz clic en "Ver original" para leer el texto que escribió la empresa y en "Ver traducción" para volver. Los nombres de tecnología, los números y los contactos no se traducen. Una vacante recién publicada o editada puede aparecer en el original por algunos minutos, hasta que la traducción esté lista. Mira [cómo usamos IA](/ia#traducao).

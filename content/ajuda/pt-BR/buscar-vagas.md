@@ -27,3 +27,7 @@ As pílulas abaixo da busca (Cloud, Dados, Front-end...) trazem as competências
 ## Vagas parecidas
 
 Ao abrir uma vaga, aparecem até 5 vagas parecidas no fim do detalhe.
+
+## Tradução automática
+
+Vagas escritas em outro idioma aparecem traduzidas para o idioma do site, com o aviso "Tradução automática". Clique em "Ver original" para ler o texto que a empresa escreveu e em "Ver tradução" para voltar. Nomes de tecnologia, números e contatos não são traduzidos. Uma vaga recém-publicada ou editada pode aparecer no original por alguns minutos, até a tradução ficar pronta. Veja [como usamos IA](/ia#traducao).

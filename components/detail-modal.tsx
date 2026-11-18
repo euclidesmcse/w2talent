@@ -8,6 +8,7 @@ import { formatFaixa, formatPretensaoCandidato, formatTempo } from "@/lib/format
 import { FichaW2Card } from "@/components/ficha-w2-card";
 import { NaoVerificada } from "@/components/empresa-etiqueta";
 import { sanitizeFicha, sanitizeFichaW2 } from "@/lib/ficha";
+import { TraducaoAviso, VerOriginalContext, textoExibido } from "@/components/traducao-aviso";
 
 /**
  * DetailModal — modal desktop / bottom sheet mobile (Task 6)
@@ -38,7 +39,7 @@ function getFocusable(container: HTMLElement): HTMLElement[] {
 }
 
 /** Corpo do detalhe (Ficha W2 do candidato ou campos da vaga), usado na janela e no painel ao lado (2.2c). */
-export function DetailBody({ item, antes, children }: { item: any; antes?: React.ReactNode; children?: React.ReactNode }) {
+export function DetailBody({ item, antes, children, langTexto }: { item: any; antes?: React.ReactNode; children?: React.ReactNode; langTexto?: string }) {
   const t = useTranslations("detail");
   const locale = useLocale();
   const skills: string[] = item?.stack && Array.isArray(item.stack) ? item.stack.map((x: any) => x?.skillId ?? x).filter(Boolean) : [];
@@ -96,7 +97,7 @@ export function DetailBody({ item, antes, children }: { item: any; antes?: React
         </div>
       ) : null}
       {item.descricaoBullets ? (
-        <ul className="list-disc space-y-1 pl-5 text-ink-soft">
+        <ul className="list-disc space-y-1 pl-5 text-ink-soft" lang={langTexto}>
           {(Array.isArray(item.descricaoBullets) ? item.descricaoBullets : [item.descricaoBullets]).map((b: string, i: number) => (
             <li key={i}>{b}</li>
           ))}
@@ -116,6 +117,11 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef, 
   const previouslyFocused = React.useRef<HTMLElement | null>(null);
   const scrollYRef = React.useRef<number>(0);
   const [isMobile, setIsMobile] = React.useState(false);
+  // 2.7a: um "Ver original" para a vaga inteira (título e descrição); volta à tradução ao reabrir.
+  const [verOriginal, setVerOriginal] = React.useState(false);
+  React.useEffect(() => {
+    if (!open) setVerOriginal(false);
+  }, [open]);
 
   // detect mobile for bottom sheet (vaul) — 768 breakpoint
   React.useEffect(() => {
@@ -222,7 +228,10 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef, 
     }
   };
 
-  const content = item ? <DetailBody item={item} antes={antes}>{children}</DetailBody> : children ?? <div>{title ?? t("title")}</div>;
+  // Vaga com tradução automática: título e descrição no idioma de quem vê, o original a um clique.
+  const texto = item && !item.nome ? textoExibido(item, verOriginal) : null;
+  const vaga = texto?.traduzida ? { ...item, titulo: texto.titulo, descricaoBullets: texto.descricaoBullets } : item;
+  const content = item ? <DetailBody item={vaga} antes={antes} langTexto={texto?.lang}>{children}</DetailBody> : children ?? <div>{title ?? t("title")}</div>;
 
   // bottom sheet mobile vs modal desktop — same component, CSS switches position
   // media: @media (max-width: 768px) -> bottom sheet
@@ -257,8 +266,8 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef, 
         }}
       >
         <div className="flex justify-between items-start gap-4">
-          <h2 id="detail-title" className="text-xl font-semibold leading-snug">
-            {title ?? item?.titulo ?? item?.nome ?? t("title")}
+          <h2 id="detail-title" className="text-xl font-semibold leading-snug" lang={texto?.traduzida ? texto.lang : undefined}>
+            {texto?.traduzida ? texto.titulo : title ?? item?.titulo ?? item?.nome ?? t("title")}
           </h2>
           <button
             type="button"
@@ -270,7 +279,10 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef, 
             ✕
           </button>
         </div>
-        <div className="mt-5">{content}</div>
+        {texto?.traduzida ? <TraducaoAviso className="mt-1.5" verOriginal={verOriginal} onAlternar={() => setVerOriginal((v) => !v)} /> : null}
+        <VerOriginalContext.Provider value={verOriginal}>
+          <div className="mt-5">{content}</div>
+        </VerOriginalContext.Provider>
         <div className="mt-6 flex justify-end gap-2 border-t border-line-soft pt-4">
           <button type="button" tabIndex={0} onClick={onClose} className={buttonClasses("secondary", "md")}>
             {tc("close")}

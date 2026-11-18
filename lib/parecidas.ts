@@ -22,6 +22,8 @@ export type VagaResumo = {
   /** 2.1a: a rota troca pelo nome da empresa e se ela é verificada (anexarEmpresas). */
   companyId?: string | null;
   company?: { nome: string; verificada: boolean };
+  /** 2.7a: a rota anexa a tradução automática no idioma de quem vê (anexarTraducoes). */
+  traducao?: import("./traducao-anexar").TraducaoAnexada | null;
 };
 
 type VagaQualquer = Record<string, any>;

@@ -4,6 +4,7 @@ import { vacancyExpiresAt } from "@/lib/hygiene";
 import { runInBackground } from "@/lib/background";
 import { indexVacancy } from "@/lib/indexing";
 import { acessoVaga } from "@/lib/empresa";
+import { pedirTraducaoDaVaga } from "@/lib/traducao-anexar";
 
 export async function POST(req: NextRequest) {
   try {
@@ -55,6 +56,8 @@ export async function POST(req: NextRequest) {
     });
     // 1.5.9: vetor + tsvector em segundo plano (a resposta não espera o modelo).
     runInBackground("indexar vaga", () => indexVacancy(created.id));
+    // 2.7a: tradução automática para os outros idiomas (a IA roda em segundo plano).
+    await pedirTraducaoDaVaga(prisma, created.id);
 
     return NextResponse.json(
       {

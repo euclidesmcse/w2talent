@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { anexarEmpresas } from "@/lib/empresa";
+import { anexarTraducoes } from "@/lib/traducao-anexar";
+import { isValidLocale, defaultLocale, type Locale } from "@/i18n";
 import { MAX_PARECIDAS, parecidasPorCompetencia, resumoDaVaga, type VagaResumo } from "@/lib/parecidas";
 
 /**
@@ -38,7 +40,7 @@ async function daDemonstracao(id: string): Promise<VagaResumo[] | null> {
   return alvo ? parecidasPorCompetencia(alvo, DEMO_VACANCIES).map(({ companyId: _c, ...v }) => v) : null;
 }
 
-export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   if (!id || id.length > 100) return NextResponse.json({ error: "id inválido" }, { status: 400 });
   let itens: VagaResumo[] | null = null;
@@ -50,7 +52,13 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
   // Banco fora do ar ou vaga de demonstração: usa os dados de exemplo, como a busca.
   if (itens === null) itens = await daDemonstracao(id).catch(() => null);
   if (itens === null) return NextResponse.json({ items: [] }, { status: 404 });
-  return NextResponse.json({ items: itens }, { headers: { "cache-control": "public, max-age=300" } });
+  // 2.7a: tradução no idioma de quem vê. O cliente manda ?lang= no endereço, então o cache
+  // de 5 min não mistura idiomas; o vary cobre quem mandar só o cabeçalho x-locale.
+  const url = new URL(req.url);
+  const langRaw = url.searchParams.get("lang") ?? req.headers.get("x-locale") ?? defaultLocale;
+  const lang: Locale = isValidLocale(langRaw) ? langRaw : defaultLocale;
+  const traduzidos = await anexarTraducoes(itens, lang);
+  return NextResponse.json({ items: traduzidos }, { headers: { "cache-control": "public, max-age=300", vary: "x-locale" } });
 }
 
 export const dynamic = "force-dynamic";
