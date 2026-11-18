@@ -61,7 +61,7 @@ export function TraducaoFichaAviso({ idiomaOrigem, original, onAlternar, texto =
   return (
     <p data-traducao-ficha={original ? "original" : "traduzida"} className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-control bg-canvas px-3 py-2 text-[13px] text-muted">
       <span>{original ? t(texto === "aviso" ? "avisoOriginal" : "avisoVariasOriginal", { lingua }) : t(texto, { lingua })}</span>
-      <button type="button" data-action="ver-original-ficha" aria-pressed={original} onClick={onAlternar} className="font-medium text-brand underline underline-offset-2 hover:text-ink">
+      <button type="button" data-action="ver-original-ficha" onClick={onAlternar} className="font-medium text-brand underline underline-offset-2 hover:text-ink">
         {original ? t("verTraducao") : t("verOriginal")}
       </button>
     </p>

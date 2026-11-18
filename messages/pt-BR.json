@@ -935,8 +935,8 @@
     "ajudaDados": "A pergunta, sem e-mail nem telefone, e os artigos de ajuda. Nada da sua conta. Pergunta sem resposta fica guardada por 90 dias, sem IP nem conta, para melhorarmos os artigos.",
     "ajudaDecide": "Você confere no artigo do link. O que a IA não sabe, a equipe responde.",
     "traducaoTarefa": "Tradução automática",
-    "traducaoFaz": "Traduz o título, a descrição e os benefícios das vagas para português, inglês e espanhol, para cada pessoa ler no idioma do site. Nomes de tecnologia, números e contatos não mudam; a tradução que mexe neles é descartada.",
-    "traducaoDados": "Só o texto da vaga, sem e-mail nem telefone.",
+    "traducaoFaz": "Traduz o título, a descrição e os benefícios das vagas e, para o recrutador, o título, o resumo, os destaques e os cargos da Ficha W2, para cada pessoa ler no idioma do site. Nomes de tecnologia, números e contatos não mudam; a tradução que mexe neles é descartada.",
+    "traducaoDados": "O texto da vaga e o da Ficha W2 publicada, sem e-mail, telefone nem o nome da pessoa.",
     "traducaoDecide": "Você. A tradução aparece marcada e o botão \"Ver original\" mostra o texto escrito pela empresa. Quem publicou continua vendo só o original."
   },
   "empresa": {

@@ -935,8 +935,8 @@
     "ajudaDados": "The question, without email or phone, and the help articles. Nothing from your account. Unanswered questions are kept for 90 days, without IP or account, so we can improve the articles.",
     "ajudaDecide": "You check the linked article. The team answers what AI does not know.",
     "traducaoTarefa": "Automatic translation",
-    "traducaoFaz": "Translates the title, description and benefits of job openings into Portuguese, English and Spanish, so each person reads them in the site language. Technology names, numbers and contacts stay the same; a translation that changes them is discarded.",
-    "traducaoDados": "Only the job opening text, without email or phone.",
+    "traducaoFaz": "Translates job titles, descriptions and benefits and, for recruiters, the title, summary, highlights and job titles of the W2 Profile, so each person reads them in the site language. Technology names, numbers and contacts do not change; a translation that alters them is discarded.",
+    "traducaoDados": "The job text and the published W2 Profile text, without email, phone or the person's name.",
     "traducaoDecide": "You. The translation is labeled and the \"Show original\" button shows the text the company wrote. Whoever posted it still sees only the original."
   },
   "empresa": {
