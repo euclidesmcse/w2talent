@@ -89,3 +89,11 @@ describe("e-mails da agenda", () => {
     expect(renderAgendaEmail({ tipo: "marcada", locale: "es", empresa: "A", vagaTitulo: "V", com: "A", duracaoMin: 30, inicio, url: "x" }).subject).toContain("Entrevista agendada");
   });
 });
+
+describe("minimoAgendavel", () => {
+  it("agora + 65 min, arredondado para cima no múltiplo de 5", async () => {
+    const { minimoAgendavel } = await import("../components/agenda-entrevista");
+    expect(minimoAgendavel(Date.parse("2026-11-20T12:02:31Z")).toISOString()).toBe("2026-11-20T13:10:00.000Z");
+    expect(minimoAgendavel(Date.parse("2026-11-20T12:00:00Z")).toISOString()).toBe("2026-11-20T13:05:00.000Z");
+  });
+});

@@ -40,12 +40,14 @@ export default function AgendarPage() {
       .catch(() => setEstado({ t: "erro" }));
   }, [pedir]);
 
-  const quando = (iso: string) => fmt.dateTime(new Date(iso), { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+  // Sempre no fuso do navegador (o next-intl usaria o fuso do servidor, UTC no Worker).
+  const timeZone = fuso || undefined;
+  const quando = (iso: string) => fmt.dateTime(new Date(iso), { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone });
   const dia = (iso: string) => {
-    const d = fmt.dateTime(new Date(iso), { weekday: "long", day: "numeric", month: "long" });
+    const d = fmt.dateTime(new Date(iso), { weekday: "long", day: "numeric", month: "long", timeZone });
     return d.charAt(0).toUpperCase() + d.slice(1);
   };
-  const hora = (iso: string) => fmt.dateTime(new Date(iso), { hour: "2-digit", minute: "2-digit" });
+  const hora = (iso: string) => fmt.dateTime(new Date(iso), { hour: "2-digit", minute: "2-digit", timeZone });
 
   async function agir(acao: "escolher" | "cancelar") {
     if (!codigo) return;

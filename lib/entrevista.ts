@@ -261,12 +261,10 @@ function pendentes(v: unknown): EmailMessage[] {
   return Array.isArray(v) ? (v as EmailMessage[]) : [];
 }
 
-async function guardarEmails(tx: Tx, e: { id: string; emailsPendentes: unknown }, novos: EmailMessage[]): Promise<void> {
+/** Acrescenta no banco (jsonb ||), sem depender de uma cópia lida antes: não perde e-mail de outra transação. */
+async function guardarEmails(tx: Tx, e: { id: string }, novos: EmailMessage[]): Promise<void> {
   if (!novos.length) return;
-  await tx.entrevista.update({
-    where: { id: e.id },
-    data: { emailsPendentes: [...pendentes(e.emailsPendentes), ...novos] as unknown as Prisma.InputJsonValue },
-  });
+  await tx.$executeRaw`UPDATE "Entrevista" SET "emailsPendentes" = "emailsPendentes" || ${JSON.stringify(novos)}::jsonb, "updatedAt" = now() WHERE id = ${e.id}`;
 }
 
 // ── recrutador ──
@@ -294,6 +292,8 @@ export async function oferecerEntrevista(
   const codigo = gerarCodigo();
   const tokenHash = await hashCodigo(codigo);
   return db.$transaction(async (tx) => {
+    // Uma oferta por vez em cada candidatura: dois envios juntos não deixam duas entrevistas ativas.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"entrevista:" + a.applicationId}))`;
     const app = await tx.application.findFirst({
       where: { id: a.applicationId, companyId: a.companyId, origem: "candidaturaLote" },
       select: { id: true, candidateId: true, vacancyId: true, contatoLiberadoEm: true, candidate: { select: { email: true } } },
@@ -548,10 +548,11 @@ export async function enfileirarPendentes(db: PrismaClient, ids: string[], enque
       }
     }
     if (!foram.size) continue;
-    // Relê dentro da transação: outra mudança pode ter guardado e-mails novos enquanto este laço rodava.
+    // Trava a linha e relê: um e-mail guardado enquanto este laço rodava não some na limpeza.
     await db.$transaction(async (tx) => {
-      const atual = await tx.entrevista.findUnique({ where: { id }, select: { emailsPendentes: true } });
-      const resto = pendentes(atual?.emailsPendentes).filter((m) => !foram.has(m.idempotencyKey));
+      const [atual] = await tx.$queryRaw<{ emailsPendentes: unknown }[]>`SELECT "emailsPendentes" FROM "Entrevista" WHERE id = ${id} FOR UPDATE`;
+      if (!atual) return;
+      const resto = pendentes(atual.emailsPendentes).filter((m) => !foram.has(m.idempotencyKey));
       await tx.entrevista.update({ where: { id }, data: { emailsPendentes: resto as unknown as Prisma.InputJsonValue } });
     });
   }

@@ -25,6 +25,12 @@ function localInput(d: Date): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+/** Primeiro horário aceito: agora + 65 min, arredondado para cima no múltiplo de 5 min. */
+export function minimoAgendavel(agora: number): Date {
+  const passo = 5 * 60_000;
+  return new Date(Math.ceil((agora + 65 * 60_000) / passo) * passo);
+}
+
 export function AgendaEntrevista({ applicationId, nome, entrevista, onAtualizar }: Props) {
   const t = useTranslations("agenda");
   const fmt = useFormatter();
@@ -38,13 +44,20 @@ export function AgendaEntrevista({ applicationId, nome, entrevista, onAtualizar 
   const [erro, setErro] = React.useState<string | null>(null);
   const [enviando, setEnviando] = React.useState(false);
   const [minimo, setMinimo] = React.useState("");
+  const [fuso, setFuso] = React.useState<string | undefined>(undefined);
 
   React.useEffect(() => {
-    if (aberto) setMinimo(localInput(new Date(Date.now() + 65 * 60_000)));
+    setFuso(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  }, []);
+
+  React.useEffect(() => {
+    // Arredondado para cima no múltiplo de 5 min: com step=300 o navegador conta os passos a partir do min.
+    if (aberto) setMinimo(localInput(minimoAgendavel(Date.now())));
   }, [aberto]);
 
+  // No fuso do navegador (o next-intl usaria o do servidor).
   const quando = (iso: string) =>
-    fmt.dateTime(new Date(iso), { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    fmt.dateTime(new Date(iso), { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: fuso });
 
   const agora = Date.now();
   const e = entrevista;

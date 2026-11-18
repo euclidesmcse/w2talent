@@ -216,4 +216,25 @@ describeDb("agenda de entrevistas (2.5a)", () => {
     expect(fila.length).toBe(antes + 1);
     expect((await db.entrevista.findUniqueOrThrow({ where: { id: e.id } })).emailsPendentes).toEqual([]);
   });
+
+  it("duas ofertas ao mesmo tempo deixam só uma entrevista ativa", async () => {
+    const [r1, r2] = await Promise.all([
+      oferecer(rec(REC_A), apps[CANDS[0]], { duracaoMin: 30, horarios: [em(60), em(62), em(64)] }),
+      oferecer(rec(REC_A), apps[CANDS[0]], { duracaoMin: 30, horarios: [em(66), em(68), em(70)] }),
+    ]);
+    expect([r1.status, r2.status]).toEqual([200, 200]);
+    expect(await db.entrevista.count({ where: { applicationId: apps[CANDS[0]], status: { in: ["aberta", "marcada"] } } })).toBe(1);
+  });
+
+  it("e-mail guardado enquanto a fila roda não some na limpeza", async () => {
+    const { enfileirarPendentes } = await import("../lib/entrevista");
+    const e = await db.entrevista.findFirstOrThrow({ where: { applicationId: apps[CANDS[0]], status: "aberta" } });
+    const m = (k: string) => ({ to: "x@exemplo.com", subject: k, html: k, text: k, idempotencyKey: k });
+    await db.entrevista.update({ where: { id: e.id }, data: { emailsPendentes: [m("k1")] } });
+    const r = await enfileirarPendentes(db, [e.id], async () => {
+      await db.$executeRaw`UPDATE "Entrevista" SET "emailsPendentes" = "emailsPendentes" || ${JSON.stringify([m("k2")])}::jsonb WHERE id = ${e.id}`;
+    });
+    expect(r).toEqual({ enviados: 1, falhas: 0 });
+    expect(((await db.entrevista.findUniqueOrThrow({ where: { id: e.id } })).emailsPendentes as any[]).map((x) => x.idempotencyKey)).toEqual(["k2"]);
+  });
 });
