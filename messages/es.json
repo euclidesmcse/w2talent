@@ -228,7 +228,8 @@
     "closeDrawer": "Cerrar selección",
     "toolbarLabel": "Barra de selección",
     "review": "Revisar y aprobar ({count})",
-    "soon": "disponible pronto"
+    "soon": "disponible pronto",
+    "compare": "Comparar ({count})"
   },
   "detail": {
     "cargo": "Cargo",
@@ -1145,5 +1146,35 @@
     "erroLimite": "Llegaste al límite de hoy. Inténtalo mañana.",
     "erroEmail": "Revisa el correo.",
     "erroGeral": "No funcionó ahora. Inténtalo de nuevo en un momento."
+  },
+  "comparar": {
+    "title": "Comparar candidatos",
+    "voltar": "← Volver a Candidatos",
+    "lead": "{n, plural, one {# candidato seleccionado.} other {# candidatos lado a lado.}}",
+    "caption": "Comparación de {n} candidatos: campos de la Ficha W2 en filas, candidatos en columnas",
+    "campo": "Campo",
+    "tirar": "Quitar a {nome} de la comparación",
+    "tirarCurto": "Quitar",
+    "fora": "{n, plural, one {# perfil seleccionado ya no está disponible y no aparece.} other {# perfiles seleccionados ya no están disponibles y no aparecen.}}",
+    "vazioTitle": "Ningún candidato para comparar",
+    "vazioBody": "Marca hasta 10 candidatos en Candidatos y vuelve aquí.",
+    "irCandidatos": "Ir a Candidatos",
+    "erro": "No se pudo armar la comparación ahora. Inténtalo de nuevo.",
+    "rodape": "El contacto aparece enmascarado, como en la búsqueda. Para hablar con alguien, usa Contactar en Candidatos.",
+    "nadaFalta": "No falta nada",
+    "campo_match": "Match",
+    "campo_falta": "Lo que falta",
+    "campo_cargo": "Cargo",
+    "campo_experiencia": "Experiencia",
+    "campo_competencias": "Competencias",
+    "campo_local": "Ubicación y modalidad",
+    "campo_regime": "Régimen",
+    "campo_pretensao": "Pretensión",
+    "campo_idiomas": "Idiomas",
+    "campo_disponibilidade": "Disponibilidad",
+    "campo_resumo": "Resumen",
+    "campo_destaques": "Destacados",
+    "campo_contato": "Contacto",
+    "campo_atualizado": "Actualizada"
   }
 }

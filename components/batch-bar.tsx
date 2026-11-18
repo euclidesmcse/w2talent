@@ -23,9 +23,11 @@ export type BatchBarProps = {
   onAction?: (ids: string[]) => void;
   /** Vagas: "Revisar e aprovar" ligado (1.5.13; até o login, só no modo de teste do admin). */
   actionEnabled?: boolean;
+  /** 2.3a: candidatos, link da tela "Comparar" (leva a vaga de referência escolhida). */
+  compararHref?: string;
 };
 
-export function BatchBar({ variant = "vagas", onAction, actionEnabled = false }: BatchBarProps) {
+export function BatchBar({ variant = "vagas", onAction, actionEnabled = false, compararHref }: BatchBarProps) {
   const t = useTranslations("batch");
   const tc = useTranslations();
   const isCand = variant === "candidatos";
@@ -161,6 +163,11 @@ export function BatchBar({ variant = "vagas", onAction, actionEnabled = false }:
           >
             {t("viewSelection")}
           </button>
+          {isCand && compararHref && count > 0 ? (
+            <a href={compararHref} data-action="comparar" className={buttonClasses("secondary", "md", "hover:no-underline")}>
+              {t("compare", { count })}
+            </a>
+          ) : null}
           <button
             type="button"
             data-action="enviar-lote"

@@ -2,7 +2,7 @@
 titulo: Buscar candidatos
 resumo: Busca, vaga de referência, filtros e a Ficha W2 ao lado.
 areas: recrutador
-telas: /candidatos
+telas: /candidatos, /candidatos/comparar
 ordem: 13
 ---
 
@@ -25,3 +25,7 @@ Os filtros ficam no endereço da página, então dá para guardar ou compartilha
 ## Ver a Ficha W2
 
 No computador, "Ver" abre a Ficha W2 ao lado da lista. No celular, abre numa janela. Com uma vaga escolhida, o topo mostra "Para a vaga X: 87%" e tudo o que falta.
+
+## Comparar
+
+Marque até 10 candidatos e use "Comparar" na barra de baixo. A tela mostra os candidatos lado a lado, com os campos da Ficha W2 em linhas e, com uma vaga escolhida, o match e o que falta. O contato aparece mascarado, como na busca. "Tirar" remove alguém da comparação e da seleção.

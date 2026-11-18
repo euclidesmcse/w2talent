@@ -228,7 +228,8 @@
     "closeDrawer": "Close selection",
     "toolbarLabel": "Selection bar",
     "review": "Review and approve ({count})",
-    "soon": "coming soon"
+    "soon": "coming soon",
+    "compare": "Compare ({count})"
   },
   "detail": {
     "cargo": "Role",
@@ -1145,5 +1146,35 @@
     "erroLimite": "You reached today's limit. Try again tomorrow.",
     "erroEmail": "Check the email.",
     "erroGeral": "That did not work now. Try again in a moment."
+  },
+  "comparar": {
+    "title": "Compare candidates",
+    "voltar": "← Back to Candidates",
+    "lead": "{n, plural, one {# candidate selected.} other {# candidates side by side.}}",
+    "caption": "Comparison of {n} candidates: W2 profile fields in rows, candidates in columns",
+    "campo": "Field",
+    "tirar": "Remove {nome} from the comparison",
+    "tirarCurto": "Remove",
+    "fora": "{n, plural, one {# selected profile is no longer available and is not shown.} other {# selected profiles are no longer available and are not shown.}}",
+    "vazioTitle": "No candidates to compare",
+    "vazioBody": "Select up to 10 candidates in Candidates and come back here.",
+    "irCandidatos": "Go to Candidates",
+    "erro": "Could not build the comparison right now. Try again.",
+    "rodape": "Contact details are masked, as in search. To reach someone, use Contact in Candidates.",
+    "nadaFalta": "Nothing missing",
+    "campo_match": "Match",
+    "campo_falta": "What is missing",
+    "campo_cargo": "Role",
+    "campo_experiencia": "Experience",
+    "campo_competencias": "Skills",
+    "campo_local": "Location and work model",
+    "campo_regime": "Contract",
+    "campo_pretensao": "Expected pay",
+    "campo_idiomas": "Languages",
+    "campo_disponibilidade": "Availability",
+    "campo_resumo": "Summary",
+    "campo_destaques": "Highlights",
+    "campo_contato": "Contact",
+    "campo_atualizado": "Updated"
   }
 }
