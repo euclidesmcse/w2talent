@@ -4,11 +4,14 @@
  * { acao: "ver", c } → { visao }   (a tela pergunta a cada 10 s enquanto está aberta e visível)
  * { acao: "enviar", c, texto } → { visao }   (30 mensagens por conversa por dia, 2000 caracteres)
  * Sem IA (D4, D7). Com login, a conversa fica ligada à conta e o aviso vai para o e-mail dela.
+ * 2.6b-2, só com login (sessão esperando o código do autenticador conta como sem login → 401):
+ * { acao: "minhas" } → { conversas }   (as da conta, atividade mais recente primeiro)
+ * { acao: "ver" | "enviar", id, texto? } → como acima, pelo id; conversa de outra conta → 404
  */
 import { NextRequest, NextResponse } from "next/server";
 import { sameOrigin } from "@/lib/admin-request";
 import { idiomaAjuda, telaDeOrigem } from "@/lib/ajuda";
-import { abrirConversa, codigoValido, emailValido, enviarMensagem, textoValido, verConversa, type ContaAtendimento } from "@/lib/atendimento";
+import { abrirConversa, codigoValido, emailValido, enviarMensagem, idValido, minhasConversas, textoValido, verConversa, type Acesso, type ContaAtendimento } from "@/lib/atendimento";
 import { EMAIL_REVISAO } from "@/lib/ia-transparencia";
 import { enqueueEmail } from "@/lib/notifications";
 import { contaDoPedido, NO_STORE } from "@/lib/sessao";
@@ -25,7 +28,7 @@ async function contaOpcional(req: NextRequest): Promise<ContaAtendimento | null>
 export async function POST(req: NextRequest) {
   if (!sameOrigin(req)) return json({ error: "origem_invalida" }, 403);
   const body = (await req.json().catch(() => ({}))) as {
-    acao?: unknown; c?: unknown; texto?: unknown; email?: unknown; locale?: unknown; de?: unknown; perguntaId?: unknown;
+    acao?: unknown; c?: unknown; id?: unknown; texto?: unknown; email?: unknown; locale?: unknown; de?: unknown; perguntaId?: unknown;
   };
   const appUrl = process.env.APP_URL || req.nextUrl.origin;
   const opts = { appUrl, emailEquipe: EMAIL_REVISAO, enqueue: enqueueEmail };
@@ -47,13 +50,24 @@ export async function POST(req: NextRequest) {
       return json({ ok: true, codigo: r.codigo });
     }
 
-    if (!codigoValido(body.c)) return json({ error: "nao_encontrada" }, 404);
+    // 2.6b-2: lista e conversa pelo id, autorizadas pela conta da sessão (sem o código do link).
+    let quem: Acesso;
+    if (body.acao === "minhas" || body.id !== undefined) {
+      const conta = await contaOpcional(req);
+      if (!conta) return json({ error: "login" }, 401);
+      if (body.acao === "minhas") return json({ ok: true, conversas: await minhasConversas(prisma, conta.id) });
+      if (!idValido(body.id)) return json({ error: "nao_encontrada" }, 404);
+      quem = { id: body.id, userId: conta.id };
+    } else {
+      if (!codigoValido(body.c)) return json({ error: "nao_encontrada" }, 404);
+      quem = { codigo: body.c };
+    }
     if (body.acao === "ver") {
-      const visao = await verConversa(prisma, body.c);
+      const visao = await verConversa(prisma, quem);
       return visao ? json({ ok: true, visao }) : json({ error: "nao_encontrada" }, 404);
     }
     if (body.acao === "enviar") {
-      const r = await enviarMensagem(prisma, body.c, body.texto, opts);
+      const r = await enviarMensagem(prisma, quem, body.texto, opts);
       if (r.ok) return json({ ok: true, visao: r.visao });
       const status = r.erro === "nao_encontrada" ? 404 : r.erro === "texto_invalido" ? 422 : r.erro === "limite_dia" ? 429 : 409;
       return json({ error: r.erro, visao: r.visao ?? null }, status);

@@ -1,7 +1,7 @@
 // Menu por área: cada tela mostra só o menu fixo da sua área (lib/nav.ts).
 import * as fs from "fs";
 import * as path from "path";
-import { AREA_NAME, AREA_SWITCH, NAV, areaOf, type Area } from "../lib/nav";
+import { AREA_NAME, AREA_SWITCH, MENU_CONTA, NAV, areaOf, type Area } from "../lib/nav";
 
 const ROOT = path.join(__dirname, "..");
 const pt = JSON.parse(fs.readFileSync(path.join(ROOT, "messages", "pt-BR.json"), "utf-8"));
@@ -21,6 +21,7 @@ const TELAS: Record<string, string> = {
   "app/admin/ranking/page.tsx": "/admin/ranking",
   "app/admin/atendimento/page.tsx": "/admin/atendimento",
   "app/ajuda/conversa/page.tsx": "/ajuda/conversa",
+  "app/ajuda/minhas-conversas/page.tsx": "/ajuda/minhas-conversas",
   "app/empresa/page.tsx": "/empresa",
   "app/publicar/page.tsx": "/publicar",
   "app/rh/page.tsx": "/rh",
@@ -46,6 +47,7 @@ describe("menu por área", () => {
     expect(areaOf("/admin/empresas")).toBe("admin");
     expect(areaOf("/admin/atendimento")).toBe("admin");
     expect(areaOf("/ajuda/conversa")).toBe("publico");
+    expect(areaOf("/ajuda/minhas-conversas")).toBe("publico");
     expect(areaOf("/vagasx")).toBe("publico");
     expect(areaOf("/entrar")).toBe("publico");
     expect(areaOf("/conta/seguranca")).toBe("publico");
@@ -57,6 +59,17 @@ describe("menu por área", () => {
     }
   });
 
+  it("2.6b-2: Minhas conversas fica no menu da conta do candidato e do recrutador, numa tela pública", () => {
+    for (const perfil of ["candidato", "recrutador"] as const) {
+      expect(MENU_CONTA[perfil].map((l) => l.href)).toContain("/ajuda/minhas-conversas");
+      // A mesma tela serve os dois perfis: não pode ser de uma área só.
+      for (const l of MENU_CONTA[perfil]) expect(areaOf(l.href)).toBe("publico");
+    }
+    expect(Object.values(NAV).flat().some((l) => l.href === "/ajuda/minhas-conversas")).toBe(false);
+    const menu = fs.readFileSync(path.join(ROOT, "components/conta-menu.tsx"), "utf-8");
+    expect(menu).toMatch(/MENU_CONTA\[/);
+  });
+
   it("o admin não tem link de troca e nenhuma troca aponta para a própria área", () => {
     expect(AREA_SWITCH.admin).toBeUndefined();
     for (const [area, l] of Object.entries(AREA_SWITCH)) expect(areaOf(l!.href)).not.toBe(area);
@@ -65,6 +78,7 @@ describe("menu por área", () => {
   it("todo texto do menu existe no catálogo", () => {
     const keys = [
       ...Object.values(NAV).flat().flatMap((l) => [l.key, l.shortKey]),
+      ...Object.values(MENU_CONTA).flat().map((l) => l.key),
       ...Object.values(AREA_SWITCH).map((l) => l!.key),
       ...Object.values(AREA_NAME),
     ].filter(Boolean) as string[];

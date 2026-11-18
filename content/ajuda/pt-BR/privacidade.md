@@ -1,6 +1,6 @@
 ---
 titulo: Meus dados e privacidade
-resumo: Contato protegido, por quanto tempo o perfil fica na busca e como pedir revisão.
+resumo: Contato protegido, por quanto tempo o perfil e as conversas ficam guardados e como pedir revisão.
 areas: publico, candidato, recrutador
 telas: /minha-ficha, /renovar, /ia, /mercado
 ordem: 10
@@ -24,6 +24,10 @@ A pretensão que você coloca na ficha aparece para recrutadores na sua Ficha W2
 - Antes de vencer, você recebe lembretes por e-mail com o botão "Continuo procurando". Clicar renova por mais 180 dias.
 - Sem renovação, o perfil é arquivado e sai da busca.
 - Depois de 30 dias arquivado, ele é apagado, junto com as candidaturas.
+
+## Conversas com a equipe
+
+As conversas em [Falar com uma pessoa](/ajuda/conversa) ficam guardadas até 180 dias depois de encerradas; aí são apagadas, com todas as mensagens. Com login, você as vê em [Minhas conversas](/ajuda/minhas-conversas). Quem responde é uma pessoa da equipe, e nada da conversa vai para IA.
 
 ## IA e revisão por uma pessoa
 

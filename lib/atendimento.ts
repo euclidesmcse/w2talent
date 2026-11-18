@@ -4,6 +4,8 @@
  * ponto: o texto fica como foi escrito e nunca vai para um modelo (D4, D7).
  * Acesso da pessoa por link com código (/ajuda/conversa?c=<código>); o banco guarda só o hash.
  * Cada e-mail de resposta leva um código novo e os anteriores continuam valendo.
+ * 2.6b-2: com login, "Minhas conversas" lista as conversas da conta e abre cada uma pelo id
+ * (autorizado pelo userId da sessão, sem o código). Conversa encerrada é apagada 180 dias depois (Cron).
  */
 import type { PrismaClient } from "@prisma/client";
 import { emailLocale, renderAtendimentoEmail } from "./email-templates";
@@ -19,6 +21,11 @@ export const LIMITE_MENSAGENS_CONVERSA_DIA = 30;
 /** Quantas mensagens a tela mostra (as mais novas). */
 export const MENSAGENS_NA_TELA = 200;
 const POR_PAGINA = 50;
+/** D4: a conversa é apagada (com mensagens e códigos) este número de dias depois de encerrada. */
+export const PRAZO_GUARDA_DIAS = 180;
+/** Quantas conversas "Minhas conversas" mostra (as de atividade mais recente). */
+export const MINHAS_NA_TELA = 100;
+const DIA_MS = 24 * 60 * 60 * 1000;
 
 export type Autor = "pessoa" | "equipe";
 export type StatusConversa = "aberta" | "encerrada";
@@ -102,9 +109,23 @@ const SELECT_VISAO = {
   mensagens: { orderBy: { createdAt: "desc" as const }, take: MENSAGENS_NA_TELA, select: { id: true, autor: true, texto: true, createdAt: true } },
 };
 
-async function porCodigo(db: PrismaClient, codigo: string) {
-  const c = await db.conversaCodigo.findUnique({ where: { tokenHash: await hashCodigo(codigo) }, select: { conversa: { select: SELECT_VISAO } } });
-  return c?.conversa ?? null;
+/** Como a pessoa chega à conversa: pelo código do link (com ou sem login) ou, com login, pelo id e a conta dona (2.6b-2). */
+export type Acesso = { codigo: string } | { id: string; userId: string };
+
+async function achar(db: PrismaClient, a: Acesso) {
+  if ("codigo" in a) {
+    const c = await db.conversaCodigo.findUnique({ where: { tokenHash: await hashCodigo(a.codigo) }, select: { conversa: { select: SELECT_VISAO } } });
+    return c?.conversa ?? null;
+  }
+  // Conversa de outra conta (ou sem conta) fica igual a uma que não existe.
+  return db.conversa.findFirst({ where: { id: a.id, userId: a.userId }, select: SELECT_VISAO });
+}
+
+const acesso = (a: string | Acesso): Acesso => (typeof a === "string" ? { codigo: a } : a);
+
+/** Id de conversa como o Prisma gera (cuid); o resto nem vai ao banco. */
+export function idValido(id: unknown): id is string {
+  return typeof id === "string" && /^[a-z0-9]{20,40}$/.test(id);
 }
 
 // ── lado da pessoa ──
@@ -154,8 +175,8 @@ export async function abrirConversa(
   return { ok: true, codigo, id: conversa.id };
 }
 
-export async function verConversa(db: PrismaClient, codigo: string): Promise<VisaoConversa | null> {
-  const c = await porCodigo(db, codigo);
+export async function verConversa(db: PrismaClient, a: string | Acesso): Promise<VisaoConversa | null> {
+  const c = await achar(db, acesso(a));
   return c ? visao(c) : null;
 }
 
@@ -163,11 +184,12 @@ export type ErroEnviar = "nao_encontrada" | "encerrada" | "texto_invalido" | "li
 
 export async function enviarMensagem(
   db: PrismaClient,
-  codigo: string,
+  quem: string | Acesso,
   texto: unknown,
   opts: Opcoes,
 ): Promise<{ ok: true; visao: VisaoConversa } | { ok: false; erro: ErroEnviar; visao?: VisaoConversa }> {
-  const c = await porCodigo(db, codigo);
+  const a = acesso(quem);
+  const c = await achar(db, a);
   if (!c) return { ok: false, erro: "nao_encontrada" };
   if (c.status === "encerrada") return { ok: false, erro: "encerrada", visao: visao(c) };
   if (!textoValido(texto)) return { ok: false, erro: "texto_invalido" };
@@ -181,13 +203,55 @@ export async function enviarMensagem(
     if (!n.count) return null;
     return tx.conversaMensagem.create({ data: { conversaId: c.id, autor: "pessoa", texto: limpo, createdAt: now }, select: { id: true } });
   });
-  const depois = (await porCodigo(db, codigo))!;
+  const depois = (await achar(db, a))!;
   if (!m) return { ok: false, erro: "encerrada", visao: visao(depois) };
   await avisar(
     opts.enqueue,
     emailParaEquipe({ conversaId: c.id, mensagemId: m.id, nova: false, texto: limpo, tela: c.tela, perfil: c.perfil, idioma: c.idioma }, opts.emailEquipe, opts.appUrl),
   );
   return { ok: true, visao: visao(depois) };
+}
+
+export type LinhaMinha = {
+  id: string;
+  status: StatusConversa;
+  /** Esperando a equipe: a última mensagem é da pessoa e a conversa está aberta. */
+  aguardando: boolean;
+  /** A equipe respondeu por último. */
+  respondida: boolean;
+  ultimaEm: string;
+  criadaEm: string;
+  /** Começo da primeira mensagem (o assunto), escrita pela própria pessoa. */
+  assunto: string;
+};
+
+/** 2.6b-2 Minhas conversas: só as ligadas à conta (userId), atividade mais recente primeiro. */
+export async function minhasConversas(db: PrismaClient, userId: string): Promise<LinhaMinha[]> {
+  const rows = await db.conversa.findMany({
+    where: { userId },
+    orderBy: [{ ultimaEm: "desc" }, { id: "asc" }],
+    take: MINHAS_NA_TELA,
+    select: {
+      id: true, status: true, ultimaDe: true, ultimaEm: true, createdAt: true,
+      mensagens: { orderBy: { createdAt: "asc" }, take: 1, select: { texto: true } },
+    },
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    status: r.status,
+    aguardando: r.status === "aberta" && r.ultimaDe === "pessoa",
+    respondida: r.ultimaDe === "equipe",
+    ultimaEm: r.ultimaEm.toISOString(),
+    criadaEm: r.createdAt.toISOString(),
+    assunto: (r.mensagens[0]?.texto ?? "").replace(/\s+/g, " ").trim().slice(0, 140),
+  }));
+}
+
+/** Cron (D4): apaga as conversas encerradas há mais de 180 dias; mensagens e códigos vão junto (cascata). */
+export async function apagarConversasAntigas(db: PrismaClient, now: Date = new Date()): Promise<number> {
+  const limite = new Date(now.getTime() - PRAZO_GUARDA_DIAS * DIA_MS);
+  const r = await db.conversa.deleteMany({ where: { status: "encerrada", encerradaEm: { lt: limite } } });
+  return r.count;
 }
 
 const EMAIL_OK = /^[^\s@<>()[\]\\,;:"]{1,64}@[A-Za-z0-9.-]{1,253}\.[A-Za-z]{2,}$/;

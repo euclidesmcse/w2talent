@@ -1,6 +1,6 @@
 ---
 titulo: My data and privacy
-resumo: Protected contact, how long a profile stays in search and how to ask for a review.
+resumo: Protected contact, how long the profile and conversations are kept and how to ask for a review.
 areas: publico, candidato, recrutador
 telas: /minha-ficha, /renovar, /ia, /mercado
 ordem: 10
@@ -24,6 +24,10 @@ The salary expectation you put in your profile shows to recruiters on your W2 Pr
 - Before it expires, you get email reminders with the "I'm still looking" button. Clicking it renews for 180 more days.
 - Without renewal, the profile is archived and leaves search.
 - After 30 days archived, it is deleted, together with its applications.
+
+## Conversations with the team
+
+Conversations in [Talk to a person](/ajuda/conversa) are kept until 180 days after they are closed; then they are deleted, with all their messages. Signed in, you see them in [My conversations](/ajuda/minhas-conversas). A person on the team replies, and nothing in the conversation goes to AI.
 
 ## AI and review by a person
 

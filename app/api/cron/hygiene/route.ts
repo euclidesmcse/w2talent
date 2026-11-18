@@ -65,7 +65,18 @@ export async function POST(req: NextRequest) {
       console.error("[ranking] cron falhou:", e instanceof Error ? e.name : e);
       return null;
     });
-    return NextResponse.json({ ok: true, ...summary, emailsCandidatura: candidaturas, emailsAgenda: agenda, traducoes, traducoesFichas: fichas, mercado, ranking }, { status: 200 });
+    // 2.6b-2: conversas do Atendimento encerradas há mais de 180 dias (D4), com mensagens e códigos.
+    const conversasApagadas = await (async () => {
+      const { apagarConversasAntigas } = await import("@/lib/atendimento");
+      return apagarConversasAntigas(prisma);
+    })().catch((e) => {
+      console.error("[atendimento] cron falhou:", e instanceof Error ? e.name : e);
+      return -1;
+    });
+    return NextResponse.json(
+      { ok: true, ...summary, emailsCandidatura: candidaturas, emailsAgenda: agenda, traducoes, traducoesFichas: fichas, mercado, ranking, conversasApagadas },
+      { status: 200 },
+    );
   } catch (e) {
     console.error("[higiene] falhou:", e instanceof Error ? `${e.name}: ${e.message}` : e);
     return NextResponse.json({ error: "hygiene_failed" }, { status: 500 });

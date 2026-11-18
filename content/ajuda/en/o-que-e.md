@@ -2,7 +2,7 @@
 titulo: What W2Talent is
 resumo: What the site does for candidates and for recruiters.
 areas: publico, candidato, recrutador
-telas: /
+telas: /, /ajuda/minhas-conversas
 ordem: 1
 ---
 
@@ -28,8 +28,10 @@ Could not find the answer in Help? In [Talk to a person](/ajuda/conversa), you w
 - Not signed in, you give an e-mail. Signed in, we use the account e-mail.
 - The reply shows up in the conversation and we let you know by e-mail, with the link.
 - Keep the link: it is how you get back to the conversation. Anyone with the link can see the conversation.
+- Signed in, your conversations are in [My conversations](/ajuda/minhas-conversas), in your account menu, and you open each one without the link.
 - A person replies. Nothing in the conversation goes to AI.
 - The team only sees what you wrote, the screen you came from and, if you are signed in, whether the account is a candidate or a recruiter.
 - Limits: 3 new conversations per day and 30 messages per conversation per day, up to 2,000 characters each.
+- The conversation is deleted 180 days after it is closed, with all its messages.
 
 This is the test version. The site changes often.

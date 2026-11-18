@@ -5,13 +5,15 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { buttonClasses } from "@/components/ui/button";
 import { linkEntrar, sair, useConta } from "@/lib/conta-client";
+import { MENU_CONTA } from "@/lib/nav";
 
 /**
  * Conta no cabeçalho (1.5.5): "Entrar" sem login; com login, o nome e um menu com
- * Segurança e Sair. No celular vira só um ícone (w-8), como o "Instalar app".
+ * Segurança, os itens da conta (lib/nav.ts, MENU_CONTA) e Sair. No celular vira só um ícone (w-8), como o "Instalar app".
  */
 export function ContaMenu() {
   const t = useTranslations("conta");
+  const tn = useTranslations("nav");
   const info = useConta();
   const caminho = usePathname() ?? "/";
   const [aberto, setAberto] = React.useState(false);
@@ -65,6 +67,13 @@ export function ContaMenu() {
                 {t("security")}
               </Link>
             ) : null}
+            {(info.estado === "ok" || info.estado === "mfa_obrigatorio") && info.conta.perfil
+              ? MENU_CONTA[info.conta.perfil].map((l) => (
+                  <Link key={l.href} href={l.href} data-conta-menu={l.href} className={buttonClasses("ghost", "sm", "-ml-2 hover:no-underline")} onClick={() => setAberto(false)}>
+                    {tn(l.key)}
+                  </Link>
+                ))
+              : null}
             <button type="button" data-action="sair" className={buttonClasses("ghost", "sm", "-ml-2")} onClick={async () => { setErroSair(false); if (!(await sair())) setErroSair(true); }}>
               {t("signOut")}
             </button>

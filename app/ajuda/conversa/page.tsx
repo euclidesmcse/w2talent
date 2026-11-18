@@ -3,6 +3,7 @@
  * 2.6b-1 Conversa com a equipe (/ajuda/conversa). Sem ?c=: formulário para abrir. Com ?c=<código>:
  * a conversa. A tela pergunta por respostas a cada 10 s só enquanto a conversa está aberta e a página
  * visível (D1). Sem login; o código do link é a chave (D2). Sem IA (D7).
+ * 2.6b-2: com ?id=<id>, a conversa da conta logada, autorizada pela sessão (vem de Minhas conversas).
  */
 import * as React from "react";
 import Link from "next/link";
@@ -11,14 +12,18 @@ import { useFormatter, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
 import { ConversaNova, TEXTO_MAX } from "@/components/conversa-nova";
 import { Button, Card, CardBody, Textarea, buttonClasses } from "@/components/ui";
+import { contaRecusada, linkEntrar, useConta } from "@/lib/conta-client";
 import { cn } from "@/components/ui/cn";
 import type { VisaoConversa } from "@/lib/atendimento";
 
 const INTERVALO_MS = 10_000;
-type Estado = { t: "carregando" } | { t: "nao_encontrada" } | { t: "erro" } | { t: "ok"; v: VisaoConversa };
+type Estado = { t: "carregando" } | { t: "nao_encontrada" } | { t: "login" } | { t: "erro" } | { t: "ok"; v: VisaoConversa };
+/** Pelo código do link (c) ou, com login, pelo id da conversa da conta (2.6b-2). */
+type Chave = { c: string } | { id: string };
+const LOGADO = new Set(["ok", "mfa_obrigatorio", "sem_perfil"]);
 type ErroEnvio = "erroTamanho" | "erroLimite" | "erroGeral";
 
-function Conversa({ codigo }: { codigo: string }) {
+function Conversa({ chave }: { chave: Chave }) {
   const t = useTranslations("conversa");
   const fmt = useFormatter();
   const [estado, setEstado] = React.useState<Estado>({ t: "carregando" });
@@ -28,12 +33,15 @@ function Conversa({ codigo }: { codigo: string }) {
   const [fuso, setFuso] = React.useState<string | undefined>(undefined);
   // Só a leitura mais nova vale (a pergunta periódica pode cruzar com um envio).
   const seq = React.useRef(0);
+  const jaConferiu = React.useRef(false);
+  const porId = "id" in chave;
+  const valor = porId ? chave.id : chave.c;
 
   const pedir = React.useCallback(async (corpo: Record<string, unknown>) => {
-    const r = await fetch("/api/ajuda/conversa", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ c: codigo, ...corpo }) });
+    const r = await fetch("/api/ajuda/conversa", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ [porId ? "id" : "c"]: valor, ...corpo }) });
     const j = (await r.json().catch(() => ({}))) as { visao?: VisaoConversa | null; error?: string };
     return { status: r.status, visao: j.visao ?? null, erro: j.error ?? null };
-  }, [codigo]);
+  }, [porId, valor]);
 
   const carregar = React.useCallback(async () => {
     const meu = ++seq.current;
@@ -42,6 +50,11 @@ function Conversa({ codigo }: { codigo: string }) {
       if (meu !== seq.current) return;
       if (r.visao) setEstado({ t: "ok", v: r.visao });
       else if (r.status === 404) setEstado({ t: "nao_encontrada" });
+      else if (r.status === 401) {
+        // Uma vez por tela: a sessão pode ter acabado.
+        if (!jaConferiu.current) { jaConferiu.current = true; contaRecusada(); }
+        setEstado({ t: "login" });
+      }
       else setEstado((e) => (e.t === "ok" ? e : { t: "erro" }));
     } catch {
       if (meu === seq.current) setEstado((e) => (e.t === "ok" ? e : { t: "erro" }));
@@ -83,6 +96,7 @@ function Conversa({ codigo }: { codigo: string }) {
       if (r.visao && meu === seq.current) setEstado({ t: "ok", v: r.visao });
       if (r.status === 200) setTexto("");
       else if (r.status === 404) setEstado({ t: "nao_encontrada" });
+      else if (r.status === 401) setEstado({ t: "login" });
       else if (r.erro !== "encerrada") setErro(r.status === 429 ? "erroLimite" : r.status === 422 ? "erroTamanho" : "erroGeral");
     } catch {
       setErro("erroGeral");
@@ -94,13 +108,20 @@ function Conversa({ codigo }: { codigo: string }) {
   const quando = (iso: string) => fmt.dateTime(new Date(iso), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: fuso });
 
   if (estado.t === "carregando") return <p aria-busy="true" className="text-muted">{t("carregando")}</p>;
-  if (estado.t === "nao_encontrada") return <p className="text-ink" data-conversa-404>{t("naoEncontrada")}</p>;
+  if (estado.t === "nao_encontrada") return <p className="text-ink" data-conversa-404>{t(porId ? "naoEncontradaConta" : "naoEncontrada")}</p>;
+  if (estado.t === "login")
+    return (
+      <div role="status" className="flex flex-col items-start gap-3" data-conversa-login>
+        <p className="text-ink">{t("entrarParaVer")}</p>
+        <Link href={linkEntrar()} className={buttonClasses("primary", "md", "hover:no-underline hover:text-white")}>{t("entrar")}</Link>
+      </div>
+    );
   if (estado.t === "erro") return <p role="alert" className="text-ink">{t("erroGeral")}</p>;
   const v = estado.v;
   const ultima = v.mensagens[v.mensagens.length - 1];
   return (
     <div className="flex flex-col gap-4" data-conversa={v.status}>
-      <p className="text-[13px] text-muted">{t("guardeLink")}</p>
+      {porId ? null : <p className="text-[13px] text-muted">{t("guardeLink")}</p>}
       <h2 className="sr-only">{t("mensagens")}</h2>
       <div role="log" aria-label={t("mensagens")}>
         <ol className="flex flex-col gap-3">
@@ -150,19 +171,29 @@ function ConversaTela() {
   const t = useTranslations("conversa");
   const sp = useSearchParams();
   const codigo = sp.get("c");
+  const id = sp.get("id");
+  const chave: Chave | null = codigo ? { c: codigo } : id ? { id } : null;
   const de = sp.get("de");
   return (
     <Card>
       <CardBody className="flex flex-col gap-4 p-6">
         <div className="flex flex-col gap-2">
           <h1 className="text-[24px] font-semibold leading-tight">{t("titulo")}</h1>
-          {!codigo ? <p className="text-ink">{t("lead")}</p> : null}
+          {!chave ? <p className="text-ink">{t("lead")}</p> : null}
           <p className="text-[13px] text-muted">{t("semIa")}</p>
         </div>
-        {codigo ? <Conversa key={codigo} codigo={codigo} /> : <ConversaNova de={de} />}
+        {chave ? <Conversa key={"id" in chave ? `id:${chave.id}` : `c:${chave.c}`} chave={chave} /> : <ConversaNova de={de} />}
       </CardBody>
     </Card>
   );
+}
+
+/** 2.6b-2: com login, o caminho para a lista das conversas da conta. */
+function LinkMinhas() {
+  const t = useTranslations("conversa");
+  const info = useConta();
+  if (!LOGADO.has(info.estado)) return null;
+  return <Link href="/ajuda/minhas-conversas" className="text-[14px] font-medium text-brand underline underline-offset-2" data-action="minhas-conversas">{t("minhas")}</Link>;
 }
 
 export default function ConversaPage() {
@@ -171,7 +202,10 @@ export default function ConversaPage() {
     <>
       <AppHeader area="publico" />
       <main className="mx-auto flex max-w-2xl flex-col gap-4 px-4 py-8 md:py-12">
-        <Link href="/ajuda" className="w-fit text-[14px] font-medium text-brand underline underline-offset-2">{t("voltarAjuda")}</Link>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <Link href="/ajuda" className="w-fit text-[14px] font-medium text-brand underline underline-offset-2">{t("voltarAjuda")}</Link>
+          <LinkMinhas />
+        </div>
         <React.Suspense fallback={<p aria-busy="true" className="text-muted">{t("carregando")}</p>}>
           <ConversaTela />
         </React.Suspense>

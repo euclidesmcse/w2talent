@@ -37,6 +37,16 @@ export const NAV: Record<Area, NavLink[]> = {
   ],
 };
 
+/**
+ * Itens do menu da conta (o nome no topo), por perfil da conta logada. Ficam fora de NAV porque são
+ * da conta e não de uma área: a mesma tela serve candidato e recrutador.
+ * 2.6b-2: Minhas conversas (as do "Falar com uma pessoa" ligadas à conta).
+ */
+export const MENU_CONTA: Record<"candidato" | "recrutador", NavLink[]> = {
+  candidato: [{ href: "/ajuda/minhas-conversas", key: "minhasConversas" }],
+  recrutador: [{ href: "/ajuda/minhas-conversas", key: "minhasConversas" }],
+};
+
 /** Nome ao lado do logo. Candidato é a área padrão e não leva nome. */
 export const AREA_NAME: Partial<Record<Area, string>> = { recrutador: "areaRecrutadores", admin: "areaAdmin" };
 
