@@ -40,7 +40,7 @@
 
 | # | Item | Entrega / critério de pronto | Status |
 |---|------|------------------------------|--------|
-| 2.0 | Transparência da IA | Página pública `/ia` (3 idiomas): onde a IA aparece, que dados usa, quem decide, fornecedores, pedido de revisão (LGPD art. 20); selo "Como usamos IA" na Ficha W2 e nas vagas parecidas. Plano "IA para RH (SAP)" https://claude.ai/artifact/5JpSxKFhEGzLpnCMY5fbXA (A1). | 🔄 em PR |
+| 2.0 | Transparência da IA | Página pública `/ia` (3 idiomas): onde a IA aparece, que dados usa, quem decide, fornecedores, pedido de revisão (LGPD art. 20); selo "Como usamos IA" na Ficha W2 e nas vagas parecidas. Plano "IA para RH (SAP)" https://claude.ai/artifact/5JpSxKFhEGzLpnCMY5fbXA (A1). | ✅ PR #34 |
 | 2.1 | Publicar vaga | Colar texto → IA estrutura; campos mínimos; **aviso de duplicada** (similaridade de embedding + empresa) com "atualizar existente"; coach de faixa salarial. Do plano SAP: **revisor de viés** no texto (regras PT/EN/ES + sugestão da IA, avisa e não bloqueia; vale também para a Ficha W2) e **perguntas de entrevista** geradas das competências (A3, A4). | ⏳ |
 | 2.2 | Candidatos + filtros | Tabela com filtros ricos, match explicado, Ficha W2 ao lado (tela do protótipo). Do plano SAP: **competências próximas** (mapa estático na taxonomia) contam parte do match e aparecem na explicação (A5). | ⏳ |
 | 2.3 | Resumos em tabela | Selecionar, comparar, exportar (CSV/XLSX/PDF) e receber resumos em tabela. | ⏳ |
@@ -48,7 +48,7 @@
 | 2.5 | Agenda | Google Calendar e Outlook/Microsoft 365; link de agendamento com horários livres. | ⏳ |
 | 2.6 | Coach + chat de suporte | Coach do candidato e do RH; chat de suporte com escalonamento para pessoa (Durable Objects). Do plano SAP: **2.6a** assistente de dúvidas só com textos do W2Talent (embeddings no Neon, sem dado pessoal, sem resposta segura → e-mail do admin pela fila) (A6); **2.6b** chat ao vivo com escalonamento; depois "o que falta para as vagas" no `/painel` (B1). | ⏳ |
 | 2.7 | Idiomas automáticos | Outros idiomas por tradução com IA, cache em KV, aviso de "tradução automática". | ⏳ |
-| 2.8 | Sinais de aprendizado | `FeedbackSignal` (aprovou, rejeitou, contratou) gravado para a Fase 3. Antecipado pelo plano SAP (A2), logo depois do 2.0. | ⏳ |
+| 2.8 | Sinais de aprendizado | `FeedbackSignal` (aprovou, rejeitou, contratou) gravado para a Fase 3. Antecipado pelo plano SAP (A2), logo depois do 2.0. | 🔄 em PR (aprovou, desfez, caiu, enviou; recrutador depois) |
 
 ---
 

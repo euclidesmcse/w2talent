@@ -128,6 +128,7 @@ model CandidateProfile {
 
   applications Application[]
   aprovacoes   ApplicationApproval[]
+  sinais       FeedbackSignal[]
 
   @@index([status])
   @@index([expiresAt])
@@ -168,6 +169,7 @@ model Vacancy {
 
   applications Application[]
   aprovacoes   ApplicationApproval[]
+  sinais       FeedbackSignal[]
 
   @@index([status])
   @@index([expiresAt])
@@ -223,6 +225,28 @@ model ApplicationApproval {
   aprovadaEm  DateTime         @default(now())
 
   @@unique([candidateId, vacancyId])
+  @@index([vacancyId])
+}
+
+// ── FeedbackSignal (2.8, antecipado pelo plano "IA para RH (SAP)", 2026-11-18) ──
+// O que as pessoas fazem com as sugestões (aprovou, desfez, enviou, a vaga mudou), para o ranking
+// adaptativo (3.1) e o "o que falta para as vagas" (B1). Sem texto livre nem contatos.
+// Apagar o candidato apaga os sinais dele; apagar a vaga só tira a ligação.
+model FeedbackSignal {
+  id            String            @id @default(cuid())
+  tipo          String
+  ator          String
+  candidateId   String?
+  candidate     CandidateProfile? @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  vacancyId     String?
+  vacancy       Vacancy?          @relation(fields: [vacancyId], references: [id], onDelete: SetNull)
+  applicationId String?
+  matchPct      Int?
+  dados         Json?
+  createdAt     DateTime          @default(now())
+
+  @@index([tipo, createdAt])
+  @@index([candidateId, createdAt])
   @@index([vacancyId])
 }
 

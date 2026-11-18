@@ -12,7 +12,7 @@
   a:hover { color: #163B9F; }
   h1, h2, h3 { letter-spacing: -0.01em; }
   /* Visual "voltagem azul" (2026-11-10): títulos em Space Grotesk, a mesma fonte do logo. */
-  h1, h2 { font-family: "Space Grotesk", "Inter", system-ui, sans-serif; }
+  h1, h2 { font-family: var(--font-grotesk), "Space Grotesk", var(--font-inter), "Inter", system-ui, sans-serif; }
   :focus-visible { outline: 2px solid #1F4FD8; outline-offset: 2px; }
 }
 
