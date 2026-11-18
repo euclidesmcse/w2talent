@@ -33,7 +33,8 @@
     "empresaCurto": "Company",
     "empresas": "Companies",
     "publicar": "Post a job",
-    "publicarCurto": "Post"
+    "publicarCurto": "Post",
+    "ajuda": "Help"
   },
   "lang": {
     "label": "Language",
@@ -1088,5 +1089,20 @@
         "falha": "Could not suggest questions right now. Try again."
       }
     }
+  },
+  "ajuda": {
+    "metaTitle": "Help · W2Talent",
+    "metaDescription": "Short articles on how to use W2Talent: profile, jobs, applications, company and privacy.",
+    "title": "Help",
+    "lead": "Short answers on how to use W2Talent.",
+    "sobreEstaTela": "About the page you were on",
+    "grupoComecar": "For everyone",
+    "grupoCandidato": "For candidates",
+    "grupoRecrutador": "For recruiters",
+    "naoAchou": "Didn't find what you were looking for? Write to <email></email>.",
+    "voltar": "← All articles",
+    "trilha": "Help navigation",
+    "outros": "Read next",
+    "link": "Help"
   }
 }

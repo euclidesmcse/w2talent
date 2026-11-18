@@ -1,0 +1,27 @@
+---
+titulo: Buscar candidatos
+resumo: Busca, vaga de referência, filtros e a Ficha W2 ao lado.
+areas: recrutador
+telas: /candidatos
+ordem: 13
+---
+
+[Candidatos](/candidatos) é só para recrutador com login e autenticador.
+
+## Buscar
+
+Escreva o que procura, por exemplo "analista cloud AWS". A busca entende sinônimos: AWS e Cloud aparecem juntos.
+
+## Para a vaga
+
+Escolha uma vaga ativa da sua empresa em "Para a vaga". A lista passa a sair pelo [match](/ajuda/match) com ela, e cada linha mostra o que falta.
+
+## Filtros
+
+Em "Filtros" você combina competências (a ficha precisa ter todas), senioridade, modelo, regime, pretensão mensal até, idioma e nível, quando pode começar e ficha atualizada. Quem não informou disponibilidade ou pretensão continua aparecendo.
+
+Os filtros ficam no endereço da página, então dá para guardar ou compartilhar a busca.
+
+## Ver a Ficha W2
+
+No computador, "Ver" abre a Ficha W2 ao lado da lista. No celular, abre numa janela. Com uma vaga escolhida, o topo mostra "Para a vaga X: 87%" e tudo o que falta.

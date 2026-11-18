@@ -1,0 +1,27 @@
+---
+titulo: Searching candidates
+resumo: Search, reference job, filters and the W2 Profile on the side.
+areas: recrutador
+telas: /candidatos
+ordem: 13
+---
+
+[Candidates](/candidatos) is only for recruiters signed in with the authenticator.
+
+## Search
+
+Type what you look for, for example "cloud analyst AWS". Search understands synonyms: AWS and Cloud show up together.
+
+## For the job
+
+Pick an active job of your company in "For the job". The list is then sorted by [match](/ajuda/match) with it, and each row shows what is missing.
+
+## Filters
+
+In "Filters" you combine skills (the profile must have all of them), seniority, work model, contract type, monthly expected pay up to, language and level, start date and profile updated. People who did not give availability or expected pay still show up.
+
+Filters stay in the page address, so you can save or share the search.
+
+## Viewing the W2 Profile
+
+On a computer, "View" opens the W2 Profile next to the list. On a phone, it opens in a window. With a job picked, the top shows "For the X job: 87%" and everything missing.

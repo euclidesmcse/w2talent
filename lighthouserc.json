@@ -11,6 +11,7 @@
         "http://localhost:3999/minha-ficha",
         "http://localhost:3999/minhas-candidaturas",
         "http://localhost:3999/ia",
+        "http://localhost:3999/ajuda",
         "http://localhost:3999/publicar"
       ],
       "numberOfRuns": 3,

@@ -4,6 +4,7 @@ import { BrandMark, BrandWordmark } from "@/components/brand-logo";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { InstallApp } from "@/components/install-app";
 import { ContaMenu, ConviteAutenticador, TrocaDeArea } from "@/components/conta-menu";
+import { LinkAjuda } from "@/components/link-ajuda";
 import { NavArea } from "@/components/nav-area";
 import { AREA_NAME, AREA_SWITCH, type Area } from "@/lib/nav";
 
@@ -25,6 +26,13 @@ export function AppHeader({ area, active, right, suffix }: { area?: Area; active
         <div className="flex shrink-0 items-center gap-1 md:gap-3">
           <InstallApp />
           <LanguageSwitcher />
+          {/* 2.6a: ajuda em todas as áreas; leva junto a tela atual para mostrar os artigos dela primeiro */}
+          {area !== "admin" ? (
+            <LinkAjuda>
+              <span aria-hidden className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-current text-[12px] font-semibold leading-none">?</span>
+              <span className="sr-only md:not-sr-only">{t("ajuda")}</span>
+            </LinkAjuda>
+          ) : null}
           {troca ? <TrocaDeArea href={troca.href}>{t(troca.key)}</TrocaDeArea> : null}
           {area !== "admin" ? <ContaMenu /> : null}
           {right}
