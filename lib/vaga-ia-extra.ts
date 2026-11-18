@@ -73,9 +73,15 @@ export function tokensDaReescrita(v: TextoVaga): number {
  * volta a ser o original, com o contato do recrutador.
  */
 function restaurar(saida: string[], recebido: string[], original: string[]): string[] {
-  return saida.map((s) => {
-    const i = recebido.indexOf(s);
-    return i >= 0 ? original[i] : s;
+  // Cada item recebido devolve seu original uma vez só, de preferência na mesma posição:
+  // duas linhas iguais sem o contato ("Contato: [EMAIL]") voltam cada uma com o seu.
+  const usados = new Set<number>();
+  return saida.map((s, j) => {
+    let i = recebido[j] === s && !usados.has(j) ? j : -1;
+    if (i < 0) i = recebido.findIndex((r, k) => r === s && !usados.has(k));
+    if (i < 0) return s;
+    usados.add(i);
+    return original[i];
   });
 }
 
