@@ -24,7 +24,7 @@ describe("2.0 Transparência — /ia", () => {
 
   it("as tarefas de IA usadas nas telas estão documentadas", () => {
     const usadas = new Set(LINHAS_IA.flatMap((l) => l.tarefas));
-    for (const t of ["extract_cv", "ficha_w2", "embed"]) expect(usadas.has(t as never)).toBe(true);
+    for (const t of ["extract_cv", "ficha_w2", "extract_vacancy", "embed"]) expect(usadas.has(t as never)).toBe(true);
   });
 
   it("o texto de revisão leva o e-mail em todos os idiomas", () => {

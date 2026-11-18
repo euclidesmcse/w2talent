@@ -8,7 +8,7 @@ import type { TaskName } from "@/lib/ai/tasks";
 
 export type LinhaIa = {
   /** Prefixo das chaves em messages ("cv" → ia.cvTarefa, ia.cvFaz, ia.cvDados, ia.cvDecide) e âncora na página. */
-  id: "cv" | "w2" | "busca" | "parecidas" | "match";
+  id: "cv" | "w2" | "vaga" | "busca" | "parecidas" | "match";
   ancora: string;
   /** Tarefas do roteador de IA usadas. Vazio = não é IA (o match é uma conta com pesos fixos). */
   tarefas: TaskName[];
@@ -17,6 +17,8 @@ export type LinhaIa = {
 export const LINHAS_IA: LinhaIa[] = [
   { id: "cv", ancora: "leitura-cv", tarefas: ["extract_cv"] },
   { id: "w2", ancora: "ficha-w2", tarefas: ["ficha_w2"] },
+  // 2.1b: Publicar vaga (leitura do texto colado; o vetor confere duplicada e faixa).
+  { id: "vaga", ancora: "leitura-vaga", tarefas: ["extract_vacancy", "embed"] },
   { id: "busca", ancora: "busca", tarefas: ["embed"] },
   { id: "parecidas", ancora: "parecidas", tarefas: ["embed"] },
   { id: "match", ancora: "match", tarefas: [] },

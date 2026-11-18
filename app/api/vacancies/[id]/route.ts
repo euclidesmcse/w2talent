@@ -69,6 +69,7 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
     // 2.1a (D3): só a empresa dona da vaga ou o admin; a empresa da vaga não muda por aqui.
     const r = await exigirDonoDaVaga(req, prisma, id);
     if ("erro" in r) return r.erro;
+    // 2.1b: null limpa o campo (ex.: tirar a faixa); ausente deixa como está.
     const updated = await prisma.vacancy.update({
       where: { id },
       data: {
@@ -76,11 +77,11 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
         stack: body.stack ?? undefined,
         descricaoBullets: body.descricaoBullets ?? undefined,
         beneficios: body.beneficios ? (normalizeDescricaoBullets(body.beneficios) as any) : undefined,
-        nivel: body.nivel ?? undefined,
-        regime: body.regime ?? undefined,
-        localidade: body.localidade ?? undefined,
-        faixaDe: body.faixaDe ?? undefined,
-        faixaAte: body.faixaAte ?? undefined,
+        nivel: body.nivel === undefined ? undefined : body.nivel,
+        regime: body.regime === undefined ? undefined : body.regime,
+        localidade: body.localidade === undefined ? undefined : body.localidade,
+        faixaDe: body.faixaDe === undefined ? undefined : body.faixaDe,
+        faixaAte: body.faixaAte === undefined ? undefined : body.faixaAte,
         faixaMoeda: body.faixaMoeda ?? undefined,
         tipoContrato: body.tipoContrato ?? undefined,
       },
