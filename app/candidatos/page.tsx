@@ -159,6 +159,11 @@ export default function CandidatosPage() {
   const matchDoDetalhe = filtros.vaga && itensDaVaga === filtros.vaga && itemDaLista && typeof itemDaLista.match === "number"
     ? <MatchDaVaga vaga={vagaTitulo} match={itemDaLista.match} gaps={itemDaLista.gaps} />
     : null;
+  const focoVolta = React.useCallback((): HTMLElement | null => {
+    if (!idDetalhe) return null;
+    const ver = Array.from(document.querySelectorAll<HTMLElement>(`[data-detail-id="${CSS.escape(idDetalhe)}"]`)).find((el) => el.offsetParent !== null);
+    return ver ?? document.querySelector<HTMLElement>('form[role="search"] input');
+  }, [idDetalhe]);
   const tituloDetalhe = itemDetalhe?.nome ?? itemDetalhe?.titulo ?? tr("detail.title");
   const painelAberto = painelLado && modalOpen && !!itemDetalhe;
   // Com o painel aberto a página usa mais da tela, para a tabela não apertar.
@@ -264,7 +269,7 @@ export default function CandidatosPage() {
           </nav>
         ) : null}
         </div>
-        {painelAberto ? <FichaPainel item={itemDetalhe} titulo={tituloDetalhe} antes={matchDoDetalhe} onClose={closeModal} triggerRef={activeTrigger} /> : null}
+        {painelAberto ? <FichaPainel item={itemDetalhe} titulo={tituloDetalhe} antes={matchDoDetalhe} onClose={closeModal} triggerRef={activeTrigger} focoVolta={focoVolta} /> : null}
         </div>
         {!painelLado ? <DetailModal open={modalOpen} onClose={closeModal} item={itemDetalhe} triggerRef={activeTrigger} title={tituloDetalhe} antes={matchDoDetalhe} /> : null}
         <BatchBar variant="candidatos" onAction={(ids) => { void ids; }} />

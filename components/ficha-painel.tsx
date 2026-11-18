@@ -14,12 +14,15 @@ export function FichaPainel({
   antes,
   onClose,
   triggerRef,
+  focoVolta,
 }: {
   item: any;
   titulo: string;
   antes?: React.ReactNode;
   onClose: () => void;
   triggerRef?: React.RefObject<HTMLElement | null>;
+  /** acha o elemento que recebe o foco ao fechar (o "Ver" visível da linha, ou a busca se a linha saiu) */
+  focoVolta?: () => HTMLElement | null;
 }) {
   const t = useTranslations("detail");
   const tituloRef = React.useRef<HTMLHeadingElement | null>(null);
@@ -31,10 +34,14 @@ export function FichaPainel({
   }, [chave]);
 
   const fechar = React.useCallback(() => {
-    // O foco volta para o "Ver" que abriu antes de o painel sair, sem esperar o próximo quadro.
-    triggerRef?.current?.focus();
+    // O foco volta para o "Ver" antes de o painel sair. Como a tabela pode ter sido refeita enquanto
+    // o painel estava aberto (busca, filtro, página), procura o botão de agora; o guardado só se ainda
+    // estiver na página.
+    const guardado = triggerRef?.current;
+    const alvo = focoVolta?.() ?? (guardado?.isConnected ? guardado : null);
+    alvo?.focus();
     onClose();
-  }, [onClose, triggerRef]);
+  }, [onClose, triggerRef, focoVolta]);
 
   return (
     <aside
