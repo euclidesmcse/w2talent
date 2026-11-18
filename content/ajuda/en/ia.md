@@ -21,4 +21,6 @@ AI helps with text tasks. It does not approve, reject or score anyone.
 
 The [match](/ajuda/match) is a calculation with fixed weights. Search uses text and meaning to sort, but does not hide candidates.
 
+The conversation in [Talk to a person](/ajuda/conversa) is answered by a person on the team. Nothing in it goes to AI.
+
 The full list, with the data each task uses, is in [How we use AI](/ia).

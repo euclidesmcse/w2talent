@@ -21,4 +21,15 @@ W2Talent conecta candidatos de tecnología con vacantes. El candidato encuentra 
 - Publicas la vacante pegando el texto, y la IA organiza los campos.
 - Buscas candidatos y los ordenas por match con una vacante tuya.
 
+## Hablar con una persona
+
+¿No encontraste la respuesta en la Ayuda? En [Hablar con una persona](/ajuda/conversa), escribes al equipo de W2Talent, con o sin sesión.
+
+- Sin sesión, indicas un e-mail. Con sesión, usamos el e-mail de la cuenta.
+- La respuesta aparece en la conversación y te avisamos por e-mail, con el enlace.
+- Guarda el enlace: es como vuelves a la conversación. Quien tenga el enlace ve la conversación.
+- Responde una persona. Nada de la conversación va a la IA.
+- El equipo solo ve lo que escribiste, la pantalla de donde viniste y, con sesión, si la cuenta es de candidato o de reclutador.
+- Límites: 3 conversaciones nuevas por día y 30 mensajes por conversación por día, hasta 2.000 caracteres cada uno.
+
 Esta es la versión de pruebas. El sitio cambia a menudo.

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import { AjudaPergunta } from "@/components/ajuda-pergunta";
 import { AppHeader } from "@/components/app-header";
+import { buttonClasses } from "@/components/ui";
 import { organizarAjuda, type ArtigoBruto } from "@/lib/ajuda";
 import { EMAIL_REVISAO } from "@/lib/ia-transparencia";
 
@@ -50,6 +51,15 @@ export default async function AjudaPage({ searchParams }: { searchParams: Promis
         <Lista id="ajuda-comecar" titulo={t("grupoComecar")} artigos={g.comecar} />
         <Lista id="ajuda-candidato" titulo={t("grupoCandidato")} artigos={g.candidato} />
         <Lista id="ajuda-recrutador" titulo={t("grupoRecrutador")} artigos={g.recrutador} />
+        <section aria-labelledby="ajuda-falar" className="relevo-cartao flex max-w-[68ch] flex-col gap-3 rounded-card border border-line bg-surface p-5" data-ajuda-falar>
+          <h2 id="ajuda-falar" className="text-xl font-semibold">{t("falarTitulo")}</h2>
+          <p className="text-[15px] text-ink">{t("falarLead")}</p>
+          <div>
+            <Link href={g.tela ? `/ajuda/conversa?de=${encodeURIComponent(g.tela)}` : "/ajuda/conversa"} className={buttonClasses("secondary", "md")} data-action="falar-com-pessoa">
+              {t("falarBotao")}
+            </Link>
+          </div>
+        </section>
         <p className="max-w-[68ch] text-ink">
           {t.rich("naoAchou", {
             email: () => <a href={`mailto:${EMAIL_REVISAO}`} className="font-medium underline underline-offset-2">{EMAIL_REVISAO}</a>,
