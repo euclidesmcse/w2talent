@@ -1015,7 +1015,7 @@
     },
     "ats": {
       "title": "Integración con ATS",
-      "intro": "¿Quieres las postulaciones en tu sistema de selección (ATS)? Indica una dirección https. Con cada postulación recibida, W2Talent envía allí un aviso firmado con la Ficha W2, sin e-mail ni teléfono.",
+      "intro": "¿Quieres las postulaciones en tu sistema de selección (ATS)? Indica una dirección https. Con cada postulación recibida y cada cambio de etapa, W2Talent envía allí un aviso firmado con la Ficha W2. E-mail y teléfono solo después de la Entrevista.",
       "ajuda": "Cómo funciona",
       "carregando": "Cargando…",
       "soDono": "Solo quien registró la empresa configura la integración.",
@@ -1023,6 +1023,10 @@
       "statusLabel": "Situación",
       "ativa": "Activa",
       "desligada": "Desactivada",
+      "pausada": "Pausada",
+      "pausadaTitulo": "Pausamos la integración el {data}.",
+      "pausadaTituloSemData": "Pausamos la integración.",
+      "pausadaTexto": "{n} entregas seguidas fallaron y no se envía nada más. Revisa la dirección y tu sistema, usa \"Enviar prueba\" y haz clic en Activar. Lo que pasó durante la pausa no se reenvía.",
       "url": "Dirección que recibe los avisos",
       "urlHint": "Solo https y dirección pública. Ej.: https://ats.tuempresa.com/w2talent",
       "criar": "Guardar y activar",
@@ -1063,6 +1067,7 @@
         "url": "Dirección inválida",
         "segredo": "Error en el secreto",
         "candidatura_apagada": "Postulación borrada",
+        "pausado": "Integración pausada",
         "outro": "Falló"
       },
       "erros": {

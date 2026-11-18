@@ -12,7 +12,7 @@ In candidate search, email and phone are masked (for example, a***@e***.com). Th
 
 ## The company's hiring system
 
-Some companies turn on the integration with their hiring system (ATS). In that case, the application you send also goes to that system, with the same content you approved: the W2 Profile, without e-mail, phone or links. There, it follows the company's privacy rules.
+Some companies turn on the integration with their hiring system (ATS). In that case, the application you send also goes to that system, with the same content you approved: the W2 Profile, without e-mail, phone or links. The system is also told when the company changes your application's stage, and your e-mail and phone only go there after the company invites you to an interview. There, the application follows the company's privacy rules.
 
 ## Salary expectation
 

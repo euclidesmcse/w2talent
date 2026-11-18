@@ -10,7 +10,7 @@
  */
 import { retryDelay, sendEmail, type EmailEnv, type EmailMessage, type SendResult } from "./email";
 
-/** Eventos do 3.4a; o 3.4b acrescenta "candidatura.etapa". */
+/** Eventos: "candidatura.recebida" e "teste" (3.4a); "candidatura.etapa" (3.4b). */
 export type EventoWebhook = "candidatura.recebida" | "candidatura.etapa" | "teste";
 export const EVENTOS_WEBHOOK: readonly EventoWebhook[] = ["candidatura.recebida", "candidatura.etapa", "teste"];
 
@@ -22,6 +22,9 @@ export type MensagemWebhook = {
   companyId: string;
   applicationId?: string;
   occurredAt: string;
+  /** 3.4b, só em "candidatura.etapa": a etapa de antes e a nova, no momento da mudança. */
+  etapaDe?: string;
+  etapaPara?: string;
 };
 
 /** O que a entrega devolve: "repetir" volta para a fila; "ok" e "desistir" saem dela. */
@@ -56,7 +59,9 @@ export function ehWebhook(b: unknown): b is MensagemWebhook {
     typeof m.id === "string" &&
     typeof m.companyId === "string" &&
     typeof m.occurredAt === "string" &&
-    (m.applicationId === undefined || typeof m.applicationId === "string")
+    (m.applicationId === undefined || typeof m.applicationId === "string") &&
+    (m.etapaDe === undefined || typeof m.etapaDe === "string") &&
+    (m.etapaPara === undefined || typeof m.etapaPara === "string")
   );
 }
 

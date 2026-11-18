@@ -1015,7 +1015,7 @@
     },
     "ats": {
       "title": "ATS integration",
-      "intro": "Want applications in your hiring system (ATS)? Enter an https address. For each application received, W2Talent sends a signed notice there with the W2 Profile, without e-mail or phone.",
+      "intro": "Want applications in your hiring system (ATS)? Enter an https address. For each application received and each stage change, W2Talent sends a signed notice there with the W2 Profile. E-mail and phone only after the Interview.",
       "ajuda": "How it works",
       "carregando": "Loading…",
       "soDono": "Only the person who registered the company can set up the integration.",
@@ -1023,6 +1023,10 @@
       "statusLabel": "Status",
       "ativa": "On",
       "desligada": "Off",
+      "pausada": "Paused",
+      "pausadaTitulo": "We paused the integration on {data}.",
+      "pausadaTituloSemData": "We paused the integration.",
+      "pausadaTexto": "{n} deliveries in a row failed, and nothing else is sent. Check the address and your system, use \"Send test\" and click Turn on. Events from the paused period are not sent again.",
       "url": "Address that receives the notices",
       "urlHint": "https and public addresses only. E.g.: https://ats.yourcompany.com/w2talent",
       "criar": "Save and turn on",
@@ -1063,6 +1067,7 @@
         "url": "Invalid address",
         "segredo": "Secret error",
         "candidatura_apagada": "Application deleted",
+        "pausado": "Integration paused",
         "outro": "Failed"
       },
       "erros": {

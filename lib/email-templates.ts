@@ -460,3 +460,59 @@ export function renderAtendimentoEmail(i: { locale: EmailLocale; url: string }):
 </table></td></tr></table></body></html>`;
   return { subject: c.assunto, html, text };
 }
+
+// ── 3.4b Integração com ATS pausada: aviso ao dono da empresa (plano 3.4, D5) ──
+
+const WEBHOOK_PAUSADO: Record<
+  EmailLocale,
+  { assunto: string; ola: (n: string) => string; corpo: (empresa: string, host: string, falhas: number) => string; religar: string; botao: string; rodape: string }
+> = {
+  "pt-BR": {
+    assunto: "Integração com ATS pausada",
+    ola: (n) => (n ? `Olá, ${n}` : "Olá"),
+    corpo: (e, h, f) =>
+      `Pausamos a integração com ATS${e ? ` da empresa ${e}` : ""}: ${f} entregas seguidas${h ? ` para ${h}` : ""} não deram certo. Enquanto ela estiver pausada, nenhum aviso é enviado ao seu sistema.`,
+    religar:
+      "Para voltar: confira o endereço e o seu sistema, abra Minha empresa > Integração com ATS, use \"Enviar teste\" e clique em Ativar. O que aconteceu durante a pausa não é reenviado.",
+    botao: "Abrir Minha empresa",
+    rodape: "Você recebe este aviso porque cadastrou a empresa no W2Talent e configurou a integração com ATS.",
+  },
+  en: {
+    assunto: "ATS integration paused",
+    ola: (n) => (n ? `Hi ${n}` : "Hi"),
+    corpo: (e, h, f) =>
+      `We paused the ATS integration${e ? ` for ${e}` : ""}: ${f} deliveries in a row${h ? ` to ${h}` : ""} failed. While it is paused, nothing is sent to your system.`,
+    religar:
+      "To turn it back on: check the address and your system, open My company > ATS integration, use \"Send test\" and click Turn on. Events from the paused period are not sent again.",
+    botao: "Open My company",
+    rodape: "You get this notice because you registered the company on W2Talent and set up the ATS integration.",
+  },
+  es: {
+    assunto: "Integración con ATS pausada",
+    ola: (n) => (n ? `Hola, ${n}` : "Hola"),
+    corpo: (e, h, f) =>
+      `Pausamos la integración con ATS${e ? ` de la empresa ${e}` : ""}: ${f} entregas seguidas${h ? ` a ${h}` : ""} fallaron. Mientras esté pausada, no se envía ningún aviso a tu sistema.`,
+    religar:
+      "Para reactivarla: revisa la dirección y tu sistema, abre Mi empresa > Integración con ATS, usa \"Enviar prueba\" y haz clic en Activar. Lo que pasó durante la pausa no se reenvía.",
+    botao: "Abrir Mi empresa",
+    rodape: "Recibes este aviso porque registraste la empresa en W2Talent y configuraste la integración con ATS.",
+  },
+};
+
+export type WebhookPausadoEmailInput = { locale: EmailLocale; nome?: string | null; empresa: string; host: string; falhas: number; url: string };
+
+export function renderWebhookPausadoEmail(i: WebhookPausadoEmailInput): { subject: string; html: string; text: string } {
+  const c = WEBHOOK_PAUSADO[i.locale];
+  const saudacao = c.ola(primeiroNome(i.nome));
+  const corpo = c.corpo(i.empresa, i.host, i.falhas);
+  const text = `${saudacao},\n\n${corpo}\n\n${c.religar}\n\n${c.botao}: ${i.url}\n\n${c.rodape}\n`;
+  const html = `<!doctype html><html lang="${i.locale}"><body style="margin:0;padding:0;background:#F7F8FA;font-family:Inter,Segoe UI,Arial,sans-serif;color:#111827">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F8FA;padding:24px 12px"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px">
+<tr><td style="padding:24px 24px 0;font:700 18px 'Space Grotesk',Inter,Arial,sans-serif">W2<span style="color:#1F4FD8">Talent</span></td></tr>
+<tr><td style="padding:16px 24px 0;font-size:16px;line-height:24px"><p style="margin:0 0 12px">${esc(saudacao)},</p><p style="margin:0 0 8px;font-weight:600">${esc(corpo)}</p><p style="margin:0">${esc(c.religar)}</p></td></tr>
+<tr><td style="padding:20px 24px 0"><a href="${esc(i.url)}" style="display:inline-block;background:#1F4FD8;color:#FFFFFF;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:999px">${esc(c.botao)}</a></td></tr>
+<tr><td style="padding:20px 24px 24px;font-size:13px;line-height:20px;color:#4B5563">${esc(c.rodape)}</td></tr>
+</table></td></tr></table></body></html>`;
+  return { subject: c.assunto, html, text };
+}

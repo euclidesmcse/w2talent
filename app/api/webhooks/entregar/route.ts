@@ -1,6 +1,7 @@
 /**
  * 3.4a: entrega de um webhook, chamada pelo consumidor da fila (custom-worker.ts → lib/fila.ts) com o
  * CRON_SECRET no cabeçalho. Roda aqui (e não no consumidor) para usar o Prisma do app com o Hyperdrive.
+ * 3.4b: a entrega também pode pausar o webhook (50 falhas seguidas) e avisar o dono por e-mail.
  * Responde 200 com { resultado: "ok" | "repetir" | "desistir" }; erro desta rota faz a fila tentar de novo.
  */
 import { NextRequest, NextResponse } from "next/server";
@@ -17,10 +18,12 @@ export async function POST(req: NextRequest) {
   if (!body || !ehWebhook(body)) return NextResponse.json({ resultado: "desistir", erro: "mensagem" }, { headers: NO_STORE });
   const t = (body as { tentativa?: unknown }).tentativa;
   const tentativa = typeof t === "number" && t >= 1 ? Math.floor(t) : 1;
-  const { tipo, evento, id, companyId, applicationId, occurredAt } = body;
+  const { tipo, evento, id, companyId, applicationId, occurredAt, etapaDe, etapaPara } = body;
   try {
     const { prisma } = await import("@/lib/prisma");
-    const r = await entregarWebhook(prisma, { tipo, evento, id, companyId, applicationId, occurredAt }, tentativa);
+    const r = await entregarWebhook(prisma, { tipo, evento, id, companyId, applicationId, occurredAt, etapaDe, etapaPara }, tentativa, {
+      appUrl: process.env.APP_URL || req.nextUrl.origin,
+    });
     return NextResponse.json(r, { headers: NO_STORE });
   } catch (e) {
     console.error("[webhook] entrega falhou:", e instanceof Error ? e.name : e);

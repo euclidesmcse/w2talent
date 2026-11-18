@@ -2,6 +2,7 @@
 /**
  * 3.4a Integração com ATS, na tela Minha empresa: endereço, ligar/desligar, novo segredo (aparece uma
  * vez), enviar teste e as últimas 20 entregas. Só o dono da empresa configura (a API confere).
+ * 3.4b: depois de 50 falhas seguidas a integração fica "Pausada"; Ativar liga de novo e zera a contagem.
  */
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -10,7 +11,7 @@ import { cn } from "@/components/ui/cn";
 import { contaRecusada } from "@/lib/conta-client";
 
 type Entrega = { id: string; createdAt: string; evento: string; status: number | null; erro: string | null; tentativa: number; ok: boolean };
-type Config = { url: string; ativo: boolean; falhasSeguidas: number; createdAt: string; entregas: Entrega[] } | null;
+type Config = { url: string; ativo: boolean; falhasSeguidas: number; pausada: boolean; pausadaEm: string | null; createdAt: string; entregas: Entrega[] } | null;
 type Resposta = { webhook?: Config; segredo?: string | null; teste?: { ok: boolean; status: number | null; erro: string | null }; error?: string; motivo?: string };
 
 const API = "/api/conta/empresa/webhook";
@@ -124,7 +125,9 @@ export function EmpresaWebhook() {
   };
 
   const resultado = (status: number | null, erroEntrega: string | null) =>
-    status != null ? (status >= 200 && status < 300 ? t("resultadoOk", { status }) : t("resultadoHttp", { status })) : t(`resultadoErro.${erroEntrega && ["tempo", "rede", "url", "segredo", "candidatura_apagada"].includes(erroEntrega) ? erroEntrega : "outro"}`);
+    erroEntrega === "pausado"
+      ? t("resultadoErro.pausado")
+      : status != null ? (status >= 200 && status < 300 ? t("resultadoOk", { status }) : t("resultadoHttp", { status })) : t(`resultadoErro.${erroEntrega && ["tempo", "rede", "url", "segredo", "candidatura_apagada"].includes(erroEntrega) ? erroEntrega : "outro"}`);
 
   const data = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
   const evento = (e: string) => t(`eventos.${e === "candidatura.recebida" ? "recebida" : e === "candidatura.etapa" ? "etapa" : "teste"}`);
@@ -145,12 +148,24 @@ export function EmpresaWebhook() {
         ) : (
           <div className="mt-4 flex flex-col gap-4">
             {config ? (
-              <p className="text-[13px] font-medium" data-webhook-ativo={config.ativo ? "sim" : "nao"}>
+              <p className="text-[13px] font-medium" data-webhook-ativo={config.ativo ? "sim" : config.pausada ? "pausada" : "nao"}>
                 {t("statusLabel")}:{" "}
-                <span className={cn("ml-1 inline-flex items-center rounded-pill px-2.5 py-0.5 text-xs font-semibold", config.ativo ? "bg-success-soft text-success-ink" : "bg-warning-soft text-warning-ink")}>
-                  {config.ativo ? t("ativa") : t("desligada")}
+                <span
+                  className={cn(
+                    "ml-1 inline-flex items-center rounded-pill px-2.5 py-0.5 text-xs font-semibold",
+                    config.ativo ? "bg-success-soft text-success-ink" : config.pausada ? "bg-danger-soft text-danger-ink" : "bg-warning-soft text-warning-ink",
+                  )}
+                >
+                  {config.ativo ? t("ativa") : config.pausada ? t("pausada") : t("desligada")}
                 </span>
               </p>
+            ) : null}
+
+            {config?.pausada ? (
+              <div role="status" className="rounded-card border border-line bg-danger-soft p-4 text-danger-ink" data-testid="webhook-pausado">
+                <p className="text-[13px] font-semibold">{config.pausadaEm ? t("pausadaTitulo", { data: data(config.pausadaEm) }) : t("pausadaTituloSemData")}</p>
+                <p className="mt-1 text-[13px]">{t("pausadaTexto", { n: config.falhasSeguidas })}</p>
+              </div>
             ) : null}
 
             <form onSubmit={salvar} className="flex flex-col gap-3" noValidate>

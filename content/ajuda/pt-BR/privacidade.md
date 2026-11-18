@@ -12,7 +12,7 @@ Na busca de candidatos, e-mail e telefone aparecem mascarados (por exemplo, a***
 
 ## Sistema de seleção da empresa
 
-Algumas empresas ligam a integração com o sistema de seleção delas (ATS). Nesse caso, a candidatura que você enviar também vai para esse sistema, com o mesmo conteúdo que você aprovou: a Ficha W2, sem e-mail, telefone nem links. Lá, ela segue as regras de privacidade da empresa.
+Algumas empresas ligam a integração com o sistema de seleção delas (ATS). Nesse caso, a candidatura que você enviar também vai para esse sistema, com o mesmo conteúdo que você aprovou: a Ficha W2, sem e-mail, telefone nem links. O sistema também fica sabendo quando a empresa muda a etapa da sua candidatura, e o seu e-mail e telefone só vão para lá depois que ela chama você para entrevista. Lá, a candidatura segue as regras de privacidade da empresa.
 
 ## Pretensão salarial
 

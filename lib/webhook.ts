@@ -9,6 +9,12 @@
  *   O segredo aparece uma vez e fica cifrado com AI_KEYS_MASTER (lib/ai/keys.ts). Só o dono configura.
  * - D5: entrega pela fila `notificacoes` (lib/fila.ts); cada tentativa vira uma linha em WebhookEntrega,
  *   sem o corpo. Repete em erro de rede, 5xx e 429, até 10 vezes.
+ * 3.4b:
+ * - "candidatura.etapa": o recrutador mudou a etapa (mudarEtapa, lib/rh-candidaturas.ts). Mesmo `data` do
+ *   "candidatura.recebida" + `mudanca: {de, para, em}`. Contato só depois da Entrevista, como sempre.
+ * - Pausa: cada tentativa que não deu certo soma 1 em `falhasSeguidas` (o teste não conta; um 2xx zera).
+ *   Chegando a 50, o webhook é desligado (`ativo: false`), a entrega ganha uma linha `erro: "pausado"`
+ *   (é dela que sai a data da pausa) e o dono recebe um e-mail. Ligar de novo zera a contagem.
  */
 import type { PrismaClient } from "@prisma/client";
 import { decryptApiKey, encryptApiKey } from "./ai/keys";
@@ -16,6 +22,8 @@ import { fichaParaEmpresa } from "./envio";
 import { sanitizeFicha, sanitizeFichaW2 } from "./ficha";
 import { matchCandidato } from "./match-candidato";
 import type { EventoWebhook, MensagemWebhook, ResultadoEntrega } from "./fila";
+import type { EmailMessage } from "./email";
+import { emailLocale, renderWebhookPausadoEmail } from "./email-templates";
 
 type Db = PrismaClient;
 
@@ -27,6 +35,10 @@ export const WEBHOOK_ENTREGAS_DIAS = 30;
 export const WEBHOOK_VERSAO = 1;
 /** "Enviar teste", por empresa e por dia (contado em UsoDiario). */
 export const LIMITE_TESTES_WEBHOOK_DIA = 30;
+/** 3.4b (D5): com tantas falhas seguidas o webhook é pausado e o dono recebe um e-mail. */
+export const WEBHOOK_PAUSA_FALHAS = 50;
+/** `erro` da linha de entrega que marca a pausa. */
+export const ERRO_PAUSADO = "pausado";
 
 // ---------------------------------------------------------------------------------------------
 // Endereço (D4)
@@ -204,7 +216,10 @@ export async function corpoDaMensagem(db: Db, m: MensagemWebhook, now = new Date
     select: { id: true, proxyThreadId: true, createdAt: true, etapa: true, contatoLiberadoEm: true, vacancy: { select: VAGA }, candidate: true },
   });
   if (!a) return null;
-  return corpoDoEvento(m.evento, m.id, m.occurredAt, m.companyId, dadosDaCandidatura(a as unknown as LinhaCandidatura, now.getTime()));
+  const data = dadosDaCandidatura(a as unknown as LinhaCandidatura, now.getTime());
+  // 3.4b: a mudança que gerou o evento. `candidatura.etapa` continua sendo a etapa atual na hora da entrega.
+  if (m.evento === "candidatura.etapa") data.mudanca = { de: m.etapaDe ?? null, para: m.etapaPara ?? null, em: m.occurredAt };
+  return corpoDoEvento(m.evento, m.id, m.occurredAt, m.companyId, data);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -221,7 +236,72 @@ function atrasoDoRetryAfter(v: string | null): number | undefined {
   return Math.min(3600, Math.max(30, Number(v.trim())));
 }
 
-export type OpcoesEntrega = { fetch?: typeof fetch; master?: string; now?: () => Date };
+export type OpcoesEntrega = {
+  fetch?: typeof fetch;
+  master?: string;
+  now?: () => Date;
+  /** Base dos links do e-mail de pausa (APP_URL). */
+  appUrl?: string;
+  /** Põe o e-mail de pausa na fila (padrão: enqueueEmail). */
+  avisar?: (m: EmailMessage) => Promise<void>;
+};
+
+/**
+ * 3.4b (D5): com `WEBHOOK_PAUSA_FALHAS` falhas seguidas, desliga o webhook e avisa o dono (ou os donos).
+ * O `updateMany` com `ativo: true` garante uma pausa só, mesmo com entregas ao mesmo tempo; o e-mail sai
+ * só de quem pausou. Nunca lança: a entrega segue o caminho dela.
+ */
+export async function pausarSeChegouAoLimite(db: Db, webhookId: string, m: MensagemWebhook, tentativa: number, opts: OpcoesEntrega = {}): Promise<boolean> {
+  try {
+    const r = await db.webhook.updateMany({ where: { id: webhookId, ativo: true, falhasSeguidas: { gte: WEBHOOK_PAUSA_FALHAS } }, data: { ativo: false } });
+    if (r.count === 0) return false;
+    const linha = await db.webhookEntrega.create({
+      data: { webhookId, evento: m.evento, deliveryId: m.id, status: null, erro: ERRO_PAUSADO, tentativa, duracaoMs: 0 },
+      select: { id: true },
+    });
+    console.warn(`[webhook] empresa ${m.companyId} pausada depois de ${WEBHOOK_PAUSA_FALHAS} falhas seguidas.`);
+    try {
+      await avisarPausa(db, m.companyId, linha.id, opts);
+    } catch (e) {
+      console.error("[webhook] e-mail de pausa não entrou na fila:", e instanceof Error ? e.message : e);
+    }
+    return true;
+  } catch (e) {
+    console.error("[webhook] pausa falhou:", e instanceof Error ? e.name : e);
+    return false;
+  }
+}
+
+/** Idioma do dono: o da última entrevista que ele ofereceu; sem nenhuma, português. */
+async function idiomaDoDono(db: Db, userId: string): Promise<string | null> {
+  const e = await db.entrevista.findFirst({ where: { recrutadorId: userId, idiomaRecrutador: { not: null } }, orderBy: { createdAt: "desc" }, select: { idiomaRecrutador: true } });
+  return e?.idiomaRecrutador ?? null;
+}
+
+async function avisarPausa(db: Db, companyId: string, pausaId: string, opts: OpcoesEntrega): Promise<void> {
+  const [empresa, donos, wh] = await Promise.all([
+    db.companyProfile.findUnique({ where: { id: companyId }, select: { nome: true } }),
+    db.companyMember.findMany({ where: { companyId, papel: "dono" }, select: { userId: true, user: { select: { name: true, email: true } } } }),
+    db.webhook.findUnique({ where: { companyId }, select: { url: true } }),
+  ]);
+  let host = "";
+  try {
+    host = wh ? new URL(wh.url).hostname : "";
+  } catch {
+    host = "";
+  }
+  const avisar = opts.avisar ?? (async (msg: EmailMessage) => (await import("./notifications")).enqueueEmail(msg));
+  const url = `${(opts.appUrl ?? process.env.APP_URL ?? "").replace(/\/+$/, "")}/empresa`;
+  for (const d of donos) {
+    if (!d.user.email) continue;
+    const e = renderWebhookPausadoEmail({ locale: emailLocale(await idiomaDoDono(db, d.userId)), nome: d.user.name, empresa: empresa?.nome ?? "", host, falhas: WEBHOOK_PAUSA_FALHAS, url });
+    try {
+      await avisar({ to: d.user.email, ...e, idempotencyKey: `webhook-pausado:${pausaId}:${d.userId}` });
+    } catch (err) {
+      console.error("[webhook] e-mail de pausa não entrou na fila:", err instanceof Error ? err.message : err);
+    }
+  }
+}
 
 /**
  * Entrega um evento: monta o corpo, assina com o segredo atual, faz o POST (10 s, sem seguir
@@ -244,6 +324,8 @@ export async function entregarWebhook(db: Db, m: MensagemWebhook, tentativa: num
       ...(m.evento === "teste" ? [] : [db.webhook.update({ where: { id: wh.id }, data: { falhasSeguidas: ok ? 0 : { increment: 1 } } })]),
       db.webhookEntrega.deleteMany({ where: { webhookId: wh.id, createdAt: { lt: new Date(agora().getTime() - WEBHOOK_ENTREGAS_DIAS * 86_400_000) } } }),
     ]);
+    // 3.4b: a 50ª falha seguida pausa o webhook e avisa o dono.
+    if (!ok && m.evento !== "teste") await pausarSeChegouAoLimite(db, wh.id, m, tentativa, opts);
     return r;
   };
 
@@ -310,6 +392,28 @@ export async function enfileirarRecebidas(
   return n;
 }
 
+/**
+ * 3.4b: depois do commit da mudança de etapa, põe "candidatura.etapa" na fila se a empresa tiver webhook
+ * ligado. Nunca lança: falha aqui não desfaz nem atrapalha a mudança.
+ */
+export async function enfileirarEtapa(
+  db: Db,
+  e: { applicationId: string; companyId: string; de: string; para: string },
+  enqueue: (m: MensagemWebhook) => Promise<void>,
+  now = new Date(),
+): Promise<boolean> {
+  if (e.de === e.para) return false;
+  try {
+    const wh = await db.webhook.findUnique({ where: { companyId: e.companyId }, select: { ativo: true } });
+    if (!wh?.ativo) return false;
+    await enqueue({ tipo: "webhook", evento: "candidatura.etapa", id: novoIdEvento(), companyId: e.companyId, applicationId: e.applicationId, occurredAt: now.toISOString(), etapaDe: e.de, etapaPara: e.para });
+    return true;
+  } catch (err) {
+    console.error(`[webhook] etapa da candidatura ${e.applicationId} não entrou na fila:`, err instanceof Error ? err.message : err);
+    return false;
+  }
+}
+
 // ---------------------------------------------------------------------------------------------
 // Configuração (só o dono da empresa)
 // ---------------------------------------------------------------------------------------------
@@ -330,7 +434,17 @@ export async function empresaDoDono(db: Db, userId: string): Promise<string> {
 }
 
 export type EntregaTela = { id: string; createdAt: string; evento: string; status: number | null; erro: string | null; tentativa: number; ok: boolean };
-export type ConfigWebhook = { url: string; ativo: boolean; falhasSeguidas: number; createdAt: string; entregas: EntregaTela[] } | null;
+export type ConfigWebhook = {
+  url: string;
+  ativo: boolean;
+  falhasSeguidas: number;
+  /** 3.4b: desligado pelas 50 falhas seguidas (não por alguém). */
+  pausada: boolean;
+  /** Quando pausou (da linha de entrega "pausado"); null se a linha já saiu do histórico. */
+  pausadaEm: string | null;
+  createdAt: string;
+  entregas: EntregaTela[];
+} | null;
 
 export async function lerConfig(db: Db, companyId: string): Promise<ConfigWebhook> {
   const wh = await db.webhook.findUnique({ where: { companyId }, select: { id: true, url: true, ativo: true, falhasSeguidas: true, createdAt: true } });
@@ -341,10 +455,18 @@ export async function lerConfig(db: Db, companyId: string): Promise<ConfigWebhoo
     take: WEBHOOK_ENTREGAS_TELA,
     select: { id: true, createdAt: true, evento: true, status: true, erro: true, tentativa: true },
   });
+  // Desligar à mão não mexe na contagem, e com o webhook desligado nada é entregue (o teste não conta):
+  // desligado com 50 ou mais só acontece pela pausa.
+  const pausada = !wh.ativo && wh.falhasSeguidas >= WEBHOOK_PAUSA_FALHAS;
+  const pausa = pausada
+    ? await db.webhookEntrega.findFirst({ where: { webhookId: wh.id, erro: ERRO_PAUSADO }, orderBy: { createdAt: "desc" }, select: { createdAt: true } })
+    : null;
   return {
     url: wh.url,
     ativo: wh.ativo,
     falhasSeguidas: wh.falhasSeguidas,
+    pausada,
+    pausadaEm: pausa?.createdAt.toISOString() ?? null,
     createdAt: wh.createdAt.toISOString(),
     entregas: entregas.map((e) => ({ ...e, createdAt: e.createdAt.toISOString(), ok: e.status != null && e.status >= 200 && e.status < 300 })),
   };

@@ -3,6 +3,7 @@ import { createHmac } from "crypto";
 import { assinar, cabecalhosAssinados, dadosDaCandidatura, deveRepetir, gerarSegredo, validarUrlWebhook } from "../lib/webhook";
 import { atrasoWebhook, ehWebhook, processarFila, type MensagemWebhook, type QueueMessage, type ResultadoEntrega } from "../lib/fila";
 import type { EmailMessage } from "../lib/email";
+import { renderWebhookPausadoEmail } from "../lib/email-templates";
 
 describe("assinatura", () => {
   it("HMAC-SHA256 em hex de `${t}.${corpo}` (vetor conhecido)", async () => {
@@ -144,6 +145,9 @@ describe("consumidor da fila", () => {
     expect(ehWebhook(webhook)).toBe(true);
     expect(ehWebhook({ ...webhook, evento: "outro" })).toBe(false);
     expect(ehWebhook(email)).toBe(false);
+    // 3.4b: candidatura.etapa leva a etapa de antes e a nova.
+    expect(ehWebhook({ ...webhook, evento: "candidatura.etapa", etapaDe: "nova", etapaPara: "entrevista" })).toBe(true);
+    expect(ehWebhook({ ...webhook, evento: "candidatura.etapa", etapaDe: 1, etapaPara: "entrevista" })).toBe(false);
   });
 
   it("e-mail continua indo pelo Resend, com nova tentativa em 5xx e ack no sucesso", async () => {
@@ -199,5 +203,26 @@ describe("consumidor da fila", () => {
     expect([1, 2, 3, 6, 7, 10].map(atrasoWebhook)).toEqual([60, 120, 240, 1920, 3600, 3600]);
     expect([null, 500, 502, 429].every(deveRepetir)).toBe(true);
     expect([200, 301, 400, 401, 404, 410].some(deveRepetir)).toBe(false);
+  });
+});
+
+describe("e-mail de integração pausada (3.4b)", () => {
+  it("3 idiomas, com a empresa, o host, o caminho para religar e o link de Minha empresa", () => {
+    const base = { nome: "Dona Ana Souza", empresa: "Acme <SA>", host: "ats.acme.example", falhas: 50, url: "https://w2.test/empresa" };
+    const pt = renderWebhookPausadoEmail({ ...base, locale: "pt-BR" });
+    expect(pt.subject).toBe("Integração com ATS pausada");
+    expect(pt.text).toContain("Olá, Dona");
+    expect(pt.text).toContain("50 entregas seguidas para ats.acme.example");
+    expect(pt.text).toContain("Minha empresa > Integração com ATS");
+    expect(pt.text).toContain("https://w2.test/empresa");
+    expect(pt.html).toContain("Acme &lt;SA&gt;");
+    expect(pt.html).not.toContain("Acme <SA>");
+    const en = renderWebhookPausadoEmail({ ...base, locale: "en" });
+    expect(en.subject).toBe("ATS integration paused");
+    expect(en.text).toContain("My company > ATS integration");
+    const es = renderWebhookPausadoEmail({ ...base, locale: "es" });
+    expect(es.subject).toBe("Integración con ATS pausada");
+    expect(es.text).toContain("Mi empresa > Integración con ATS");
+    expect(es.html).toContain('lang="es"');
   });
 });
