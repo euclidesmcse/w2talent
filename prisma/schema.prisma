@@ -36,6 +36,17 @@ enum ApplicationStatus {
   arquivado
 }
 
+/// 2.4 Painel RH (plano aprovado em 2026-11-18, D1): etapas que só o recrutador vê.
+/// O candidato vê o status (enviado/visualizado/respondido/arquivado), derivado daqui (D3).
+enum EtapaCandidatura {
+  nova
+  em_analise
+  entrevista
+  proposta
+  contratada
+  nao_seguiu
+}
+
 enum ValidationStatus {
   pendente
   validado
@@ -201,28 +212,35 @@ model Vacancy {
 // - Aplicação deve dedupar em código: verificar existência antes de criar quando vacancyId != null
 // Alternativa (se quiser normalizar): separar em modelos Application (vacancyId required) + Contact (sem vacancyId).
 model Application {
-  id            String            @id @default(cuid())
-  vacancyId     String?
-  vacancy       Vacancy?          @relation(fields: [vacancyId], references: [id], onDelete: SetNull)
-  candidateId   String
-  candidate     CandidateProfile  @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  companyId     String
-  company       CompanyProfile    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  origem        ApplicationOrigin
-  proxyThreadId String            @unique
-  status        ApplicationStatus @default(enviado)
-  loteId        String?
+  id                String            @id @default(cuid())
+  vacancyId         String?
+  vacancy           Vacancy?          @relation(fields: [vacancyId], references: [id], onDelete: SetNull)
+  candidateId       String
+  candidate         CandidateProfile  @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  companyId         String
+  company           CompanyProfile    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  origem            ApplicationOrigin
+  proxyThreadId     String            @unique
+  status            ApplicationStatus @default(enviado)
+  loteId            String?
   /// 1.5.13: e-mail para a empresa montado no envio e ainda fora da fila; o Cron diário tenta de novo
   /// com este mesmo conteúdo. null quando já entrou na fila (ou não há e-mail).
-  emailPendente Json?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  emailPendente     Json?
+  /// 2.4: etapa no Painel RH; etapaEm = última mudança; respondidaEm = primeira saída de "nova"
+  /// (tempo até a primeira resposta); contatoLiberadoEm = quando foi para Entrevista (2.4c, D4).
+  etapa             EtapaCandidatura  @default(nova)
+  etapaEm           DateTime?
+  respondidaEm      DateTime?
+  contatoLiberadoEm DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   @@unique([candidateId, vacancyId])
   @@index([candidateId])
   @@index([candidateId, createdAt])
   @@index([vacancyId])
   @@index([companyId])
+  @@index([vacancyId, etapa])
   @@index([loteId])
 }
 
@@ -494,7 +512,7 @@ model TwoFactor {
 // Trechos dos artigos de ajuda (content/ajuda) com vetor bge-m3. O Worker refaz o índice de um
 // idioma quando a versão (hash do texto dos artigos) muda; ver lib/ajuda-ia.ts.
 model AjudaTrecho {
-  id        String                      @id @default(cuid())
+  id        String                       @id @default(cuid())
   idioma    String
   versao    String
   slug      String
@@ -502,7 +520,7 @@ model AjudaTrecho {
   secao     String
   texto     String
   embedding Unsupported("vector(1024)")?
-  createdAt DateTime                    @default(now())
+  createdAt DateTime                     @default(now())
 
   @@unique([idioma, slug, ordem])
   @@index([idioma, versao])

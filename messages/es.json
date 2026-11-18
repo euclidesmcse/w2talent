@@ -34,7 +34,9 @@
     "empresas": "Empresas",
     "publicar": "Publicar vacante",
     "publicarCurto": "Publicar",
-    "ajuda": "Ayuda"
+    "ajuda": "Ayuda",
+    "painelRh": "Panel de RR. HH.",
+    "painelRhCurto": "Panel"
   },
   "lang": {
     "label": "Idioma",
@@ -1182,5 +1184,42 @@
     "baixarXlsx": "Descargar Excel",
     "imprimirPdf": "Imprimir o PDF",
     "paraVaga": "Para la vacante: {vaga}"
+  },
+  "rh": {
+    "title": "Panel de RR. HH.",
+    "lead": "Las vacantes de {empresa} y las postulaciones recibidas.",
+    "gateTitle": "El panel de RR. HH. es para reclutadores",
+    "gateBody": "Inicia sesión con una cuenta de reclutador para ver las vacantes y postulaciones de tu empresa.",
+    "gateCandidate": "Esta cuenta es de candidato. Para ver el panel de RR. HH., inicia sesión con una cuenta de reclutador.",
+    "semEmpresaTitle": "Primero registra tu empresa",
+    "semEmpresaBody": "El panel muestra las vacantes y postulaciones de la empresa vinculada a tu cuenta.",
+    "irEmpresa": "Ir a Mi empresa",
+    "erro": "No se pudo cargar el panel. Inténtalo de nuevo en un momento.",
+    "tentar": "Reintentar",
+    "numerosTitle": "Números de la empresa",
+    "vagasAtivas": "Vacantes activas",
+    "vencendo": "Vencen en hasta 3 días",
+    "candidaturas": "Postulaciones",
+    "novas": "Nuevas, sin respuesta",
+    "tempoMedio": "Tiempo hasta la primera respuesta",
+    "taxaResposta": "Tasa de respuesta",
+    "semDado": "Aún sin datos",
+    "horas": "{n} h",
+    "dias": "{n} días",
+    "pct": "{n}%",
+    "vagasTitle": "Vacantes",
+    "vagasVazioTitle": "Ninguna vacante publicada",
+    "vagasVazioBody": "Publica la primera vacante para recibir postulaciones.",
+    "publicar": "Publicar vacante",
+    "colVaga": "Vacante",
+    "colSituacao": "Estado",
+    "colCandidaturas": "Postulaciones",
+    "colNovas": "Nuevas",
+    "situacao_ativa": "Activa",
+    "situacao_vencendo": "Vence el {data}",
+    "situacao_vencida": "Vencida",
+    "situacao_arquivada": "Archivada",
+    "compativeis": "Candidatos compatibles",
+    "compativeisLabel": "Candidatos compatibles con {vaga}"
   }
 }

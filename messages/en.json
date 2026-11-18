@@ -34,7 +34,9 @@
     "empresas": "Companies",
     "publicar": "Post a job",
     "publicarCurto": "Post",
-    "ajuda": "Help"
+    "ajuda": "Help",
+    "painelRh": "HR dashboard",
+    "painelRhCurto": "Dashboard"
   },
   "lang": {
     "label": "Language",
@@ -1182,5 +1184,42 @@
     "baixarXlsx": "Download Excel",
     "imprimirPdf": "Print or PDF",
     "paraVaga": "For the job: {vaga}"
+  },
+  "rh": {
+    "title": "HR dashboard",
+    "lead": "{empresa}'s jobs and the applications they received.",
+    "gateTitle": "The HR dashboard is for recruiters",
+    "gateBody": "Sign in with a recruiter account to see your company's jobs and applications.",
+    "gateCandidate": "This is a candidate account. To see the HR dashboard, sign in with a recruiter account.",
+    "semEmpresaTitle": "Register your company first",
+    "semEmpresaBody": "The dashboard shows the jobs and applications of the company linked to your account.",
+    "irEmpresa": "Go to My company",
+    "erro": "Could not load the dashboard. Try again in a moment.",
+    "tentar": "Try again",
+    "numerosTitle": "Company numbers",
+    "vagasAtivas": "Active jobs",
+    "vencendo": "Expire within 3 days",
+    "candidaturas": "Applications",
+    "novas": "New, no reply yet",
+    "tempoMedio": "Time to first reply",
+    "taxaResposta": "Reply rate",
+    "semDado": "No data yet",
+    "horas": "{n} h",
+    "dias": "{n} days",
+    "pct": "{n}%",
+    "vagasTitle": "Jobs",
+    "vagasVazioTitle": "No jobs published",
+    "vagasVazioBody": "Publish your first job to receive applications.",
+    "publicar": "Publish job",
+    "colVaga": "Job",
+    "colSituacao": "Status",
+    "colCandidaturas": "Applications",
+    "colNovas": "New",
+    "situacao_ativa": "Active",
+    "situacao_vencendo": "Expires {data}",
+    "situacao_vencida": "Expired",
+    "situacao_arquivada": "Archived",
+    "compativeis": "Matching candidates",
+    "compativeisLabel": "Candidates matching {vaga}"
   }
 }
