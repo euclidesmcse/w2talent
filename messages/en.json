@@ -452,6 +452,7 @@
         "compose_message": "Write message",
         "translate_ui": "Translate interface",
         "translate_content": "Translate content",
+        "translate_profile": "Translate the W2 Profile",
         "embed": "Meaning search (embeddings)"
       }
     },
@@ -499,6 +500,18 @@
     "erroInvalido": "This link is not valid. Open the email and click the button again.",
     "erroPerfil": "We couldn't find your profile. It may have been deleted already.",
     "erroGeral": "That didn't work right now. Try again in a few minutes."
+  },
+  "traducaoFicha": {
+    "aviso": "Automatic translation. Original in {lingua}.",
+    "avisoVarias": "Some texts were translated automatically. Downloaded files keep the original text.",
+    "avisoOriginal": "Original text, in {lingua}.",
+    "avisoVariasOriginal": "Showing the original texts.",
+    "verOriginal": "See original",
+    "verTraducao": "See translation",
+    "lingua_pt": "Portuguese",
+    "lingua_en": "English",
+    "lingua_es": "Spanish",
+    "lingua_outro": "another language"
   },
   "ficha": {
     "title": "My profile",

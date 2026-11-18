@@ -452,6 +452,7 @@
         "compose_message": "Escribir mensaje",
         "translate_ui": "Traducir la interfaz",
         "translate_content": "Traducir contenido",
+        "translate_profile": "Traducir la Ficha W2",
         "embed": "Búsqueda por significado (embeddings)"
       }
     },
@@ -499,6 +500,18 @@
     "erroInvalido": "Este enlace no es válido. Abre el correo y haz clic en el botón otra vez.",
     "erroPerfil": "No encontramos tu perfil. Puede que ya se haya borrado.",
     "erroGeral": "No funcionó ahora. Inténtalo de nuevo en unos minutos."
+  },
+  "traducaoFicha": {
+    "aviso": "Traducción automática. Original en {lingua}.",
+    "avisoVarias": "Algunos textos se tradujeron automáticamente. Los archivos descargados mantienen el texto original.",
+    "avisoOriginal": "Texto original, en {lingua}.",
+    "avisoVariasOriginal": "Mostrando los textos originales.",
+    "verOriginal": "Ver original",
+    "verTraducao": "Ver traducción",
+    "lingua_pt": "portugués",
+    "lingua_en": "inglés",
+    "lingua_es": "español",
+    "lingua_outro": "otro idioma"
   },
   "ficha": {
     "title": "Mi ficha",

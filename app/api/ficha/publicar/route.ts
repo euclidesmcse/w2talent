@@ -40,6 +40,14 @@ export async function POST(req: NextRequest) {
       const { indexCandidate } = await import("@/lib/indexing");
       await indexCandidate(p.userId);
     });
+    // 2.7b: o texto mudou (ou a ficha acabou de ser publicada): traduz para os outros idiomas em segundo plano.
+    // A tradução nunca impede a publicação; o Cron diário pega o que ficar para trás.
+    try {
+      const { pedirTraducaoFichas } = await import("@/lib/traducao");
+      await pedirTraducaoFichas(prisma, [p.id], 1);
+    } catch (e) {
+      console.warn("[ficha/publicar] tradução não pedida:", e instanceof Error ? e.name : e);
+    }
     return NextResponse.json({ ok: true, id: p.id }, { headers: { "cache-control": "no-store" } });
   } catch (e) {
     console.error("[ficha/publicar] falhou:", e instanceof Error ? e.name : e);

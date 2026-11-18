@@ -14,6 +14,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { linkEntrar, useConta } from "@/lib/conta-client";
 import { selectionStore } from "@/lib/selection-store";
 import { useLinhasComparacao } from "@/components/comparar-linhas";
+import { aplicarTraducaoFicha, TraducaoFichaAviso } from "@/components/traducao-ficha";
 import type { VagaOpcao } from "@/components/candidatos-filtros";
 import type { ItemComparacao } from "@/lib/comparar";
 import { gerarCsv, gerarXlsx, nomeArquivo, separadorCsv, tabelaPorCandidato } from "@/lib/exportar";
@@ -91,7 +92,7 @@ export default function CompararPage() {
     fetch("/api/candidates/comparar", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ ids, vaga }),
+      body: JSON.stringify({ ids, vaga, lang: locale }),
     })
       .then(async (r) => {
         if (meu !== ultimo.current) return;
@@ -110,11 +111,16 @@ export default function CompararPage() {
         setEstado(itensAtuais.length ? { t: "pronto", itens: itensAtuais, fora: j.fora.length, vaga: j.vaga } : { t: "vazio" });
       })
       .catch(() => { if (meu === ultimo.current) setEstado({ t: "erro" }); });
-  }, [liberado, pronto, vaga]);
+  }, [liberado, pronto, vaga, locale]);
 
   const itens = estado.t === "pronto" ? estado.itens : [];
   const comVaga = estado.t === "pronto" && !!estado.vaga;
+  // Os arquivos (CSV, Excel) saem com o texto original: são o registro. A tela mostra a tradução (2.7b).
   const linhas = useLinhasComparacao(itens, comVaga);
+  const [verOriginal, setVerOriginal] = React.useState(false);
+  const traduzidos = itens.filter((it) => it.traducao);
+  const itensTela = React.useMemo(() => (verOriginal ? itens : itens.map((it) => aplicarTraducaoFicha(it))), [itens, verOriginal]);
+  const linhasTela = useLinhasComparacao(itensTela, comVaga);
   const voltar = `/candidatos${vaga ? `?vaga=${encodeURIComponent(vaga)}` : ""}`;
 
   // 2.3b: o sinal "exportou" vai em segundo plano; o arquivo não depende dele.
@@ -210,6 +216,11 @@ export default function CompararPage() {
 
         {estado.t === "pronto" && (
           <>
+            {traduzidos.length ? (
+              <div className="mt-4 print:hidden">
+                <TraducaoFichaAviso texto="avisoVarias" idiomaOrigem={traduzidos[0].traducao?.idiomaOrigem ?? ""} original={verOriginal} onAlternar={() => setVerOriginal((v) => !v)} />
+              </div>
+            ) : null}
             <div className="mt-5 overflow-x-auto rounded-card border border-line bg-surface print:overflow-visible print:border-0" data-testid="comparar-tabela">
               <table className="w-full border-collapse text-sm">
                 <caption className="sr-only">{t("caption", { n: itens.length })}</caption>
@@ -229,12 +240,18 @@ export default function CompararPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {linhas.map((l) => (
+                  {linhasTela.map((l, k) => (
                     <tr key={l.chave} className="border-t border-line-soft" data-linha={l.chave}>
                       <th scope="row" className="sticky left-0 z-10 bg-surface px-3 py-3 text-left align-top text-[13px] font-medium text-muted">{l.rotulo}</th>
-                      {l.valores.map((v, i) => (
-                        <td key={itens[i].id} className="whitespace-pre-line px-3 py-3 align-top text-ink">{v}</td>
-                      ))}
+                      {l.valores.map((v, i) => {
+                        // O PDF (impressão) sai com o texto original, como os outros arquivos.
+                        const orig = linhas[k]?.valores[i] ?? v;
+                        return (
+                          <td key={itens[i].id} className="whitespace-pre-line px-3 py-3 align-top text-ink">
+                            {orig === v ? v : <><span className="print:hidden">{v}</span><span className="hidden print:inline">{orig}</span></>}
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))}
                 </tbody>
