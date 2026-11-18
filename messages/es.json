@@ -920,7 +920,11 @@
     "ajudaTarefa": "Preguntas en Ayuda",
     "ajudaFaz": "Busca en los artículos de ayuda los fragmentos más cercanos a la pregunta y escribe una respuesta corta solo con ellos, con el enlace del artículo. Si los artículos no responden, lo dice y ofrece enviar la pregunta al equipo.",
     "ajudaDados": "La pregunta, sin correo ni teléfono, y los artículos de ayuda. Nada de tu cuenta. Las preguntas sin respuesta se guardan 90 días, sin IP ni cuenta, para mejorar los artículos.",
-    "ajudaDecide": "Revisas el artículo del enlace. Lo que la IA no sabe, lo responde el equipo."
+    "ajudaDecide": "Revisas el artículo del enlace. Lo que la IA no sabe, lo responde el equipo.",
+    "traducaoTarefa": "Traducción automática",
+    "traducaoFaz": "Traduce el título, la descripción y los beneficios de las vacantes al portugués, inglés y español, para que cada persona las lea en el idioma del sitio. Los nombres de tecnología, los números y los contactos no cambian; la traducción que los altera se descarta.",
+    "traducaoDados": "Solo el texto de la vacante, sin correo ni teléfono.",
+    "traducaoDecide": "Tú. La traducción aparece marcada y el botón \"Ver original\" muestra el texto que escribió la empresa. Quien la publicó sigue viendo solo el original."
   },
   "empresa": {
     "title": "Mi empresa",
@@ -1326,5 +1330,10 @@
     "erroPrazo": "Ya no se puede cambiar esta entrevista por aquí.",
     "erroGeral": "No se pudo cargar o guardar ahora. Inténtalo de nuevo.",
     "minhas": "Ver mis postulaciones"
+  },
+  "traducao": {
+    "aviso": "Traducción automática",
+    "verOriginal": "Ver original",
+    "verTraducao": "Ver traducción"
   }
 }

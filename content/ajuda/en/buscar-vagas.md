@@ -27,3 +27,7 @@ The pills below the search (Cloud, Data, Front-end...) bring the most requested 
 ## Similar jobs
 
 When you open a job, up to 5 similar jobs show at the end of the details.
+
+## Automatic translation
+
+Jobs written in another language show translated into the site language, labeled "Automatic translation". Click "Show original" to read the text the company wrote and "Show translation" to go back. Technology names, numbers and contacts are not translated. A job just posted or edited may show in the original for a few minutes, until the translation is ready. See [how we use AI](/ia#traducao).

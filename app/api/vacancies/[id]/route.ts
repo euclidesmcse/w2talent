@@ -4,6 +4,7 @@ import { runInBackground } from "@/lib/background";
 import { indexVacancy, markForReindex } from "@/lib/indexing";
 import { exigirDonoDaVaga } from "@/lib/empresa";
 import { renovar } from "@/lib/vaga-renovar";
+import { pedirTraducaoDaVaga } from "@/lib/traducao-anexar";
 
 function parseIdFromUrl(req: NextRequest): string {
   const parts = new URL(req.url).pathname.split("/").filter(Boolean);
@@ -89,6 +90,8 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
     // 1.5.9: marca como pendente (o reindex pega se o vetor falhar) e refaz em segundo plano.
     await markForReindex("vacancy", updated.id, { db: prisma }).catch(() => {});
     runInBackground("reindexar vaga", () => indexVacancy(updated.id));
+    // 2.7a: texto mudou, a tradução antiga deixa de valer (hash); pede a nova em segundo plano.
+    await pedirTraducaoDaVaga(prisma, updated.id);
     return NextResponse.json({ ...updated, id: updated.id }, { status: 200 });
   } catch (e: any) {
     console.error("PUT vaga", e?.code ?? e?.name ?? "erro");

@@ -9,6 +9,7 @@ import { IaLink } from "@/components/ia-link";
 import { formatFaixa } from "@/lib/format";
 import { diaMes } from "@/lib/envio-client";
 import type { VagaResumo } from "@/lib/parecidas";
+import { VerOriginalContext, textoExibido } from "@/components/traducao-aviso";
 
 export function AvisoEnviada({ em }: { em?: string }) {
   const t = useTranslations("vagas");
@@ -26,16 +27,20 @@ export function VagasParecidas({ id, sentAt, onAbrir }: { id: string; sentAt?: R
   const t = useTranslations("vagas");
   const locale = useLocale();
   const [itens, setItens] = React.useState<VagaResumo[] | null>(null);
+  // 2.7a: segue o "Ver original" do detalhe em que a lista aparece.
+  const verOriginal = React.useContext(VerOriginalContext);
+  const tt = useTranslations("traducao");
 
   React.useEffect(() => {
     let vivo = true;
     setItens(null);
-    fetch(`/api/vacancies/${encodeURIComponent(id)}/parecidas`)
+    // lang no endereço: a resposta fica 5 min em cache e traz a tradução do idioma de quem vê.
+    fetch(`/api/vacancies/${encodeURIComponent(id)}/parecidas?lang=${encodeURIComponent(locale)}`)
       .then((r) => (r.ok ? (r.json() as Promise<{ items?: VagaResumo[] }>) : { items: [] }))
       .then((j) => { if (vivo) setItens(j.items ?? []); })
       .catch(() => { if (vivo) setItens([]); });
     return () => { vivo = false; };
-  }, [id]);
+  }, [id, locale]);
 
   if (!itens?.length) return null;
   return (
@@ -50,6 +55,7 @@ export function VagasParecidas({ id, sentAt, onAbrir }: { id: string; sentAt?: R
             .filter((x) => x && x !== "—")
             .join(" · ");
           const enviada = sentAt?.[v.id];
+          const texto = textoExibido(v, verOriginal);
           return (
             <li key={v.id}>
               <button
@@ -65,7 +71,8 @@ export function VagasParecidas({ id, sentAt, onAbrir }: { id: string; sentAt?: R
                 }}
                 className="flex w-full flex-col gap-0.5 rounded-card border border-line bg-surface px-3.5 py-2.5 text-left hover:border-brand"
               >
-                <span className="font-semibold text-ink">{v.titulo}</span>
+                <span className="font-semibold text-ink" lang={texto.lang}>{texto.titulo}</span>
+                {texto.traduzida && !verOriginal ? <span className="text-xs text-muted">{tt("aviso")}</span> : null}
                 <span className="text-[13px] text-muted">{linha}</span>
                 {enviada ? <span className="text-xs font-medium text-success-ink">{t("sentOn", { date: diaMes(enviada, locale) })}</span> : null}
               </button>

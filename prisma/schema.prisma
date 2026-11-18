@@ -156,6 +156,7 @@ model CandidateProfile {
   applications Application[]
   aprovacoes   ApplicationApproval[]
   sinais       FeedbackSignal[]
+  traducoes    Traducao[]
 
   @@index([status])
   @@index([expiresAt])
@@ -197,6 +198,7 @@ model Vacancy {
   applications Application[]
   aprovacoes   ApplicationApproval[]
   sinais       FeedbackSignal[]
+  traducoes    Traducao[]
 
   @@index([status])
   @@index([expiresAt])
@@ -582,4 +584,25 @@ model PerguntaSemResposta {
   createdAt     DateTime @default(now())
 
   @@index([createdAt])
+}
+
+/// 2.7 Tradução automática: cópia traduzida do texto escrito por pessoas (vaga; ficha no 2.7b).
+/// Vale só enquanto hashOrigem bate com o texto atual; apaga junto com a vaga ou a ficha.
+model Traducao {
+  id           String            @id @default(cuid())
+  vacancyId    String?
+  vacancy      Vacancy?          @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
+  candidateId  String?
+  candidate    CandidateProfile? @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  idioma       String // pt-BR | en | es (destino)
+  idiomaOrigem String // idioma em que o texto foi escrito, segundo a IA
+  hashOrigem   String // sha-256 do texto original traduzido
+  /// Campos traduzidos; null quando o texto já está no idioma de destino.
+  conteudo     Json?
+  modelo       String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@unique([vacancyId, idioma])
+  @@unique([candidateId, idioma])
 }

@@ -8,6 +8,7 @@ import { MatchCell } from "@/components/vacancy-match";
 import type { MatchGap } from "@/lib/match";
 import { diaMes } from "@/lib/envio-client";
 import { NaoVerificada } from "@/components/empresa-etiqueta";
+import { TraducaoAviso, textoExibido, type TraducaoAnexada } from "@/components/traducao-aviso";
 // breakpoints: 360 / 768 / 1024 / 1280 — Tailwind screens xs/md/lg/xl (see tailwind.config.js)
 // next-intl: colunas via messages/pt-BR.json, en.json — fallback PT-BR (i18n.ts t())
 // PWA: manifest.json linked in layout.tsx
@@ -33,7 +34,23 @@ export type VacancyRow = {
   /** 1.5.12: match com a busca (null quando a busca não tem critério) e o que falta. */
   match?: number | null;
   gaps?: MatchGap[];
+  /** 2.7a: tradução automática no idioma de quem vê (null: sem tradução pronta ou já neste idioma). */
+  traducao?: TraducaoAnexada | null;
 };
+
+/** 2.7a: vagas em que a pessoa pediu "Ver original" (uma escolha por vaga). */
+export function useOriginais(): [Set<string>, (id: string) => void] {
+  const [originais, setOriginais] = React.useState<Set<string>>(() => new Set());
+  const alternar = React.useCallback((id: string) => {
+    setOriginais((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  }, []);
+  return [originais, alternar];
+}
 
 function getSkillIds(row: VacancyRow): string[] {
   if (!Array.isArray(row.stack)) return [];
@@ -61,6 +78,7 @@ export function VacancyTable({
   const t = useTranslations();
   const locale = useLocale();
   const showMatch = items.some((r) => r.match != null);
+  const [originais, alternarOriginal] = useOriginais();
 
   return (
     <table aria-label={t("vagas.tableLabel")} className="vacancy-table w-full min-w-[760px] border-collapse text-sm tabular-nums">
@@ -87,6 +105,7 @@ export function VacancyTable({
           const telRaw = row.telefone ?? row.contato?.telefone ?? "";
           const contatoMascarado = [emailRaw ? maskEmail(emailRaw) : "", telRaw ? maskPhone(telRaw) : ""].filter(Boolean).join(" · ");
           const subtitulo = [row.company?.nome, row.nivel].filter(Boolean).join(" · ");
+          const texto = textoExibido(row, originais.has(row.id));
           return (
             <tr
               key={row.id}
@@ -97,7 +116,7 @@ export function VacancyTable({
               <td className="py-3.5 pl-4 pr-2 align-top">
                 <input
                   type="checkbox"
-                  aria-label={t("table.selectItem", { name: row.titulo })}
+                  aria-label={t("table.selectItem", { name: texto.titulo })}
                   data-select-id={row.id}
                   checked={isSelected}
                   disabled={!!enviadaEm}
@@ -106,8 +125,8 @@ export function VacancyTable({
                 />
               </td>
               <td className="px-2 py-3.5 align-top">
-                <button type="button" onClick={() => onOpenDetail?.(row.id)} className="vacancy-identidade text-left font-semibold text-ink hover:text-brand">
-                  {row.titulo}
+                <button type="button" onClick={() => onOpenDetail?.(row.id)} className="vacancy-identidade text-left font-semibold text-ink hover:text-brand" lang={texto.lang}>
+                  {texto.titulo}
                 </button>
                 <div className="mt-0.5 text-[13px] text-muted">
                   {subtitulo}
@@ -117,6 +136,7 @@ export function VacancyTable({
                     </span>
                   ) : null}
                 </div>
+                {texto.traduzida ? <div className="mt-1"><TraducaoAviso verOriginal={originais.has(row.id)} onAlternar={() => alternarOriginal(row.id)} /></div> : null}
                 {row.company?.verificada === false ? <div className="mt-1.5"><NaoVerificada company={row.company} /></div> : null}
                 {enviadaEm ? <div className="mt-1.5"><span data-enviada={row.id} className="inline-flex items-center gap-1 rounded-pill bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success-ink"><span aria-hidden>✓</span>{t("vagas.sentOn", { date: diaMes(enviadaEm, locale) })}</span></div> : null}
               </td>
