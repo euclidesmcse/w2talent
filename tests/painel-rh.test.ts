@@ -41,6 +41,11 @@ describe("montarResumo", () => {
     expect(r.vagas.find((v) => v.id === "x")!.total).toBe(0);
   });
 
+  it("com a lista cortada, vagas ativas e vencendo vêm da contagem da empresa toda", () => {
+    const r = montarResumo(vagas, [], { n: 0, segundos: null }, NOW, { ativas: 250, vencendo: 7 });
+    expect([r.metricas.vagasAtivas, r.metricas.vencendo]).toEqual([250, 7]);
+  });
+
   it("sem candidaturas, tempo e taxa ficam sem dado", () => {
     const r = montarResumo(vagas, [], { n: 0, segundos: null }, NOW);
     expect(r.metricas.tempoMedioHoras).toBeNull();

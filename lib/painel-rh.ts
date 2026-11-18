@@ -53,12 +53,14 @@ const zeradas = (): Record<Etapa, number> => Object.fromEntries(ETAPAS.map((e) =
 
 const ORDEM_SITUACAO: Record<SituacaoVaga, number> = { vencendo: 0, ativa: 1, vencida: 2, arquivada: 3 };
 
-/** Junta vagas e contagens. Ordem: vencendo, ativas, vencidas, arquivadas; dentro, mais novas primeiro. */
+/** Junta vagas e contagens. Ordem: vencendo, ativas, vencidas, arquivadas; dentro, a ordem que vier do banco (vencendo: a que vence antes primeiro). */
 export function montarResumo(
   vagas: VagaDb[],
   contagens: ContagemDb[],
   respostas: { n: number; segundos: number | null },
   now: Date,
+  /** Contagem de vagas da empresa toda; a lista pode estar cortada em RH_MAX_VAGAS. */
+  totaisVagas?: { ativas: number; vencendo: number },
 ): ResumoRh {
   const porVaga = new Map<string, Record<Etapa, number>>();
   let candidaturas = 0;
@@ -80,8 +82,8 @@ export function montarResumo(
   const respondidas = candidaturas - novas;
   return {
     metricas: {
-      vagasAtivas: lista.filter((v) => v.situacao === "ativa" || v.situacao === "vencendo").length,
-      vencendo: lista.filter((v) => v.situacao === "vencendo").length,
+      vagasAtivas: totaisVagas?.ativas ?? lista.filter((v) => v.situacao === "ativa" || v.situacao === "vencendo").length,
+      vencendo: totaisVagas?.vencendo ?? lista.filter((v) => v.situacao === "vencendo").length,
       candidaturas,
       novas,
       respondidas,
@@ -92,15 +94,21 @@ export function montarResumo(
   };
 }
 
-/** Tudo da empresa em três consultas: vagas, contagem por vaga e etapa, média de tempo até a resposta. */
+/**
+ * Tudo da empresa: vagas (lista cortada em RH_MAX_VAGAS, ativas antes das arquivadas), contagem de
+ * vagas ativas e vencendo da empresa toda, contagem por vaga e etapa, média de tempo até a resposta.
+ */
 export async function resumoDaEmpresa(db: PrismaClient, companyId: string, now = new Date()): Promise<ResumoRh> {
-  const [vagas, grupos, media] = await Promise.all([
+  const limiteVence = new Date(now.getTime() + VENCE_EM_DIAS * 864e5);
+  const [vagas, ativas, vencendo, grupos, media] = await Promise.all([
     db.vacancy.findMany({
       where: { companyId },
       select: { id: true, titulo: true, status: true, expiresAt: true },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ status: "asc" }, { expiresAt: "desc" }],
       take: RH_MAX_VAGAS,
     }),
+    db.vacancy.count({ where: { companyId, status: "ativa", expiresAt: { gt: now } } }),
+    db.vacancy.count({ where: { companyId, status: "ativa", expiresAt: { gt: now, lte: limiteVence } } }),
     db.application.groupBy({
       by: ["vacancyId", "etapa"],
       where: { companyId, origem: "candidaturaLote" },
@@ -116,5 +124,6 @@ export async function resumoDaEmpresa(db: PrismaClient, companyId: string, now =
     grupos.map((g) => ({ vacancyId: g.vacancyId, etapa: g.etapa as Etapa, n: g._count._all })),
     media[0] ?? { n: 0, segundos: null },
     now,
+    { ativas, vencendo },
   );
 }
