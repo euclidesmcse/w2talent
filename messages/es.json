@@ -33,7 +33,8 @@
     "empresaCurto": "Empresa",
     "empresas": "Empresas",
     "publicar": "Publicar vacante",
-    "publicarCurto": "Publicar"
+    "publicarCurto": "Publicar",
+    "ajuda": "Ayuda"
   },
   "lang": {
     "label": "Idioma",
@@ -1088,5 +1089,20 @@
         "falha": "No se pudieron sugerir preguntas ahora. Inténtalo de nuevo."
       }
     }
+  },
+  "ajuda": {
+    "metaTitle": "Ayuda · W2Talent",
+    "metaDescription": "Artículos cortos sobre cómo usar W2Talent: ficha, vacantes, postulaciones, empresa y privacidad.",
+    "title": "Ayuda",
+    "lead": "Respuestas cortas sobre cómo usar W2Talent.",
+    "sobreEstaTela": "Sobre la pantalla donde estabas",
+    "grupoComecar": "Para todos",
+    "grupoCandidato": "Para candidatos",
+    "grupoRecrutador": "Para reclutadores",
+    "naoAchou": "¿No encontraste lo que buscabas? Escribe a <email></email>.",
+    "voltar": "← Todos los artículos",
+    "trilha": "Navegación de la ayuda",
+    "outros": "Lee también",
+    "link": "Ayuda"
   }
 }

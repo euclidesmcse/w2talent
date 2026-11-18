@@ -25,6 +25,17 @@ export function AppHeader({ area, active, right, suffix }: { area?: Area; active
         <div className="flex shrink-0 items-center gap-1 md:gap-3">
           <InstallApp />
           <LanguageSwitcher />
+          {/* 2.6a: ajuda em todas as áreas; leva junto a tela atual para mostrar os artigos dela primeiro */}
+          {area !== "admin" ? (
+            <Link
+              href={active ? `/ajuda?de=${encodeURIComponent(active)}` : "/ajuda"}
+              data-link-ajuda
+              className="inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-pill px-2 text-sm font-medium text-ink-soft hover:bg-canvas hover:text-ink hover:no-underline"
+            >
+              <span aria-hidden className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-current text-[12px] font-semibold leading-none">?</span>
+              <span className="sr-only md:not-sr-only">{t("ajuda")}</span>
+            </Link>
+          ) : null}
           {troca ? <TrocaDeArea href={troca.href}>{t(troca.key)}</TrocaDeArea> : null}
           {area !== "admin" ? <ContaMenu /> : null}
           {right}
