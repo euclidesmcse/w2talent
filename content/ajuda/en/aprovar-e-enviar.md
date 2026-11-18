@@ -23,5 +23,6 @@ To send, you need to sign in as a candidate and have your profile published.
 - The same job is never sent twice.
 - If the company changes the job after you approved it, the approval drops and the job comes back for you to check.
 - Expired or archived jobs are not sent.
+- The company gets it by e-mail and, if it turned on the ATS integration, also in its hiring system. The content is the same, without your e-mail and phone.
 
 After sending, follow up in [My applications](/minhas-candidaturas).

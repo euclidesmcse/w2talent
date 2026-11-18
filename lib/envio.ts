@@ -19,6 +19,7 @@ import { formatPretensoes, nomeRegime } from "./format";
 import { getSkill } from "./taxonomy";
 import { emailLocale, renderCandidaturaEmail } from "./email-templates";
 import type { EmailMessage } from "./email";
+import type { MensagemWebhook } from "./fila";
 import { entrevistasDasCandidaturas } from "./entrevista";
 import { gravarSinais, registrarSinal, type Sinal } from "./sinais";
 import { partesParaSinal } from "./ranking";
@@ -289,7 +290,13 @@ export async function enviarCandidaturas(
   db: PrismaClient,
   perfil: PerfilEnvio,
   vacancyIdsBrutos: unknown,
-  opts: { now?: Date; loteId?: string; enviarEmail?: (m: EmailMessage) => Promise<void> } = {},
+  opts: {
+    now?: Date;
+    loteId?: string;
+    enviarEmail?: (m: EmailMessage) => Promise<void>;
+    /** 3.4a: põe na fila o evento "candidatura.recebida" para a empresa com webhook ligado. */
+    enviarWebhook?: (m: MensagemWebhook) => Promise<void>;
+  } = {},
 ): Promise<ResultadoEnvio> {
   const now = opts.now ?? new Date();
   const todos = limparIds(vacancyIdsBrutos, 100);
@@ -331,6 +338,7 @@ export async function enviarCandidaturas(
       return { ok: false as const, erro: "limite_dia" as const, max: ENVIO_LIMITE_24H, usadas24h: usadas, restantes: Math.max(0, ENVIO_LIMITE_24H - usadas) };
     }
     const emails: { applicationId: string; mensagem: EmailMessage }[] = [];
+    const criadas: { applicationId: string; companyId: string }[] = [];
     for (const v of prontas) {
       const proxyThreadId = novoProxyThreadId();
       // O e-mail é montado agora, com o perfil e a vaga que a pessoa aprovou, e guardado com a
@@ -354,10 +362,11 @@ export async function enviarCandidaturas(
       await tx.vacancy.update({ where: { id: v.id }, data: { candidaturasCount: { increment: 1 } } });
       itens.push({ vacancyId: v.id, status: "enviada", applicationId: app.id, email: !!v.company.emailContato });
       if (mensagem) emails.push({ applicationId: app.id, mensagem });
+      criadas.push({ applicationId: app.id, companyId: v.companyId });
       sinais.push({ tipo: "candidatura_enviada", ator: "candidato", candidateId: perfil.id, vacancyId: v.id, applicationId: app.id, matchPct: match.pct, dados: { loteId, ...partesParaSinal(match.partes) }, createdAt: now });
     }
     await gravarSinais(tx, sinais);
-    return { ok: true as const, itens, usadas24h: usadas + prontas.length, emails };
+    return { ok: true as const, itens, usadas24h: usadas + prontas.length, emails, criadas };
   });
 
   if (!r.ok) return r;
@@ -370,6 +379,13 @@ export async function enviarCandidaturas(
       // (reenviarEmailsPendentes) com o mesmo conteúdo.
       console.error(`[envio] e-mail da candidatura ${e.applicationId} não entrou na fila:`, err instanceof Error ? err.message : err);
     }
+  }
+  // 3.4a: o sistema da empresa (ATS) recebe a candidatura. Nunca quebra o envio (enfileirarRecebidas não lança).
+  if (opts.enviarWebhook && r.criadas.length) {
+    const enviarWebhook = opts.enviarWebhook;
+    await import("./webhook")
+      .then(({ enfileirarRecebidas }) => enfileirarRecebidas(db, r.criadas, enviarWebhook, now))
+      .catch((err) => console.error("[envio] webhooks não entraram na fila:", err instanceof Error ? err.message : err));
   }
   // Na ordem em que a pessoa mandou.
   const ordem = new Map(todos.map((id, i) => [id, i]));

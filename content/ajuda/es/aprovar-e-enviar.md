@@ -23,5 +23,6 @@ Para enviar necesitas iniciar sesión como candidato y tener la ficha publicada.
 - La misma vacante nunca se envía dos veces.
 - Si la empresa cambia la vacante después de tu aprobación, la aprobación se cae y la vacante vuelve para que la revises.
 - Las vacantes vencidas o archivadas no se envían.
+- La empresa la recibe por e-mail y, si activó la integración con ATS, también en su sistema de selección. El contenido es el mismo, sin tu e-mail ni teléfono.
 
 Después del envío, sigue todo en [Mis postulaciones](/minhas-candidaturas).
