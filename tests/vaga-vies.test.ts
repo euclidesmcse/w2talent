@@ -19,6 +19,9 @@ describe("revisor de viés — regras", () => {
     expect(regras("Programa Jovem Aprendiz")).toEqual([]);
     expect(regras("Experiência com fotografia de produto")).toEqual([]);
     expect(regras("Salário atrativo, attractive package")).toEqual([]);
+    expect(regras("Desenvolvimento nativo em iOS e Android")).toEqual([]);
+    expect(regras("Excellent health insurance")).toEqual([]);
+    expect(regras("Fluente, nativo em inglês")).toEqual(["nativo"]);
   });
 
   it("gênero, aparência, origem, família, saúde e religião", () => {

@@ -66,8 +66,8 @@ Schema: {"titulo": string, "descricaoBullets": [string], "beneficios": [string]}
 
 export type Reescrita = TextoVaga & { restantes: number };
 
-/** Proposta de texto sem os termos apontados. Null quando a IA falha ou não muda nada. */
-export async function reescreverSemVies(v: TextoVaga, chat: ChatExtraFn): Promise<Reescrita | null> {
+/** Proposta de texto sem os termos apontados. "igual" quando a IA respondeu sem mudar nada; null quando falha. */
+export async function reescreverSemVies(v: TextoVaga, chat: ChatExtraFn): Promise<Reescrita | "igual" | null> {
   const avisos = avisosDoTexto(v);
   const entrada = {
     titulo: redactContacts(v.titulo),
@@ -100,7 +100,7 @@ export async function reescreverSemVies(v: TextoVaga, chat: ChatExtraFn): Promis
       descricaoBullets: limpo.descricaoBullets.length || !v.descricaoBullets.length ? limpo.descricaoBullets : v.descricaoBullets,
       beneficios: limpo.beneficios.length || !v.beneficios.length ? limpo.beneficios : v.beneficios,
     };
-    if (JSON.stringify(out) === JSON.stringify({ titulo: v.titulo, descricaoBullets: v.descricaoBullets, beneficios: v.beneficios })) return null;
+    if (JSON.stringify(out) === JSON.stringify({ titulo: v.titulo, descricaoBullets: v.descricaoBullets, beneficios: v.beneficios })) return "igual";
     return { ...out, restantes: avisosDoTexto(out).length };
   } catch (e) {
     console.warn("[vaga] reescrita sem viés falhou:", e instanceof Error ? e.name : e);

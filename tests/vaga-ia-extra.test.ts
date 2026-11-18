@@ -20,7 +20,7 @@ describe("reescrita sem viés", () => {
   });
 
   it("lista vazia ou título vazio da IA não apaga o texto do recrutador", async () => {
-    const p = await reescreverSemVies(texto, resposta({ titulo: "", descricaoBullets: ["Pessoa proativa"], beneficios: [] }));
+    const p = (await reescreverSemVies(texto, resposta({ titulo: "", descricaoBullets: ["Pessoa proativa"], beneficios: [] }))) as Exclude<Awaited<ReturnType<typeof reescreverSemVies>>, "igual">;
     expect(p?.titulo).toBe("Vendedor");
     expect(p?.beneficios).toEqual(["VR"]);
   });
@@ -30,15 +30,15 @@ describe("reescrita sem viés", () => {
     expect(textoParaRevisar(longo)).toEqual(longo);
     expect(textoParaRevisar({ ...longo, beneficios: ["x".repeat(MAX_ITEM_REVISAR + 1)] })).toBeNull();
     expect(textoParaRevisar({ ...longo, descricaoBullets: [1, 2] })).toBeNull();
-    const p = await reescreverSemVies(longo, resposta({ ...longo, descricaoBullets: longo.descricaoBullets.map((b) => b.replace("jovem", "proativa")) }));
+    const p = (await reescreverSemVies(longo, resposta({ ...longo, descricaoBullets: longo.descricaoBullets.map((b) => b.replace("jovem", "proativa")) }))) as Exclude<Awaited<ReturnType<typeof reescreverSemVies>>, "igual">;
     expect(p?.descricaoBullets).toHaveLength(14);
     expect(p?.beneficios[0]).toHaveLength(318);
   });
 
-  it("IA quebrada, sem JSON ou sem mudança: null", async () => {
+  it("IA quebrada ou sem JSON: null; sem mudança: igual", async () => {
     expect(await reescreverSemVies(texto, async () => { throw new Error("x"); })).toBeNull();
     expect(await reescreverSemVies(texto, async () => ({ text: "oi" }))).toBeNull();
-    expect(await reescreverSemVies(texto, resposta(texto))).toBeNull();
+    expect(await reescreverSemVies(texto, resposta(texto))).toBe("igual");
   });
 });
 

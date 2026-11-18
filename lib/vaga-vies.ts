@@ -56,14 +56,14 @@ const REGRAS: Regra[] = [
   { id: "foto", categoria: "aparencia", padrao: `(?:foto|photo|picture)\\s+(?:no|en el|in your|on your|with your)\\s+(?:curr${I}culo|cv|resume)|(?:curr${I}culo|cv|resume)\\s+(?:com|con|with)\\s+(?:foto|photo|picture)|(?:enviar|envie|anexar|anexe|adjuntar|adjunte|send|attach)\\s+(?:uma\\s+|una\\s+|a\\s+)?(?:foto|photo|picture)|(?:foto|photo)\\s+(?:obrigat${O}ria|obligatoria|required)`, troca: "" },
   { id: "altura-peso", categoria: "aparencia", padrao: `(?:altura|estatura|height|peso|weight)\\s+(?:m${I}nima|m${A}xima|minimum|maximum|ideal)`, troca: null },
   // ── Origem ──
-  { id: "nativo", categoria: "origem", padrao: `(?:falante|hablante)\\s+nativ[oa]|native(?:\\s+(?:english|spanish|portuguese))?\\s+speaker|(?:ingl${E}s|espanhol|portugu${E}s|ingl${E}s|espa${N()}ol|english|spanish|portuguese)\\s+nativ[oa]|nativ[oa]\\s+(?:em|en)\\s+\\p{L}+|native\\s+(?:level\\s+)?(?:english|spanish|portuguese)`, troca: null },
+  { id: "nativo", categoria: "origem", padrao: `(?:falante|hablante)\\s+nativ[oa]|native(?:\\s+(?:english|spanish|portuguese))?\\s+speaker|(?:ingl${E}s|espanhol|portugu${E}s|ingl${E}s|espa${N()}ol|english|spanish|portuguese)\\s+nativ[oa]|nativ[oa]\\s+(?:em|en)\\s+(?:ingl${E}s|espanhol|espa${N()}ol|portugu${E}s|franc${E}s|alem${A}o|alem${A}n|italiano|english|spanish|portuguese)|native\\s+(?:level\\s+)?(?:english|spanish|portuguese)`, troca: null },
   { id: "nacionalidade", categoria: "origem", padrao: `brasileir[oa]s?\\s+nat[oa]s?|nacionalidade\\s+brasileira\\s+obrigat${O}ria`, troca: "" },
   // ── Família ──
   { id: "estado-civil", categoria: "familia", padrao: `estado civil|marital status`, troca: null },
   { id: "solteiro", categoria: "familia", padrao: `solteir[oa]s?|casad[oa]s?(?=\\s*(?:ou|o|,|\\.|$))|solter[oa]s?`, troca: "" },
   { id: "sem-filhos", categoria: "familia", padrao: `sem filhos|sin hijos|no children|without children`, troca: "" },
   // ── Saúde ──
-  { id: "boa-saude", categoria: "saude", padrao: `(?:boa|${O}tima|excelente|buena|good|excellent)\\s+(?:sa${U}de|salud|health)|sem defici${E}ncia|sin discapacidad|able[- ]bodied`, troca: "" },
+  { id: "boa-saude", categoria: "saude", padrao: `(?:boa|${O}tima|excelente|buena|good|excellent)\\s+(?:sa${U}de|salud|health)(?!\\s+(?:insurance|plan|care|coverage|benefits?))|sem defici${E}ncia|sin discapacidad|able[- ]bodied`, troca: "" },
   // ── Religião ──
   { id: "religiao", categoria: "religiao", padrao: `religi${A}o|religi${O}n|religion|evang${E}lic[oa]s?|cat${O}lic[oa]s?`, troca: "" },
 ];

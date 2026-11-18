@@ -1021,7 +1021,8 @@
         "limite_dia": "You reached today's rewrite limit. Use the replacements above or edit the text.",
         "sem_avisos": "There are no flagged terms to rewrite.",
         "mudou": "The text changed while AI was answering. Ask again to get a proposal for the current text.",
-        "texto_longo": "The text is too long for AI to review. Use the replacements above or edit the text."
+        "texto_longo": "The text is too long for AI to review. Use the replacements above or edit the text.",
+        "sem_mudanca": "AI found nothing to change in this text. Use the replacements above or edit the flagged parts."
       }
     },
     "perguntas": {

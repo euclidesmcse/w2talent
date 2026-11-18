@@ -192,7 +192,7 @@ export default function PublicarPage() {
         return setProposta({ ...j.proposta, chave });
       }
       if (r.status === 401 || r.status === 403) contaRecusada();
-      setErroVies(t(`vies.erros.${j.error === "limite_dia" || j.error === "sem_avisos" || j.error === "texto_longo" ? j.error : "ia_indisponivel"}`));
+      setErroVies(t(`vies.erros.${j.error === "limite_dia" || j.error === "sem_avisos" || j.error === "texto_longo" || j.error === "sem_mudanca" ? j.error : "ia_indisponivel"}`));
     } catch {
       setErroVies(t("vies.erros.ia_indisponivel"));
     } finally {

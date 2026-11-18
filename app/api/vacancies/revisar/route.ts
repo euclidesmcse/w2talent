@@ -39,6 +39,8 @@ export async function POST(req: NextRequest) {
   }
   const proposta = await reescreverSemVies(texto, chat);
   if (!proposta) return json({ error: "ia_indisponivel" }, 503);
+  // A IA respondeu, mas não mudou nada: não é falha (e pedir de novo só gastaria o limite do dia).
+  if (proposta === "igual") return json({ error: "sem_mudanca" }, 422);
   return json({ proposta });
 }
 
