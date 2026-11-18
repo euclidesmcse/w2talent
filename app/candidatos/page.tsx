@@ -90,26 +90,40 @@ export default function CandidatosPage() {
   }, [draft, q]);
   const submitSearch = (e: React.FormEvent) => { e.preventDefault(); setQ(draft); setPage(1); };
 
+  // Só a busca mais recente pode mexer na tela: respostas atrasadas são ignoradas.
+  const ultimaBusca = React.useRef(0);
   const fetchPage = React.useCallback(async (query: string, p: number, f: FiltrosCandidatos) => {
+    const minha = ++ultimaBusca.current;
     const lang = locale;
     const params = new URLSearchParams([["q", query], ["page", String(p)], ["pageSize", "20"], ["lang", lang], ...filtrosParaUrl(f)]);
     const res = await fetch(`/api/search/candidates?${params.toString()}`);
+    if (minha !== ultimaBusca.current) return false;
     if (res.status === 404 && f.vaga) {
-      // Vaga vencida, arquivada ou de outra empresa: tira a vaga e busca de novo.
+      // Vaga vencida, arquivada ou de outra empresa: tira a vaga (se ainda for a escolhida) e busca de novo.
       setVagaSumiu(true);
-      setFiltros({ ...f, vaga: undefined });
-      return;
+      setFiltros((atual) => (atual.vaga === f.vaga ? { ...atual, vaga: undefined } : atual));
+      return false;
     }
     const data = await res.json();
+    if (minha !== ultimaBusca.current) return false;
     setItems(data.items ?? []);
     setTotal(data.total ?? 0);
     setTotalPages(data.totalPages ?? 1);
     setSuggestion(data.suggestion ?? null);
     setEmptyCTA(data.emptyCTA ?? null);
     setLoaded(true);
+    return true;
   }, [locale]);
 
-  React.useEffect(() => { if (!liberado || !pronto) return; setSearching(true); fetchPage(q, page, filtros).catch(() => {}).finally(() => { setLoaded(true); setSearching(false); }); }, [q, page, filtros, fetchPage, liberado, pronto]);
+  React.useEffect(() => {
+    if (!liberado || !pronto) return;
+    setSearching(true);
+    const minha = ultimaBusca.current + 1;
+    fetchPage(q, page, filtros).catch(() => {}).finally(() => {
+      if (minha !== ultimaBusca.current) return;
+      setLoaded(true); setSearching(false);
+    });
+  }, [q, page, filtros, fetchPage, liberado, pronto]);
 
   const handleClearFilters = () => { setDraft(""); setQ(""); setFiltros((f) => ({ vaga: f.vaga, skills: [] })); setPage(1); };
   const handleUseSuggestion = (s: string) => { setDraft(s); setQ(s); setPage(1); };

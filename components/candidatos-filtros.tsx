@@ -35,7 +35,18 @@ export function CandidatosFiltros({
     setSkillsTexto(textoSkills(chaveSkills ? chaveSkills.split(",") : []));
   }, [chaveSkills]);
 
+  // Pretensão: o campo guarda o que se digita e só busca ao sair do campo ou no Enter.
+  const [faixa, setFaixa] = React.useState(() => (filtros.faixaAte ? String(filtros.faixaAte) : ""));
+  React.useEffect(() => {
+    setFaixa(filtros.faixaAte ? String(filtros.faixaAte) : "");
+  }, [filtros.faixaAte]);
+
   const set = <K extends keyof FiltrosCandidatos>(k: K, v: FiltrosCandidatos[K]) => onChange({ ...filtros, [k]: v });
+  const aplicarFaixa = () => {
+    const n = Number(faixa);
+    const valor = faixa.trim() && Number.isFinite(n) && n > 0 ? Math.round(n) : undefined;
+    if (valor !== filtros.faixaAte) set("faixaAte", valor);
+  };
   const aplicarSkills = () => {
     const partes = skillsTexto.split(",").map((s) => s.trim()).filter(Boolean);
     const ids: string[] = [];
@@ -105,8 +116,10 @@ export function CandidatosFiltros({
               inputMode="numeric"
               min={0}
               step={500}
-              value={filtros.faixaAte ?? ""}
-              onChange={(e) => { const n = Number(e.target.value); set("faixaAte", Number.isFinite(n) && n > 0 ? Math.round(n) : undefined); }}
+              value={faixa}
+              onChange={(e) => setFaixa(e.target.value)}
+              onBlur={aplicarFaixa}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); aplicarFaixa(); } }}
             />
           </Field>
           <Field label={t("idioma")}>
