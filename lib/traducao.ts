@@ -432,9 +432,11 @@ export function idiomaDoPedido(req: Request, corpo?: unknown): Idioma {
  * Junta `traducao` a cada item com `id` de ficha que tem tradução pronta no idioma. Se a leitura
  * falhar (sem banco, por exemplo), os itens voltam como estavam e a tela mostra o original.
  */
-export async function comTraducaoDasFichas<T extends { id?: unknown }>(db: Pick<PrismaClient, "candidateProfile">, itens: T[], idioma: Idioma): Promise<(T & { traducao?: TraducaoFicha })[]> {
+export async function comTraducaoDasFichas<T extends { id?: unknown }>(db: DbFicha, itens: T[], idioma: Idioma): Promise<(T & { traducao?: TraducaoFicha })[]> {
   const ids = [...new Set(itens.map((i) => i.id).filter((x): x is string => typeof x === "string" && !!x))];
   if (!ids.length) return itens;
+  // Fichas da lista ainda sem tradução atual (anteriores ao 2.7b ou que falharam): até 3 em segundo plano.
+  await pedirTraducaoFichas(db, ids, 3).catch((e) => console.warn("[traducao] pedido das fichas falhou:", e instanceof Error ? e.name : e));
   try {
     const mapa = await traducoesDasFichas(db, ids, idioma);
     if (!mapa.size) return itens;

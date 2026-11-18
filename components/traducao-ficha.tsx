@@ -46,6 +46,8 @@ export function aplicarTraducaoFicha<T extends Record<string, any>>(item: T): T 
   if (w2) {
     const destaques = Array.isArray(w2.destaques) && w2.destaques.length === t.destaques.length ? t.destaques : w2.destaques;
     out.fichaW2 = { ...w2, resumo: t.resumo || w2.resumo, destaques };
+    // A tela não corta o texto traduzido no limite de entrada da ficha (sanitizeFichaW2).
+    out.fichaTraduzida = true;
   }
   if (Array.isArray(item.destaques) && item.destaques.length === t.destaques.length) out.destaques = t.destaques;
   if (Array.isArray(item.experiencias) && item.experiencias.length === t.cargos.length) {

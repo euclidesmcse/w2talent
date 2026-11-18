@@ -106,3 +106,14 @@ describe("tela do recrutador", () => {
     expect(idiomaDoPedido(new Request("https://w2.test/x?lang=fr"))).toBe("pt-BR");
   });
 });
+
+describe("Ficha W2 traduzida na tela", () => {
+  it("não corta a tradução mais longa no limite de entrada", async () => {
+    const { sanitizeFichaW2 } = await import("../lib/ficha");
+    const resumo = "x".repeat(600);
+    const destaque = "y".repeat(300);
+    expect(sanitizeFichaW2({ resumo, destaques: [destaque] })?.resumo.length).toBe(420);
+    const t = sanitizeFichaW2({ resumo, destaques: [destaque] }, { traduzida: true });
+    expect([t?.resumo.length, t?.destaques[0].length]).toEqual([600, 300]);
+  });
+});

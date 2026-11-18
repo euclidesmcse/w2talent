@@ -297,15 +297,20 @@ export function nomeCurto(nome: string): string {
   return p.length === 1 ? p[0] : `${p[0]} ${p[p.length - 1][0].toUpperCase()}.`;
 }
 
-export function sanitizeFichaW2(input: unknown): FichaW2 | null {
+/**
+ * `traduzida`: texto da tradução automática (2.7b), que pode ser mais longo que o original
+ * (até 3x + 40 letras, o limite que a conferência da tradução aceita); não corta no limite de entrada.
+ */
+export function sanitizeFichaW2(input: unknown, opts: { traduzida?: boolean } = {}): FichaW2 | null {
   const o = (input && typeof input === "object" ? input : null) as Record<string, any> | null;
   if (!o) return null;
-  const resumo = typeof o.resumo === "string" ? o.resumo.trim().slice(0, 420) : "";
+  const lim = (n: number) => (opts.traduzida ? n * 3 + 40 : n);
+  const resumo = typeof o.resumo === "string" ? o.resumo.trim().slice(0, lim(420)) : "";
   if (!resumo) return null;
   return {
     resumo,
     destaques: (Array.isArray(o.destaques) ? o.destaques : [])
-      .map((d) => (typeof d === "string" ? d.replace(/\s+/g, " ").trim().slice(0, 160) : ""))
+      .map((d) => (typeof d === "string" ? d.replace(/\s+/g, " ").trim().slice(0, lim(160)) : ""))
       .filter(Boolean)
       .slice(0, MAX_DESTAQUES),
     idioma: typeof o.idioma === "string" ? o.idioma.slice(0, 10) : "pt-BR",
