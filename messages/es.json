@@ -956,7 +956,11 @@
     "traducaoTarefa": "Traducción automática",
     "traducaoFaz": "Traduce el título, la descripción y los beneficios de las vacantes y, para el reclutador, el título, el resumen, los destacados y los cargos de la Ficha W2, para que cada persona los lea en el idioma del sitio. Los nombres de tecnología, los números y los contactos no cambian; la traducción que los altera se descarta.",
     "traducaoDados": "El texto de la vacante y el de la Ficha W2 publicada, sin correo, teléfono ni el nombre de la persona.",
-    "traducaoDecide": "Tú. La traducción aparece marcada y el botón \"Ver original\" muestra el texto que escribió la empresa. Quien la publicó sigue viendo solo el original."
+    "traducaoDecide": "Tú. La traducción aparece marcada y el botón \"Ver original\" muestra el texto que escribió la empresa. Quien la publicó sigue viendo solo el original.",
+    "mercadoTarefa": "Números del mercado",
+    "mercadoFaz": "No es IA: es un cálculo diario sobre las vacantes y fichas del sitio. Muestra rangos salariales, las competencias más pedidas y la pretensión de los candidatos en rangos, solo con 10 o más registros (y 3 o más empresas, en el caso de las vacantes).",
+    "mercadoDados": "Rangos de las vacantes activas y pretensión mensual de las fichas publicadas, sin nombre ni contactos. Las vacantes y fichas de ejemplo quedan fuera.",
+    "mercadoDecide": "Nadie: son solo números de referencia. El reclutador ve la pretensión solo como rango de 10 o más fichas, nunca la de una persona."
   },
   "empresa": {
     "title": "Mi empresa",

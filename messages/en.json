@@ -956,7 +956,11 @@
     "traducaoTarefa": "Automatic translation",
     "traducaoFaz": "Translates job titles, descriptions and benefits and, for recruiters, the title, summary, highlights and job titles of the W2 Profile, so each person reads them in the site language. Technology names, numbers and contacts do not change; a translation that alters them is discarded.",
     "traducaoDados": "The job text and the published W2 Profile text, without email, phone or the person's name.",
-    "traducaoDecide": "You. The translation is labeled and the \"Show original\" button shows the text the company wrote. Whoever posted it still sees only the original."
+    "traducaoDecide": "You. The translation is labeled and the \"Show original\" button shows the text the company wrote. Whoever posted it still sees only the original.",
+    "mercadoTarefa": "Market numbers",
+    "mercadoFaz": "Not AI: a daily calculation over the site's jobs and profiles. It shows salary ranges, the most requested skills and candidates' expected pay as ranges, only with 10 or more records (and 3 or more companies, for jobs).",
+    "mercadoDados": "Ranges of active jobs and monthly expected pay from published profiles, without names or contacts. Sample jobs and profiles are left out.",
+    "mercadoDecide": "No one: these are reference numbers only. Recruiters see expected pay only as a range over 10 or more profiles, never anyone's own."
   },
   "empresa": {
     "title": "My company",
