@@ -214,15 +214,19 @@ export async function avisoEnfileirado(db: PrismaClient, applicationId: string, 
 }
 
 export async function marcarVista(db: PrismaClient, companyId: string, applicationId: string): Promise<boolean> {
-  const r = await db.application.updateMany({
-    where: { id: applicationId, companyId, origem: "candidaturaLote", status: "enviado" },
-    data: { status: "visualizado" },
+  const a = await db.application.findFirst({
+    where: { id: applicationId, companyId, origem: "candidaturaLote" },
+    select: { candidateId: true, vacancyId: true, status: true },
   });
-  if (r.count > 0) {
-    // 2.8: a primeira vez que o recrutador abre a ficha da candidatura (só nessa vez, sem repetir).
-    const a = await db.application.findUnique({ where: { id: applicationId }, select: { candidateId: true, vacancyId: true } });
-    if (a) await registrarSinal(db, { tipo: "ficha_vista", ator: "recrutador", candidateId: a.candidateId, vacancyId: a.vacancyId, applicationId });
-    return true;
+  if (!a) return false;
+  if (a.status === "enviado") {
+    await db.application.updateMany({ where: { id: applicationId, status: "enviado" }, data: { status: "visualizado" } });
   }
-  return (await db.application.count({ where: { id: applicationId, companyId, origem: "candidaturaLote" } })) > 0;
+  // 2.8: a primeira vez que o recrutador abre a ficha, mesmo que a etapa já tenha mudado antes.
+  // Conta pelo próprio sinal, não pelo status que o candidato vê.
+  const jaVista = await db.feedbackSignal.count({ where: { applicationId, tipo: "ficha_vista" } });
+  if (jaVista === 0) {
+    await registrarSinal(db, { tipo: "ficha_vista", ator: "recrutador", candidateId: a.candidateId, vacancyId: a.vacancyId, applicationId });
+  }
+  return true;
 }
