@@ -2,7 +2,7 @@
 /**
  * 2.4a Painel RH (plano 2.4 aprovado pelo Euclides em 2026-11-18).
  * Números da empresa (D5) e a lista das vagas com as candidaturas que chegaram.
- * 2.4b liga cada vaga à tela das candidaturas, com as etapas.
+ * 2.4b: cada vaga leva à tela das candidaturas (/rh/vagas/[id]), com as etapas.
  */
 import * as React from "react";
 import Link from "next/link";
@@ -150,7 +150,7 @@ export default function PainelRhPage() {
                     {estado.vagas.map((v) => (
                       <li key={v.id} data-vaga={v.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line-soft py-3 first:border-t-0">
                         <div className="flex min-w-0 flex-[1_1_240px] flex-col gap-1">
-                          <span className="font-medium">{v.titulo}</span>
+                          <Link href={`/rh/vagas/${encodeURIComponent(v.id)}`} className="font-medium text-ink underline-offset-2 hover:underline">{v.titulo}</Link>
                           <span className={cn("inline-flex h-6 w-fit items-center rounded-control px-2 text-[12px] font-medium", TOM[v.situacao])}>{situacao(v)}</span>
                         </div>
                         <dl className="flex gap-5 text-sm">
@@ -163,6 +163,14 @@ export default function PainelRhPage() {
                             <dd className={cn("font-semibold tabular-nums", v.novas > 0 && "text-brand-ink")}>{v.novas}</dd>
                           </div>
                         </dl>
+                        <Link
+                          href={`/rh/vagas/${encodeURIComponent(v.id)}`}
+                          aria-label={t("verCandidaturasLabel", { vaga: v.titulo })}
+                          className={buttonClasses("secondary", "md", "hover:no-underline")}
+                          data-action="ver-candidaturas"
+                        >
+                          {t("verCandidaturas")}
+                        </Link>
                         {v.situacao === "ativa" || v.situacao === "vencendo" ? (
                           <Link
                             href={`/candidatos?vaga=${encodeURIComponent(v.id)}`}

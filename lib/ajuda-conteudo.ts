@@ -134,7 +134,7 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
         "/painel"
       ],
       "ordem": 9,
-      "corpo": "Em [Minhas candidaturas](/minhas-candidaturas) aparece cada vaga enviada, com a data.\n\n## Situações\n\n- **Enviada:** a candidatura chegou à empresa.\n- **Vista:** a empresa abriu a sua ficha.\n- **Respondida:** a empresa respondeu.\n- **Arquivada:** a vaga ou a candidatura saiu de circulação.\n\n## Contato protegido\n\nA empresa fala com você por um endereço do W2Talent. Seu e-mail e telefone só aparecem para ela depois que você responde.\n\nO [painel](/painel) mostra os mesmos números de forma resumida."
+      "corpo": "Em [Minhas candidaturas](/minhas-candidaturas) aparece cada vaga enviada, com a data.\n\n## Situações\n\n- **Enviada:** a candidatura chegou à empresa.\n- **Vista:** a empresa abriu a sua ficha ou começou a analisar.\n- **Respondida:** a empresa quer seguir com você (entrevista ou proposta).\n- **Encerrada:** a empresa não vai seguir com esta candidatura, ou ela saiu de circulação.\n\n## Contato protegido\n\nA empresa fala com você por um endereço do W2Talent. Seu e-mail e telefone só aparecem para ela depois que você responde.\n\nO [painel](/painel) mostra os mesmos números de forma resumida."
     },
     {
       "slug": "privacidade",
@@ -235,7 +235,7 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
         "/rh"
       ],
       "ordem": 16,
-      "corpo": "O [Painel RH](/rh) mostra as vagas da sua empresa e as candidaturas que chegaram a cada uma.\n\n## Números da empresa\n\n- **Vagas ativas** e as que **vencem em até 3 dias** (renove antes de vencer).\n- **Candidaturas** recebidas e quantas ainda estão **novas, sem resposta**.\n- **Tempo até a primeira resposta:** a média entre a candidatura chegar e você mudar a etapa dela pela primeira vez.\n- **Taxa de resposta:** quantas candidaturas já receberam alguma resposta.\n\nOs números são só da sua empresa.\n\n## Vagas\n\nCada vaga mostra a situação, o total de candidaturas e as novas. Em \"Candidatos compatíveis\" você busca perfis parecidos com a vaga, mesmo de quem ainda não se candidatou."
+      "corpo": "O [Painel RH](/rh) mostra as vagas da sua empresa e as candidaturas que chegaram a cada uma.\n\n## Números da empresa\n\n- **Vagas ativas** e as que **vencem em até 3 dias** (renove antes de vencer).\n- **Candidaturas** recebidas e quantas ainda estão **novas, sem resposta**.\n- **Tempo até a primeira resposta:** a média entre a candidatura chegar e você mudar a etapa dela pela primeira vez.\n- **Taxa de resposta:** quantas candidaturas já receberam alguma resposta.\n\nOs números são só da sua empresa.\n\n## Vagas\n\nCada vaga mostra a situação, o total de candidaturas e as novas. Em \"Candidatos compatíveis\" você busca perfis parecidos com a vaga, mesmo de quem ainda não se candidatou.\n\n## Candidaturas de uma vaga\n\nEm \"Ver candidaturas\" aparecem as pessoas que se candidataram, da maior para a menor compatibilidade com a vaga.\n\n- **Etapa:** Nova, Em análise, Entrevista, Proposta, Contratada ou Não seguiu. Mude com um clique; não há formulário.\n- **O que o candidato vê:** \"Vista\" quando você abre a ficha ou move para Em análise, \"Respondida\" a partir de Entrevista e \"Encerrada\" em Não seguiu. As etapas internas não aparecem para ele.\n- **Comparar:** marque até 10 pessoas para compará-las lado a lado e exportar."
     }
   ],
   "en": [
@@ -370,7 +370,7 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
         "/painel"
       ],
       "ordem": 9,
-      "corpo": "[My applications](/minhas-candidaturas) lists each job you sent, with the date.\n\n## Statuses\n\n- **Sent:** the application reached the company.\n- **Seen:** the company opened your profile.\n- **Answered:** the company replied.\n- **Archived:** the job or the application is no longer active.\n\n## Protected contact\n\nThe company talks to you through a W2Talent address. Your email and phone only show to them after you reply.\n\nThe [dashboard](/painel) shows the same numbers in short."
+      "corpo": "[My applications](/minhas-candidaturas) lists each job you sent, with the date.\n\n## Statuses\n\n- **Sent:** the application reached the company.\n- **Seen:** the company opened your profile or started reviewing it.\n- **Answered:** the company wants to move forward with you (interview or offer).\n- **Closed:** the company is not moving forward with this application, or it is no longer active.\n\n## Protected contact\n\nThe company talks to you through a W2Talent address. Your email and phone only show to them after you reply.\n\nThe [dashboard](/painel) shows the same numbers in short."
     },
     {
       "slug": "privacidade",
@@ -471,7 +471,7 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
         "/rh"
       ],
       "ordem": 16,
-      "corpo": "The [HR dashboard](/rh) shows your company's jobs and the applications each one received.\n\n## Company numbers\n\n- **Active jobs** and the ones that **expire within 3 days** (renew them before they expire).\n- **Applications** received and how many are still **new, with no reply**.\n- **Time to first reply:** the average time between an application arriving and you first changing its stage.\n- **Reply rate:** how many applications have received a reply.\n\nThe numbers cover only your company.\n\n## Jobs\n\nEach job shows its status, the total number of applications and the new ones. \"Matching candidates\" searches for profiles close to the job, including people who have not applied yet."
+      "corpo": "The [HR dashboard](/rh) shows your company's jobs and the applications each one received.\n\n## Company numbers\n\n- **Active jobs** and the ones that **expire within 3 days** (renew them before they expire).\n- **Applications** received and how many are still **new, with no reply**.\n- **Time to first reply:** the average time between an application arriving and you first changing its stage.\n- **Reply rate:** how many applications have received a reply.\n\nThe numbers cover only your company.\n\n## Jobs\n\nEach job shows its status, the total number of applications and the new ones. \"Matching candidates\" searches for profiles close to the job, including people who have not applied yet.\n\n## Applications for a job\n\n\"See applications\" lists the people who applied, from best to lowest match with the job.\n\n- **Stage:** New, Reviewing, Interview, Offer, Hired or Not moving forward. Change it with one click; there is no form.\n- **What the candidate sees:** \"Seen\" when you open the profile or move it to Reviewing, \"Answered\" from Interview on, and \"Closed\" for Not moving forward. Internal stages are not shown to them.\n- **Compare:** tick up to 10 people to compare them side by side and export."
     }
   ],
   "es": [
@@ -606,7 +606,7 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
         "/painel"
       ],
       "ordem": 9,
-      "corpo": "En [Mis postulaciones](/minhas-candidaturas) aparece cada vacante enviada, con la fecha.\n\n## Estados\n\n- **Enviada:** la postulación llegó a la empresa.\n- **Vista:** la empresa abrió tu ficha.\n- **Respondida:** la empresa respondió.\n- **Archivada:** la vacante o la postulación salió de circulación.\n\n## Contacto protegido\n\nLa empresa habla contigo por una dirección de W2Talent. Tu correo y teléfono solo le aparecen después de que respondes.\n\nEl [panel](/painel) muestra los mismos números de forma resumida."
+      "corpo": "En [Mis postulaciones](/minhas-candidaturas) aparece cada vacante enviada, con la fecha.\n\n## Estados\n\n- **Enviada:** la postulación llegó a la empresa.\n- **Vista:** la empresa abrió tu ficha o empezó a analizarla.\n- **Respondida:** la empresa quiere seguir contigo (entrevista u oferta).\n- **Cerrada:** la empresa no seguirá con esta postulación, o salió de circulación.\n\n## Contacto protegido\n\nLa empresa habla contigo por una dirección de W2Talent. Tu correo y teléfono solo le aparecen después de que respondes.\n\nEl [panel](/painel) muestra los mismos números de forma resumida."
     },
     {
       "slug": "privacidade",
@@ -707,7 +707,7 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
         "/rh"
       ],
       "ordem": 16,
-      "corpo": "El [panel de RR. HH.](/rh) muestra las vacantes de tu empresa y las postulaciones que recibió cada una.\n\n## Números de la empresa\n\n- **Vacantes activas** y las que **vencen en hasta 3 días** (renuévalas antes de que venzan).\n- **Postulaciones** recibidas y cuántas siguen **nuevas, sin respuesta**.\n- **Tiempo hasta la primera respuesta:** el promedio entre la llegada de la postulación y el primer cambio de etapa que haces.\n- **Tasa de respuesta:** cuántas postulaciones ya recibieron alguna respuesta.\n\nLos números son solo de tu empresa.\n\n## Vacantes\n\nCada vacante muestra su estado, el total de postulaciones y las nuevas. En \"Candidatos compatibles\" buscas perfiles parecidos a la vacante, incluso de quienes aún no se postularon."
+      "corpo": "El [panel de RR. HH.](/rh) muestra las vacantes de tu empresa y las postulaciones que recibió cada una.\n\n## Números de la empresa\n\n- **Vacantes activas** y las que **vencen en hasta 3 días** (renuévalas antes de que venzan).\n- **Postulaciones** recibidas y cuántas siguen **nuevas, sin respuesta**.\n- **Tiempo hasta la primera respuesta:** el promedio entre la llegada de la postulación y el primer cambio de etapa que haces.\n- **Tasa de respuesta:** cuántas postulaciones ya recibieron alguna respuesta.\n\nLos números son solo de tu empresa.\n\n## Vacantes\n\nCada vacante muestra su estado, el total de postulaciones y las nuevas. En \"Candidatos compatibles\" buscas perfiles parecidos a la vacante, incluso de quienes aún no se postularon.\n\n## Postulaciones de una vacante\n\nEn \"Ver postulaciones\" aparecen las personas que se postularon, de mayor a menor compatibilidad con la vacante.\n\n- **Etapa:** Nueva, En análisis, Entrevista, Oferta, Contratada o No siguió. Cámbiala con un clic; no hay formulario.\n- **Lo que ve el candidato:** \"Vista\" cuando abres la ficha o la pasas a En análisis, \"Respondida\" desde Entrevista y \"Cerrada\" en No siguió. Las etapas internas no se le muestran.\n- **Comparar:** marca hasta 10 personas para compararlas lado a lado y exportar."
     }
   ]
 };

@@ -20,3 +20,11 @@ Os números são só da sua empresa.
 ## Vagas
 
 Cada vaga mostra a situação, o total de candidaturas e as novas. Em "Candidatos compatíveis" você busca perfis parecidos com a vaga, mesmo de quem ainda não se candidatou.
+
+## Candidaturas de uma vaga
+
+Em "Ver candidaturas" aparecem as pessoas que se candidataram, da maior para a menor compatibilidade com a vaga.
+
+- **Etapa:** Nova, Em análise, Entrevista, Proposta, Contratada ou Não seguiu. Mude com um clique; não há formulário.
+- **O que o candidato vê:** "Vista" quando você abre a ficha ou move para Em análise, "Respondida" a partir de Entrevista e "Encerrada" em Não seguiu. As etapas internas não aparecem para ele.
+- **Comparar:** marque até 10 pessoas para compará-las lado a lado e exportar.

@@ -20,3 +20,11 @@ The numbers cover only your company.
 ## Jobs
 
 Each job shows its status, the total number of applications and the new ones. "Matching candidates" searches for profiles close to the job, including people who have not applied yet.
+
+## Applications for a job
+
+"See applications" lists the people who applied, from best to lowest match with the job.
+
+- **Stage:** New, Reviewing, Interview, Offer, Hired or Not moving forward. Change it with one click; there is no form.
+- **What the candidate sees:** "Seen" when you open the profile or move it to Reviewing, "Answered" from Interview on, and "Closed" for Not moving forward. Internal stages are not shown to them.
+- **Compare:** tick up to 10 people to compare them side by side and export.

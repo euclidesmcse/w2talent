@@ -20,3 +20,11 @@ Los números son solo de tu empresa.
 ## Vacantes
 
 Cada vacante muestra su estado, el total de postulaciones y las nuevas. En "Candidatos compatibles" buscas perfiles parecidos a la vacante, incluso de quienes aún no se postularon.
+
+## Postulaciones de una vacante
+
+En "Ver postulaciones" aparecen las personas que se postularon, de mayor a menor compatibilidad con la vacante.
+
+- **Etapa:** Nueva, En análisis, Entrevista, Oferta, Contratada o No siguió. Cámbiala con un clic; no hay formulario.
+- **Lo que ve el candidato:** "Vista" cuando abres la ficha o la pasas a En análisis, "Respondida" desde Entrevista y "Cerrada" en No siguió. Las etapas internas no se le muestran.
+- **Comparar:** marca hasta 10 personas para compararlas lado a lado y exportar.

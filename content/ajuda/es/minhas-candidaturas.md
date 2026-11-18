@@ -11,9 +11,9 @@ En [Mis postulaciones](/minhas-candidaturas) aparece cada vacante enviada, con l
 ## Estados
 
 - **Enviada:** la postulación llegó a la empresa.
-- **Vista:** la empresa abrió tu ficha.
-- **Respondida:** la empresa respondió.
-- **Archivada:** la vacante o la postulación salió de circulación.
+- **Vista:** la empresa abrió tu ficha o empezó a analizarla.
+- **Respondida:** la empresa quiere seguir contigo (entrevista u oferta).
+- **Cerrada:** la empresa no seguirá con esta postulación, o salió de circulación.
 
 ## Contacto protegido
 

@@ -11,9 +11,9 @@ Em [Minhas candidaturas](/minhas-candidaturas) aparece cada vaga enviada, com a 
 ## Situações
 
 - **Enviada:** a candidatura chegou à empresa.
-- **Vista:** a empresa abriu a sua ficha.
-- **Respondida:** a empresa respondeu.
-- **Arquivada:** a vaga ou a candidatura saiu de circulação.
+- **Vista:** a empresa abriu a sua ficha ou começou a analisar.
+- **Respondida:** a empresa quer seguir com você (entrevista ou proposta).
+- **Encerrada:** a empresa não vai seguir com esta candidatura, ou ela saiu de circulação.
 
 ## Contato protegido
 
