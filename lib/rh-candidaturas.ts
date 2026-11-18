@@ -16,6 +16,7 @@ import { matchCandidato, type GapCandidato } from "./match-candidato";
 import { gravarSinais } from "./sinais";
 import { ETAPAS, type Etapa } from "./painel-rh";
 import { emailLocale, renderEntrevistaEmail } from "./email-templates";
+import { entrevistasDasCandidaturas, type ResumoEntrevista } from "./entrevista";
 import type { EmailMessage } from "./email";
 
 /** Etapas que liberam o contato (D4): a partir da Entrevista. */
@@ -63,6 +64,8 @@ export type CandidaturaRh = {
   contato: { email: string; celular: string | null } | null;
   /** Perfil sem contato (emailMasked/celularMasked), no mesmo formato da busca de Candidatos. */
   candidato: Record<string, unknown>;
+  /** 2.5a: a entrevista mais recente (oferta, marcada ou cancelada); null se nunca houve. */
+  entrevista: ResumoEntrevista | null;
 };
 
 export type VagaDaPagina = { id: string; titulo: string; status: "ativa" | "arquivada"; expiresAt: string };
@@ -99,6 +102,7 @@ export async function candidaturasDaVaga(
     db.application.count({ where }),
   ]);
   const t = now.getTime();
+  const entrevistas = await entrevistasDasCandidaturas(db, apps.map((a) => a.id), now);
   const itens = apps.map((a): CandidaturaRh => {
     const { expiresAt, ...perfil } = a.candidate;
     const m = matchCandidato(perfil as any, vaga as any, t);
@@ -112,6 +116,7 @@ export async function candidaturasDaVaga(
       gaps: m.gaps,
       contato: a.contatoLiberadoEm ? { email: perfil.email, celular: perfil.celular ?? null } : null,
       candidato: withoutContacts(perfil),
+      entrevista: entrevistas.get(a.id) ?? null,
     };
   });
   // Melhor match primeiro; empate, quem chegou antes.

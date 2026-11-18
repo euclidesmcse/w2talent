@@ -274,3 +274,146 @@ export function renderEntrevistaEmail(i: EntrevistaEmailInput): { subject: strin
 </table></td></tr></table></body></html>`;
   return { subject, html, text };
 }
+
+// ── 2.5a Agenda: convite para escolher horário, entrevista marcada e cancelada ──
+
+export type AgendaTipo = "convite" | "marcada" | "trocada" | "cancelada";
+
+type AgendaCopy = {
+  ola: (n: string) => string;
+  assunto: Record<AgendaTipo, (empresa: string, vaga: string, quando: string) => string>;
+  conviteCorpo: (empresa: string, vaga: string, dur: number) => string;
+  conviteBotao: string;
+  marcadaCorpo: (quem: string, vaga: string, quando: string, dur: number) => string;
+  trocadaCorpo: (quem: string, vaga: string, quando: string, dur: number) => string;
+  canceladaCorpo: (vaga: string, quando: string | null, porCandidato: boolean) => string;
+  link: (url: string) => string;
+  semLink: string;
+  anexo: string;
+  gerenciarBotao: string;
+  verCandidaturasBotao: string;
+  rodape: string;
+};
+
+const AGENDA: Record<EmailLocale, AgendaCopy> = {
+  "pt-BR": {
+    ola: (n) => (n ? `Olá, ${n}` : "Olá"),
+    assunto: {
+      convite: (e) => `${e}: escolha o horário da sua entrevista`,
+      marcada: (_e, v, q) => `Entrevista marcada: ${v}, ${q}`,
+      trocada: (_e, v, q) => `Entrevista remarcada: ${v}, ${q}`,
+      cancelada: (_e, v) => `Entrevista cancelada: ${v}`,
+    },
+    conviteCorpo: (e, v, d) => `${e} quer marcar a sua entrevista para a vaga ${v} (${d} minutos). Escolha um dos horários oferecidos pelo link abaixo.`,
+    conviteBotao: "Escolher horário",
+    marcadaCorpo: (q, v, w, d) => `A entrevista com ${q} para a vaga ${v} está marcada para ${w} (${d} minutos).`,
+    trocadaCorpo: (q, v, w, d) => `A entrevista com ${q} para a vaga ${v} mudou para ${w} (${d} minutos).`,
+    canceladaCorpo: (v, w, c) => `A entrevista para a vaga ${v}${w ? ` de ${w}` : ""} foi cancelada ${c ? "pelo candidato" : "pela empresa"}.`,
+    link: (u) => `Link da reunião: ${u}`,
+    semLink: "O link da reunião ainda não foi informado; a empresa deve mandar por e-mail.",
+    anexo: "O convite em anexo (.ics) põe a entrevista na sua agenda.",
+    gerenciarBotao: "Ver ou mudar o horário",
+    verCandidaturasBotao: "Ver candidaturas da vaga",
+    rodape: "Você recebeu este e-mail por causa de uma candidatura feita pelo W2Talent.",
+  },
+  en: {
+    ola: (n) => (n ? `Hi ${n}` : "Hi"),
+    assunto: {
+      convite: (e) => `${e}: pick a time for your interview`,
+      marcada: (_e, v, q) => `Interview booked: ${v}, ${q}`,
+      trocada: (_e, v, q) => `Interview moved: ${v}, ${q}`,
+      cancelada: (_e, v) => `Interview cancelled: ${v}`,
+    },
+    conviteCorpo: (e, v, d) => `${e} wants to book your interview for the ${v} job (${d} minutes). Pick one of the times offered using the link below.`,
+    conviteBotao: "Pick a time",
+    marcadaCorpo: (q, v, w, d) => `The interview with ${q} for the ${v} job is booked for ${w} (${d} minutes).`,
+    trocadaCorpo: (q, v, w, d) => `The interview with ${q} for the ${v} job moved to ${w} (${d} minutes).`,
+    canceladaCorpo: (v, w, c) => `The interview for the ${v} job${w ? ` on ${w}` : ""} was cancelled by the ${c ? "candidate" : "company"}.`,
+    link: (u) => `Meeting link: ${u}`,
+    semLink: "The meeting link has not been added yet; the company should send it by e-mail.",
+    anexo: "The attached invite (.ics) adds the interview to your calendar.",
+    gerenciarBotao: "See or change the time",
+    verCandidaturasBotao: "See the job's applications",
+    rodape: "You got this e-mail because of an application made through W2Talent.",
+  },
+  es: {
+    ola: (n) => (n ? `Hola, ${n}` : "Hola"),
+    assunto: {
+      convite: (e) => `${e}: elige el horario de tu entrevista`,
+      marcada: (_e, v, q) => `Entrevista agendada: ${v}, ${q}`,
+      trocada: (_e, v, q) => `Entrevista reprogramada: ${v}, ${q}`,
+      cancelada: (_e, v) => `Entrevista cancelada: ${v}`,
+    },
+    conviteCorpo: (e, v, d) => `${e} quiere agendar tu entrevista para la vacante ${v} (${d} minutos). Elige uno de los horarios ofrecidos en el enlace de abajo.`,
+    conviteBotao: "Elegir horario",
+    marcadaCorpo: (q, v, w, d) => `La entrevista con ${q} para la vacante ${v} está agendada para el ${w} (${d} minutos).`,
+    trocadaCorpo: (q, v, w, d) => `La entrevista con ${q} para la vacante ${v} cambió al ${w} (${d} minutos).`,
+    canceladaCorpo: (v, w, c) => `La entrevista para la vacante ${v}${w ? ` del ${w}` : ""} fue cancelada por ${c ? "el candidato" : "la empresa"}.`,
+    link: (u) => `Enlace de la reunión: ${u}`,
+    semLink: "El enlace de la reunión aún no fue informado; la empresa debe enviarlo por e-mail.",
+    anexo: "La invitación adjunta (.ics) agrega la entrevista a tu calendario.",
+    gerenciarBotao: "Ver o cambiar el horario",
+    verCandidaturasBotao: "Ver postulaciones de la vacante",
+    rodape: "Recibiste este e-mail por una postulación hecha en W2Talent.",
+  },
+};
+
+/** Data e hora no idioma e fuso de quem recebe, com o nome do fuso (ex.: "qua., 25 de nov. 14:00 BRT"). */
+export function quandoEmail(d: Date, locale: EmailLocale, fuso?: string | null): string {
+  const tz = fusoValido(fuso) ? fuso! : "UTC";
+  return new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: tz, timeZoneName: "short" }).format(d);
+}
+
+export function fusoValido(fuso: string | null | undefined): boolean {
+  if (!fuso || fuso.length > 64) return false;
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: fuso });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export type AgendaEmailInput = {
+  tipo: AgendaTipo;
+  locale: EmailLocale;
+  nome?: string | null;
+  empresa: string;
+  vagaTitulo: string;
+  /** Com quem é a entrevista, para quem recebe (empresa para o candidato, candidato para o recrutador). */
+  com: string;
+  duracaoMin: number;
+  inicio?: Date | null;
+  fuso?: string | null;
+  linkReuniao?: string | null;
+  porCandidato?: boolean;
+  /** Botão: o link de escolher horário (candidato) ou a tela da vaga (recrutador). */
+  url: string;
+  paraRecrutador?: boolean;
+  temAnexo?: boolean;
+};
+
+export function renderAgendaEmail(i: AgendaEmailInput): { subject: string; html: string; text: string } {
+  const c = AGENDA[i.locale];
+  const quando = i.inicio ? quandoEmail(i.inicio, i.locale, i.fuso) : "";
+  const subject = c.assunto[i.tipo](i.empresa, i.vagaTitulo, quando);
+  const paragrafos: string[] = [];
+  if (i.tipo === "convite") paragrafos.push(c.conviteCorpo(i.empresa, i.vagaTitulo, i.duracaoMin));
+  else if (i.tipo === "marcada") paragrafos.push(c.marcadaCorpo(i.com, i.vagaTitulo, quando, i.duracaoMin));
+  else if (i.tipo === "trocada") paragrafos.push(c.trocadaCorpo(i.com, i.vagaTitulo, quando, i.duracaoMin));
+  else paragrafos.push(c.canceladaCorpo(i.vagaTitulo, quando || null, !!i.porCandidato));
+  if (i.tipo === "marcada" || i.tipo === "trocada") paragrafos.push(i.linkReuniao ? c.link(i.linkReuniao) : c.semLink);
+  if (i.temAnexo) paragrafos.push(c.anexo);
+  const botao = i.paraRecrutador ? c.verCandidaturasBotao : i.tipo === "convite" ? c.conviteBotao : c.gerenciarBotao;
+  const saudacao = c.ola(primeiroNome(i.nome));
+  const text = `${saudacao},\n\n${paragrafos.join("\n")}\n\n${botao}: ${i.url}\n\n${c.rodape}\n`;
+  const html = `<!doctype html><html lang="${i.locale}"><body style="margin:0;padding:0;background:#F7F8FA;font-family:Inter,Segoe UI,Arial,sans-serif;color:#111827">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F8FA;padding:24px 12px"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px">
+<tr><td style="padding:24px 24px 0;font:700 18px 'Space Grotesk',Inter,Arial,sans-serif">W2<span style="color:#1F4FD8">Talent</span></td></tr>
+<tr><td style="padding:16px 24px 0;font-size:16px;line-height:24px"><p style="margin:0 0 12px">${esc(saudacao)},</p>${paragrafos.map((p, n) => `<p style="margin:0 0 8px${n === 0 ? ";font-weight:600" : ""}">${esc(p)}</p>`).join("")}</td></tr>
+<tr><td style="padding:20px 24px 0"><a href="${esc(i.url)}" style="display:inline-block;background:#1F4FD8;color:#FFFFFF;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:999px">${esc(botao)}</a></td></tr>
+<tr><td style="padding:20px 24px 24px;font-size:13px;line-height:20px;color:#4B5563">${esc(c.rodape)}</td></tr>
+</table></td></tr></table></body></html>`;
+  return { subject, html, text };
+}

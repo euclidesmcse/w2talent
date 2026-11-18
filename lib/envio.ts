@@ -19,6 +19,7 @@ import { formatPretensoes, nomeRegime } from "./format";
 import { getSkill } from "./taxonomy";
 import { emailLocale, renderCandidaturaEmail } from "./email-templates";
 import type { EmailMessage } from "./email";
+import { entrevistasDasCandidaturas } from "./entrevista";
 import { gravarSinais, registrarSinal, type Sinal } from "./sinais";
 
 export const ENVIO_LIMITE_LOTE = 10;
@@ -375,7 +376,17 @@ export async function enviarCandidaturas(
   return { ok: true, loteId, itens, usadas24h: r.usadas24h };
 }
 
-export type Enviada = { id: string; vacancyId: string | null; titulo: string; empresa: string; status: string; createdAt: string; proxyThreadId: string };
+export type Enviada = {
+  id: string;
+  vacancyId: string | null;
+  titulo: string;
+  empresa: string;
+  status: string;
+  createdAt: string;
+  proxyThreadId: string;
+  /** 2.5a: entrevista marcada ou à espera de o candidato escolher o horário (sem o código do link). */
+  entrevista: { status: "aberta" | "marcada"; inicio: string | null; duracaoMin: number; linkReuniao: string | null } | null;
+};
 
 export async function listarEnviadas(db: PrismaClient, candidateId: string): Promise<Enviada[]> {
   const rows = await db.application.findMany({
@@ -384,15 +395,22 @@ export async function listarEnviadas(db: PrismaClient, candidateId: string): Pro
     take: 200,
     select: { id: true, vacancyId: true, status: true, createdAt: true, proxyThreadId: true, vacancy: { select: { titulo: true } }, company: { select: { nome: true } } },
   });
-  return rows.map((a) => ({
-    id: a.id,
-    vacancyId: a.vacancyId,
-    titulo: a.vacancy?.titulo ?? "",
-    empresa: a.company?.nome ?? "",
-    status: a.status,
-    createdAt: a.createdAt.toISOString(),
-    proxyThreadId: a.proxyThreadId,
-  }));
+  const now = new Date();
+  const ents = await entrevistasDasCandidaturas(db, rows.map((a) => a.id), now);
+  return rows.map((a) => {
+    const e = ents.get(a.id);
+    const ativa = e && (e.status === "aberta" || (e.status === "marcada" && !!e.inicio && new Date(e.inicio).getTime() > now.getTime() - e.duracaoMin * 60_000));
+    return {
+      id: a.id,
+      vacancyId: a.vacancyId,
+      titulo: a.vacancy?.titulo ?? "",
+      empresa: a.company?.nome ?? "",
+      status: a.status,
+      createdAt: a.createdAt.toISOString(),
+      proxyThreadId: a.proxyThreadId,
+      entrevista: ativa && e ? { status: e.status as "aberta" | "marcada", inicio: e.inicio, duracaoMin: e.duracaoMin, linkReuniao: e.status === "marcada" ? e.linkReuniao : null } : null,
+    };
+  });
 }
 
 /** Quantas candidaturas o perfil tem em cada status, no histórico todo (a lista acima para em 200). */

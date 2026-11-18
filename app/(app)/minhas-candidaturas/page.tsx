@@ -21,11 +21,33 @@ type AppRow = {
   empresa?: string;
   companyId?: string;
   createdAt?: string;
+  /** 2.5a: entrevista marcada ou esperando a escolha do horário. */
+  entrevista?: { status: "aberta" | "marcada"; inicio: string | null; duracaoMin: number; linkReuniao: string | null } | null;
 };
 
 const STATUS_ORDER: Record<string, number> = { enviado: 0, visualizado: 1, respondido: 2, arquivado: 3 };
 
 const STATUS_KEYS = ["enviado", "visualizado", "respondido", "arquivado"] as const;
+
+function LinhaEntrevista({ e }: { e: NonNullable<AppRow["entrevista"]> }) {
+  const t = useTranslations("minhas");
+  const locale = useLocale();
+  if (e.status === "marcada" && e.inicio) {
+    const quando = new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(e.inicio));
+    return (
+      <div className="mt-1 text-[13px] font-medium text-success-ink" data-testid="minha-entrevista">
+        {t("entrevistaMarcada", { quando, min: e.duracaoMin })}
+        {e.linkReuniao ? (
+          <>
+            {" · "}
+            <a href={e.linkReuniao} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{t("entrevistaLink")}</a>
+          </>
+        ) : null}
+      </div>
+    );
+  }
+  return <div className="mt-1 text-[13px] font-medium text-brand-ink" data-testid="minha-entrevista">{t("entrevistaEscolher")}</div>;
+}
 
 export default function MinhasCandidaturasPage() {
   const t = useTranslations("minhas");
@@ -132,6 +154,7 @@ export default function MinhasCandidaturasPage() {
                         {[app.empresa, app.createdAt ? t("sentOn", { date: diaMes(app.createdAt, locale) }) : ""].filter(Boolean).join(" · ")}
                       </div>
                     ) : null}
+                    {app.entrevista ? <LinhaEntrevista e={app.entrevista} /> : null}
                   </div>
                   <span className={`inline-flex h-7 shrink-0 items-center rounded-control px-2.5 text-[13px] font-medium ${app.status === "respondido" ? "bg-success-soft text-success-ink" : app.status === "visualizado" ? "bg-brand-soft text-brand-ink" : "bg-neutral-soft text-ink-soft"}`}>
                     {statusLabel(app.status)}
@@ -161,6 +184,7 @@ export default function MinhasCandidaturasPage() {
                         </div>
                       ) : null}
                       <div className="font-mono text-xs text-muted" title={t("proxyHint")}>{app.proxyThreadId}</div>
+                      {app.entrevista ? <LinhaEntrevista e={app.entrevista} /> : null}
                     </td>
                     <td className="px-2 py-3.5">
                       <span

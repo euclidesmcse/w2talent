@@ -13,7 +13,8 @@
         "http://localhost:3999/ia",
         "http://localhost:3999/ajuda",
         "http://localhost:3999/publicar",
-        "http://localhost:3999/rh"
+        "http://localhost:3999/rh",
+        "http://localhost:3999/agendar"
       ],
       "numberOfRuns": 3,
       "settings": {

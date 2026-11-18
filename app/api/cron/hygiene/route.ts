@@ -4,6 +4,7 @@ import { runHygiene } from "@/lib/hygiene";
 import { prisma } from "@/lib/prisma";
 import { enqueueEmail } from "@/lib/notifications";
 import { reenviarEmailsPendentes } from "@/lib/envio";
+import { reenviarEmailsEntrevista } from "@/lib/entrevista";
 
 /**
  * Higiene diária (1.5.15). Chamada pelo Cron Trigger do Worker (custom-worker.ts) às 9h de Brasília,
@@ -25,7 +26,12 @@ export async function POST(req: NextRequest) {
       console.error("[envio] reenvio falhou:", e instanceof Error ? e.name : e);
       return { enviados: 0, falhas: -1 };
     });
-    return NextResponse.json({ ok: true, ...summary, emailsCandidatura: candidaturas }, { status: 200 });
+    // 2.5a: e-mails de agenda (convite, marcada, cancelada) que não entraram na fila.
+    const agenda = await reenviarEmailsEntrevista(prisma, enqueueEmail).catch((e) => {
+      console.error("[agenda] reenvio falhou:", e instanceof Error ? e.name : e);
+      return { enviados: 0, falhas: -1 };
+    });
+    return NextResponse.json({ ok: true, ...summary, emailsCandidatura: candidaturas, emailsAgenda: agenda }, { status: 200 });
   } catch (e) {
     console.error("[higiene] falhou:", e instanceof Error ? `${e.name}: ${e.message}` : e);
     return NextResponse.json({ error: "hygiene_failed" }, { status: 500 });
