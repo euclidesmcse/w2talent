@@ -63,7 +63,7 @@ export default async function IaPage() {
           <h2 id="ia-revisao" className="text-xl font-semibold">{t("revisaoTitulo")}</h2>
           <p className="text-ink">
             {t.rich("revisao1", {
-              email: () => <a href={`mailto:${EMAIL_REVISAO}`} className="font-medium">{EMAIL_REVISAO}</a>,
+              email: () => <a href={`mailto:${EMAIL_REVISAO}`} className="font-medium underline underline-offset-2">{EMAIL_REVISAO}</a>,
             })}
           </p>
         </section>
