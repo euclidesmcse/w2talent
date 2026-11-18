@@ -384,6 +384,8 @@
       "names": {
         "extract_cv": "Leer CV",
         "extract_vacancy": "Leer vacante",
+        "review_bias": "Revisar sesgo de la vacante",
+        "interview_questions": "Preguntas de entrevista",
         "ficha_w2": "Ficha W2",
         "match_explain": "Explicar el match",
         "coach_candidate": "Coach del candidato",
@@ -808,6 +810,14 @@
     "vagaFaz": "Completa los campos de la vacante a partir del texto pegado, avisa de una vacante parecida ya publicada por la empresa y sugiere el rango salarial por la mediana de 5 o más vacantes parecidas.",
     "vagaDados": "El texto de la vacante, sin correo ni teléfono.",
     "vagaDecide": "El reclutador revisa cada campo y decide si publica.",
+    "viesTarefa": "Revisor de sesgo (reclutador)",
+    "viesFaz": "Reglas fijas señalan en el texto de la vacante términos que excluyen a personas por edad, género, apariencia, origen, familia, salud o religión, y sugieren un cambio. Si el reclutador lo pide, la IA propone el texto reescrito sin esos términos.",
+    "viesDados": "El título, la descripción y los beneficios de la vacante, sin correo ni teléfono. Las reglas corren en el navegador; la IA solo recibe el texto cuando el reclutador lo pide.",
+    "viesDecide": "El reclutador. El aviso no impide publicar, y la propuesta de la IA solo se usa si él la elige.",
+    "perguntasTarefa": "Preguntas de entrevista (reclutador)",
+    "perguntasFaz": "Sugiere de 6 a 8 preguntas, iguales para todos los candidatos, a partir de las competencias y responsabilidades de la vacante, y qué observar en la respuesta.",
+    "perguntasDados": "Título, nivel, competencias y responsabilidades de la vacante. Nada sobre candidatos.",
+    "perguntasDecide": "El reclutador decide si las usa. Las preguntas no se guardan y no califican a nadie.",
     "buscaTarefa": "Búsqueda por significado",
     "buscaFaz": "Encuentra vacantes y perfiles con palabras distintas que significan lo mismo.",
     "buscaDados": "El texto de la búsqueda y el de las vacantes y fichas, sin contactos.",
@@ -976,6 +986,56 @@
       "sumiu": "La vacante que ibas a actualizar ya no está disponible. Publícala como nueva.",
       "publicar": "No pudimos publicar. Intenta de nuevo.",
       "faixaValor": "Escribe el rango solo con números. Ej.: 8000 u 8.000."
+    },
+    "vies": {
+      "titulo": "{count, plural, one {1 término puede alejar candidatos} other {# términos pueden alejar candidatos}}",
+      "semAvisos": "Ningún término señalado ahora",
+      "intro": "Es solo un aviso: tú decides qué cambia, y la vacante se publica igual.",
+      "comoFunciona": "Cómo funciona",
+      "campos": {
+        "titulo": "título",
+        "descricao": "descripción",
+        "beneficios": "beneficios"
+      },
+      "cat": {
+        "idade": "limita por edad.",
+        "genero": "limita por género.",
+        "aparencia": "juzga por la apariencia.",
+        "origem": "exige origen o idioma nativo; prefiere el nivel de fluidez.",
+        "familia": "pregunta por familia o estado civil.",
+        "saude": "excluye por salud o discapacidad.",
+        "religiao": "menciona religión."
+      },
+      "trocarPor": "Cambiar por \"{troca}\"",
+      "tirar": "Quitar \"{trecho}\"",
+      "reescrever": "Reescribe este fragmento.",
+      "pedirIa": "Pedir a la IA un texto sin estos términos",
+      "reescrevendo": "Reescribiendo...",
+      "propostaTitulo": "Propuesta de la IA",
+      "propostaLimpa": "Las reglas no señalan nada en este texto. Revísalo antes de usarlo.",
+      "propostaRestantes": "{count, plural, one {Queda 1 término señalado.} other {Quedan # términos señalados.}} Revísalo antes de usarlo.",
+      "usarProposta": "Usar este texto",
+      "manter": "Mantener el mío",
+      "erros": {
+        "ia_indisponivel": "La IA no respondió ahora. Usa los cambios de arriba o edita el texto.",
+        "limite_dia": "Llegaste al límite de reescrituras de hoy. Usa los cambios de arriba o edita el texto.",
+        "sem_avisos": "No hay términos señalados para reescribir.",
+        "mudou": "El texto cambió mientras la IA respondía. Pide de nuevo para ver una propuesta del texto actual.",
+        "texto_longo": "El texto es demasiado largo para que la IA lo revise. Usa los cambios de arriba o edita el texto.",
+        "sem_mudanca": "La IA no encontró qué cambiar en este texto. Usa los cambios de arriba o edita los fragmentos señalados."
+      }
+    },
+    "perguntas": {
+      "titulo": "Preguntas de entrevista",
+      "intro": "Sugerencias a partir de las competencias y responsabilidades de esta vacante, iguales para todos los candidatos. Quedan solo en esta pantalla: no se guardan y no califican a nadie.",
+      "gerar": "Sugerir preguntas",
+      "gerarDeNovo": "Sugerir otras",
+      "gerando": "Generando...",
+      "observar": "Observa: {texto}",
+      "erros": {
+        "sem_competencias": "Completa las competencias o la descripción para sugerir preguntas.",
+        "falha": "No se pudieron sugerir preguntas ahora. Inténtalo de nuevo."
+      }
     }
   }
 }

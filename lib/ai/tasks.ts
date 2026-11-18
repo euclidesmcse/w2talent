@@ -26,6 +26,10 @@ export const TEXT_MODEL = "@cf/zai-org/glm-4.7-flash";
 export const TASKS = {
   extract_cv: { kind: "chat", json: true, minContext: 32_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
   extract_vacancy: { kind: "chat", json: true, minContext: 16_000, defaultWorkersModel: TEXT_MODEL },
+  // 2.1c: reescrever o texto da vaga sem os termos apontados pelo revisor de viés (só quando o recrutador pede).
+  review_bias: { kind: "chat", json: true, minContext: 8_000, defaultWorkersModel: TEXT_MODEL },
+  // 2.1c: perguntas de entrevista a partir das competências da vaga (não guardadas, sem nota).
+  interview_questions: { kind: "chat", json: true, minContext: 8_000, defaultWorkersModel: TEXT_MODEL },
   ficha_w2: { kind: "chat", json: true, minContext: 32_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
   match_explain: { kind: "chat", json: true, minContext: 16_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
   coach_candidate: { kind: "chat", minContext: 32_000, personalData: true, defaultWorkersModel: TEXT_MODEL },

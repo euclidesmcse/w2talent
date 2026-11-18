@@ -384,6 +384,8 @@
       "names": {
         "extract_cv": "Ler currículo",
         "extract_vacancy": "Ler vaga",
+        "review_bias": "Revisar viés da vaga",
+        "interview_questions": "Perguntas de entrevista",
         "ficha_w2": "Ficha W2",
         "match_explain": "Explicar o match",
         "coach_candidate": "Coach do candidato",
@@ -808,6 +810,14 @@
     "vagaFaz": "Preenche os campos da vaga a partir do texto colado, avisa vaga parecida já publicada pela empresa e sugere a faixa salarial pela mediana de 5 ou mais vagas parecidas.",
     "vagaDados": "O texto da vaga, sem e-mail nem telefone.",
     "vagaDecide": "O recrutador confere cada campo e decide se publica.",
+    "viesTarefa": "Revisor de viés (recrutador)",
+    "viesFaz": "Regras fixas apontam no texto da vaga termos que excluem pessoas por idade, gênero, aparência, origem, família, saúde ou religião, e sugerem uma troca. Se o recrutador pedir, a IA propõe o texto reescrito sem esses termos.",
+    "viesDados": "O título, a descrição e os benefícios da vaga, sem e-mail nem telefone. As regras rodam no navegador; a IA só recebe o texto quando o recrutador pede.",
+    "viesDecide": "O recrutador. O aviso não impede a publicação, e a proposta da IA só entra se ele escolher.",
+    "perguntasTarefa": "Perguntas de entrevista (recrutador)",
+    "perguntasFaz": "Sugere de 6 a 8 perguntas iguais para todos os candidatos, a partir das competências e responsabilidades da vaga, e o que observar na resposta.",
+    "perguntasDados": "Título, nível, competências e responsabilidades da vaga. Nada sobre candidatos.",
+    "perguntasDecide": "O recrutador escolhe se usa. As perguntas não ficam guardadas e não dão nota a ninguém.",
     "buscaTarefa": "Busca por significado",
     "buscaFaz": "Acha vagas e perfis com palavras diferentes que querem dizer o mesmo.",
     "buscaDados": "O texto da busca e o texto das vagas e fichas, sem contatos.",
@@ -976,6 +986,56 @@
       "sumiu": "A vaga que você ia atualizar não está mais disponível. Publique como vaga nova.",
       "publicar": "Não deu para publicar. Tente de novo.",
       "faixaValor": "Escreva a faixa só com números. Ex.: 8000 ou 8.000."
+    },
+    "vies": {
+      "titulo": "{count, plural, one {1 termo pode afastar candidatos} other {# termos podem afastar candidatos}}",
+      "semAvisos": "Nenhum termo apontado agora",
+      "intro": "Só um aviso: você decide o que muda, e a vaga publica do mesmo jeito.",
+      "comoFunciona": "Como funciona",
+      "campos": {
+        "titulo": "título",
+        "descricao": "descrição",
+        "beneficios": "benefícios"
+      },
+      "cat": {
+        "idade": "limita por idade.",
+        "genero": "limita por gênero.",
+        "aparencia": "julga pela aparência.",
+        "origem": "exige origem ou idioma nativo; prefira o nível de fluência.",
+        "familia": "pergunta sobre família ou estado civil.",
+        "saude": "exclui por saúde ou deficiência.",
+        "religiao": "cita religião."
+      },
+      "trocarPor": "Trocar por \"{troca}\"",
+      "tirar": "Tirar \"{trecho}\"",
+      "reescrever": "Reescreva este trecho.",
+      "pedirIa": "Pedir à IA um texto sem esses termos",
+      "reescrevendo": "Reescrevendo...",
+      "propostaTitulo": "Proposta da IA",
+      "propostaLimpa": "As regras não apontam nada neste texto. Confira antes de usar.",
+      "propostaRestantes": "{count, plural, one {Ainda sobra 1 termo apontado.} other {Ainda sobram # termos apontados.}} Confira antes de usar.",
+      "usarProposta": "Usar este texto",
+      "manter": "Manter o meu",
+      "erros": {
+        "ia_indisponivel": "A IA não respondeu agora. Use as trocas acima ou edite o texto.",
+        "limite_dia": "Você chegou ao limite de reescritas de hoje. Use as trocas acima ou edite o texto.",
+        "sem_avisos": "Não há termos apontados para reescrever.",
+        "mudou": "O texto mudou enquanto a IA respondia. Peça de novo para ver uma proposta do texto atual.",
+        "texto_longo": "O texto está longo demais para a IA revisar. Use as trocas acima ou edite o texto.",
+        "sem_mudanca": "A IA não achou o que mudar neste texto. Use as trocas acima ou edite os trechos apontados."
+      }
+    },
+    "perguntas": {
+      "titulo": "Perguntas de entrevista",
+      "intro": "Sugestões a partir das competências e responsabilidades desta vaga, iguais para todos os candidatos. Ficam só nesta tela: não são guardadas e não dão nota a ninguém.",
+      "gerar": "Sugerir perguntas",
+      "gerarDeNovo": "Sugerir outras",
+      "gerando": "Gerando...",
+      "observar": "Observe: {texto}",
+      "erros": {
+        "sem_competencias": "Preencha as competências ou a descrição para sugerir perguntas.",
+        "falha": "Não deu para sugerir perguntas agora. Tente de novo."
+      }
     }
   }
 }

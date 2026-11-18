@@ -3,6 +3,8 @@
  * Publicar vaga (2.1b, plano 2.1, D4 e D6). O recrutador cola o texto, a IA preenche os campos,
  * ele confere e publica. Antes de publicar, a tela avisa vaga parecida já ativa na empresa
  * ("Atualizar a existente") e sugere a faixa salarial quando há 5 ou mais vagas parecidas de base.
+ * 2.1c (D5, D6): o revisor de viés aponta termos que excluem gente (só avisa; a IA reescreve se ele
+ * pedir) e a tela sugere perguntas de entrevista, que não ficam guardadas e não dão nota.
  */
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -14,9 +16,12 @@ import { formatFaixa } from "@/lib/format";
 import { diaMes } from "@/lib/envio-client";
 import { getSkill, normalizeSkill } from "@/lib/taxonomy";
 import { localidadeDaVaga, MODOS, MOEDAS, NIVEIS, rascunhoVazio, REGIMES, valorFaixa, type RascunhoVaga } from "@/lib/vaga-campos";
+import { aplicarTroca, revisarVies, type AvisoVies, type CampoVies } from "@/lib/vaga-vies";
 
 type Duplicada = { id: string; titulo: string; updatedAt: string };
 type Faixa = { de: number; ate: number; base: number; moeda: string };
+type Proposta = { titulo: string; descricaoBullets: string[]; beneficios: string[]; restantes: number; chave: string };
+type Pergunta = { competencia: string; pergunta: string; observar: string };
 type Empresa = { nome: string; validacaoStatus: "pendente" | "validado" | "rejeitado" } | null;
 
 /** Campos de texto da tela (a faixa e as listas ficam como o recrutador digita). */
@@ -102,6 +107,12 @@ export default function PublicarPage() {
   const [editando, setEditando] = React.useState<Duplicada | null>(null);
   const [enviando, setEnviando] = React.useState(false);
   const [publicada, setPublicada] = React.useState<{ titulo: string; atualizada: boolean; semPrazo?: boolean } | null>(null);
+  const [proposta, setProposta] = React.useState<Proposta | null>(null);
+  const [reescrevendo, setReescrevendo] = React.useState(false);
+  const [erroVies, setErroVies] = React.useState<string | null>(null);
+  const [perguntas, setPerguntas] = React.useState<Pergunta[] | null>(null);
+  const [gerando, setGerando] = React.useState(false);
+  const [erroPerguntas, setErroPerguntas] = React.useState<string | null>(null);
   const conferencia = React.useRef(0);
   const tituloRef = React.useRef<HTMLInputElement>(null);
 
@@ -149,8 +160,78 @@ export default function PublicarPage() {
   const set = <K extends keyof Form>(k: K) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  // Revisor de viés: regras fixas, no navegador, a cada mudança do texto.
+  const avisos = React.useMemo(
+    () => revisarVies({ titulo: form.titulo, descricao: form.descricao, beneficios: form.beneficios }),
+    [form.titulo, form.descricao, form.beneficios],
+  );
+  const CAMPO_FORM: Record<CampoVies, "titulo" | "descricao" | "beneficios"> = { titulo: "titulo", descricao: "descricao", beneficios: "beneficios" };
+  // A proposta da IA vale só para o texto de onde saiu: mudou o texto, ela some.
+  const chaveTexto = JSON.stringify([form.titulo, form.descricao, form.beneficios]);
+  const chaveAtual = React.useRef(chaveTexto);
+  chaveAtual.current = chaveTexto;
+  React.useEffect(() => {
+    setProposta((p) => (p && p.chave !== chaveTexto ? null : p));
+  }, [chaveTexto]);
+  const trocar = (a: AvisoVies) => setForm((f) => ({ ...f, [CAMPO_FORM[a.campo]]: aplicarTroca(f[CAMPO_FORM[a.campo]], a) }));
+
+  const reescrever = async () => {
+    setErroVies(null);
+    setProposta(null);
+    setReescrevendo(true);
+    const chave = chaveTexto;
+    try {
+      const r = await fetch("/api/vacancies/revisar", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ titulo: rascunho.titulo, descricaoBullets: rascunho.descricaoBullets, beneficios: rascunho.beneficios }),
+      });
+      const j = (await r.json().catch(() => ({}))) as { proposta?: Proposta; error?: string };
+      if (r.ok && j.proposta) {
+        if (chaveAtual.current !== chave) return setErroVies(t("vies.erros.mudou"));
+        return setProposta({ ...j.proposta, chave });
+      }
+      if (r.status === 401 || r.status === 403) contaRecusada();
+      setErroVies(t(`vies.erros.${j.error === "limite_dia" || j.error === "sem_avisos" || j.error === "texto_longo" || j.error === "sem_mudanca" ? j.error : "ia_indisponivel"}`));
+    } catch {
+      setErroVies(t("vies.erros.ia_indisponivel"));
+    } finally {
+      setReescrevendo(false);
+    }
+  };
+
+  const usarProposta = () => {
+    if (!proposta) return;
+    setForm((f) => ({ ...f, titulo: proposta.titulo, descricao: proposta.descricaoBullets.join("\n"), beneficios: proposta.beneficios.join("\n") }));
+    setProposta(null);
+  };
+
+  const gerarPerguntas = async () => {
+    setErroPerguntas(null);
+    setGerando(true);
+    try {
+      const r = await fetch("/api/vacancies/perguntas", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ rascunho, idioma: locale }),
+      });
+      const j = (await r.json().catch(() => ({}))) as { perguntas?: Pergunta[]; error?: string };
+      if (r.ok && j.perguntas) return setPerguntas(j.perguntas);
+      if (r.status === 401 || r.status === 403) contaRecusada();
+      setErroPerguntas(t(`perguntas.erros.${j.error === "sem_competencias" ? j.error : "falha"}`));
+    } catch {
+      setErroPerguntas(t("perguntas.erros.falha"));
+    } finally {
+      setGerando(false);
+    }
+  };
+
   const irParaConferir = (v: RascunhoVaga, o: "ia" | "regras" | "manual") => {
     setForm(formDe(v));
+    setProposta(null);
+    setErroVies(null);
+    setPerguntas(null);
+    setErroPerguntas(null);
     setOrigem(o);
     setErro(null);
     setEditando(null);
@@ -417,12 +498,93 @@ export default function PublicarPage() {
                   <Textarea className="md:h-auto" rows={4} value={form.beneficios} onChange={set("beneficios")} />
                 </Field>
 
+                {avisos.length || proposta ? (
+                  <section aria-labelledby="vies-titulo" data-testid="vies" className="rounded-card bg-warning-soft px-3.5 py-3 text-[13px] text-warning-ink">
+                    <h2 id="vies-titulo" className="font-semibold">{avisos.length ? t("vies.titulo", { count: avisos.length }) : t("vies.semAvisos")}</h2>
+                    <p className="mt-1">
+                      {t("vies.intro")} <a href="/ia#revisor-vies" className="underline">{t("vies.comoFunciona")}</a>
+                    </p>
+                    {avisos.length ? (
+                      <ul className="mt-2 flex flex-col gap-2">
+                        {avisos.map((a) => (
+                          <li key={`${a.campo}-${a.inicio}-${a.regra}`} data-vies={a.regra} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <span>
+                              <strong>&ldquo;{a.trecho}&rdquo;</strong> ({t(`vies.campos.${a.campo}`)}): {t(`vies.cat.${a.categoria}`)}
+                            </span>
+                            {a.troca === null ? (
+                              <span>{t("vies.reescrever")}</span>
+                            ) : (
+                              <Button variant="secondary" size="sm" onClick={() => trocar(a)}>
+                                {a.troca ? t("vies.trocarPor", { troca: a.troca }) : t("vies.tirar", { trecho: a.trecho })}
+                              </Button>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {avisos.length && !proposta ? (
+                      <div className="mt-3">
+                        <Button variant="secondary" size="sm" onClick={reescrever} disabled={reescrevendo} aria-busy={reescrevendo}>
+                          {reescrevendo ? t("vies.reescrevendo") : t("vies.pedirIa")}
+                        </Button>
+                      </div>
+                    ) : null}
+                    {erroVies ? <p role="alert" className="mt-2">{erroVies}</p> : null}
+                    {proposta ? (
+                      <div data-testid="vies-proposta" className="mt-3 rounded-card border border-line bg-surface px-3.5 py-3 text-ink">
+                        <p className="font-semibold">{t("vies.propostaTitulo")}</p>
+                        <p className="mt-1 text-muted">{proposta.restantes ? t("vies.propostaRestantes", { count: proposta.restantes }) : t("vies.propostaLimpa")}</p>
+                        <p className="mt-2 font-medium">{proposta.titulo}</p>
+                        {proposta.descricaoBullets.length ? (
+                          <ul className="mt-1 list-disc pl-5">{proposta.descricaoBullets.map((b, i) => <li key={i}>{b}</li>)}</ul>
+                        ) : null}
+                        {proposta.beneficios.length ? (
+                          <>
+                            <p className="mt-2 font-medium">{t("beneficios")}</p>
+                            <ul className="mt-1 list-disc pl-5">{proposta.beneficios.map((b, i) => <li key={i}>{b}</li>)}</ul>
+                          </>
+                        ) : null}
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Button size="sm" onClick={usarProposta}>{t("vies.usarProposta")}</Button>
+                          <Button variant="ghost" size="sm" onClick={() => setProposta(null)}>{t("vies.manter")}</Button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </section>
+                ) : null}
+
                 {erro ? <p role="alert" className="text-[13px] text-danger">{erro}</p> : null}
                 <div className="flex flex-wrap items-center gap-3">
                   <Button type="submit" disabled={enviando || !form.titulo.trim()} aria-busy={enviando}>{editando ? t("atualizar") : t("publicar")}</Button>
                   <Button type="button" variant="ghost" onClick={() => { setPasso("colar"); setErro(null); }}>{t("voltar")}</Button>
                 </div>
               </form>
+
+              <section aria-labelledby="perguntas-titulo" data-testid="perguntas" className="mt-6 border-t border-line pt-5">
+                <h2 id="perguntas-titulo" className="text-base font-semibold">{t("perguntas.titulo")}</h2>
+                <p className="mt-1 text-[13px] text-muted">
+                  {t("perguntas.intro")} <a href="/ia#perguntas-entrevista" className="underline">{t("vies.comoFunciona")}</a>
+                </p>
+                <div className="mt-3">
+                  <Button variant="secondary" size="sm" onClick={gerarPerguntas} disabled={gerando || (!rascunho.stack.length && !rascunho.descricaoBullets.length)} aria-busy={gerando}>
+                    {gerando ? t("perguntas.gerando") : perguntas ? t("perguntas.gerarDeNovo") : t("perguntas.gerar")}
+                  </Button>
+                </div>
+                {erroPerguntas ? <p role="alert" className="mt-2 text-[13px] text-danger">{erroPerguntas}</p> : null}
+                {perguntas ? (
+                  <ol className="mt-4 flex list-decimal flex-col gap-3 pl-5 text-sm">
+                    {perguntas.map((p, i) => (
+                      <li key={i}>
+                        <p className="text-ink">{p.pergunta}</p>
+                        <p className="mt-0.5 text-[13px] text-muted">
+                          {p.competencia ? <span className="font-medium">{p.competencia}. </span> : null}
+                          {t("perguntas.observar", { texto: p.observar })}
+                        </p>
+                      </li>
+                    ))}
+                  </ol>
+                ) : null}
+              </section>
             </CardBody>
           </Card>
         )}
