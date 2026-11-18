@@ -18,6 +18,7 @@ Em [Publicar vaga](/publicar) você cola o texto da vaga e a IA preenche os camp
 
 - **Vaga parecida:** se a sua empresa já tem uma vaga ativa parecida, aparece o aviso com "Atualizar a existente". Se for outra vaga, publique assim mesmo.
 - **Faixa sugerida:** com 5 ou mais vagas parecidas, aparece a faixa mediana delas.
+- **Mercado:** ao lado, os números do [Mercado de TI](/mercado) para a primeira competência, o nível, o regime e a moeda: a faixa das vagas e o que os candidatos pedem. A pretensão é sempre agregada, de 10 ou mais fichas; você nunca vê a pretensão de alguém por aqui. É só informativo.
 - **Revisor de viés:** termos sobre idade, gênero, aparência, origem, família, saúde ou religião ganham um aviso com sugestão de troca. Ele só avisa e não bloqueia. Você pode pedir à IA um texto sem esses termos.
 - **Perguntas de entrevista:** a IA sugere perguntas a partir das competências. Elas não são guardadas.
 

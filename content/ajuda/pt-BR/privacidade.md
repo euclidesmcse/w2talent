@@ -2,13 +2,17 @@
 titulo: Meus dados e privacidade
 resumo: Contato protegido, por quanto tempo o perfil fica na busca e como pedir revisão.
 areas: publico, candidato, recrutador
-telas: /minha-ficha, /renovar, /ia
+telas: /minha-ficha, /renovar, /ia, /mercado
 ordem: 10
 ---
 
 ## Contato protegido
 
 Na busca de candidatos, e-mail e telefone aparecem mascarados (por exemplo, a***@e***.com). O contato completo só chega à empresa depois que você responde a ela ou quando ela chama você para uma entrevista numa vaga em que você se candidatou (e você recebe um aviso).
+
+## Pretensão salarial
+
+A pretensão que você coloca na ficha aparece para recrutadores na sua Ficha W2 e na busca de candidatos. Nos números de mercado ([Mercado de TI](/mercado) e Publicar vaga), recrutadores veem só faixas agregadas de **10 ou mais fichas**, nunca a pretensão de alguém, e nunca o mínimo nem o máximo.
 
 ## Quanto tempo o perfil fica na busca
 

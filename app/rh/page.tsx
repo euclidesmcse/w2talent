@@ -6,13 +6,15 @@
  */
 import * as React from "react";
 import Link from "next/link";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/ui";
 import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { contaRecusada, linkEntrar, useConta } from "@/lib/conta-client";
 import type { MetricasRh, SituacaoVaga, VagaRh } from "@/lib/painel-rh";
+import { formatMoney } from "@/lib/locale";
+import type { Posicao } from "@/lib/mercado-tela";
 
 type Estado =
   | { t: "carregando" }
@@ -27,9 +29,17 @@ const TOM: Record<SituacaoVaga, string> = {
   arquivada: "bg-neutral-soft text-ink-soft",
 };
 
+/** 3.2b: vaga abaixo do mercado tende a atrair menos gente; acima não é problema. */
+const TOM_MERCADO: Record<Posicao, string> = {
+  abaixo: "bg-warning-soft text-warning-ink",
+  dentro: "bg-success-soft text-success-ink",
+  acima: "bg-brand-soft text-brand-ink",
+};
+
 export default function PainelRhPage() {
   const t = useTranslations("rh");
   const tr = useTranslations();
+  const locale = useLocale();
   const fmt = useFormatter();
   const conta = useConta();
   const liberado = conta.estado === "ok" && conta.conta?.perfil === "recrutador";
@@ -151,7 +161,19 @@ export default function PainelRhPage() {
                       <li key={v.id} data-vaga={v.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line-soft py-3 first:border-t-0">
                         <div className="flex min-w-0 flex-[1_1_240px] flex-col gap-1">
                           <Link href={`/rh/vagas/${encodeURIComponent(v.id)}`} className="font-medium text-ink underline-offset-2 hover:underline">{v.titulo}</Link>
-                          <span className={cn("inline-flex h-6 w-fit items-center rounded-control px-2 text-[12px] font-medium", TOM[v.situacao])}>{situacao(v)}</span>
+                          <span className="flex flex-wrap gap-1.5">
+                            <span className={cn("inline-flex h-6 w-fit items-center rounded-control px-2 text-[12px] font-medium", TOM[v.situacao])}>{situacao(v)}</span>
+                            {v.mercado ? (
+                              <span
+                                className={cn("inline-flex h-6 w-fit items-center rounded-control px-2 text-[12px] font-medium", TOM_MERCADO[v.mercado.posicao])}
+                                title={t("mercadoDetalhe", { de: formatMoney(v.mercado.faixa.de, locale, v.mercado.moeda), ate: formatMoney(v.mercado.faixa.ate, locale, v.mercado.moeda) })}
+                                data-mercado={v.mercado.posicao}
+                              >
+                                {t(`mercado_${v.mercado.posicao}`)}
+                                <span className="sr-only"> · {t("mercadoDetalhe", { de: formatMoney(v.mercado.faixa.de, locale, v.mercado.moeda), ate: formatMoney(v.mercado.faixa.ate, locale, v.mercado.moeda) })}</span>
+                              </span>
+                            ) : null}
+                          </span>
                         </div>
                         <dl className="flex gap-5 text-sm">
                           <div className="flex flex-col">

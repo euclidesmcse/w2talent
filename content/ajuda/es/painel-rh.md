@@ -19,7 +19,7 @@ Los números son solo de tu empresa.
 
 ## Vacantes
 
-Cada vacante muestra su estado, el total de postulaciones y las nuevas. En "Candidatos compatibles" buscas perfiles parecidos a la vacante, incluso de quienes aún no se postularon.
+Cada vacante muestra su estado, el total de postulaciones y las nuevas. Una vacante activa con rango recibe la etiqueta "por debajo", "dentro" o "por encima del mercado": el medio de su rango frente al rango de las vacantes de la misma primera competencia, nivel, tipo de contrato y moneda en el [Mercado de TI](/mercado). Sin números suficientes para el grupo, no aparece etiqueta. En "Candidatos compatibles" buscas perfiles parecidos a la vacante, incluso de quienes aún no se postularon.
 
 ## Postulaciones de una vacante
 

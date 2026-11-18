@@ -18,6 +18,7 @@ En [Publicar vacante](/publicar) pegas el texto de la vacante y la IA llena los 
 
 - **Vacante parecida:** si tu empresa ya tiene una vacante activa parecida, aparece el aviso con "Actualizar la existente". Si es otra vacante, publícala igual.
 - **Rango sugerido:** con 5 o más vacantes parecidas, aparece el rango mediano de ellas.
+- **Mercado:** al lado, los números del [Mercado de TI](/mercado) para la primera competencia, el nivel, el tipo de contrato y la moneda: el rango de las vacantes y lo que piden los candidatos. La pretensión siempre es agregada, de 10 o más fichas; aquí nunca ves la pretensión de alguien. Es solo informativo.
 - **Revisor de sesgo:** los términos sobre edad, género, apariencia, origen, familia, salud o religión reciben un aviso con sugerencia de cambio. Solo avisa y no bloquea. Puedes pedir a la IA un texto sin esos términos.
 - **Preguntas de entrevista:** la IA sugiere preguntas a partir de las competencias. No se guardan.
 

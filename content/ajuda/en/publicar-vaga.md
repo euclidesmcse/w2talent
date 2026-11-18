@@ -18,6 +18,7 @@ In [Post a job](/publicar) you paste the job text and AI fills in the fields. Em
 
 - **Similar job:** if your company already has a similar active job, you see a warning with "Update the existing one". If it is a different job, publish anyway.
 - **Suggested pay range:** with 5 or more similar jobs, their median range shows.
+- **Market:** next to it, the [Tech job market](/mercado) numbers for the first skill, level, employment type and currency: the job range and what candidates ask. Expectations are always aggregated from 10 or more profiles; you never see anyone's own expectation here. It is for information only.
 - **Bias reviewer:** terms about age, gender, looks, origin, family, health or religion get a warning with a suggested change. It only warns and never blocks. You can ask AI for a text without those terms.
 - **Interview questions:** AI suggests questions from the skills. They are not saved.
 
