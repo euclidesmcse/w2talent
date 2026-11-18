@@ -12,6 +12,8 @@ export const NAV: Record<Area, NavLink[]> = {
   publico: [
     { href: "/vagas", key: "vagas" },
     { href: "/candidatos", key: "recrutadores", shortKey: "recrutadoresCurto" },
+    // 3.2a: números de mercado, públicos
+    { href: "/mercado", key: "mercado" },
   ],
   candidato: [
     { href: "/painel", key: "painel" },

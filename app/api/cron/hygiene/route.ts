@@ -49,7 +49,15 @@ export async function POST(req: NextRequest) {
       console.error("[traducao] cron das fichas falhou:", e instanceof Error ? e.name : e);
       return null;
     });
-    return NextResponse.json({ ok: true, ...summary, emailsCandidatura: candidaturas, emailsAgenda: agenda, traducoes, traducoesFichas: fichas }, { status: 200 });
+    // 3.2a: agregados de mercado da semana (MarketStat).
+    const mercado = await (async () => {
+      const { atualizarMercado } = await import("@/lib/mercado");
+      return atualizarMercado(prisma);
+    })().catch((e) => {
+      console.error("[mercado] cron falhou:", e instanceof Error ? e.name : e);
+      return null;
+    });
+    return NextResponse.json({ ok: true, ...summary, emailsCandidatura: candidaturas, emailsAgenda: agenda, traducoes, traducoesFichas: fichas, mercado }, { status: 200 });
   } catch (e) {
     console.error("[higiene] falhou:", e instanceof Error ? `${e.name}: ${e.message}` : e);
     return NextResponse.json({ error: "hygiene_failed" }, { status: 500 });
