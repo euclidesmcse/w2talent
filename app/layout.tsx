@@ -4,15 +4,16 @@ import { getMessages, getLocale, getTranslations } from "next-intl/server";
 import { defaultLocale } from "@/i18n";
 import { ToastProvider } from "@/components/ui/toast";
 import { OfflineBanner, PwaInit } from "@/components/pwa";
-import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-// Fontes servidas pelo próprio site (next/font baixa no build): sem CSS de terceiro bloqueando a
-// primeira pintura. Antes vinham do fonts.googleapis.com e o tempo até esse servidor fazia o
-// Lighthouse do CI oscilar (FCP 1,5 s ↔ 2,8 s) e cair abaixo de 90 em telas sorteadas.
-const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"], display: "swap", variable: "--font-inter" });
-const mono = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500"], display: "swap", variable: "--font-mono", preload: false });
-const grotesk = Space_Grotesk({ subsets: ["latin"], weight: ["500", "600", "700"], display: "swap", variable: "--font-grotesk" });
+// Fontes servidas pelo próprio site: sem CSS de terceiro bloqueando a primeira pintura (antes vinham do
+// fonts.googleapis.com e o Lighthouse do CI oscilava). Os arquivos ficam no repositório (app/fonts, versões
+// variáveis do Fontsource, licença OFL, só o subconjunto latin): o build não depende do Google Fonts,
+// que às vezes respondia fora do formato e quebrava o next/font/google no CI.
+const inter = localFont({ src: "./fonts/inter-latin-wght-normal.woff2", weight: "100 900", display: "swap", variable: "--font-inter" });
+const mono = localFont({ src: "./fonts/jetbrains-mono-latin-wght-normal.woff2", weight: "100 800", display: "swap", variable: "--font-mono", preload: false, fallback: ["ui-monospace", "monospace"] });
+const grotesk = localFont({ src: "./fonts/space-grotesk-latin-wght-normal.woff2", weight: "300 700", display: "swap", variable: "--font-grotesk" });
 
 export const dynamic = "force-dynamic";
 
