@@ -57,7 +57,15 @@ export async function POST(req: NextRequest) {
       console.error("[mercado] cron falhou:", e instanceof Error ? e.name : e);
       return null;
     });
-    return NextResponse.json({ ok: true, ...summary, emailsCandidatura: candidaturas, emailsAgenda: agenda, traducoes, traducoesFichas: fichas, mercado }, { status: 200 });
+    // 3.1a: pesos do ranking adaptativo (global e por empresa).
+    const ranking = await (async () => {
+      const { atualizarPesos } = await import("@/lib/ranking");
+      return atualizarPesos(prisma);
+    })().catch((e) => {
+      console.error("[ranking] cron falhou:", e instanceof Error ? e.name : e);
+      return null;
+    });
+    return NextResponse.json({ ok: true, ...summary, emailsCandidatura: candidaturas, emailsAgenda: agenda, traducoes, traducoesFichas: fichas, mercado, ranking }, { status: 200 });
   } catch (e) {
     console.error("[higiene] falhou:", e instanceof Error ? `${e.name}: ${e.message}` : e);
     return NextResponse.json({ error: "hygiene_failed" }, { status: 500 });

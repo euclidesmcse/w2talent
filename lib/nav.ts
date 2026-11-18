@@ -30,6 +30,8 @@ export const NAV: Record<Area, NavLink[]> = {
   admin: [
     { href: "/admin/ia", key: "ia" },
     { href: "/admin/empresas", key: "empresas" },
+    // 3.1a: pesos do ranking adaptativo (D7)
+    { href: "/admin/ranking", key: "ranking" },
   ],
 };
 

@@ -14,6 +14,7 @@ import { Prisma, type PrismaClient } from "@prisma/client";
 import { withoutContacts } from "./search";
 import { matchCandidato, type GapCandidato } from "./match-candidato";
 import { gravarSinais, registrarSinal } from "./sinais";
+import { partesParaSinal } from "./ranking";
 import { ETAPAS, type Etapa } from "./painel-rh";
 import { emailLocale, renderEntrevistaEmail } from "./email-templates";
 import { entrevistasDasCandidaturas, type ResumoEntrevista } from "./entrevista";
@@ -155,8 +156,8 @@ export async function mudarEtapa(
       where: { id: applicationId, companyId, origem: "candidaturaLote" },
       select: {
         id: true, etapa: true, etapaEm: true, status: true, respondidaEm: true, contatoLiberadoEm: true, emailPendente: true, candidateId: true, vacancyId: true,
-        candidate: { select: { nome: true, email: true, celular: true, idiomaOriginal: true } },
-        vacancy: { select: { titulo: true } },
+        candidate: { select: { ...PERFIL, idiomaOriginal: true } },
+        vacancy: { select: VAGA },
         company: { select: { nome: true } },
       },
     });
@@ -193,10 +194,14 @@ export async function mudarEtapa(
       },
     });
     if (r.count === 0) return { ok: false, erro: "mudou" } as const;
+    // 3.1 (D6): as 5 partes do match deste momento, para o ranking adaptativo aprender.
+    const m = app.vacancy ? matchCandidato(app.candidate as any, app.vacancy as any, now.getTime()) : null;
     await gravarSinais(tx, [
       {
         tipo: "etapa_mudou", ator: "recrutador", candidateId: app.candidateId, vacancyId: app.vacancyId, applicationId: app.id,
-        dados: libera ? { de, para, contatoLiberado: true } : { de, para }, createdAt: now,
+        matchPct: m?.pct ?? null,
+        dados: { de, para, ...(libera ? { contatoLiberado: true } : {}), ...(m ? partesParaSinal(m.partes) : {}) },
+        createdAt: now,
       },
     ]);
     const liberado = libera || !!app.contatoLiberadoEm;

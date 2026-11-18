@@ -1,4 +1,5 @@
 /** 2.4b Candidaturas da vaga e mudança de etapa no banco de verdade. Só roda num Postgres local. */
+import { partesDoSinal } from "../lib/ranking";
 import type { PrismaClient } from "@prisma/client";
 import { NextRequest } from "next/server";
 import { cookieDeTeste, type ContaTeste } from "./helpers/sessao-mock";
@@ -158,7 +159,9 @@ describeDb("candidaturas da vaga (2.4b/2.4c)", () => {
     expect(enfileirados).toHaveLength(1);
 
     const sinais = await db.feedbackSignal.findMany({ where: { candidateId: { in: CANDS }, tipo: "etapa_mudou" }, orderBy: { createdAt: "asc" } });
-    expect(sinais.map((s) => s.dados)).toEqual([
+    // 3.1a: cada mudança guarda as 5 partes do match daquele momento (sem texto).
+    expect(sinais.every((s) => partesDoSinal(s.dados) !== null && s.matchPct != null)).toBe(true);
+    expect(sinais.map((s) => { const { de, para, contatoLiberado } = s.dados as any; return contatoLiberado ? { de, para, contatoLiberado } : { de, para }; })).toEqual([
       { de: "nova", para: "entrevista", contatoLiberado: true },
       { de: "entrevista", para: "em_analise" },
       { de: "em_analise", para: "entrevista" },

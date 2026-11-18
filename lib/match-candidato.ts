@@ -5,7 +5,7 @@
  * Atualização e completude passam a ser da ficha. Não é IA e nada aqui usa idade, gênero, foto,
  * estado civil ou endereço exato.
  */
-import { MATCH_WEIGHTS, recencia, regimeDaVaga, vacancyModo, vacancySkillIds, type MatchableVacancy } from "./match";
+import { notaComPesos, recencia, type MatchPartes, regimeDaVaga, vacancyModo, vacancySkillIds, type MatchableVacancy } from "./match";
 import { CAMPOS_MINIMOS, camposFaltando, sanitizeFicha, type Ficha } from "./ficha";
 import { fold } from "./query-intent";
 import { melhorCompetencia } from "./taxonomia-proximas";
@@ -18,7 +18,7 @@ export type GapCandidato =
   | { kind: "modo"; want: string; have: string | null }
   | { kind: "faixa"; want: number; have: number; moeda: string };
 
-export type MatchCandidato = { pct: number; gaps: GapCandidato[] };
+export type MatchCandidato = { pct: number; gaps: GapCandidato[]; partes: MatchPartes };
 
 /** Senioridade da ficha que atende o nível escrito na vaga. Nível que não dá para ler não conta. */
 export function senioridadesDoNivel(nivel: string | null | undefined): string[] | null {
@@ -93,9 +93,6 @@ export function matchCandidato(perfil: unknown, v: VagaParaMatch, now: number = 
 
   const o = (perfil ?? {}) as { updatedAt?: string | Date | null; createdAt?: string | Date | null };
   const completude = 1 - camposFaltando(f).length / CAMPOS_MINIMOS.length;
-  const W = MATCH_WEIGHTS;
-  const pct = Math.round(
-    W.skills * skills + W.nivel * nivel + W.condicoes * condicoes + W.recencia * recencia({ updatedAt: o.updatedAt, createdAt: o.createdAt }, now) + W.completude * completude,
-  );
-  return { pct: Math.max(0, Math.min(100, pct)), gaps };
+  const partes: MatchPartes = { skills, nivel, condicoes, recencia: recencia({ updatedAt: o.updatedAt, createdAt: o.createdAt }, now), completude };
+  return { pct: notaComPesos(partes), gaps, partes };
 }

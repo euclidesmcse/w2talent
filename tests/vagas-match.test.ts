@@ -104,7 +104,7 @@ describe("matchVacancy", () => {
 
   it("vaga completa e recente que atende tudo = 100", () => {
     const r = matchVacancy(base, { skills: ["aws"], modo: "remoto", regime: "PJ", nivel: "Sênior", faixaMin: 15000 }, now);
-    expect(r).toEqual({ pct: 100, gaps: [] });
+    expect(r).toEqual({ pct: 100, gaps: [], partes: { skills: 1, nivel: 1, condicoes: 1, recencia: 1, completude: 1 } });
   });
 
   it("falta competência: perde a fração dos 40", () => {

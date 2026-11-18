@@ -53,6 +53,7 @@ describe("catálogos de idioma", () => {
       "app/conta/seguranca/page.tsx",
       "app/empresa/page.tsx",
       "app/admin/empresas/page.tsx",
+      "app/admin/ranking/page.tsx",
       "components/admin-login.tsx",
       "components/empresa-etiqueta.tsx",
     ];

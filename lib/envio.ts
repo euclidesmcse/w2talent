@@ -21,6 +21,7 @@ import { emailLocale, renderCandidaturaEmail } from "./email-templates";
 import type { EmailMessage } from "./email";
 import { entrevistasDasCandidaturas } from "./entrevista";
 import { gravarSinais, registrarSinal, type Sinal } from "./sinais";
+import { partesParaSinal } from "./ranking";
 
 export const ENVIO_LIMITE_LOTE = 10;
 export const ENVIO_LIMITE_24H = 30;
@@ -353,7 +354,7 @@ export async function enviarCandidaturas(
       await tx.vacancy.update({ where: { id: v.id }, data: { candidaturasCount: { increment: 1 } } });
       itens.push({ vacancyId: v.id, status: "enviada", applicationId: app.id, email: !!v.company.emailContato });
       if (mensagem) emails.push({ applicationId: app.id, mensagem });
-      sinais.push({ tipo: "candidatura_enviada", ator: "candidato", candidateId: perfil.id, vacancyId: v.id, applicationId: app.id, matchPct: match.pct, dados: { loteId }, createdAt: now });
+      sinais.push({ tipo: "candidatura_enviada", ator: "candidato", candidateId: perfil.id, vacancyId: v.id, applicationId: app.id, matchPct: match.pct, dados: { loteId, ...partesParaSinal(match.partes) }, createdAt: now });
     }
     await gravarSinais(tx, sinais);
     return { ok: true as const, itens, usadas24h: usadas + prontas.length, emails };

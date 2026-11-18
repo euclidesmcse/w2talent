@@ -11,6 +11,15 @@ import { fold, type Modo, type Nivel, type QueryIntent, type Regime } from "./qu
 import { pesoCompetencia } from "./taxonomia-proximas";
 
 export const MATCH_WEIGHTS = { skills: 40, nivel: 20, condicoes: 20, recencia: 10, completude: 10 } as const;
+/** As 5 partes do match, cada uma de 0 a 1 (3.1: o ranking adaptativo aprende os pesos delas). */
+export type MatchPartes = { skills: number; nivel: number; condicoes: number; recencia: number; completude: number };
+export type PesosMatch = { [K in keyof MatchPartes]: number };
+
+/** Nota de 0 a 100 com os pesos dados (padrão: os fixos, a nota que aparece na tela). */
+export function notaComPesos(p: MatchPartes, W: PesosMatch = MATCH_WEIGHTS): number {
+  const pct = Math.round(W.skills * p.skills + W.nivel * p.nivel + W.condicoes * p.condicoes + W.recencia * p.recencia + W.completude * p.completude);
+  return Math.max(0, Math.min(100, pct));
+}
 /** Vaga atualizada até 7 dias atrás vale a recência inteira; com 60 dias ou mais, nada. */
 export const RECENCIA_DIAS = { cheia: 7, zero: 60 } as const;
 
@@ -24,7 +33,7 @@ export type MatchGap =
   | { kind: "modo"; want: Modo; have: Modo | null }
   | { kind: "faixa"; want: number; have: number | null; moeda: string };
 
-export type MatchResult = { pct: number; gaps: MatchGap[] };
+export type MatchResult = { pct: number; gaps: MatchGap[]; partes: MatchPartes };
 
 export type MatchableVacancy = {
   stack?: unknown;
@@ -163,9 +172,6 @@ export function matchVacancy(v: MatchableVacancy, c: MatchCriteria, now: number 
   }
   const condicoes = cond.length ? cond.reduce((a, b) => a + b, 0) / cond.length : 1;
 
-  const W = MATCH_WEIGHTS;
-  const pct = Math.round(
-    W.skills * skills + W.nivel * nivel + W.condicoes * condicoes + W.recencia * recencia(v, now) + W.completude * completude(v),
-  );
-  return { pct: Math.max(0, Math.min(100, pct)), gaps };
+  const partes: MatchPartes = { skills, nivel, condicoes, recencia: recencia(v, now), completude: completude(v) };
+  return { pct: notaComPesos(partes), gaps, partes };
 }
