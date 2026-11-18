@@ -973,7 +973,8 @@
       "faixa": "El valor \"Desde\" debe ser menor que \"Hasta\".",
       "empresa_rejeitada": "La empresa no fue verificada y no puede publicar vacantes.",
       "sumiu": "La vacante que ibas a actualizar ya no está disponible. Publícala como nueva.",
-      "publicar": "No pudimos publicar. Intenta de nuevo."
+      "publicar": "No pudimos publicar. Intenta de nuevo.",
+      "faixaValor": "Escribe el rango solo con números. Ej.: 8000 u 8.000."
     }
   }
 }

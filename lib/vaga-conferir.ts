@@ -3,7 +3,7 @@
  * - Duplicada (D4): a mesma empresa já tem vaga ativa muito parecida (título ou vetor). Só avisa;
  *   a tela oferece "Atualizar a existente".
  * - Faixa sugerida (D6): mediana das faixas das vagas ativas parecidas (mesmo nível, regime e moeda),
- *   só quando há 5 ou mais vagas de base. Sem base suficiente, não sugere nada.
+ *   só com nível e regime informados e 5 ou mais vagas de base. Sem base suficiente, não sugere nada.
  * O vetor do rascunho vem do bge-m3; se ele demorar ou falhar, as regras (título e competências) seguem.
  */
 import { Prisma, type PrismaClient } from "@prisma/client";
@@ -145,6 +145,8 @@ export async function conferirVaga(
   }
 
   // ── Faixa sugerida: mesmo nível, regime e moeda; parecidas pelo vetor ou pelas competências ──
+  // Sem nível ou regime não sugere: misturaria júnior com sênior, CLT com PJ.
+  if (!r.nivel || !r.regime) return { duplicadas, faixa: null };
   const filtros = [
     Prisma.sql`status = 'ativa'`,
     Prisma.sql`"expiresAt" > ${agora}`,
@@ -153,8 +155,7 @@ export async function conferirVaga(
     Prisma.sql`COALESCE("faixaMoeda", 'BRL') = ${r.faixaMoeda}`,
     Prisma.sql`id <> ${ignorar}`,
   ];
-  if (r.nivel) filtros.push(Prisma.sql`nivel = ${r.nivel}`);
-  if (r.regime) filtros.push(Prisma.sql`regime = ${r.regime}`);
+  filtros.push(Prisma.sql`nivel = ${r.nivel}`, Prisma.sql`regime = ${r.regime}`);
   const onde = Prisma.join(filtros, " AND ");
   let base: { faixaDe: number | null; faixaAte: number | null }[] = [];
   if (lit) {

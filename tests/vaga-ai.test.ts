@@ -1,6 +1,6 @@
 // 2.1b: leitura do texto colado da vaga (IA com regras de reserva) e limpeza do rascunho.
 import { faixaDoTexto, lerVaga, sanitizarRascunho, type ChatVagaFn } from "../lib/vaga-ai";
-import { localidadeDaVaga, rascunhoVazio } from "../lib/vaga-campos";
+import { localidadeDaVaga, rascunhoVazio, valorFaixa } from "../lib/vaga-campos";
 
 const TEXTO = `Engenheiro(a) Cloud Sênior
 Empresa: Acme. Contato: rh@acme.com.br ou (11) 98765-4321
@@ -109,5 +109,29 @@ describe("localidadeDaVaga", () => {
     expect(localidadeDaVaga("São Paulo", "hibrido")).toBe("São Paulo (Híbrido)");
     expect(localidadeDaVaga("Curitiba", "")).toBe("Curitiba");
     expect(localidadeDaVaga(" ", "")).toBeNull();
+  });
+});
+
+describe("itens da lista", () => {
+  it("tira só o marcador, não o começo do requisito", () => {
+    const r = sanitizarRascunho({ descricaoBullets: ["- 5 anos de experiência com AWS", ".NET em produção", "100% remoto", "1. Terraform", "2) Kubernetes", "• Python"] });
+    expect(r.descricaoBullets).toEqual(["5 anos de experiência com AWS", ".NET em produção", "100% remoto", "Terraform", "Kubernetes", "Python"]);
+  });
+});
+
+describe("valorFaixa", () => {
+  it.each([
+    ["8000", 8000],
+    ["8.000", 8000],
+    ["8,000", 8000],
+    ["8.000,00", 8000],
+    ["8,000.00", 8000],
+    ["R$ 12.500", 12500],
+    ["8k", 8000],
+    ["", null],
+    ["oito mil", null],
+    ["8.00.0", null],
+  ])("%s", (raw, n) => {
+    expect(valorFaixa(raw)).toBe(n);
   });
 });

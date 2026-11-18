@@ -973,7 +973,8 @@
       "faixa": "O valor \"De\" precisa ser menor que o \"Até\".",
       "empresa_rejeitada": "A empresa não foi verificada e não pode publicar vagas.",
       "sumiu": "A vaga que você ia atualizar não está mais disponível. Publique como vaga nova.",
-      "publicar": "Não deu para publicar. Tente de novo."
+      "publicar": "Não deu para publicar. Tente de novo.",
+      "faixaValor": "Escreva a faixa só com números. Ex.: 8000 ou 8.000."
     }
   }
 }

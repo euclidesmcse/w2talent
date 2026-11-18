@@ -39,3 +39,21 @@ export function localidadeDaVaga(cidade: string, modo: ModoVaga | ""): string | 
   return modo ? `${c} (${MODO_ROTULO[modo]})` : c;
 }
 
+
+/**
+ * Valor digitado na faixa → número inteiro. Aceita "8000", "8.000", "8,000", "8.000,00", "8,000.00" e "8k".
+ * Vírgula ou ponto com 1 ou 2 dígitos no fim são centavos (descartados). Null quando não dá para ler.
+ */
+export function valorFaixa(raw: string): number | null {
+  let s = raw.trim().replace(/^(?:R\$|US\$|\$|€)\s*/i, "").replace(/\s+/g, "");
+  if (!s) return null;
+  let mult = 1;
+  if (/k$/i.test(s)) {
+    mult = 1000;
+    s = s.slice(0, -1);
+  }
+  s = s.replace(/[.,]\d{1,2}$/, "");
+  if (!/^\d{1,3}(?:([.,])\d{3}(?:\1\d{3})*)?$|^\d+$/.test(s)) return null;
+  const n = Number(s.replace(/[.,]/g, "")) * mult;
+  return Number.isFinite(n) && n > 0 && n <= 1_000_000 ? Math.round(n) : null;
+}

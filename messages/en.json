@@ -973,7 +973,8 @@
       "faixa": "\"From\" must be lower than \"To\".",
       "empresa_rejeitada": "The company wasn't verified and can't post jobs.",
       "sumiu": "The job you were updating is no longer available. Post it as a new job.",
-      "publicar": "Couldn't post. Try again."
+      "publicar": "Couldn't post. Try again.",
+      "faixaValor": "Enter the range with numbers only. E.g.: 8000 or 8,000."
     }
   }
 }

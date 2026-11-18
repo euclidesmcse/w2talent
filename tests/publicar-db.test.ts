@@ -152,6 +152,12 @@ describeDb("publicar vaga", () => {
 
     const senior = await (await POST(req("/api/vacancies/conferir", "POST", rec(REC_B), { rascunho: { ...rascunho, nivel: "Sênior" } }))).json();
     expect(senior.faixa).toBeNull();
+
+    // Sem nível ou sem regime não sugere (misturaria Pleno com Sênior, CLT com PJ).
+    for (const parcial of [{ ...rascunho, nivel: "" }, { ...rascunho, regime: "" }]) {
+      const r = await (await POST(req("/api/vacancies/conferir", "POST", rec(REC_B), { rascunho: parcial }))).json();
+      expect(r.faixa).toBeNull();
+    }
   });
 
   it("conferir com vetor: a consulta pelo vetor roda e, sem vagas com vetor, cai nas competências", async () => {

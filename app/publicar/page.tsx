@@ -13,7 +13,7 @@ import { contaRecusada, linkEntrar, useConta } from "@/lib/conta-client";
 import { formatFaixa } from "@/lib/format";
 import { diaMes } from "@/lib/envio-client";
 import { getSkill, normalizeSkill } from "@/lib/taxonomy";
-import { localidadeDaVaga, MODOS, MOEDAS, NIVEIS, rascunhoVazio, REGIMES, type RascunhoVaga } from "@/lib/vaga-campos";
+import { localidadeDaVaga, MODOS, MOEDAS, NIVEIS, rascunhoVazio, REGIMES, valorFaixa, type RascunhoVaga } from "@/lib/vaga-campos";
 
 type Duplicada = { id: string; titulo: string; updatedAt: string };
 type Faixa = { de: number; ate: number; base: number; moeda: string };
@@ -60,11 +60,6 @@ function lerSkills(s: string): { ids: string[]; desconhecidas: string[] } {
   return { ids, desconhecidas };
 }
 
-function valor(s: string): number | null {
-  const n = Number(s.replace(/[^\d]/g, ""));
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
-
 function linhas(s: string): string[] {
   return s.split(/\r?\n/).map((l) => l.replace(/^[-•*·]\s*/, "").trim()).filter(Boolean);
 }
@@ -78,8 +73,8 @@ function rascunhoDe(f: Form): RascunhoVaga {
     cidade: f.cidade.trim(),
     modo: f.modo,
     stack: lerSkills(f.skills).ids,
-    faixaDe: valor(f.faixaDe),
-    faixaAte: valor(f.faixaAte),
+    faixaDe: valorFaixa(f.faixaDe),
+    faixaAte: valorFaixa(f.faixaAte),
     faixaMoeda: f.faixaMoeda,
     descricaoBullets: linhas(f.descricao),
     beneficios: linhas(f.beneficios),
@@ -123,7 +118,8 @@ export default function PublicarPage() {
 
   // Conferência (duplicada e faixa) quando muda o que pesa nela, depois de uma pausa curta.
   const rascunho = React.useMemo(() => rascunhoDe(form), [form]);
-  const chaveConferir = JSON.stringify([rascunho.titulo, rascunho.stack, rascunho.nivel, rascunho.regime, rascunho.faixaMoeda]);
+  // Tudo o que entra no vetor da comparação (vacancyEmbeddingText) ou nos filtros da faixa.
+  const chaveConferir = JSON.stringify([rascunho.titulo, rascunho.stack, rascunho.nivel, rascunho.regime, rascunho.faixaMoeda, rascunho.cidade, rascunho.modo, rascunho.descricaoBullets]);
   React.useEffect(() => {
     if (passo !== "conferir") return;
     if (!rascunho.titulo && !rascunho.stack.length) {
@@ -186,12 +182,14 @@ export default function PublicarPage() {
   };
 
   const desconhecidas = lerSkills(form.skills).desconhecidas;
-  const faixaInvertida = rascunho.faixaDe !== null && rascunho.faixaAte !== null && rascunho.faixaDe > rascunho.faixaAte;
+  const faixaIlegivel = (!!form.faixaDe.trim() && rascunho.faixaDe === null) || (!!form.faixaAte.trim() && rascunho.faixaAte === null);
+  const faixaInvertida = faixaIlegivel || (rascunho.faixaDe !== null && rascunho.faixaAte !== null && rascunho.faixaDe > rascunho.faixaAte);
 
   const publicar = async (ev: React.FormEvent) => {
     ev.preventDefault();
     setErro(null);
     if (!rascunho.titulo) return setErro(t("erros.titulo"));
+    if (faixaIlegivel) return setErro(t("erros.faixaValor"));
     if (faixaInvertida) return setErro(t("erros.faixa"));
     setEnviando(true);
     const corpo = {

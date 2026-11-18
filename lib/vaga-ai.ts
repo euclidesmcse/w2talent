@@ -61,11 +61,14 @@ function numero(v: unknown): number | null {
   return r > 0 && r <= MAX_FAIXA ? r : null;
 }
 
+/** Só o marcador da lista ("- ", "• ", "1. ", "2) "): "5 anos", ".NET" e "100% remoto" ficam como estão. */
+const MARCADOR = /^(?:[-•*·–—]+|\d{1,2}[.)])\s+/;
+
 function lista(v: unknown, max: number): string[] {
   const arr = Array.isArray(v) ? v : typeof v === "string" ? v.split(/\r?\n/) : [];
   const out: string[] = [];
   for (const item of arr) {
-    const s = texto(item, 200).replace(/^[-•*·–—\d.)\s]+/, "").trim();
+    const s = texto(item, 200).replace(MARCADOR, "").trim();
     if (s && !out.includes(s)) out.push(s);
     if (out.length >= max) break;
   }
