@@ -57,7 +57,8 @@ describe("conteúdo da ajuda", () => {
           const href = m[1];
           expect(hrefSeguro(href)).toBe(href);
           const caminho = href.split("#")[0];
-          if (caminho.startsWith("/ajuda/")) expect(slugs.has(caminho.slice(7))).toBe(true);
+          // /ajuda/<slug> é artigo; /ajuda/conversa (2.6b-1) é tela.
+          if (caminho.startsWith("/ajuda/") && !rotas.includes(caminho)) expect(slugs.has(caminho.slice(7))).toBe(true);
           else expect(rotas).toContain(caminho);
         }
         for (const t of a.telas) expect(rotas).toContain(t);

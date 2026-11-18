@@ -21,4 +21,6 @@ A IA ajuda em tarefas de texto. Ela não aprova, não reprova e não dá nota a 
 
 O [match](/ajuda/match) é uma conta com pesos fixos. A busca usa texto e significado para ordenar, mas não esconde candidatos.
 
+A conversa em [Falar com uma pessoa](/ajuda/conversa) é respondida por uma pessoa da equipe. Nada dela vai para IA.
+
 A lista completa, com os dados que cada tarefa usa, está em [Como usamos IA](/ia).

@@ -491,6 +491,7 @@ model User {
   twoFactors       TwoFactor[]
   consentLogs      ConsentLog[]
   empresa          CompanyMember?
+  conversas        Conversa[]
 }
 
 model Session {
@@ -645,4 +646,66 @@ model RankingWeights {
   atualizadoEm DateTime @default(now())
 
   @@unique([escopo, escopoId])
+}
+
+// ── Atendimento (2.6b-1) ─────────────────────────────────────────────
+// "Falar com uma pessoa" na Ajuda: a pessoa escreve, a equipe responde em Admin > Atendimento.
+// Com ou sem login. O acesso é por um link com código (/ajuda/conversa?c=<código>); guardamos só o
+// hash. Cada e-mail de resposta leva um código novo (o anterior continua valendo), porque o código
+// em si nunca fica no banco. Nada daqui vai para IA.
+enum StatusConversa {
+  aberta
+  encerrada
+}
+
+enum AutorMensagem {
+  pessoa
+  equipe
+}
+
+model Conversa {
+  id          String             @id @default(cuid())
+  status      StatusConversa     @default(aberta)
+  /// Para onde vai o aviso de resposta: o e-mail digitado (sem login) ou o da conta.
+  email       String
+  /// Conta de quem abriu, quando estava logado.
+  userId      String?
+  user        User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// "candidato" | "recrutador" na hora de abrir (só com login).
+  perfil      String?
+  idioma      String
+  /// Tela de onde a pessoa veio (?de=).
+  tela        String?
+  /// Última mensagem: "pessoa" = esperando a equipe.
+  ultimaDe    AutorMensagem      @default(pessoa)
+  ultimaEm    DateTime           @default(now())
+  encerradaEm DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  mensagens   ConversaMensagem[]
+  codigos     ConversaCodigo[]
+
+  @@index([status, ultimaEm])
+  @@index([userId])
+}
+
+model ConversaMensagem {
+  id         String        @id @default(cuid())
+  conversaId String
+  conversa   Conversa      @relation(fields: [conversaId], references: [id], onDelete: Cascade)
+  autor      AutorMensagem
+  texto      String
+  createdAt  DateTime      @default(now())
+
+  @@index([conversaId, createdAt])
+}
+
+/// Códigos de acesso de uma conversa (SHA-256 do código do link).
+model ConversaCodigo {
+  tokenHash  String   @id
+  conversaId String
+  conversa   Conversa @relation(fields: [conversaId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([conversaId])
 }

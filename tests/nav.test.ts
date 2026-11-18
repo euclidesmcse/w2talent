@@ -19,6 +19,8 @@ const TELAS: Record<string, string> = {
   "app/admin/ia/page.tsx": "/admin/ia",
   "app/admin/empresas/page.tsx": "/admin/empresas",
   "app/admin/ranking/page.tsx": "/admin/ranking",
+  "app/admin/atendimento/page.tsx": "/admin/atendimento",
+  "app/ajuda/conversa/page.tsx": "/ajuda/conversa",
   "app/empresa/page.tsx": "/empresa",
   "app/publicar/page.tsx": "/publicar",
   "app/rh/page.tsx": "/rh",
@@ -42,6 +44,8 @@ describe("menu por área", () => {
     expect(areaOf("/rhx")).toBe("publico");
     expect(areaOf("/rh/vagas/abc")).toBe("recrutador");
     expect(areaOf("/admin/empresas")).toBe("admin");
+    expect(areaOf("/admin/atendimento")).toBe("admin");
+    expect(areaOf("/ajuda/conversa")).toBe("publico");
     expect(areaOf("/vagasx")).toBe("publico");
     expect(areaOf("/entrar")).toBe("publico");
     expect(areaOf("/conta/seguranca")).toBe("publico");

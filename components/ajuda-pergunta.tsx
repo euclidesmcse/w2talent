@@ -1,13 +1,14 @@
 "use client";
 /**
  * 2.6a-2 caixa "Pergunte" da Ajuda: responde só com os artigos (POST /api/ajuda/perguntar) e,
- * quando não sabe, oferece mandar a pergunta para a equipe (POST /api/ajuda/equipe).
+ * quando não sabe, oferece falar com uma pessoa (2.6b-1, D6): abre a conversa já com a pergunta.
  */
 import * as React from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import { ConversaNova } from "@/components/conversa-nova";
 import { IaLink } from "@/components/ia-link";
-import { Button, Input, Textarea } from "@/components/ui";
+import { Button, Textarea } from "@/components/ui";
 
 type Fonte = { slug: string; titulo: string; secao: string };
 type Estado =
@@ -15,7 +16,6 @@ type Estado =
   | { t: "pensando" }
   | { t: "resposta"; resposta: string; fontes: Fonte[] }
   | { t: "sem_resposta"; id: string | null; pergunta: string }
-  | { t: "enviado" }
   | { t: "erro"; chave: "erroTamanho" | "erroLimite" | "erroGeral" };
 
 const MIN = 5;
@@ -25,11 +25,6 @@ export function AjudaPergunta({ de }: { de?: string | null }) {
   const t = useTranslations("ajuda");
   const locale = useLocale();
   const [pergunta, setPergunta] = React.useState("");
-  const [email, setEmail] = React.useState("");
-  const [erroEmail, setErroEmail] = React.useState(false);
-  // Falha ao mandar para a equipe: o formulário continua na tela para tentar de novo.
-  const [erroEquipe, setErroEquipe] = React.useState<"erroLimite" | "erroGeral" | null>(null);
-  const [enviando, setEnviando] = React.useState(false);
   const [estado, setEstado] = React.useState<Estado>({ t: "vazio" });
   const seq = React.useRef(0);
 
@@ -38,8 +33,6 @@ export function AjudaPergunta({ de }: { de?: string | null }) {
     const p = pergunta.trim();
     if (p.length < MIN || p.length > MAX) return setEstado({ t: "erro", chave: "erroTamanho" });
     const meu = ++seq.current;
-    setErroEquipe(null);
-    setErroEmail(false);
     setEstado({ t: "pensando" });
     try {
       const r = await fetch("/api/ajuda/perguntar", {
@@ -56,30 +49,6 @@ export function AjudaPergunta({ de }: { de?: string | null }) {
       setEstado(j.tipo === "resposta" ? { t: "resposta", resposta: j.resposta, fontes: j.fontes } : { t: "sem_resposta", id: j.id, pergunta: p });
     } catch {
       if (meu === seq.current) setEstado({ t: "erro", chave: "erroGeral" });
-    }
-  }
-
-  async function mandarEquipe(e: React.FormEvent) {
-    e.preventDefault();
-    if (estado.t !== "sem_resposta") return;
-    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
-    setErroEmail(!ok);
-    setErroEquipe(null);
-    if (!ok) return;
-    setEnviando(true);
-    try {
-      const r = await fetch("/api/ajuda/equipe", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id: estado.id, pergunta: estado.pergunta, email: email.trim(), locale, de }),
-      });
-      if (r.ok) setEstado({ t: "enviado" });
-      else if (r.status === 422) setErroEmail(true);
-      else setErroEquipe(r.status === 429 ? "erroLimite" : "erroGeral");
-    } catch {
-      setErroEquipe("erroGeral");
-    } finally {
-      setEnviando(false);
     }
   }
 
@@ -126,29 +95,13 @@ export function AjudaPergunta({ de }: { de?: string | null }) {
           </div>
         )}
         {estado.t === "erro" && <p role="alert" className="text-[14px] text-danger">{t(estado.chave)}</p>}
-        {estado.t === "enviado" && <p className="text-[14px] font-medium text-success-ink">{t("equipeEnviado")}</p>}
         {estado.t === "sem_resposta" && (
-          <form onSubmit={mandarEquipe} noValidate className="flex flex-col gap-3 border-t border-line-soft pt-4" data-ajuda-equipe>
+          <div className="flex flex-col gap-3 border-t border-line-soft pt-4" data-ajuda-equipe>
             <p className="text-[15px] text-ink">
-              <strong className="font-semibold">{t("semResposta")}</strong> {t("equipeLead")}
+              <strong className="font-semibold">{t("semResposta")}</strong> {t("semRespostaLead")}
             </p>
-            <label htmlFor="ajuda-equipe-email" className="text-[13px] font-medium text-ink">{t("equipeEmail")}</label>
-            <Input
-              id="ajuda-equipe-email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              aria-invalid={erroEmail}
-              aria-describedby={erroEmail ? "ajuda-equipe-erro" : undefined}
-              onChange={(e) => setEmail(e.target.value)}
-              className="md:max-w-[360px]"
-            />
-            {erroEmail && <p id="ajuda-equipe-erro" className="text-[13px] text-danger">{t("erroEmail")}</p>}
-            {erroEquipe && <p role="alert" className="text-[13px] text-danger">{t(erroEquipe)}</p>}
-            <div>
-              <Button type="submit" variant="secondary" data-action="mandar-equipe" disabled={enviando}>{t("equipeEnviar")}</Button>
-            </div>
-          </form>
+            <ConversaNova key={estado.id ?? estado.pergunta} inicial={estado.pergunta} perguntaId={estado.id} de={de} prefixo="ajuda-conversa" />
+          </div>
         )}
       </div>
     </section>

@@ -5,8 +5,6 @@
 import type { PrismaClient } from "@prisma/client";
 import {
   CORTE_SIMILARIDADE,
-  emailParaEquipe,
-  emailValido,
   garantirIndice,
   lerRespostaIa,
   perguntaValida,
@@ -14,6 +12,7 @@ import {
   trechosDoIdioma,
   type ChatAjudaFn,
 } from "../lib/ajuda-ia";
+import { emailValido } from "../lib/atendimento";
 import type { Embedder } from "../lib/embeddings";
 import { chaveUso, consumirUso, LIMITE_PERGUNTAS_AJUDA_DIA } from "../lib/uso-diario";
 
@@ -60,16 +59,6 @@ describe("trechos da ajuda", () => {
     expect(lerRespostaIa("não é json", 4)).toBeNull();
     expect(lerRespostaIa('{"respondido":true,"resposta":"Sim.","fontes":[9,0,"2"]}', 4)).toEqual({ resposta: "Sim.", fontes: [1] });
     expect(lerRespostaIa('{"respondido":true,"resposta":"Sim.","fontes":[2,2,3]}', 4)).toEqual({ resposta: "Sim.", fontes: [2, 3] });
-  });
-
-  it("e-mail para a equipe: escapa HTML, tira contatos da pergunta e leva o e-mail de quem perguntou", async () => {
-    const m = await emailParaEquipe({ pergunta: "<b>oi</b> me liga 11 99999-0000", email: "ana@exemplo.com", locale: "pt-BR", tela: "/vagas" }, "contato@w2talent.com");
-    expect(m.to).toBe("contato@w2talent.com");
-    expect(m.html).toContain("&lt;b&gt;");
-    expect(m.html).not.toContain("<b>oi");
-    expect(m.text).not.toContain("99999");
-    expect(m.text).toContain("ana@exemplo.com");
-    expect(m.idempotencyKey.length).toBeLessThan(100);
   });
 });
 

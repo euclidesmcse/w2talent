@@ -417,3 +417,46 @@ export function renderAgendaEmail(i: AgendaEmailInput): { subject: string; html:
 </table></td></tr></table></body></html>`;
   return { subject, html, text };
 }
+
+// ── 2.6b-1 Atendimento: a equipe respondeu ──
+
+type AtendimentoCopy = { assunto: string; ola: string; corpo: string; botao: string; rodape: string };
+
+const ATENDIMENTO: Record<EmailLocale, AtendimentoCopy> = {
+  "pt-BR": {
+    assunto: "A equipe do W2Talent respondeu",
+    ola: "Olá",
+    corpo: "A equipe do W2Talent respondeu à sua conversa na Ajuda. Abra pelo botão abaixo para ler e continuar.",
+    botao: "Ver a resposta",
+    rodape: "Você recebe este aviso porque abriu uma conversa na Ajuda do W2Talent. Não compartilhe o link: quem tem o link vê a conversa.",
+  },
+  en: {
+    assunto: "The W2Talent team replied",
+    ola: "Hi",
+    corpo: "The W2Talent team replied to your conversation in Help. Open it with the button below to read and continue.",
+    botao: "See the reply",
+    rodape: "You get this notice because you started a conversation in W2Talent Help. Do not share the link: anyone with the link can see the conversation.",
+  },
+  es: {
+    assunto: "El equipo de W2Talent respondió",
+    ola: "Hola",
+    corpo: "El equipo de W2Talent respondió a tu conversación en Ayuda. Ábrela con el botón de abajo para leer y continuar.",
+    botao: "Ver la respuesta",
+    rodape: "Recibes este aviso porque abriste una conversación en la Ayuda de W2Talent. No compartas el enlace: quien lo tenga puede ver la conversación.",
+  },
+};
+
+/** O texto da resposta não vai no e-mail: fica só na conversa, atrás do link. */
+export function renderAtendimentoEmail(i: { locale: EmailLocale; url: string }): { subject: string; html: string; text: string } {
+  const c = ATENDIMENTO[i.locale];
+  const text = `${c.ola},\n\n${c.corpo}\n\n${c.botao}: ${i.url}\n\n${c.rodape}\n`;
+  const html = `<!doctype html><html lang="${i.locale}"><body style="margin:0;padding:0;background:#F7F8FA;font-family:Inter,Segoe UI,Arial,sans-serif;color:#111827">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F8FA;padding:24px 12px"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px">
+<tr><td style="padding:24px 24px 0;font:700 18px 'Space Grotesk',Inter,Arial,sans-serif">W2<span style="color:#1F4FD8">Talent</span></td></tr>
+<tr><td style="padding:16px 24px 0;font-size:16px;line-height:24px"><p style="margin:0 0 12px">${esc(c.ola)},</p><p style="margin:0">${esc(c.corpo)}</p></td></tr>
+<tr><td style="padding:20px 24px 0"><a href="${esc(i.url)}" style="display:inline-block;background:#1F4FD8;color:#FFFFFF;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:999px">${esc(c.botao)}</a></td></tr>
+<tr><td style="padding:20px 24px 24px;font-size:13px;line-height:20px;color:#4B5563">${esc(c.rodape)}</td></tr>
+</table></td></tr></table></body></html>`;
+  return { subject: c.assunto, html, text };
+}
