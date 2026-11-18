@@ -19,7 +19,7 @@ The numbers cover only your company.
 
 ## Jobs
 
-Each job shows its status, the total number of applications and the new ones. "Matching candidates" searches for profiles close to the job, including people who have not applied yet.
+Each job shows its status, the total number of applications and the new ones. An active job with a pay range gets a "below", "within" or "above market" tag: the middle of its range against the job range for the same first skill, level, employment type and currency in the [Tech job market](/mercado). Without enough numbers for the group, no tag shows. "Matching candidates" searches for profiles close to the job, including people who have not applied yet.
 
 ## Applications for a job
 

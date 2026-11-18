@@ -854,7 +854,25 @@
     "vagasRegimeSem": "{n} de {total} vacantes piden régimen {want}; tu ficha no indica el régimen.",
     "vagasModo": "{n} de {total} vacantes piden modalidad {want}; tu ficha dice {have}.",
     "vagasModoSem": "{n} de {total} vacantes piden modalidad {want}; tu ficha no indica la modalidad.",
-    "vagasRodape": "No es IA: el mismo cálculo del match. El rango salarial no entra."
+    "vagasRodape": "No es IA: el mismo cálculo del match. El rango salarial no entra.",
+    "mercadoTitulo": "Tu pretensión y el mercado",
+    "mercadoCarregando": "Cargando los números del mercado…",
+    "mercadoErro": "No fue posible cargar los números del mercado ahora.",
+    "mercadoSemFicha": "Publica tu ficha para comparar tu pretensión con lo que pagan las vacantes.",
+    "mercadoLead": "{skill} · {nivel}, en las vacantes activas de W2Talent:",
+    "mercadoPagam": "Las vacantes {regime} pagan entre {de} y {ate} (mediana {mediana}).",
+    "mercadoSua": "Tu pretensión: {valor}",
+    "mercadoPos_abaixo": "Por debajo del rango",
+    "mercadoPos_dentro": "Dentro del rango",
+    "mercadoPos_acima": "Por encima del rango",
+    "mercadoPoucos": "Aún hay pocos datos",
+    "mercadoSemPretensao": "agrega el nivel y la pretensión mensual en tu ficha para comparar.",
+    "mercadoVer": "Ver el Mercado de TI",
+    "mercadoVerSkill": "Ver los números de {skill}",
+    "mercadoAltaTitulo": "Competencias en alza",
+    "mercadoAltaVazio": "Ninguna competencia en alza este mes.",
+    "mercadoTem": "La tienes",
+    "mercadoRodape": "Cálculo sin IA, con los números del Mercado de TI. El rango va del “desde” mediano al “hasta” mediano de las vacantes de tu competencia principal, en tu nivel y régimen, solo con 10 o más vacantes de 3 o más empresas."
   },
   "areas": {
     "title": "Áreas",
@@ -1136,7 +1154,13 @@
         "sem_competencias": "Completa las competencias o la descripción para sugerir preguntas.",
         "falha": "No se pudieron sugerir preguntas ahora. Inténtalo de nuevo."
       }
-    }
+    },
+    "mercadoTitulo": "Mercado: {skill} · {nivel} · {regime}",
+    "mercadoVagas": "Vacantes parecidas pagan entre {de} y {ate} (mediana {mediana}, {n, plural, one {# vacante} other {# vacantes}}).",
+    "mercadoPretensao": "Los candidatos piden entre {de} y {ate} (mediana {mediana}, {n, plural, one {# ficha} other {# fichas}}).",
+    "mercadoPoucos": "Aún hay pocos datos de mercado para este grupo.",
+    "mercadoNota": "Solo informativo. La pretensión siempre es agregada, de 10 o más fichas, nunca la de alguien.",
+    "mercadoVer": "Ver el Mercado de TI (se abre en otra pestaña)"
   },
   "ajuda": {
     "metaTitle": "Ayuda · W2Talent",
@@ -1274,7 +1298,11 @@
     "selecionadosDica": "{n} de {max} seleccionados (la selección también vale en Candidatos).",
     "limparSelecao": "Limpiar selección",
     "contatoEmail": "Enviar e-mail a {nome}",
-    "contatoTel": "Llamar a {nome}"
+    "contatoTel": "Llamar a {nome}",
+    "mercado_abaixo": "Por debajo del mercado",
+    "mercado_dentro": "Dentro del mercado",
+    "mercado_acima": "Por encima del mercado",
+    "mercadoDetalhe": "vacantes parecidas pagan de {de} a {ate}"
   },
   "agenda": {
     "semEntrevista": "Entrevista aún no agendada.",

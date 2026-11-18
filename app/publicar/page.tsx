@@ -12,11 +12,13 @@ import { AppHeader } from "@/components/app-header";
 import { Button, Card, CardBody, Field, Input, Select, Textarea, useToast } from "@/components/ui";
 import { buttonClasses } from "@/components/ui/button";
 import { contaRecusada, linkEntrar, useConta } from "@/lib/conta-client";
-import { formatFaixa } from "@/lib/format";
+import { formatFaixa, nomeRegime } from "@/lib/format";
 import { diaMes } from "@/lib/envio-client";
 import { getSkill, normalizeSkill } from "@/lib/taxonomy";
 import { localidadeDaVaga, MODOS, MOEDAS, NIVEIS, rascunhoVazio, REGIMES, valorFaixa, type RascunhoVaga } from "@/lib/vaga-campos";
 import { aplicarTroca, revisarVies, type AvisoVies, type CampoVies } from "@/lib/vaga-vies";
+import { formatMoney } from "@/lib/locale";
+import type { MercadoRascunho } from "@/lib/mercado-tela";
 
 type Duplicada = { id: string; titulo: string; updatedAt: string };
 type Faixa = { de: number; ate: number; base: number; moeda: string };
@@ -104,6 +106,7 @@ export default function PublicarPage() {
   const [erro, setErro] = React.useState<string | null>(null);
   const [duplicadas, setDuplicadas] = React.useState<Duplicada[]>([]);
   const [faixa, setFaixa] = React.useState<Faixa | null>(null);
+  const [mercado, setMercado] = React.useState<MercadoRascunho | null>(null);
   const [editando, setEditando] = React.useState<Duplicada | null>(null);
   const [enviando, setEnviando] = React.useState(false);
   const [publicada, setPublicada] = React.useState<{ titulo: string; atualizada: boolean; semPrazo?: boolean } | null>(null);
@@ -136,6 +139,7 @@ export default function PublicarPage() {
     if (!rascunho.titulo && !rascunho.stack.length) {
       setDuplicadas([]);
       setFaixa(null);
+      setMercado(null);
       return;
     }
     const n = ++conferencia.current;
@@ -147,9 +151,10 @@ export default function PublicarPage() {
           body: JSON.stringify({ rascunho, ignorarId: editando?.id ?? null }),
         });
         if (n !== conferencia.current || !r.ok) return;
-        const j = (await r.json()) as { duplicadas: Duplicada[]; faixa: Faixa | null };
+        const j = (await r.json()) as { duplicadas: Duplicada[]; faixa: Faixa | null; mercado?: MercadoRascunho | null };
         setDuplicadas(j.duplicadas ?? []);
         setFaixa(j.faixa ?? null);
+        setMercado(j.mercado ?? null);
       } catch {
         /* a conferência só ajuda; sem ela, publica igual */
       }
@@ -237,6 +242,7 @@ export default function PublicarPage() {
     setEditando(null);
     setDuplicadas([]);
     setFaixa(null);
+    setMercado(null);
     setPasso("conferir");
     setTimeout(() => tituloRef.current?.focus(), 0);
   };
@@ -489,6 +495,7 @@ export default function PublicarPage() {
                       </Button>
                     </div>
                   ) : null}
+                  {mercado ? <MercadoDoRascunho m={mercado} /> : null}
                 </fieldset>
 
                 <Field label={t("descricao")} hint={t("linhaHint")}>
@@ -589,6 +596,35 @@ export default function PublicarPage() {
           </Card>
         )}
       </main>
+    </div>
+  );
+}
+
+/**
+ * 3.2b (plano 3.2, D5/D6): o mercado do rascunho ao lado da faixa sugerida, só informativo.
+ * Vagas: do "de" mediano ao "até" mediano das vagas do grupo. Candidatos: só a faixa agregada de 10+ fichas.
+ */
+function MercadoDoRascunho({ m }: { m: MercadoRascunho }) {
+  const t = useTranslations("publicar");
+  const tf = useTranslations("ficha");
+  const locale = useLocale();
+  const d = (v: number) => formatMoney(v, locale, m.moeda);
+  const regime = m.moeda !== "BRL" ? `${nomeRegime(m.regime, locale)} (${m.moeda})` : nomeRegime(m.regime, locale);
+  return (
+    <div data-testid="faixa-mercado" className="flex flex-col gap-1.5 rounded-card border border-line bg-canvas px-3.5 py-2.5 text-[13px]">
+      <p className="font-medium">{t("mercadoTitulo", { skill: m.label, nivel: tf(`sen_${m.nivel}`), regime })}</p>
+      {m.vagas || m.pretensao ? (
+        <ul className="flex flex-col gap-1 tabular-nums">
+          {m.vagas ? <li data-mercado="vagas">{t("mercadoVagas", { de: d(m.vagas.de), ate: d(m.vagas.ate), mediana: d(m.vagas.mediana), n: m.vagas.n })}</li> : null}
+          {m.pretensao ? <li data-mercado="pretensao">{t("mercadoPretensao", { de: d(m.pretensao.de), ate: d(m.pretensao.ate), mediana: d(m.pretensao.mediana), n: m.pretensao.n })}</li> : null}
+        </ul>
+      ) : (
+        <p className="text-ink-soft" data-mercado="poucos">{t("mercadoPoucos")}</p>
+      )}
+      <p className="text-muted">
+        {t("mercadoNota")}{" "}
+        <a href={`/mercado?skill=${encodeURIComponent(m.skillId)}`} target="_blank" rel="noopener" className="font-medium text-brand underline underline-offset-2">{t("mercadoVer")}</a>
+      </p>
     </div>
   );
 }

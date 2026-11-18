@@ -17,6 +17,7 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 import { regimeDaVaga, vacancyModo, vacancySkillIds } from "./match";
 import { senioridadesDoNivel } from "./match-candidato";
 import { REGIMES } from "./vaga-campos";
+import { faixaDaPretensao, faixaDasVagas, posicaoNaFaixa, valorDaVaga, type MercadoRascunho, type MercadoVagaRh } from "./mercado-tela";
 
 export const MIN_REGISTROS = 10;
 export const MIN_EMPRESAS = 3;
@@ -141,7 +142,7 @@ export type VagaMercado = {
 export type FichaMercado = { stack: unknown; senioridade: string | null; pretensoes: unknown };
 export type RespostaMercado = { companyId: string | null; createdAt: Date; respondidaEm: Date };
 
-function skillsDaFicha(stack: unknown): string[] {
+export function skillsDaFicha(stack: unknown): string[] {
   if (!Array.isArray(stack)) return [];
   return stack.map((s: any) => (typeof s === "string" ? s : s?.skillId ?? "")).filter((s): s is string => typeof s === "string" && !!s);
 }
@@ -333,6 +334,27 @@ export type VisaoMercado = {
 const faixaDe = (l: { p25: number | null; p50: number | null; p75: number | null } | undefined): Faixa | null =>
   l && l.p25 != null && l.p50 != null && l.p75 != null ? { p25: l.p25, p50: l.p50, p75: l.p75 } : null;
 
+type LinhaLida = Grupo & { metrica: string; n: number; nEmpresas: number | null; p25: number | null; p50: number | null; p75: number | null };
+
+/** Junta as linhas faixa_de/faixa_ate de um grupo numa só e separa as de pretensão. */
+function montarGrupos(linhas: LinhaLida[]): { faixas: GrupoFaixa[]; pretensoes: GrupoPretensao[] } {
+  const porGrupo = new Map<string, GrupoFaixa>();
+  const pretensoes: GrupoPretensao[] = [];
+  for (const l of linhas) {
+    const g: Grupo = { skillId: l.skillId, nivel: l.nivel, regime: l.regime, modo: l.modo, moeda: l.moeda };
+    if (l.metrica === "pretensao") {
+      pretensoes.push({ ...g, n: l.n, valor: faixaDe(l), faltam: faltam(l) });
+      continue;
+    }
+    const k = chave("f", g);
+    const atual = porGrupo.get(k) ?? { ...g, n: l.n, nEmpresas: l.nEmpresas, de: null, ate: null, faltam: faltam(l) };
+    if (l.metrica === "faixa_de") atual.de = faixaDe(l);
+    else atual.ate = faixaDe(l);
+    porGrupo.set(k, atual);
+  }
+  return { faixas: [...porGrupo.values()], pretensoes };
+}
+
 /** Crescimento usado em "em alta": só com 5+ vagas recentes, ordenado pelo aumento relativo. */
 export const MIN_RECENTES_ALTA = 5;
 export function emAlta(ds: Demanda[], max = 10): Demanda[] {
@@ -368,20 +390,7 @@ export async function lerMercado(db: Pick<PrismaClient, "marketStat">, opts: { s
     fichas: fichasPor.get(d.skillId) ?? 0,
   }));
 
-  const porGrupo = new Map<string, GrupoFaixa>();
-  const pretensoes: GrupoPretensao[] = [];
-  for (const l of grupos) {
-    const g: Grupo = { skillId: l.skillId, nivel: l.nivel, regime: l.regime, modo: l.modo, moeda: l.moeda };
-    if (l.metrica === "pretensao") {
-      pretensoes.push({ ...g, n: l.n, valor: faixaDe(l), faltam: faltam(l) });
-      continue;
-    }
-    const k = chave("f", g);
-    const atual = porGrupo.get(k) ?? { ...g, n: l.n, nEmpresas: l.nEmpresas, de: null, ate: null, faltam: faltam(l) };
-    if (l.metrica === "faixa_de") atual.de = faixaDe(l);
-    else atual.ate = faixaDe(l);
-    porGrupo.set(k, atual);
-  }
+  const { faixas, pretensoes } = montarGrupos(grupos);
   const ordemNivel = (n: string) => (NIVEIS_MERCADO as readonly string[]).indexOf(n);
   const ordenar = <T extends Grupo>(xs: T[]) =>
     xs.sort((a, b) => ordemNivel(a.nivel) - ordemNivel(b.nivel) || a.regime.localeCompare(b.regime) || a.moeda.localeCompare(b.moeda));
@@ -391,11 +400,100 @@ export async function lerMercado(db: Pick<PrismaClient, "marketStat">, opts: { s
   return {
     semana: semana.toISOString().slice(0, 10),
     skillId,
-    faixas: ordenar([...porGrupo.values()]),
+    faixas: ordenar(faixas),
     pretensoes: ordenar(pretensoes),
     maisPedidas: [...visiveis].sort((a, b) => b.vagas - a.vagas || a.skillId.localeCompare(b.skillId)).slice(0, 15),
     emAlta: emAlta(visiveis),
     demanda: skillId ? (demandas.find((d) => d.skillId === skillId) ?? null) : null,
     respostaHoras: faixaDe(resp ?? undefined),
   };
+}
+
+// ---------- 3.2b: um grupo dentro das telas logadas ----------
+
+/** Competência + nível + regime + moeda (o modo fica "" = todos os modos). */
+export type GrupoChave = Pick<Grupo, "skillId" | "nivel" | "regime" | "moeda">;
+export type MercadoDoGrupo = GrupoChave & { vagas: GrupoFaixa | null; pretensao: GrupoPretensao | null };
+
+/** Mais grupos que isto por leitura não entram (o /rh lê até RH_MAX_VAGAS). */
+export const MAX_GRUPOS_LEITURA = 300;
+const chaveGrupo = (g: GrupoChave) => [g.skillId, g.nivel, g.regime, g.moeda].join("|");
+
+/**
+ * Lê da última semana calculada as linhas de vagas e de pretensão de cada grupo pedido (todos os modos).
+ * Grupo sem linha volta com `vagas`/`pretensao` null. Os números só existem nos grupos publicáveis (D3):
+ * abaixo do mínimo a linha tem só as contagens e `de`/`ate`/`valor` ficam null.
+ */
+export async function lerGrupos(db: Pick<PrismaClient, "marketStat">, pedidos: GrupoChave[]): Promise<{ semana: string | null; grupos: MercadoDoGrupo[] }> {
+  const unicos = [...new Map(pedidos.filter((g) => g.skillId && g.nivel && g.regime && g.moeda).map((g) => [chaveGrupo(g), g])).values()].slice(0, MAX_GRUPOS_LEITURA);
+  if (!unicos.length) return { semana: null, grupos: [] };
+  const ultima = await db.marketStat.findFirst({ orderBy: { semana: "desc" }, select: { semana: true } });
+  if (!ultima) return { semana: null, grupos: unicos.map((g) => ({ ...g, vagas: null, pretensao: null })) };
+  const linhas = await db.marketStat.findMany({
+    where: {
+      semana: ultima.semana,
+      modo: "",
+      metrica: { in: ["faixa_de", "faixa_ate", "pretensao"] },
+      OR: unicos.map((g) => ({ skillId: g.skillId, nivel: g.nivel, regime: g.regime, moeda: g.moeda })),
+    },
+  });
+  const { faixas, pretensoes } = montarGrupos(linhas);
+  const fx = new Map(faixas.map((f) => [chaveGrupo(f), f]));
+  const pr = new Map(pretensoes.map((p) => [chaveGrupo(p), p]));
+  return {
+    semana: ultima.semana.toISOString().slice(0, 10),
+    grupos: unicos.map((g) => ({ ...g, vagas: fx.get(chaveGrupo(g)) ?? null, pretensao: pr.get(chaveGrupo(g)) ?? null })),
+  };
+}
+
+/** Grupo de mercado de uma vaga (ou rascunho): a primeira competência, o nível, o regime e a moeda. Sem algum deles, null. */
+export function grupoDaVaga(v: { stack: unknown; nivel: string | null | undefined; regime: string | null | undefined; faixaMoeda?: string | null }): GrupoChave | null {
+  const skillId = vacancySkillIds({ stack: v.stack } as any)[0];
+  const nivel = nivelDaVaga(v.nivel);
+  const regime = regimeMercado(v.regime);
+  if (!skillId || !nivel || !regime) return null;
+  return { skillId, nivel, regime, moeda: v.faixaMoeda || "BRL" };
+}
+
+/**
+ * /publicar (3.2b, D5/D6): o mercado do rascunho, só informativo. Vagas: faixa típica do grupo
+ * (`faixaDasVagas`); pretensão: só a faixa agregada de 10+ fichas, nunca a de alguém.
+ */
+export async function mercadoDoRascunho(
+  db: Pick<PrismaClient, "marketStat">,
+  r: { stack: unknown; nivel: string | null | undefined; regime: string | null | undefined; faixaMoeda?: string | null },
+  rotulo: (skillId: string) => string = (s) => s,
+): Promise<MercadoRascunho | null> {
+  const g = grupoDaVaga(r);
+  if (!g) return null;
+  const lido = (await lerGrupos(db, [g])).grupos[0];
+  if (!lido) return null;
+  const vagas = faixaDasVagas(lido.vagas);
+  const pretensao = faixaDaPretensao(lido.pretensao?.valor);
+  return {
+    ...g,
+    label: rotulo(g.skillId),
+    vagas: vagas && lido.vagas ? { ...vagas, n: lido.vagas.n } : null,
+    pretensao: pretensao && lido.pretensao ? { ...pretensao, n: lido.pretensao.n } : null,
+  };
+}
+
+/** /rh (3.2b): posição de cada vaga (meio da faixa, `valorDaVaga`) contra a faixa típica do grupo dela. */
+export async function posicoesNoMercado(
+  db: Pick<PrismaClient, "marketStat">,
+  vagas: { id: string; stack: unknown; nivel: string | null; regime: string | null; faixaDe: number | null; faixaAte: number | null; faixaMoeda: string | null }[],
+): Promise<Map<string, MercadoVagaRh>> {
+  const out = new Map<string, MercadoVagaRh>();
+  const comGrupo = vagas
+    .map((v) => ({ v, g: grupoDaVaga(v), valor: valorDaVaga(v.faixaDe, v.faixaAte) }))
+    .filter((x): x is { v: (typeof vagas)[number]; g: GrupoChave; valor: number } => !!x.g && x.valor != null);
+  if (!comGrupo.length) return out;
+  const { grupos } = await lerGrupos(db, comGrupo.map((x) => x.g));
+  const porChave = new Map(grupos.map((g) => [chaveGrupo(g), g]));
+  for (const { v, g, valor } of comGrupo) {
+    const faixa = faixaDasVagas(porChave.get(chaveGrupo(g))?.vagas);
+    const posicao = posicaoNaFaixa(valor, faixa);
+    if (faixa && posicao) out.set(v.id, { posicao, faixa, moeda: g.moeda });
+  }
+  return out;
 }

@@ -19,7 +19,7 @@ Os números são só da sua empresa.
 
 ## Vagas
 
-Cada vaga mostra a situação, o total de candidaturas e as novas. Em "Candidatos compatíveis" você busca perfis parecidos com a vaga, mesmo de quem ainda não se candidatou.
+Cada vaga mostra a situação, o total de candidaturas e as novas. Vaga ativa com faixa ganha a etiqueta "abaixo", "dentro" ou "acima do mercado": o meio da faixa dela contra a faixa das vagas da mesma primeira competência, nível, regime e moeda no [Mercado de TI](/mercado). Sem números suficientes para o grupo, não aparece etiqueta. Em "Candidatos compatíveis" você busca perfis parecidos com a vaga, mesmo de quem ainda não se candidatou.
 
 ## Candidaturas de uma vaga
 

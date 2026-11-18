@@ -2,13 +2,17 @@
 titulo: My data and privacy
 resumo: Protected contact, how long a profile stays in search and how to ask for a review.
 areas: publico, candidato, recrutador
-telas: /minha-ficha, /renovar, /ia
+telas: /minha-ficha, /renovar, /ia, /mercado
 ordem: 10
 ---
 
 ## Protected contact
 
 In candidate search, email and phone are masked (for example, a***@e***.com). The full contact only reaches the company after you reply to it or when it invites you to an interview for a job you applied to (and you get a notice).
+
+## Salary expectation
+
+The salary expectation you put in your profile shows to recruiters on your W2 Profile and in candidate search. In the market numbers ([Tech job market](/mercado) and Post a job), recruiters only see aggregated ranges from **10 or more profiles**, never anyone's own expectation, and never the minimum or the maximum.
 
 ## How long a profile stays in search
 

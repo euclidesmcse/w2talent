@@ -2,7 +2,7 @@
 titulo: Mercado de TI
 resumo: Rango salarial de las vacantes, pretensión de los candidatos y competencias en alza, sin iniciar sesión.
 areas: publico, candidato, recrutador
-telas: /mercado
+telas: /mercado, /painel, /publicar, /rh
 ordem: 17
 ---
 
@@ -27,3 +27,11 @@ Elige una competencia y, si quieres, la modalidad (remoto, híbrido o presencial
 ## "Todavía pocos datos"
 
 Para que nadie pueda ser identificado, un grupo solo recibe números con **10 o más** vacantes o fichas y, cuando sale de vacantes, de **3 o más empresas**. Por debajo, la tabla indica cuánto falta, por ejemplo "faltan 4 vacantes". Nunca mostramos el mínimo ni el máximo.
+
+## Dentro de W2Talent
+
+Los mismos números aparecen en tres pantallas, siempre con la regla de arriba. El "rango de las vacantes" va del "desde" mediano al "hasta" mediano de las vacantes del grupo (misma competencia, nivel, tipo de contrato y moneda).
+
+- **En tu [panel](/painel) (candidato):** "Tu pretensión y el mercado" compara la pretensión mensual de tu ficha publicada con el rango de las vacantes de tu primera competencia que ya tiene números, en tu nivel y tipo de contrato, y dice si está por debajo, dentro o por encima. También muestra hasta 5 competencias en alza, marcando las que ya tienes.
+- **En [Publicar vacante](/publicar):** junto al rango sugerido, el rango de las vacantes y la pretensión de los candidatos para la primera competencia, el nivel, el tipo de contrato y la moneda de la vacante. La pretensión siempre es agregada, de 10 o más fichas, nunca la de alguien. Es solo informativo.
+- **En el [Panel RH](/rh):** cada vacante activa con rango recibe la etiqueta "por debajo", "dentro" o "por encima del mercado", comparando el medio de su rango con el rango de las vacantes del mismo grupo. Sin números para el grupo, no aparece nada.

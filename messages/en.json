@@ -854,7 +854,25 @@
     "vagasRegimeSem": "{n} of {total} jobs are {want}; your profile has no contract type.",
     "vagasModo": "{n} of {total} jobs are {want}; your profile says {have}.",
     "vagasModoSem": "{n} of {total} jobs are {want}; your profile has no work model.",
-    "vagasRodape": "Not AI: the same calculation as the match. Salary range is left out."
+    "vagasRodape": "Not AI: the same calculation as the match. Salary range is left out.",
+    "mercadoTitulo": "Your salary expectation and the market",
+    "mercadoCarregando": "Loading market numbers…",
+    "mercadoErro": "Couldn't load the market numbers right now.",
+    "mercadoSemFicha": "Publish your profile to compare your expectation with what jobs pay.",
+    "mercadoLead": "{skill} · {nivel}, in active jobs on W2Talent:",
+    "mercadoPagam": "{regime} jobs pay between {de} and {ate} (median {mediana}).",
+    "mercadoSua": "Your expectation: {valor}",
+    "mercadoPos_abaixo": "Below the range",
+    "mercadoPos_dentro": "Within the range",
+    "mercadoPos_acima": "Above the range",
+    "mercadoPoucos": "Not enough data yet",
+    "mercadoSemPretensao": "add your level and monthly salary expectation to your profile to compare.",
+    "mercadoVer": "See the IT market",
+    "mercadoVerSkill": "See the numbers for {skill}",
+    "mercadoAltaTitulo": "Skills on the rise",
+    "mercadoAltaVazio": "No skills on the rise this month.",
+    "mercadoTem": "You have it",
+    "mercadoRodape": "Computed without AI, from the IT market numbers. The range goes from the median “from” to the median “to” of jobs for your main skill, at your level and contract type, only with 10 or more jobs from 3 or more companies."
   },
   "areas": {
     "title": "Areas",
@@ -1136,7 +1154,13 @@
         "sem_competencias": "Fill in the skills or the description to get questions.",
         "falha": "Could not suggest questions right now. Try again."
       }
-    }
+    },
+    "mercadoTitulo": "Market: {skill} · {nivel} · {regime}",
+    "mercadoVagas": "Similar jobs pay between {de} and {ate} (median {mediana}, {n, plural, one {# job} other {# jobs}}).",
+    "mercadoPretensao": "Candidates ask between {de} and {ate} (median {mediana}, {n, plural, one {# profile} other {# profiles}}).",
+    "mercadoPoucos": "Not enough market data for this group yet.",
+    "mercadoNota": "For information only. Expectations are always aggregated from 10 or more profiles, never anyone's own.",
+    "mercadoVer": "See the IT market (opens in a new tab)"
   },
   "ajuda": {
     "metaTitle": "Help · W2Talent",
@@ -1274,7 +1298,11 @@
     "selecionadosDica": "{n} of {max} selected (the selection is shared with Candidates).",
     "limparSelecao": "Clear selection",
     "contatoEmail": "E-mail {nome}",
-    "contatoTel": "Call {nome}"
+    "contatoTel": "Call {nome}",
+    "mercado_abaixo": "Below market",
+    "mercado_dentro": "Within market",
+    "mercado_acima": "Above market",
+    "mercadoDetalhe": "similar jobs pay from {de} to {ate}"
   },
   "agenda": {
     "semEntrevista": "No interview booked yet.",

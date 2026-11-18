@@ -6,6 +6,8 @@
  * Só contam candidaturas que o candidato enviou (origem candidaturaLote), não contatos do recrutador.
  */
 import type { PrismaClient } from "@prisma/client";
+import { posicoesNoMercado } from "./mercado";
+import type { MercadoVagaRh } from "./mercado-tela";
 
 export const ETAPAS = ["nova", "em_analise", "entrevista", "proposta", "contratada", "nao_seguiu"] as const;
 export type Etapa = (typeof ETAPAS)[number];
@@ -23,6 +25,11 @@ export type VagaRh = {
   total: number;
   novas: number;
   porEtapa: Record<Etapa, number>;
+  /**
+   * 3.2b: só em vaga ativa (ou vencendo) com faixa e grupo de mercado publicável. Compara o meio da
+   * faixa da vaga com a faixa típica das vagas da mesma primeira competência + nível + regime + moeda.
+   */
+  mercado?: MercadoVagaRh | null;
 };
 
 export type MetricasRh = {
@@ -106,7 +113,7 @@ export async function resumoDaEmpresa(db: PrismaClient, companyId: string, now =
   const [vagas, ativas, vencendo, grupos, media] = await Promise.all([
     db.vacancy.findMany({
       where: { companyId },
-      select: { id: true, titulo: true, status: true, expiresAt: true },
+      select: { id: true, titulo: true, status: true, expiresAt: true, stack: true, nivel: true, regime: true, faixaDe: true, faixaAte: true, faixaMoeda: true },
       orderBy: [{ status: "asc" }, { expiresAt: "desc" }],
       take: RH_MAX_VAGAS,
     }),
@@ -122,11 +129,19 @@ export async function resumoDaEmpresa(db: PrismaClient, companyId: string, now =
       FROM "Application"
       WHERE "companyId" = ${companyId} AND "origem" = 'candidaturaLote' AND "respondidaEm" IS NOT NULL`,
   ]);
-  return montarResumo(
+  const resumo = montarResumo(
     vagas,
     grupos.map((g) => ({ vacancyId: g.vacancyId, etapa: g.etapa as Etapa, n: g._count._all })),
     media[0] ?? { n: 0, segundos: null },
     now,
     { ativas, vencendo },
   );
+  // 3.2b: o mercado só ajuda; se a leitura falhar, o painel segue sem as etiquetas.
+  const abertas = new Set(resumo.vagas.filter((v) => v.situacao === "ativa" || v.situacao === "vencendo").map((v) => v.id));
+  const mercado = await posicoesNoMercado(db, vagas.filter((v) => abertas.has(v.id))).catch((e) => {
+    console.error("[rh] mercado:", e instanceof Error ? e.name : e);
+    return new Map<string, MercadoVagaRh>();
+  });
+  for (const v of resumo.vagas) v.mercado = mercado.get(v.id) ?? null;
+  return resumo;
 }
