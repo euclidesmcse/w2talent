@@ -5,6 +5,7 @@ import { formatPretensaoCandidato, formatTempo, maskEmail, maskPhone } from "@/l
 import type { CandidateRow } from "./candidate-table";
 import { buttonClasses } from "@/components/ui/button";
 import { SkillChips } from "@/components/skill-chips";
+import { MatchCandidatoCell } from "@/components/candidato-match";
 
 function getSkillIds(row: CandidateRow): string[] {
   if (!Array.isArray(row.stack)) return [];
@@ -70,6 +71,12 @@ export function CandidateCards({
               </button>
             </div>
             <dl className="card-body mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13px]">
+              {row.match != null ? (
+                <>
+                  <dt className="text-muted">{t("candidatos.match.col")}</dt>
+                  <dd data-testid="match-candidato"><MatchCandidatoCell match={row.match} gaps={row.gaps} /></dd>
+                </>
+              ) : null}
               <dt className="text-muted">{t("table.skills")}</dt>
               <dd><SkillChips ids={skillIds} limit={3} /></dd>
               <dt className="text-muted">{t("table.modeloShort")}</dt>

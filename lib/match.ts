@@ -61,6 +61,18 @@ export function vacancyModo(localidade: string | null | undefined): Modo | null 
   return null;
 }
 
+/** Qual dos regimes do candidato é o da vaga ("PJ", "CLT ou PJ", "Estágio"…). */
+export function regimeDaVaga(regimes: string[], regimeVaga: string | null | undefined): string | null {
+  if (!regimeVaga) return null;
+  const v = fold(regimeVaga);
+  return (
+    regimes.find((r) => {
+      if (r === "Estágio") return /estagi|intern|trainee|pasant/.test(v);
+      return new RegExp(`(^|[^a-z])${fold(r)}([^a-z]|$)`).test(v);
+    }) ?? null
+  );
+}
+
 function regimeOk(want: Regime, have: string | null | undefined): boolean {
   if (!have) return false;
   const h = fold(have);
@@ -73,7 +85,7 @@ function nivelOk(want: Nivel, have: string | null | undefined): boolean {
   return fold(have).includes(fold(want));
 }
 
-function recencia(v: MatchableVacancy, now: number): number {
+export function recencia(v: MatchableVacancy, now: number): number {
   const d = v.updatedAt ?? v.createdAt;
   const t = d ? new Date(d).getTime() : NaN;
   if (!Number.isFinite(t)) return 0;

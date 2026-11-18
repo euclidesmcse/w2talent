@@ -12,6 +12,7 @@
  * termina em segundo plano: a próxima busca igual já vem completa.
  */
 import { Prisma, type PrismaClient } from "@prisma/client";
+import { disponibilidadesAte, idsDasSkills, niveisIdiomaDesde, PADRAO_IDIOMA, type FiltrosCandidatos } from "./candidatos-filtros";
 import { EMBEDDING_DIM, EMBEDDING_MODEL, embeddingHash, generateEmbedding, toVectorLiteral, type Embedder } from "./embeddings";
 import { runInBackground } from "./background";
 import { expandQuery } from "./search-synonyms";
@@ -36,6 +37,8 @@ export type DbSearchParams = {
   textQ?: string;
   /** Basta um destes termos aparecer (as competências da busca, 1.5.12). */
   anyTerms?: string[];
+  /** Filtros da tela Candidatos (2.2b); mesmo critério de `passaNosFiltros` em lib/candidatos-filtros.ts. */
+  candidatos?: FiltrosCandidatos;
 };
 
 export type DbSearchOptions = { db: Db; embed?: Embedder; timeoutMs?: number };
@@ -136,6 +139,21 @@ function candidateFilters(p: DbSearchParams): Prisma.Sql[] {
   // Pretensão = mínimo aceito por regime: cabe quando o mínimo (mensal) do regime procurado é até o
   // teto da faixa. O piso da faixa não exclui ninguém (quem pede menos também aceita mais).
   // Sem pretensão mensal informada naquele regime, continua aparecendo (fica escondida, não some).
+  const c = p.candidatos;
+  if (c) {
+    for (const ids of idsDasSkills(c.skills)) {
+      f.push(Prisma.sql`EXISTS (SELECT 1 FROM jsonb_array_elements(v.stack) s WHERE s->>'skillId' IN (${Prisma.join(ids)}))`);
+    }
+    if (c.senioridade) f.push(Prisma.sql`v.senioridade = ${c.senioridade}`);
+    if (c.idioma) {
+      const nivel = c.idiomaNivel ? Prisma.sql`AND i->>'nivel' IN (${Prisma.join(niveisIdiomaDesde(c.idiomaNivel))})` : Prisma.empty;
+      f.push(Prisma.sql`EXISTS (SELECT 1 FROM jsonb_array_elements(v.idiomas) i WHERE (i->>'idioma') ~* ${PADRAO_IDIOMA[c.idioma]} ${nivel})`);
+    }
+    if (c.disponibilidade) {
+      f.push(Prisma.sql`(v.disponibilidade IS NULL OR v.disponibilidade IN (${Prisma.join(disponibilidadesAte(c.disponibilidade))}))`);
+    }
+    if (c.atualizadaDias) f.push(Prisma.sql`v."updatedAt" >= now() - make_interval(days => ${c.atualizadaDias}::int)`);
+  }
   if (p.faixaAte != null) {
     const doRegime = p.regime ? Prisma.sql`AND lower(x->>'regime') = lower(${p.regime})` : Prisma.empty;
     const mensais = Prisma.sql`FROM jsonb_array_elements(v.pretensoes) x

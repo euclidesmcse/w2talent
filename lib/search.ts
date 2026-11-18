@@ -14,6 +14,8 @@ import { normalizeSkill, SKILLS, getSkill } from "./taxonomy";
 import { parseQueryIntent, skillTextTerms, type IntentChip } from "./query-intent";
 import { hasCriteria, matchVacancy } from "./match";
 import { vizinhasDe } from "./taxonomia-proximas";
+import { passaNosFiltros, type FiltrosCandidatos } from "./candidatos-filtros";
+import { matchCandidato, type VagaParaMatch } from "./match-candidato";
 
 // ── Constantes ─────────────────────────────────────────────────────────
 export const PAGE_SIZE = 20;
@@ -35,6 +37,8 @@ export type SearchParams = {
   faixaAte?: number | null;
   nivel?: string;
   status?: string;
+  /** Só na busca de candidatos (2.2b). */
+  filtros?: FiltrosCandidatos;
 };
 
 export type SearchResult<T> = {
@@ -366,6 +370,11 @@ type KindOptions = {
 };
 
 function memorySearch(kind: Kind, params: SearchParams, items: any[], page: number, pageSize: number, ko: KindOptions = {}) {
+  const f = kind === "candidate" ? params.filtros : undefined;
+  if (f) {
+    const now = Date.now();
+    items = items.filter((it) => passaNosFiltros(it, f, now));
+  }
   return hybridSearch(ko.memoryQ ?? params.q ?? "", items, {
     buildText: kind === "vacancy" ? buildTsvectorTextVacancy : buildTsvectorTextCandidate,
     getStack: (it) => it.stack ?? [],
@@ -404,6 +413,7 @@ async function searchKind(kind: Kind, params: SearchParams, dataSource?: any[], 
       faixaAte: params.faixaAte ?? null,
       textQ: ko.textQ,
       anyTerms: ko.anyTerms,
+      candidatos: kind === "candidate" ? params.filtros : undefined,
     };
     const opts = { db: getPrisma() };
     found = kind === "vacancy" ? await searchVacanciesDb(dbParams, opts) : await searchCandidatesDb(dbParams, opts);
@@ -495,7 +505,30 @@ export function withoutContacts<T extends Record<string, any>>(row: T) {
   };
 }
 
-export async function searchCandidates(params: SearchParams, dataSource?: any[]): Promise<SearchResult<any>> {
-  const r = await searchKind("candidate", params, dataSource);
-  return { ...r, items: r.items.map(withoutContacts) };
+export async function searchCandidates(params: SearchParams, dataSource?: any[], vaga?: VagaParaMatch | null): Promise<SearchResult<any>> {
+  if (!vaga) {
+    const r = await searchKind("candidate", params, dataSource);
+    return { ...r, items: r.items.map(withoutContacts) };
+  }
+  // 2.2b (D5): com vaga de referência, um lote maior sai ordenado pelo match da vaga.
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, params.pageSize ?? PAGE_SIZE));
+  const r = await searchKind("candidate", { ...params, page: 1, pageSize: MATCH_POOL }, dataSource, { pool: MATCH_POOL });
+  const now = Date.now();
+  const ranked = r.items
+    .map((it: any) => {
+      const m = matchCandidato(it, vaga, now);
+      return { ...it, match: m.pct, gaps: m.gaps };
+    })
+    .sort((a: any, b: any) => b.match - a.match || (b._rank ?? 0) - (a._rank ?? 0));
+  const total = Math.min(r.total, ranked.length);
+  const start = (page - 1) * pageSize;
+  return {
+    ...r,
+    items: ranked.slice(start, start + pageSize).map(withoutContacts),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
 }

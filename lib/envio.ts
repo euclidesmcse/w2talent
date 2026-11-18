@@ -11,7 +11,8 @@
  */
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { sha256Hex } from "./admin-auth";
-import { matchVacancy, type MatchCriteria, type MatchResult } from "./match";
+import { matchVacancy, regimeDaVaga, type MatchCriteria, type MatchResult } from "./match";
+export { regimeDaVaga };
 import { fold, type Nivel, type Regime } from "./query-intent";
 import { anosExperiencia, nomeCurto, sanitizeFicha, sanitizeFichaW2, topSkills, type Ficha, type FichaW2 } from "./ficha";
 import { formatPretensoes, nomeRegime } from "./format";
@@ -123,18 +124,6 @@ export function fichaParaEmpresa(f: Ficha, regimeVaga: string | null | undefined
     regimes: regime ? [regime] : f.regimes,
     pretensoes: regime ? f.pretensoes.filter((p) => p.regime === regime && p.valor != null) : [],
   };
-}
-
-/** Qual dos regimes do candidato é o da vaga ("PJ", "CLT ou PJ", "Estágio"…). */
-export function regimeDaVaga(regimes: string[], regimeVaga: string | null | undefined): string | null {
-  if (!regimeVaga) return null;
-  const v = fold(regimeVaga);
-  return (
-    regimes.find((r) => {
-      if (r === "Estágio") return /estagi|intern|trainee|pasant/.test(v);
-      return new RegExp(`(^|[^a-z])${fold(r)}([^a-z]|$)`).test(v);
-    }) ?? null
-  );
 }
 
 const NIVEL_DA_SENIORIDADE: Record<string, Nivel> = { junior: "Júnior", pleno: "Pleno", senior: "Sênior" };

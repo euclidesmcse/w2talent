@@ -157,3 +157,16 @@ export function vizinhasDe(id: string): string[] {
   for (const x of ids) for (const y of MESMOS.get(x) ?? [x]) if (!out.includes(y)) out.push(y);
   return out;
 }
+
+/** Competências que atendem `pedida` por inteiro (ela mesma, as iguais e as que a cobrem). Para o filtro de competências. */
+export function atendemPorInteiro(pedida: string): string[] {
+  const out = [pedida];
+  const c = canon(pedida);
+  const candidatas = new Set<string>([c, ...(MESMOS.get(c) ?? [])]);
+  for (const k of PESO.keys()) {
+    const [a, b] = k.split("\u0000");
+    if (b === c && PESO.get(k) === 1) candidatas.add(a);
+  }
+  for (const x of candidatas) for (const y of MESMOS.get(x) ?? [x]) if (!out.includes(y)) out.push(y);
+  return out;
+}
