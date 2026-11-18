@@ -1,12 +1,14 @@
 /**
  * Match da vaga (1.5.12), com os pesos da spec §7.2:
  * competências 40%, nível 20%, regime/modelo/faixa 20%, recência 10%, completude da vaga 10%.
+ * Desde o 2.2a, competência próxima (lib/taxonomia-proximas.ts) vale metade.
  *
  * Decisão do Euclides em 2026-11-09: enquanto não há login, o match mede quanto a vaga atende ao
  * que a pessoa buscou (QueryIntent). Critério não pedido conta como atendido. Depois do login
  * (1.5.5 + 1.5.10), o perfil do candidato entra no lugar da busca, com a mesma função.
  */
 import { fold, type Modo, type Nivel, type QueryIntent, type Regime } from "./query-intent";
+import { pesoCompetencia } from "./taxonomia-proximas";
 
 export const MATCH_WEIGHTS = { skills: 40, nivel: 20, condicoes: 20, recencia: 10, completude: 10 } as const;
 /** Vaga atualizada até 7 dias atrás vale a recência inteira; com 60 dias ou mais, nada. */
@@ -15,7 +17,8 @@ export const RECENCIA_DIAS = { cheia: 7, zero: 60 } as const;
 export type MatchCriteria = Pick<QueryIntent, "skills" | "regime" | "modo" | "nivel" | "faixaMin">;
 
 export type MatchGap =
-  | { kind: "skill"; skill: string }
+  /** `proxima`: a vaga não tem a competência, mas tem uma próxima (2.2a), que vale metade. */
+  | { kind: "skill"; skill: string; proxima?: string }
   | { kind: "nivel"; want: Nivel; have: string | null }
   | { kind: "regime"; want: Regime; have: string | null }
   | { kind: "modo"; want: Modo; have: Modo | null }
@@ -99,10 +102,25 @@ export function matchVacancy(v: MatchableVacancy, c: MatchCriteria, now: number 
   // Competências (40)
   let skills = 1;
   if (c.skills.length) {
-    const have = new Set(vacancySkillIds(v));
-    const missing = c.skills.filter((s) => !have.has(s));
-    skills = (c.skills.length - missing.length) / c.skills.length;
-    for (const s of missing) gaps.push({ kind: "skill", skill: s });
+    const daVaga = vacancySkillIds(v);
+    const faltam: MatchGap[] = [];
+    const proximas: MatchGap[] = [];
+    let soma = 0;
+    for (const s of c.skills) {
+      // A pessoa (ou quem busca) tem `s`; a vaga pede `d`. Exata, igual ou que cobre = 1; próxima = 0,5.
+      let melhor = { peso: 0, skill: "" };
+      for (const d of daVaga) {
+        const peso = pesoCompetencia(s, d);
+        if (peso > melhor.peso) melhor = { peso, skill: d };
+        if (peso === 1) break;
+      }
+      soma += melhor.peso;
+      if (melhor.peso === 0) faltam.push({ kind: "skill", skill: s });
+      else if (melhor.peso < 1) proximas.push({ kind: "skill", skill: s, proxima: melhor.skill });
+    }
+    skills = soma / c.skills.length;
+    // O que falta de todo vem antes do que tem uma próxima.
+    gaps.push(...faltam, ...proximas);
   }
 
   // Nível (20)

@@ -19,7 +19,9 @@ export function useGapText() {
     (g: MatchGap): string => {
       switch (g.kind) {
         case "skill":
-          return t("gapSkill", { skill: getSkill(g.skill)?.label ?? g.skill });
+          return g.proxima
+            ? t("gapSkillProxima", { skill: getSkill(g.skill)?.label ?? g.skill, proxima: getSkill(g.proxima)?.label ?? g.proxima })
+            : t("gapSkill", { skill: getSkill(g.skill)?.label ?? g.skill });
         case "nivel":
           return g.have ? t("gapNivel", { want: t(`nivel.${nivelKey(g.want)}`), have: g.have }) : t("gapNivelNone");
         case "regime":
