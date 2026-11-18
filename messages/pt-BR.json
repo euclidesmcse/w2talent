@@ -39,7 +39,8 @@
     "painelRh": "Painel RH",
     "painelRhCurto": "Painel",
     "mercado": "Mercado",
-    "atendimento": "Atendimento"
+    "atendimento": "Atendimento",
+    "minhasConversas": "Minhas conversas"
   },
   "lang": {
     "label": "Idioma",
@@ -966,7 +967,11 @@
     "rankingTarefa": "Ordem dos candidatos",
     "rankingFaz": "Muda só a ordem dos candidatos de uma vaga, a partir de quem a empresa leva para entrevista e de quem ela marca como não seguiu. A % de match mostrada continua a mesma conta.",
     "rankingDados": "As 5 partes do match (competências, nível, condições, atualização, completude). Nunca idade, gênero, foto, estado civil ou endereço. Dados de exemplo e de empresa recusada ficam de fora.",
-    "rankingDecide": "Não é IA nem decide nada: cada peso muda no máximo 50% e só depois de 30 decisões. O recrutador pode ver a ordem padrão, e o admin pode desligar."
+    "rankingDecide": "Não é IA nem decide nada: cada peso muda no máximo 50% e só depois de 30 decisões. O recrutador pode ver a ordem padrão, e o admin pode desligar.",
+    "atendimentoTarefa": "Falar com uma pessoa (Ajuda)",
+    "atendimentoFaz": "Não é IA: quem responde a conversa é uma pessoa da equipe do W2Talent. Nenhuma resposta é escrita nem sugerida por IA.",
+    "atendimentoDados": "O que você escreve na conversa, a tela de onde veio e, com login, se a conta é de candidato ou de recrutador. Nada disso vai para um modelo de IA. A conversa é apagada 180 dias depois de encerrada.",
+    "atendimentoDecide": "Uma pessoa da equipe lê e responde. A IA não participa."
   },
   "empresa": {
     "title": "Minha empresa",
@@ -1370,7 +1375,33 @@
     "encerradaLead": "A equipe encerrou esta conversa. Para falar de novo, abra outra.",
     "abrirOutra": "Abrir outra conversa",
     "voltarAjuda": "← Voltar para a Ajuda",
-    "semIa": "Quem responde é uma pessoa da equipe. Nada desta conversa vai para IA."
+    "semIa": "Quem responde é uma pessoa da equipe. Nada desta conversa vai para IA.",
+    "naoEncontradaConta": "Não achamos esta conversa na sua conta. Veja a lista em Minhas conversas.",
+    "entrarParaVer": "Entre na sua conta para ver esta conversa.",
+    "entrar": "Entrar",
+    "minhas": "Minhas conversas"
+  },
+  "minhasConversas": {
+    "metaTitle": "Minhas conversas · W2Talent",
+    "titulo": "Minhas conversas",
+    "lead": "As conversas com a equipe que você abriu com login. Abra uma para ver as respostas e escrever de novo.",
+    "guarda": "Quem responde é uma pessoa, sem IA. A conversa é apagada 180 dias depois de encerrada.",
+    "carregando": "Carregando as conversas…",
+    "erro": "Não deu certo agora. Tente de novo em instantes.",
+    "loginTitulo": "Entre para ver suas conversas",
+    "loginTexto": "A lista mostra as conversas abertas com login. Sem login, use o link que enviamos por e-mail.",
+    "entrar": "Entrar",
+    "vaziaTitulo": "Nenhuma conversa ainda",
+    "vaziaTexto": "Quando você falar com a equipe pela Ajuda com login, a conversa aparece aqui.",
+    "abrir": "Falar com uma pessoa",
+    "lista": "Conversas",
+    "semAssunto": "Conversa",
+    "ultima": "Última mensagem:",
+    "aguardando": "Esperando a equipe",
+    "respondida": "Equipe respondeu",
+    "encerrada": "Encerrada",
+    "nova": "Abrir outra conversa",
+    "voltarAjuda": "← Voltar para a Ajuda"
   },
   "comparar": {
     "title": "Comparar candidatos",

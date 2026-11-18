@@ -39,7 +39,8 @@
     "painelRh": "Panel de RR. HH.",
     "painelRhCurto": "Panel",
     "mercado": "Mercado",
-    "atendimento": "Atención"
+    "atendimento": "Atención",
+    "minhasConversas": "Mis conversaciones"
   },
   "lang": {
     "label": "Idioma",
@@ -966,7 +967,11 @@
     "rankingTarefa": "Orden de los candidatos",
     "rankingFaz": "Cambia solo el orden de los candidatos de una vacante, a partir de a quién la empresa pasa a entrevista y a quién marca como no siguió. El % de compatibilidad mostrado sigue siendo el mismo cálculo.",
     "rankingDados": "Las 5 partes de la compatibilidad (competencias, nivel, condiciones, actualización, completitud). Nunca edad, género, foto, estado civil ni dirección. Los datos de ejemplo y de empresas rechazadas quedan fuera.",
-    "rankingDecide": "No es IA ni decide nada: cada peso cambia como máximo un 50% y solo después de 30 decisiones. El reclutador puede ver el orden estándar, y el admin puede desactivarlo."
+    "rankingDecide": "No es IA ni decide nada: cada peso cambia como máximo un 50% y solo después de 30 decisiones. El reclutador puede ver el orden estándar, y el admin puede desactivarlo.",
+    "atendimentoTarefa": "Hablar con una persona (Ayuda)",
+    "atendimentoFaz": "No es IA: quien responde la conversación es una persona del equipo de W2Talent. Ninguna respuesta la escribe ni la sugiere la IA.",
+    "atendimentoDados": "Lo que escribes en la conversación, la pantalla de la que viniste y, con sesión iniciada, si la cuenta es de candidato o de reclutador. Nada de eso va a un modelo de IA. La conversación se borra 180 días después de cerrada.",
+    "atendimentoDecide": "Una persona del equipo lee y responde. La IA no participa."
   },
   "empresa": {
     "title": "Mi empresa",
@@ -1370,7 +1375,33 @@
     "encerradaLead": "El equipo cerró esta conversación. Para hablar de nuevo, abre otra.",
     "abrirOutra": "Abrir otra conversación",
     "voltarAjuda": "← Volver a la Ayuda",
-    "semIa": "Responde una persona del equipo. Nada de esta conversación va a la IA."
+    "semIa": "Responde una persona del equipo. Nada de esta conversación va a la IA.",
+    "naoEncontradaConta": "No encontramos esta conversación en tu cuenta. Mira la lista en Mis conversaciones.",
+    "entrarParaVer": "Inicia sesión en tu cuenta para ver esta conversación.",
+    "entrar": "Iniciar sesión",
+    "minhas": "Mis conversaciones"
+  },
+  "minhasConversas": {
+    "metaTitle": "Mis conversaciones · W2Talent",
+    "titulo": "Mis conversaciones",
+    "lead": "Las conversaciones con el equipo que abriste con sesión iniciada. Abre una para ver las respuestas y escribir de nuevo.",
+    "guarda": "Responde una persona, sin IA. La conversación se borra 180 días después de cerrada.",
+    "carregando": "Cargando las conversaciones…",
+    "erro": "No funcionó ahora. Prueba de nuevo en un momento.",
+    "loginTitulo": "Inicia sesión para ver tus conversaciones",
+    "loginTexto": "La lista muestra las conversaciones abiertas con sesión iniciada. Sin sesión, usa el enlace que enviamos por e-mail.",
+    "entrar": "Iniciar sesión",
+    "vaziaTitulo": "Todavía no hay conversaciones",
+    "vaziaTexto": "Cuando hables con el equipo desde la Ayuda con sesión iniciada, la conversación aparece aquí.",
+    "abrir": "Hablar con una persona",
+    "lista": "Conversaciones",
+    "semAssunto": "Conversación",
+    "ultima": "Último mensaje:",
+    "aguardando": "Esperando al equipo",
+    "respondida": "El equipo respondió",
+    "encerrada": "Cerrada",
+    "nova": "Abrir otra conversación",
+    "voltarAjuda": "← Volver a la Ayuda"
   },
   "comparar": {
     "title": "Comparar candidatos",

@@ -1,6 +1,6 @@
 ---
 titulo: Mis datos y privacidad
-resumo: Contacto protegido, cuánto tiempo queda el perfil en la búsqueda y cómo pedir revisión.
+resumo: Contacto protegido, cuánto tiempo se guardan el perfil y las conversaciones y cómo pedir revisión.
 areas: publico, candidato, recrutador
 telas: /minha-ficha, /renovar, /ia, /mercado
 ordem: 10
@@ -24,6 +24,10 @@ La pretensión que pones en tu ficha aparece para los reclutadores en tu Ficha W
 - Antes de vencer, recibes recordatorios por correo con el botón "Sigo buscando". Al hacer clic se renueva por 180 días más.
 - Sin renovación, el perfil se archiva y sale de la búsqueda.
 - Después de 30 días archivado, se borra, junto con las postulaciones.
+
+## Conversaciones con el equipo
+
+Las conversaciones en [Hablar con una persona](/ajuda/conversa) se guardan hasta 180 días después de cerradas; luego se borran, con todos los mensajes. Con sesión, las ves en [Mis conversaciones](/ajuda/minhas-conversas). Responde una persona del equipo, y nada de la conversación va a la IA.
 
 ## IA y revisión por una persona
 

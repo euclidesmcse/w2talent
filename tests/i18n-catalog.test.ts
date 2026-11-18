@@ -61,6 +61,8 @@ describe("catálogos de idioma", () => {
       "components/conversa-nova.tsx",
       "app/ajuda/page.tsx",
       "app/ajuda/conversa/page.tsx",
+      "app/ajuda/minhas-conversas/page.tsx",
+      "app/ajuda/minhas-conversas/layout.tsx",
       "app/admin/atendimento/page.tsx",
       "components/empresa-webhook.tsx",
     ];

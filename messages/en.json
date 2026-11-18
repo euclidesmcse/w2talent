@@ -39,7 +39,8 @@
     "painelRh": "HR dashboard",
     "painelRhCurto": "Dashboard",
     "mercado": "Market",
-    "atendimento": "Support"
+    "atendimento": "Support",
+    "minhasConversas": "My conversations"
   },
   "lang": {
     "label": "Language",
@@ -966,7 +967,11 @@
     "rankingTarefa": "Candidate order",
     "rankingFaz": "Changes only the order of a job's candidates, based on who the company moves to interview and who it marks as not moving forward. The match % shown is still the same calculation.",
     "rankingDados": "The 5 parts of the match (skills, level, conditions, how recent, completeness). Never age, gender, photo, marital status or address. Sample data and data from rejected companies are left out.",
-    "rankingDecide": "It is not AI and decides nothing: each weight changes by at most 50%, and only after 30 decisions. Recruiters can see the default order, and the admin can turn it off."
+    "rankingDecide": "It is not AI and decides nothing: each weight changes by at most 50%, and only after 30 decisions. Recruiters can see the default order, and the admin can turn it off.",
+    "atendimentoTarefa": "Talk to a person (Help)",
+    "atendimentoFaz": "Not AI: a person on the W2Talent team answers the conversation. No reply is written or suggested by AI.",
+    "atendimentoDados": "What you write in the conversation, the screen you came from and, when signed in, whether the account is a candidate or a recruiter. None of it goes to an AI model. The conversation is deleted 180 days after it is closed.",
+    "atendimentoDecide": "A person on the team reads and replies. AI takes no part."
   },
   "empresa": {
     "title": "My company",
@@ -1370,7 +1375,33 @@
     "encerradaLead": "The team closed this conversation. To talk again, start a new one.",
     "abrirOutra": "Start another conversation",
     "voltarAjuda": "← Back to Help",
-    "semIa": "A person on the team replies. Nothing in this conversation goes to AI."
+    "semIa": "A person on the team replies. Nothing in this conversation goes to AI.",
+    "naoEncontradaConta": "We could not find this conversation in your account. See the list in My conversations.",
+    "entrarParaVer": "Sign in to your account to see this conversation.",
+    "entrar": "Sign in",
+    "minhas": "My conversations"
+  },
+  "minhasConversas": {
+    "metaTitle": "My conversations · W2Talent",
+    "titulo": "My conversations",
+    "lead": "The conversations with the team that you started while signed in. Open one to see the replies and write again.",
+    "guarda": "A person replies, with no AI. The conversation is deleted 180 days after it is closed.",
+    "carregando": "Loading the conversations…",
+    "erro": "That did not work. Try again in a moment.",
+    "loginTitulo": "Sign in to see your conversations",
+    "loginTexto": "The list shows the conversations started while signed in. Without signing in, use the link we sent by e-mail.",
+    "entrar": "Sign in",
+    "vaziaTitulo": "No conversations yet",
+    "vaziaTexto": "When you talk to the team through Help while signed in, the conversation shows up here.",
+    "abrir": "Talk to a person",
+    "lista": "Conversations",
+    "semAssunto": "Conversation",
+    "ultima": "Last message:",
+    "aguardando": "Waiting for the team",
+    "respondida": "Team replied",
+    "encerrada": "Closed",
+    "nova": "Start another conversation",
+    "voltarAjuda": "← Back to Help"
   },
   "comparar": {
     "title": "Compare candidates",
