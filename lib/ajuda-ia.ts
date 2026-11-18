@@ -164,16 +164,18 @@ export async function perguntarAjuda(
     return { tipo: "sem_resposta", id: p.id, motivo };
   };
 
-  let trechos: TrechoAchado[];
+  let achados: TrechoAchado[];
   try {
     await garantirIndice(db, locale, deps.embed);
     const vetor = await generateEmbedding(pergunta, { embed: deps.embed });
-    trechos = await buscarTrechos(db, vetor, locale);
+    achados = await buscarTrechos(db, vetor, locale);
   } catch {
     return semResposta("ia_falhou");
   }
-  const melhor = trechos[0]?.similaridade;
-  if (melhor === undefined || melhor < CORTE_SIMILARIDADE) return semResposta("sem_trecho", melhor);
+  const melhor = achados[0]?.similaridade;
+  // Só os trechos acima do corte vão para a IA e podem virar fonte.
+  const trechos = achados.filter((t) => t.similaridade >= CORTE_SIMILARIDADE);
+  if (melhor === undefined || !trechos.length) return semResposta("sem_trecho", melhor);
 
   let lido: ReturnType<typeof lerRespostaIa>;
   try {

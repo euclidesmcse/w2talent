@@ -14,7 +14,7 @@ type Estado =
   | { t: "vazio" }
   | { t: "pensando" }
   | { t: "resposta"; resposta: string; fontes: Fonte[] }
-  | { t: "sem_resposta"; id: string | null }
+  | { t: "sem_resposta"; id: string | null; pergunta: string }
   | { t: "enviado" }
   | { t: "erro"; chave: "erroTamanho" | "erroLimite" | "erroGeral" };
 
@@ -46,12 +46,12 @@ export function AjudaPergunta({ de }: { de?: string | null }) {
       if (meu !== seq.current) return;
       if (r.status === 429) return setEstado({ t: "erro", chave: "erroLimite" });
       if (r.status === 422) return setEstado({ t: "erro", chave: "erroTamanho" });
-      if (!r.ok) return setEstado({ t: "sem_resposta", id: null });
+      if (!r.ok) return setEstado({ t: "sem_resposta", id: null, pergunta: p });
       const j = (await r.json()) as { tipo: "resposta"; resposta: string; fontes: Fonte[] } | { tipo: "sem_resposta"; id: string };
       if (meu !== seq.current) return;
-      setEstado(j.tipo === "resposta" ? { t: "resposta", resposta: j.resposta, fontes: j.fontes } : { t: "sem_resposta", id: j.id });
+      setEstado(j.tipo === "resposta" ? { t: "resposta", resposta: j.resposta, fontes: j.fontes } : { t: "sem_resposta", id: j.id, pergunta: p });
     } catch {
-      if (meu === seq.current) setEstado({ t: "sem_resposta", id: null });
+      if (meu === seq.current) setEstado({ t: "sem_resposta", id: null, pergunta: p });
     }
   }
 
@@ -66,7 +66,7 @@ export function AjudaPergunta({ de }: { de?: string | null }) {
       const r = await fetch("/api/ajuda/equipe", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id: estado.id, pergunta: pergunta.trim(), email: email.trim(), locale, de }),
+        body: JSON.stringify({ id: estado.id, pergunta: estado.pergunta, email: email.trim(), locale, de }),
       });
       if (r.ok) setEstado({ t: "enviado" });
       else if (r.status === 422) setErroEmail(true);

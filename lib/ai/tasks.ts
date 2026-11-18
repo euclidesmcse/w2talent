@@ -34,7 +34,8 @@ export const TASKS = {
   match_explain: { kind: "chat", json: true, minContext: 16_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
   coach_candidate: { kind: "chat", minContext: 32_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
   coach_recruiter: { kind: "chat", minContext: 32_000, defaultWorkersModel: TEXT_MODEL },
-  support_chat: { kind: "chat", minContext: 32_000, defaultWorkersModel: TEXT_MODEL },
+  // 2.6a-2: a Ajuda lê a resposta em JSON ({respondido, resposta, fontes}).
+  support_chat: { kind: "chat", json: true, minContext: 32_000, defaultWorkersModel: TEXT_MODEL },
   compose_message: { kind: "chat", minContext: 8_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
   translate_ui: { kind: "chat", minContext: 8_000, defaultWorkersModel: TEXT_MODEL },
   translate_content: { kind: "chat", minContext: 8_000, defaultWorkersModel: TEXT_MODEL },

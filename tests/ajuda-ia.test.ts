@@ -120,6 +120,21 @@ describeDb("perguntas na ajuda (banco)", () => {
     expect(await db.perguntaSemResposta.count()).toBe(0);
   });
 
+  it("só os trechos acima do corte vão para a IA", async () => {
+    const alvo = trechosDoIdioma("pt-BR").find((t) => t.slug === "match" && t.ordem === 0)!;
+    const pergunta = alvo.texto.slice(0, 400);
+    let recebidos: { n: number; texto: string }[] = [];
+    const chat: ChatAjudaFn = async (_t, q) => {
+      recebidos = JSON.parse(q.messages[1].content).trechos;
+      return { text: '{"respondido":false}' };
+    };
+    await perguntarAjuda(db, { pergunta, locale: "pt-BR" }, { embed, chat });
+    const qv = vetor(pergunta);
+    const cos = (v: number[]) => v.reduce((s, x, i) => s + x * qv[i], 0);
+    expect(recebidos.length).toBeGreaterThan(0);
+    for (const t of recebidos) expect(cos(vetor(t.texto))).toBeGreaterThanOrEqual(CORTE_SIMILARIDADE - 1e-6);
+  });
+
   it("descarta quando a IA diz que não sabe, e quando ela falha", async () => {
     const alvo = trechosDoIdioma("pt-BR")[0];
     const naoSabe: ChatAjudaFn = async () => ({ text: '{"respondido":false,"resposta":"","fontes":[]}' });
