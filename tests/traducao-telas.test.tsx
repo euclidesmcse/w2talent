@@ -107,15 +107,14 @@ describe("Aviso de tradução automática", () => {
     expect(textoExibido({ ...vaga, traducao: null }, false)).toMatchObject({ titulo: "Engenheiro de Dados", traduzida: false });
   });
 
-  it("botão Ver original / Ver tradução com aria-pressed, nos três idiomas", () => {
+  it("botão Ver original / Ver tradução (rótulo muda, sem aria-pressed), nos três idiomas", () => {
     const html = render(<TraducaoAviso verOriginal={false} onAlternar={() => {}} />);
     expect(html).toContain('data-action="ver-original"');
-    expect(html).toContain('aria-pressed="false"');
+    expect(html).not.toContain("aria-pressed");
     expect(html).toContain("Tradução automática");
     expect(html).toContain("Ver original");
     expect(html).toContain('href="/ia#traducao"');
     const aberto = render(<TraducaoAviso verOriginal onAlternar={() => {}} />);
-    expect(aberto).toContain('aria-pressed="true"');
     expect(aberto).toContain("Ver tradução");
     expect(render(<TraducaoAviso verOriginal={false} onAlternar={() => {}} />, "en")).toContain("Show original");
     expect(render(<TraducaoAviso verOriginal={false} onAlternar={() => {}} />, "es")).toContain("Traducción automática");

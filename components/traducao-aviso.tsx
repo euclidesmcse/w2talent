@@ -53,7 +53,6 @@ export function TraducaoAviso({ verOriginal, onAlternar, className }: { verOrigi
       <button
         type="button"
         data-action="ver-original"
-        aria-pressed={verOriginal}
         onClick={onAlternar}
         className="rounded-control font-medium text-brand underline-offset-2 hover:underline"
       >
