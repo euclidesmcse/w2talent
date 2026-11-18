@@ -1,0 +1,32 @@
+/**
+ * 2.0 Transparência (plano "IA para RH (SAP)", aprovado pelo Euclides em 2026-11-18).
+ * Onde a IA aparece no W2Talent, na ordem da página /ia. Cada linha tem uma âncora
+ * (os selos "Como usamos IA" apontam para ela) e as tarefas do roteador que usa.
+ * Ao ligar uma tarefa nova de IA numa tela, acrescente a linha aqui e os textos em messages/*.json (grupo "ia").
+ */
+import type { TaskName } from "@/lib/ai/tasks";
+
+export type LinhaIa = {
+  /** Prefixo das chaves em messages ("cv" → ia.cvTarefa, ia.cvFaz, ia.cvDados, ia.cvDecide) e âncora na página. */
+  id: "cv" | "w2" | "busca" | "parecidas" | "match";
+  ancora: string;
+  /** Tarefas do roteador de IA usadas. Vazio = não é IA (o match é uma conta com pesos fixos). */
+  tarefas: TaskName[];
+};
+
+export const LINHAS_IA: LinhaIa[] = [
+  { id: "cv", ancora: "leitura-cv", tarefas: ["extract_cv"] },
+  { id: "w2", ancora: "ficha-w2", tarefas: ["ficha_w2"] },
+  { id: "busca", ancora: "busca", tarefas: ["embed"] },
+  { id: "parecidas", ancora: "parecidas", tarefas: ["embed"] },
+  { id: "match", ancora: "match", tarefas: [] },
+];
+
+export const CAMPOS_LINHA = ["Tarefa", "Faz", "Dados", "Decide"] as const;
+
+/** Endereço para pedir revisão por uma pessoa (LGPD art. 20). Confirmar com o Euclides que a caixa existe. */
+export const EMAIL_REVISAO = "contato@w2talent.com";
+
+export function hrefIa(ancora?: string): string {
+  return ancora ? `/ia#${ancora}` : "/ia";
+}

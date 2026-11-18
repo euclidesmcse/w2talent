@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const t = await getTranslations("home");
   const ts = await getTranslations("status");
+  const ti = await getTranslations("ia");
   const PASSOS = [1, 2, 3, 4].map((n) => ({ n: String(n), titulo: t(`step${n}Title`), texto: t(`step${n}Text`) }));
   const PERGUNTAS = [1, 2, 3, 4].map((n) => ({ p: t(`faq${n}q`), r: t(`faq${n}a`) }));
   return (
@@ -167,7 +168,10 @@ export default async function HomePage() {
       <footer className="border-t border-line bg-surface">
         <div className="mx-auto flex max-w-page flex-wrap justify-between gap-2 px-6 py-5 text-[13px] text-muted">
           <span>{t("footer")}</span>
-          <span>© 2026</span>
+          <span className="flex gap-4">
+            <Link href="/ia" className="text-muted underline underline-offset-2 hover:text-ink">{ti("footerLink")}</Link>
+            <span>© 2026</span>
+          </span>
         </div>
       </footer>
     </div>

@@ -9,7 +9,8 @@
         "http://localhost:3999/candidatos",
         "http://localhost:3999/painel",
         "http://localhost:3999/minha-ficha",
-        "http://localhost:3999/minhas-candidaturas"
+        "http://localhost:3999/minhas-candidaturas",
+        "http://localhost:3999/ia"
       ],
       "numberOfRuns": 3,
       "settings": {

@@ -5,6 +5,7 @@
  */
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { IaLink } from "@/components/ia-link";
 import { formatFaixa } from "@/lib/format";
 import { diaMes } from "@/lib/envio-client";
 import type { VagaResumo } from "@/lib/parecidas";
@@ -39,7 +40,10 @@ export function VagasParecidas({ id, sentAt, onAbrir }: { id: string; sentAt?: R
   if (!itens?.length) return null;
   return (
     <section aria-labelledby="parecidas-titulo" className="flex flex-col gap-2 border-t border-line-soft pt-4" data-testid="vagas-parecidas">
-      <h3 id="parecidas-titulo" className="text-[13px] font-medium text-ink">{t("parecidas")}</h3>
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h3 id="parecidas-titulo" className="text-[13px] font-medium text-ink">{t("parecidas")}</h3>
+        <IaLink ancora="parecidas" texto="seloParecidas" className="text-xs" />
+      </div>
       <ul className="flex flex-col gap-2">
         {itens.map((v) => {
           const linha = [v.nivel, [v.localidade, v.regime].filter(Boolean).join(" · "), formatFaixa(v.faixaDe, v.faixaAte, v.faixaMoeda ?? "BRL", locale)]
