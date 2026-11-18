@@ -16,6 +16,9 @@ describe("regras", () => {
   });
   it("números iguais com separadores diferentes", () => {
     expect(numeros("R$ 8.000,50 e 5 anos")).toEqual(numeros("5 years and R$ 8,000.50"));
+    expect(numeros("1,5 anos")).toEqual(numeros("1.5 years"));
+    expect(numeros("1,5 anos")).not.toEqual(numeros("15 years"));
+    expect(numeros("R$ 8.000")).not.toEqual(numeros("R$ 8.00"));
   });
   it("aceita a tradução boa e recusa a que muda números, itens ou tecnologia", () => {
     const prot = protegidosDaVaga(["react", { skillId: "typescript" }]);
