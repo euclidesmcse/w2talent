@@ -48,6 +48,13 @@
     "en": "English",
     "es": "Español"
   },
+  "tema": {
+    "label": "Tema",
+    "sistema": "Seguir el sistema",
+    "claro": "Claro",
+    "escuro": "Oscuro",
+    "botao": "Tema: {atual}. Cambiar a: {proximo}"
+  },
   "home": {
     "title": "Postúlate a <destaque>varios empleos a la vez</destaque>, sin perder el control",
     "lead": "Tú encuentras los empleos, revisas cada uno y lo apruebas. W2Talent envía en lote solo los que aprobaste, con un resumen de tu perfil que el reclutador entiende en segundos.",

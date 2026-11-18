@@ -58,7 +58,7 @@ export function CandidateCards({
             data-candidate-id={rid}
             aria-label={t("candidatos.itemLabel", { name: row.nome })}
             onClick={(e) => { if ((e.target as HTMLElement).closest("button, a, input, label")) return; onToggle?.(rid); }}
-            className={`cursor-pointer candidate-card rounded-card border p-4 ${isSelected ? "selected border-brand bg-[#F5F8FF]" : "border-line bg-surface"}`}
+            className={`cursor-pointer candidate-card rounded-card border p-4 ${isSelected ? "selected border-brand bg-brand-faint" : "border-line bg-surface"}`}
           >
             <div className="card-header flex items-start gap-3">
               <input type="checkbox" aria-label={t("table.selectItem", { name: row.nome })}

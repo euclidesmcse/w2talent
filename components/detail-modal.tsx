@@ -241,7 +241,7 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef, 
       ref={overlayRef}
       aria-hidden={false}
       onClick={handleOverlayClick}
-      className="detail-overlay fixed inset-0 z-50 flex items-end justify-center bg-ink/40 md:items-center"
+      className="detail-overlay fixed inset-0 z-50 flex items-end justify-center bg-scrim/40 md:items-center"
       style={{ zIndex: 50 }}
       data-testid="detail-overlay"
     >

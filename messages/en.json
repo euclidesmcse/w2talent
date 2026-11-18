@@ -48,6 +48,13 @@
     "en": "English",
     "es": "Español"
   },
+  "tema": {
+    "label": "Theme",
+    "sistema": "Follow system",
+    "claro": "Light",
+    "escuro": "Dark",
+    "botao": "Theme: {atual}. Switch to: {proximo}"
+  },
   "home": {
     "title": "Apply to <destaque>many jobs at once</destaque>, without losing control",
     "lead": "You find the jobs, review each one and approve it. W2Talent sends a batch with only the ones you approved, plus a profile summary a recruiter understands in seconds.",

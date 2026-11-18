@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "./cn";
 
-/** Tabela densa do protótipo: cabeçalho 12px em caixa normal, linhas com borda #F0F1F3, rolagem horizontal no celular. */
+/** Tabela densa do protótipo: cabeçalho 12px em caixa normal, linhas com borda line-soft, rolagem horizontal no celular. */
 export function Table({ className, minWidth = 560, ...props }: React.TableHTMLAttributes<HTMLTableElement> & { minWidth?: number }) {
   return (
     <div className="relative overflow-x-auto">
@@ -23,7 +23,7 @@ export function Th({ className, ...props }: React.ThHTMLAttributes<HTMLTableCell
 }
 
 export function Tr({ className, selected, ...props }: React.HTMLAttributes<HTMLTableRowElement> & { selected?: boolean }) {
-  return <tr className={cn("border-t border-line-soft", selected ? "bg-[#F5F8FF]" : "bg-surface", className)} {...props} />;
+  return <tr className={cn("border-t border-line-soft", selected ? "bg-brand-faint" : "bg-surface", className)} {...props} />;
 }
 
 export function Td({ className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {

@@ -269,7 +269,7 @@ export default function MinhaFichaPage() {
         <ol className="mt-5 flex flex-wrap gap-x-4 gap-y-1 text-[13px]" aria-label={t("passo", { n: nPasso })}>
           {passos.map(([p, rot], i) => (
             <li key={p} aria-current={p === r.passo ? "step" : undefined} className={cn("flex items-center gap-1.5", p === r.passo ? "font-semibold text-ink" : "text-muted")}>
-              <span className={cn("grid h-5 w-5 place-items-center rounded-full text-[11px] tabular-nums", p === r.passo ? "bg-brand text-white" : "bg-neutral-soft text-muted")}>{i + 1}</span>
+              <span className={cn("grid h-5 w-5 place-items-center rounded-full text-[11px] tabular-nums", p === r.passo ? "bg-brand-solid text-white" : "bg-neutral-soft text-muted")}>{i + 1}</span>
               {rot}
             </li>
           ))}

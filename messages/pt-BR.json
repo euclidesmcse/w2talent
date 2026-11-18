@@ -48,6 +48,13 @@
     "en": "English",
     "es": "Español"
   },
+  "tema": {
+    "label": "Tema",
+    "sistema": "Seguir o sistema",
+    "claro": "Claro",
+    "escuro": "Escuro",
+    "botao": "Tema: {atual}. Mudar para: {proximo}"
+  },
   "home": {
     "title": "Candidate-se a <destaque>várias vagas de uma vez</destaque>, sem perder o controle",
     "lead": "Você encontra as vagas, confere cada uma e aprova. O W2Talent envia em lote só as que você aprovou, com um resumo do seu perfil que o recrutador entende em segundos.",

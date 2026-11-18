@@ -64,7 +64,7 @@ export function VacancyCards({
             data-vacancy-id={row.id}
             aria-label={t("vagas.itemLabel", { title: texto.titulo })}
             onClick={(e) => { if (enviadaEm || (e.target as HTMLElement).closest("button, a, input, label")) return; onToggle?.(row.id); }}
-            className={`cursor-pointer vacancy-card rounded-card border p-4 ${isSelected ? "selected border-brand bg-[#F5F8FF]" : "border-line bg-surface"}`}
+            className={`cursor-pointer vacancy-card rounded-card border p-4 ${isSelected ? "selected border-brand bg-brand-faint" : "border-line bg-surface"}`}
           >
             <div className="card-header flex items-start gap-3">
               <input

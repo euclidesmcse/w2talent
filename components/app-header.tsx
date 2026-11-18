@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { BrandMark, BrandWordmark } from "@/components/brand-logo";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { TemaSwitcher } from "@/components/tema-switcher";
 import { InstallApp } from "@/components/install-app";
 import { ContaMenu, ConviteAutenticador, TrocaDeArea } from "@/components/conta-menu";
 import { LinkAjuda } from "@/components/link-ajuda";
@@ -26,6 +27,7 @@ export function AppHeader({ area, active, right, suffix }: { area?: Area; active
         <div className="flex shrink-0 items-center gap-1 md:gap-3">
           <InstallApp />
           <LanguageSwitcher />
+          <TemaSwitcher />
           {/* 2.6a: ajuda em todas as áreas; leva junto a tela atual para mostrar os artigos dela primeiro */}
           {area !== "admin" ? (
             <LinkAjuda>

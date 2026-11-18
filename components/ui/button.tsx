@@ -10,10 +10,10 @@ const base =
   "disabled:opacity-50 disabled:cursor-not-allowed";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-brand text-white font-semibold relevo-primario focus-visible:outline-brand",
+  primary: "bg-brand-solid text-white font-semibold relevo-primario focus-visible:outline-brand",
   secondary: "bg-surface text-ink font-medium border border-line-strong relevo-secundario focus-visible:outline-brand",
   ghost: "bg-transparent text-brand font-medium hover:bg-brand-soft focus-visible:outline-brand",
-  danger: "bg-danger text-white font-semibold hover:opacity-90 focus-visible:outline-brand",
+  danger: "bg-danger-solid text-white font-semibold hover:opacity-90 focus-visible:outline-brand",
   // Sobre o bloco azul do herói (visual "voltagem azul", 2026-11-10)
   inverse: "bg-surface text-brand-ink font-semibold border border-white relevo-secundario focus-visible:outline-white",
   inverseOutline: "bg-transparent text-white font-medium border border-white/70 hover:bg-white/10 focus-visible:outline-white",

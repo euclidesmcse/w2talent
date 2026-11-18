@@ -21,21 +21,22 @@ import {
   Td,
   useToast,
 } from "@/components/ui";
-import { colors } from "@/lib/design-tokens";
+import { claro, escuro } from "@/lib/design-tokens";
 
 /** Vitrine do design system v2: confere os componentes base contra o protótipo aprovado. */
 export default function DesignPage() {
   const toast = useToast();
   const [chips, setChips] = React.useState(["Remoto", "PJ", "AWS"]);
-  const swatches: Array<[string, string]> = [
-    ["Ação", colors.brand.DEFAULT],
-    ["Texto", colors.ink.DEFAULT],
-    ["Texto secundário", colors.muted.DEFAULT],
-    ["Borda", colors.line.DEFAULT],
-    ["Fundo", colors.canvas],
-    ["Sucesso", colors.success.DEFAULT],
-    ["Atenção", colors.warning.DEFAULT],
-    ["Erro", colors.danger.DEFAULT],
+  // [nome, variável CSS, valor no claro, valor no escuro]
+  const swatches: Array<[string, string, string, string]> = [
+    ["Ação", "--cor-brand", claro.brand.DEFAULT, escuro.brand.DEFAULT],
+    ["Texto", "--cor-ink", claro.ink.DEFAULT, escuro.ink.DEFAULT],
+    ["Texto secundário", "--cor-muted", claro.muted.DEFAULT, escuro.muted.DEFAULT],
+    ["Borda", "--cor-line", claro.line.DEFAULT, escuro.line.DEFAULT],
+    ["Fundo", "--cor-canvas", claro.canvas, escuro.canvas],
+    ["Sucesso", "--cor-success", claro.success.DEFAULT, escuro.success.DEFAULT],
+    ["Atenção", "--cor-warning", claro.warning.DEFAULT, escuro.warning.DEFAULT],
+    ["Erro", "--cor-danger", claro.danger.DEFAULT, escuro.danger.DEFAULT],
   ];
 
   return (
@@ -52,12 +53,12 @@ export default function DesignPage() {
         <section aria-labelledby="cores" className="flex flex-col gap-3">
           <h2 id="cores" className="text-[13px] font-medium text-muted">Cores</h2>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3">
-            {swatches.map(([nome, hex]) => (
+            {swatches.map(([nome, variavel, hexClaro, hexEscuro]) => (
               <Card key={nome} className="overflow-hidden">
-                <div className="h-14 border-b border-line" style={{ background: hex }} />
+                <div className="h-14 border-b border-line" style={{ background: `rgb(var(${variavel}))` }} />
                 <div className="px-3 py-2.5 text-[13px]">
                   <strong className="font-semibold">{nome}</strong>
-                  <div className="font-mono text-muted">{hex}</div>
+                  <div className="font-mono text-muted">{hexClaro} · {hexEscuro}</div>
                 </div>
               </Card>
             ))}

@@ -4,6 +4,7 @@ import { getMessages, getLocale, getTranslations } from "next-intl/server";
 import { defaultLocale } from "@/i18n";
 import { ToastProvider } from "@/components/ui/toast";
 import { OfflineBanner, PwaInit } from "@/components/pwa";
+import { COR_DO_TOPO, SCRIPT_TEMA } from "@/lib/tema";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -32,7 +33,12 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#F7F8FA",
+  // Barra do navegador/app instalado no fundo de cada tema. Com Claro/Escuro fixado no botão do topo,
+  // lib/tema.ts troca as duas metas para a cor escolhida.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: COR_DO_TOPO.claro },
+    { media: "(prefers-color-scheme: dark)", color: COR_DO_TOPO.escuro },
+  ],
   // Ocupa a tela toda no app instalado; as bordas usam env(safe-area-inset-*) (entalhe e barra de gestos)
   viewportFit: "cover",
 };
@@ -45,8 +51,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   });
 
   return (
-    <html lang={locale} className={`${inter.variable} ${mono.variable} ${grotesk.variable}`}>
+    // data-theme vem do script abaixo (antes da primeira pintura), por isso o React não deve reclamar da diferença
+    <html lang={locale} className={`${inter.variable} ${mono.variable} ${grotesk.variable}`} suppressHydrationWarning>
       <head>
+        {/* Tema claro/escuro (lib/tema.ts): segue o sistema ou a escolha guardada, sem piscar o tema errado */}
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className="bg-canvas font-sans text-ink antialiased [padding-left:env(safe-area-inset-left)] [padding-right:env(safe-area-inset-right)]">

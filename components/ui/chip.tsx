@@ -4,9 +4,9 @@ import { cn } from "./cn";
 export type ChipTone = "brand" | "neutral" | "add";
 
 const chipTones: Record<ChipTone, string> = {
-  brand: "bg-brand text-white relevo-chip",
+  brand: "bg-brand-solid text-white relevo-chip",
   neutral: "bg-neutral-soft text-ink-soft",
-  add: "bg-surface text-muted border border-dashed border-[#9CA3AF]",
+  add: "bg-surface text-muted border border-dashed border-line-dashed",
 };
 
 /** Etiqueta arredondada: filtros, competências, "A IA entendeu". */
