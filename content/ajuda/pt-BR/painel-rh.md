@@ -11,9 +11,9 @@ O [Painel RH](/rh) mostra as vagas da sua empresa e as candidaturas que chegaram
 ## Números da empresa
 
 - **Vagas ativas** e as que **vencem em até 3 dias** (renove antes de vencer).
-- **Candidaturas** recebidas e quantas ainda estão **novas, sem resposta**.
+- **Candidaturas** recebidas e quantas estão **na etapa Nova**.
 - **Tempo até a primeira resposta:** a média entre a candidatura chegar e você mudar a etapa dela pela primeira vez.
-- **Taxa de resposta:** quantas candidaturas já receberam alguma resposta.
+- **Taxa de resposta:** quantas candidaturas já saíram de Nova alguma vez.
 
 Os números são só da sua empresa.
 

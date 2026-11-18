@@ -11,9 +11,9 @@ El [panel de RR. HH.](/rh) muestra las vacantes de tu empresa y las postulacione
 ## Números de la empresa
 
 - **Vacantes activas** y las que **vencen en hasta 3 días** (renuévalas antes de que venzan).
-- **Postulaciones** recibidas y cuántas siguen **nuevas, sin respuesta**.
+- **Postulaciones** recibidas y cuántas están **en la etapa Nueva**.
 - **Tiempo hasta la primera respuesta:** el promedio entre la llegada de la postulación y el primer cambio de etapa que haces.
-- **Tasa de respuesta:** cuántas postulaciones ya recibieron alguna respuesta.
+- **Tasa de respuesta:** cuántas postulaciones ya salieron de Nueva alguna vez.
 
 Los números son solo de tu empresa.
 

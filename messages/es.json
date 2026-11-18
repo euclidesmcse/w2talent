@@ -1200,7 +1200,7 @@
     "vagasAtivas": "Vacantes activas",
     "vencendo": "Vencen en hasta 3 días",
     "candidaturas": "Postulaciones",
-    "novas": "Nuevas, sin respuesta",
+    "novas": "En la etapa Nueva",
     "tempoMedio": "Tiempo hasta la primera respuesta",
     "taxaResposta": "Tasa de respuesta",
     "semDado": "Aún sin datos",
@@ -1245,10 +1245,12 @@
     "verFichaDe": "Ver la ficha de {nome}",
     "compararDe": "Comparar a {nome}",
     "comparar": "Comparar ({n})",
-    "compararDica": "Marca hasta 10 para comparar y exportar.",
     "etapaSalva": "{nome}: {etapa}",
     "etapaMudou": "Otra persona cambió esta postulación. La lista se actualizó.",
     "etapaErro": "No se pudo cambiar la etapa. Inténtalo de nuevo.",
-    "maisDe": "Mostrando las {n} primeras."
+    "maisDe": "Mostrando las {n} primeras.",
+    "selecaoCheia": "La selección ya tiene {max}. Quita a alguien o límpiala.",
+    "selecionadosDica": "{n} de {max} seleccionados (la selección también vale en Candidatos).",
+    "limparSelecao": "Limpiar selección"
   }
 }

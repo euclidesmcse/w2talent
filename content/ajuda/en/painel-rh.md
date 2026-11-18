@@ -11,9 +11,9 @@ The [HR dashboard](/rh) shows your company's jobs and the applications each one 
 ## Company numbers
 
 - **Active jobs** and the ones that **expire within 3 days** (renew them before they expire).
-- **Applications** received and how many are still **new, with no reply**.
+- **Applications** received and how many are **in the New stage**.
 - **Time to first reply:** the average time between an application arriving and you first changing its stage.
-- **Reply rate:** how many applications have received a reply.
+- **Reply rate:** how many applications have left New at least once.
 
 The numbers cover only your company.
 

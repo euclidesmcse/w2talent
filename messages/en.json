@@ -1200,7 +1200,7 @@
     "vagasAtivas": "Active jobs",
     "vencendo": "Expire within 3 days",
     "candidaturas": "Applications",
-    "novas": "New, no reply yet",
+    "novas": "In the New stage",
     "tempoMedio": "Time to first reply",
     "taxaResposta": "Reply rate",
     "semDado": "No data yet",
@@ -1245,10 +1245,12 @@
     "verFichaDe": "View {nome}'s profile",
     "compararDe": "Compare {nome}",
     "comparar": "Compare ({n})",
-    "compararDica": "Tick up to 10 to compare and export.",
     "etapaSalva": "{nome}: {etapa}",
     "etapaMudou": "Someone else changed this application. The list was refreshed.",
     "etapaErro": "Could not change the stage. Try again.",
-    "maisDe": "Showing the first {n}."
+    "maisDe": "Showing the first {n}.",
+    "selecaoCheia": "The selection already has {max}. Remove someone or clear it.",
+    "selecionadosDica": "{n} of {max} selected (the selection is shared with Candidates).",
+    "limparSelecao": "Clear selection"
   }
 }

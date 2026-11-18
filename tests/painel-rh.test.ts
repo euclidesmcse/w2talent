@@ -46,6 +46,11 @@ describe("montarResumo", () => {
     expect([r.metricas.vagasAtivas, r.metricas.vencendo]).toEqual([250, 7]);
   });
 
+  it("quem voltou para Nova depois de respondida continua contando como respondida", () => {
+    const r = montarResumo(vagas, [{ vacancyId: "a", etapa: "nova", n: 1 }], { n: 1, segundos: 3600 }, NOW);
+    expect([r.metricas.novas, r.metricas.respondidas, r.metricas.taxaResposta, r.metricas.tempoMedioHoras]).toEqual([1, 1, 100, 1]);
+  });
+
   it("sem candidaturas, tempo e taxa ficam sem dado", () => {
     const r = montarResumo(vagas, [], { n: 0, segundos: null }, NOW);
     expect(r.metricas.tempoMedioHoras).toBeNull();

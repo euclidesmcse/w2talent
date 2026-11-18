@@ -132,8 +132,10 @@ export default function CandidaturasDaVagaPage() {
     const cid = String(it.candidato.id);
     try {
       selectionStore.rememberLabel?.(cid, [nomeDe(it), it.candidato.titulo].filter(Boolean).join(" · "));
-      selectionStore.toggle(cid);
+      const r = selectionStore.toggle(cid);
       setSelecionados([...selectionStore.getState().selectedIds]);
+      // A seleção é a mesma de Candidatos: cheia, avisa em vez de falhar calada.
+      if (r && r.ok === false) show(t("selecaoCheia", { max: 10 }), "error");
     } catch {}
   };
 
@@ -165,7 +167,6 @@ export default function CandidaturasDaVagaPage() {
   const itemAberto = aberto ? itens.find((x) => x.applicationId === aberto) ?? null : null;
   const vagaAtiva = estado.t === "ok" && estado.vaga.status === "ativa" && new Date(estado.vaga.expiresAt).getTime() > Date.now();
   const marcados = new Set(selecionados);
-  const daVaga = itens.filter((x) => marcados.has(String(x.candidato.id))).length;
   const compararHref = `/candidatos/comparar${vagaAtiva ? `?vaga=${encodeURIComponent(id)}` : ""}`;
   const antes = itemAberto && estado.t === "ok" ? <MatchDaVaga vaga={estado.vaga.titulo} match={itemAberto.match} gaps={itemAberto.gaps} /> : null;
   const painelAberto = painelLado && !!itemAberto;
@@ -297,13 +298,23 @@ export default function CandidaturasDaVagaPage() {
           <DetailModal open={!!itemAberto} onClose={fechar} item={itemAberto?.candidato ?? null} triggerRef={gatilho} title={itemAberto ? nomeDe(itemAberto) : ""} antes={antes} />
         ) : null}
 
-        {daVaga > 0 ? (
+        {selecionados.length > 0 ? (
           <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 px-4 py-3 backdrop-blur md:px-6">
             <div className="mx-auto flex max-w-page flex-wrap items-center justify-between gap-2">
-              <span className="text-[13px] text-muted">{t("compararDica")}</span>
+              <span className="text-[13px] text-muted" aria-live="polite">{t("selecionadosDica", { n: selecionados.length, max: 10 })}</span>
+              <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                data-action="limpar-selecao"
+                onClick={() => { try { selectionStore.clear(); } catch {} setSelecionados([]); }}
+                className={buttonClasses("secondary", "md")}
+              >
+                {t("limparSelecao")}
+              </button>
               <a href={compararHref} data-action="comparar" className={buttonClasses("primary", "md", "hover:no-underline hover:text-white")}>
                 {t("comparar", { n: selecionados.length })}
               </a>
+              </div>
             </div>
           </div>
         ) : null}
