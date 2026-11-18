@@ -236,6 +236,21 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
       ],
       "ordem": 16,
       "corpo": "O [Painel RH](/rh) mostra as vagas da sua empresa e as candidaturas que chegaram a cada uma.\n\n## Números da empresa\n\n- **Vagas ativas** e as que **vencem em até 3 dias** (renove antes de vencer).\n- **Candidaturas** recebidas e quantas estão **na etapa Nova**.\n- **Tempo até a primeira resposta:** a média entre a candidatura chegar e você mudar a etapa dela pela primeira vez.\n- **Taxa de resposta:** quantas candidaturas já saíram de Nova alguma vez.\n\nOs números são só da sua empresa.\n\n## Vagas\n\nCada vaga mostra a situação, o total de candidaturas e as novas. Em \"Candidatos compatíveis\" você busca perfis parecidos com a vaga, mesmo de quem ainda não se candidatou.\n\n## Candidaturas de uma vaga\n\nEm \"Ver candidaturas\" aparecem as pessoas que se candidataram, da maior para a menor compatibilidade com a vaga.\n\n- **Etapa:** Nova, Em análise, Entrevista, Proposta, Contratada ou Não seguiu. Mude com um clique; não há formulário.\n- **O que o candidato vê:** \"Vista\" quando você abre a ficha ou move para Em análise, \"Respondida\" a partir de Entrevista e \"Encerrada\" em Não seguiu. As etapas internas não aparecem para ele.\n- **Contato:** ao mover para Entrevista (ou depois), o e-mail e o telefone do candidato aparecem na lista, só para a sua empresa, e ele recebe um aviso por e-mail. Liberado uma vez, fica liberado.\n- **Agendar entrevista:** com o contato liberado, ofereça de 3 a 8 horários (30, 45 ou 60 minutos) e, se quiser, o link da reunião. O candidato escolhe um pelo link do e-mail e os dois recebem o convite para a agenda (.ics). Ele pode trocar ou cancelar até 12 horas antes. Mudar os horários cancela a oferta anterior.\n- **Comparar:** marque até 10 pessoas para compará-las lado a lado e exportar."
+    },
+    {
+      "slug": "mercado",
+      "titulo": "Mercado de TI",
+      "resumo": "Faixa salarial das vagas, pretensão dos candidatos e competências em alta, sem login.",
+      "areas": [
+        "publico",
+        "candidato",
+        "recrutador"
+      ],
+      "telas": [
+        "/mercado"
+      ],
+      "ordem": 17,
+      "corpo": "A página [Mercado de TI](/mercado) mostra números tirados das vagas e fichas publicadas no W2Talent. É aberta a todos, sem login.\n\n## De onde vêm os números\n\n- Só das vagas ativas e das fichas ativas do próprio W2Talent. Não há IA nem dados de fora.\n- O cálculo roda uma vez por dia; a página diz a semana dos números.\n- Vagas e fichas de exemplo ficam de fora.\n\n## Como ler as tabelas\n\n- **Faixa salarial das vagas:** o \"de\" e o \"até\" anunciados, por nível e regime, em valor mensal. A **mediana** é o valor do meio; a coluna **25%–75%** mostra onde fica a metade das vagas.\n- **Pretensão dos candidatos:** o mínimo mensal pedido nas fichas, por nível e regime. As fichas não separam a pretensão por modelo de trabalho.\n- **Mais pedidas:** competências com mais vagas ativas, quantas fichas têm cada uma e quantas vagas há para cada ficha.\n- **Em alta:** vagas publicadas nos últimos 30 dias contra os 30 anteriores, só para competências com 5 ou mais vagas recentes.\n- **Tempo até a primeira resposta:** da candidatura até a empresa mudar a etapa pela primeira vez, no site todo, nos últimos 90 dias.\n\nEscolha uma competência e, se quiser, o modelo de trabalho (remoto, híbrido ou presencial) para ver só os números dela.\n\n## \"Ainda poucos dados\"\n\nPara ninguém ser identificado, um grupo só ganha números com **10 ou mais** vagas ou fichas e, quando vem de vagas, de **3 ou mais empresas**. Abaixo disso a tabela diz quanto falta, por exemplo \"faltam 4 vagas\". Nunca mostramos o mínimo nem o máximo."
     }
   ],
   "en": [
@@ -472,6 +487,21 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
       ],
       "ordem": 16,
       "corpo": "The [HR dashboard](/rh) shows your company's jobs and the applications each one received.\n\n## Company numbers\n\n- **Active jobs** and the ones that **expire within 3 days** (renew them before they expire).\n- **Applications** received and how many are **in the New stage**.\n- **Time to first reply:** the average time between an application arriving and you first changing its stage.\n- **Reply rate:** how many applications have left New at least once.\n\nThe numbers cover only your company.\n\n## Jobs\n\nEach job shows its status, the total number of applications and the new ones. \"Matching candidates\" searches for profiles close to the job, including people who have not applied yet.\n\n## Applications for a job\n\n\"See applications\" lists the people who applied, from best to lowest match with the job.\n\n- **Stage:** New, Reviewing, Interview, Offer, Hired or Not moving forward. Change it with one click; there is no form.\n- **What the candidate sees:** \"Seen\" when you open the profile or move it to Reviewing, \"Answered\" from Interview on, and \"Closed\" for Not moving forward. Internal stages are not shown to them.\n- **Contact:** when you move someone to Interview (or later), their email and phone show in the list, only for your company, and they get a notice by email. Once released, it stays released.\n- **Book an interview:** once the contact is released, offer 3 to 8 times (30, 45 or 60 minutes) and, if you want, the meeting link. The candidate picks one through the e-mail link and both get the calendar invite (.ics). They can change or cancel up to 12 hours before. Changing the times cancels the previous offer.\n- **Compare:** tick up to 10 people to compare them side by side and export."
+    },
+    {
+      "slug": "mercado",
+      "titulo": "Tech job market",
+      "resumo": "Salary ranges in jobs, candidate expectations and trending skills, no sign-in needed.",
+      "areas": [
+        "publico",
+        "candidato",
+        "recrutador"
+      ],
+      "telas": [
+        "/mercado"
+      ],
+      "ordem": 17,
+      "corpo": "The [Tech job market](/mercado) page shows numbers taken from the jobs and profiles published on W2Talent. It's open to everyone, no sign-in needed.\n\n## Where the numbers come from\n\n- Only from W2Talent's own active jobs and active profiles. No AI and no outside data.\n- The calculation runs once a day; the page shows the week of the numbers.\n- Example jobs and profiles are left out.\n\n## How to read the tables\n\n- **Salary range in jobs:** the posted \"from\" and \"up to\", by level and employment type, as a monthly amount. The **median** is the middle value; the **25%–75%** column shows where half of the jobs fall.\n- **Candidate salary expectations:** the monthly minimum asked in profiles, by level and employment type. Profiles don't split expectations by work model.\n- **Most requested:** skills with the most active jobs, how many profiles have each one and how many jobs there are per profile.\n- **Trending:** jobs posted in the last 30 days versus the previous 30, only for skills with 5 or more recent jobs.\n- **Time to first reply:** from the application until the company first changes its stage, across the site, in the last 90 days.\n\nPick a skill and, if you like, the work model (remote, hybrid or on-site) to see only its numbers.\n\n## \"Not enough data yet\"\n\nSo that no one can be identified, a group only gets numbers with **10 or more** jobs or profiles and, when it comes from jobs, from **3 or more companies**. Below that the table says how many are missing, for example \"4 more jobs needed\". We never show the minimum or the maximum."
     }
   ],
   "es": [
@@ -708,6 +738,21 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
       ],
       "ordem": 16,
       "corpo": "El [panel de RR. HH.](/rh) muestra las vacantes de tu empresa y las postulaciones que recibió cada una.\n\n## Números de la empresa\n\n- **Vacantes activas** y las que **vencen en hasta 3 días** (renuévalas antes de que venzan).\n- **Postulaciones** recibidas y cuántas están **en la etapa Nueva**.\n- **Tiempo hasta la primera respuesta:** el promedio entre la llegada de la postulación y el primer cambio de etapa que haces.\n- **Tasa de respuesta:** cuántas postulaciones ya salieron de Nueva alguna vez.\n\nLos números son solo de tu empresa.\n\n## Vacantes\n\nCada vacante muestra su estado, el total de postulaciones y las nuevas. En \"Candidatos compatibles\" buscas perfiles parecidos a la vacante, incluso de quienes aún no se postularon.\n\n## Postulaciones de una vacante\n\nEn \"Ver postulaciones\" aparecen las personas que se postularon, de mayor a menor compatibilidad con la vacante.\n\n- **Etapa:** Nueva, En análisis, Entrevista, Oferta, Contratada o No siguió. Cámbiala con un clic; no hay formulario.\n- **Lo que ve el candidato:** \"Vista\" cuando abres la ficha o la pasas a En análisis, \"Respondida\" desde Entrevista y \"Cerrada\" en No siguió. Las etapas internas no se le muestran.\n- **Contacto:** al pasar a Entrevista (o después), el correo y el teléfono del candidato aparecen en la lista, solo para tu empresa, y recibe un aviso por correo. Liberado una vez, queda liberado.\n- **Agendar entrevista:** con el contacto liberado, ofrece de 3 a 8 horarios (30, 45 o 60 minutos) y, si quieres, el enlace de la reunión. El candidato elige uno con el enlace del e-mail y ambos reciben la invitación para el calendario (.ics). Puede cambiar o cancelar hasta 12 horas antes. Cambiar los horarios cancela la oferta anterior.\n- **Comparar:** marca hasta 10 personas para compararlas lado a lado y exportar."
+    },
+    {
+      "slug": "mercado",
+      "titulo": "Mercado de TI",
+      "resumo": "Rango salarial de las vacantes, pretensión de los candidatos y competencias en alza, sin iniciar sesión.",
+      "areas": [
+        "publico",
+        "candidato",
+        "recrutador"
+      ],
+      "telas": [
+        "/mercado"
+      ],
+      "ordem": 17,
+      "corpo": "La página [Mercado de TI](/mercado) muestra números sacados de las vacantes y fichas publicadas en W2Talent. Está abierta a todos, sin iniciar sesión.\n\n## De dónde salen los números\n\n- Solo de las vacantes activas y las fichas activas de W2Talent. Sin IA y sin datos de fuera.\n- El cálculo corre una vez por día; la página indica la semana de los números.\n- Las vacantes y fichas de ejemplo quedan fuera.\n\n## Cómo leer las tablas\n\n- **Rango salarial de las vacantes:** el \"desde\" y el \"hasta\" publicados, por nivel y tipo de contrato, en valor mensual. La **mediana** es el valor del medio; la columna **25%–75%** muestra dónde está la mitad de las vacantes.\n- **Pretensión de los candidatos:** el mínimo mensual pedido en las fichas, por nivel y tipo de contrato. Las fichas no separan la pretensión por modalidad.\n- **Más pedidas:** competencias con más vacantes activas, cuántas fichas tiene cada una y cuántas vacantes hay por ficha.\n- **En alza:** vacantes publicadas en los últimos 30 días frente a los 30 anteriores, solo para competencias con 5 o más vacantes recientes.\n- **Tiempo hasta la primera respuesta:** desde la postulación hasta que la empresa cambia la etapa por primera vez, en todo el sitio, en los últimos 90 días.\n\nElige una competencia y, si quieres, la modalidad (remoto, híbrido o presencial) para ver solo sus números.\n\n## \"Todavía pocos datos\"\n\nPara que nadie pueda ser identificado, un grupo solo recibe números con **10 o más** vacantes o fichas y, cuando sale de vacantes, de **3 o más empresas**. Por debajo, la tabla indica cuánto falta, por ejemplo \"faltan 4 vacantes\". Nunca mostramos el mínimo ni el máximo."
     }
   ]
 };

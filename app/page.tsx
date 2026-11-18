@@ -11,6 +11,7 @@ export default async function HomePage() {
   const ts = await getTranslations("status");
   const ti = await getTranslations("ia");
   const tn = await getTranslations("nav");
+  const tm = await getTranslations("mercado");
   const PASSOS = [1, 2, 3, 4].map((n) => ({ n: String(n), titulo: t(`step${n}Title`), texto: t(`step${n}Text`) }));
   const PERGUNTAS = [1, 2, 3, 4].map((n) => ({ p: t(`faq${n}q`), r: t(`faq${n}a`) }));
   return (
@@ -169,9 +170,10 @@ export default async function HomePage() {
       <footer className="border-t border-line bg-surface">
         <div className="mx-auto flex max-w-page flex-wrap justify-between gap-2 px-6 py-5 text-[13px] text-muted">
           <span>{t("footer")}</span>
-          <span className="flex gap-4">
+          <span className="flex flex-wrap gap-x-4 gap-y-1">
             <Link href="/ajuda?de=%2F" className="text-muted underline underline-offset-2 hover:text-ink">{tn("ajuda")}</Link>
             <Link href="/ia" className="text-muted underline underline-offset-2 hover:text-ink">{ti("footerLink")}</Link>
+            <Link href="/mercado" className="text-muted underline underline-offset-2 hover:text-ink">{tm("footerLink")}</Link>
             <span>© 2026</span>
           </span>
         </div>
