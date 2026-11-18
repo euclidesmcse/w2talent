@@ -234,6 +234,7 @@ model Application {
   contatoLiberadoEm DateTime?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
+  entrevistas       Entrevista[]
 
   @@unique([candidateId, vacancyId])
   @@index([candidateId])
@@ -242,6 +243,48 @@ model Application {
   @@index([companyId])
   @@index([vacancyId, etapa])
   @@index([loteId])
+}
+
+// ── Entrevista (2.5a) ────────────────────────────────────────────────
+// O recrutador oferece de 3 a 8 horários a uma candidatura em Entrevista (contato liberado, 2.4c);
+// o candidato escolhe um pelo link do e-mail (/agendar?c=<código>; guardamos só o hash do código).
+// Uma oferta nova da mesma candidatura cancela a anterior. Tudo em UTC; os fusos servem só para os e-mails.
+// emailsPendentes: e-mails montados na transação e ainda fora da fila; o Cron diário tenta de novo.
+enum StatusEntrevista {
+  aberta
+  marcada
+  cancelada
+}
+
+model Entrevista {
+  id               String           @id @default(cuid())
+  applicationId    String
+  application      Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  companyId        String
+  /// User.id de quem ofereceu os horários (recebe as confirmações).
+  recrutadorId     String
+  duracaoMin       Int
+  horarios         DateTime[]
+  linkReuniao      String?
+  tokenHash        String           @unique
+  status           StatusEntrevista @default(aberta)
+  inicio           DateTime?
+  marcadaEm        DateTime?
+  canceladaEm      DateTime?
+  /// "candidato" | "recrutador"
+  canceladaPor     String?
+  /// SEQUENCE do convite (.ics): sobe a cada troca de horário ou cancelamento.
+  sequencia        Int              @default(0)
+  fusoRecrutador   String?
+  idiomaRecrutador String?
+  fusoCandidato    String?
+  emailsPendentes  Json             @default("[]")
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([applicationId, createdAt])
+  @@index([recrutadorId, status, inicio])
+  @@index([companyId])
 }
 
 // ── ApplicationApproval (1.5.13) ─────────────────────────────────────

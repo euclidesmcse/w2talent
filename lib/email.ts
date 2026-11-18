@@ -16,7 +16,11 @@ export type EmailMessage = {
   text: string;
   /** Mesmo valor = mesmo e-mail: o Resend não reenvia se a fila repetir a mensagem. */
   idempotencyKey: string;
+  /** 2.5a: anexos pequenos (convite .ics), conteúdo em base64. */
+  attachments?: EmailAttachment[];
 };
+
+export type EmailAttachment = { filename: string; content: string; contentType?: string };
 
 export type EmailEnv = {
   apiKey?: string;
@@ -70,7 +74,16 @@ export async function sendEmail(msg: EmailMessage, env: EmailEnv): Promise<SendR
         "Content-Type": "application/json",
         "Idempotency-Key": msg.idempotencyKey.slice(0, 256),
       },
-      body: JSON.stringify({ from: env.from || DEFAULT_EMAIL_FROM, to: [dest.to], subject: dest.subject, html: msg.html, text: msg.text }),
+      body: JSON.stringify({
+        from: env.from || DEFAULT_EMAIL_FROM,
+        to: [dest.to],
+        subject: dest.subject,
+        html: msg.html,
+        text: msg.text,
+        ...(msg.attachments?.length
+          ? { attachments: msg.attachments.map((a) => ({ filename: a.filename, content: a.content, ...(a.contentType ? { content_type: a.contentType } : {}) })) }
+          : {}),
+      }),
     });
   } catch {
     return { status: "falhou", http: 0, codigo: "rede", tentarDeNovo: true };

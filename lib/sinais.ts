@@ -12,6 +12,9 @@ export const TIPOS_SINAL = [
   "candidatura_enviada", // a candidatura saiu no lote
   "exportou", // 2.3b: o recrutador exportou a comparação com este candidato (formato em dados)
   "etapa_mudou", // 2.4b: o recrutador mudou a etapa da candidatura (de, para em dados)
+  "entrevista_oferecida", // 2.5a: o recrutador ofereceu horários (quantos, duração)
+  "entrevista_marcada", // 2.5a: o candidato escolheu ou trocou o horário
+  "entrevista_cancelada", // 2.5a: entrevista cancelada (por quem, em que status estava)
 ] as const;
 export type TipoSinal = (typeof TIPOS_SINAL)[number];
 

@@ -20,3 +20,7 @@ En [Mis postulaciones](/minhas-candidaturas) aparece cada vacante enviada, con l
 La empresa habla contigo por una dirección de W2Talent. Tu correo y teléfono solo le aparecen después de que respondes o cuando te llama a una entrevista. En ese caso, solo la empresa de esa vacante ve tu contacto, y recibes un aviso por correo.
 
 El [panel](/painel) muestra los mismos números de forma resumida.
+
+## Entrevista
+
+Cuando una empresa te llama a una entrevista, llega un e-mail con un enlace para elegir uno de los horarios ofrecidos. Los horarios aparecen en tu zona horaria. Después de elegir, tú y la empresa reciben la invitación para el calendario (.ics). Con el mismo enlace puedes cambiar el horario o cancelar hasta 12 horas antes. La entrevista agendada aparece en [Mis postulaciones](/minhas-candidaturas).

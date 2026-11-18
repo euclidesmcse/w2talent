@@ -28,4 +28,5 @@ Em "Ver candidaturas" aparecem as pessoas que se candidataram, da maior para a m
 - **Etapa:** Nova, Em análise, Entrevista, Proposta, Contratada ou Não seguiu. Mude com um clique; não há formulário.
 - **O que o candidato vê:** "Vista" quando você abre a ficha ou move para Em análise, "Respondida" a partir de Entrevista e "Encerrada" em Não seguiu. As etapas internas não aparecem para ele.
 - **Contato:** ao mover para Entrevista (ou depois), o e-mail e o telefone do candidato aparecem na lista, só para a sua empresa, e ele recebe um aviso por e-mail. Liberado uma vez, fica liberado.
+- **Agendar entrevista:** com o contato liberado, ofereça de 3 a 8 horários (30, 45 ou 60 minutos) e, se quiser, o link da reunião. O candidato escolhe um pelo link do e-mail e os dois recebem o convite para a agenda (.ics). Ele pode trocar ou cancelar até 12 horas antes. Mudar os horários cancela a oferta anterior.
 - **Comparar:** marque até 10 pessoas para compará-las lado a lado e exportar.

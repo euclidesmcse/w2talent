@@ -4,6 +4,7 @@
  * As candidaturas que chegaram, da maior para a menor compatibilidade, com a etapa de cada uma
  * (1 clique, sem arrastar: D2). Abrir a ficha marca a candidatura como vista para o candidato (D3).
  * Marcar até 10 leva à tela Comparar do 2.3, que também exporta.
+ * 2.5a: com o contato liberado (Entrevista em diante), cada linha oferece horários de entrevista.
  */
 import * as React from "react";
 import Link from "next/link";
@@ -16,6 +17,7 @@ import { cn } from "@/components/ui/cn";
 import { FichaPainel } from "@/components/ficha-painel";
 import { DetailModal } from "@/components/detail-modal";
 import { MatchCandidatoCell, MatchDaVaga } from "@/components/candidato-match";
+import { AgendaEntrevista } from "@/components/agenda-entrevista";
 import { contaRecusada, linkEntrar, useConta } from "@/lib/conta-client";
 import { selectionStore } from "@/lib/selection-store";
 import { ETAPAS, type Etapa } from "@/lib/painel-rh";
@@ -285,6 +287,18 @@ export default function CandidaturasDaVagaPage() {
                             {t("verFicha")}
                           </button>
                         </div>
+                        {it.contato ? (
+                          <AgendaEntrevista
+                            applicationId={it.applicationId}
+                            nome={nome}
+                            entrevista={it.entrevista}
+                            onAtualizar={(ent) =>
+                              setEstado((e) =>
+                                e.t === "ok" ? { ...e, itens: e.itens.map((x) => (x.applicationId === it.applicationId ? { ...x, entrevista: ent } : x)) } : e,
+                              )
+                            }
+                          />
+                        ) : null}
                       </li>
                     );
                   })}
