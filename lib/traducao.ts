@@ -47,9 +47,18 @@ function textos(c: Campos): string[] {
   return Object.values(c).flatMap((v) => (Array.isArray(v) ? v : [v]));
 }
 
-/** Números do texto sem separadores ("8.000" e "8,000" contam igual). */
+/**
+ * Números do texto pelo valor: "8.000" e "8,000" contam igual, e "1,5" e "1.5" também,
+ * mas "1,5" e "15" não. Separador seguido de 1 ou 2 dígitos no fim é decimal; o resto agrupa milhar.
+ */
 export function numeros(s: string): string[] {
-  return (s.match(/\d+(?:[.,]\d+)*/g) ?? []).map((n) => n.replace(/[.,]/g, "")).sort();
+  return (s.match(/\d+(?:[.,]\d+)*/g) ?? [])
+    .map((n) => {
+      const dec = /[.,](\d{1,2})$/.exec(n);
+      const inteiro = (dec ? n.slice(0, dec.index) : n).replace(/[.,]/g, "").replace(/^0+(?=\d)/, "");
+      return dec ? `${inteiro}.${dec[1]}` : inteiro;
+    })
+    .sort();
 }
 
 /**
@@ -193,6 +202,25 @@ export async function vagasSemTraducao(db: DbTx, ids: string[]): Promise<string[
 
 export type ResumoTraducao = { traduzidas: number; mesmoIdioma: number; falhas: number; semLimite: boolean };
 
+/** Minutos que uma reserva vale; depois disso (IA caiu, Worker parou) outra chamada pode tentar. */
+export const RESERVA_MIN = 10;
+
+/**
+ * Reserva atômica da tradução de uma vaga num idioma: grava a linha como "pendente" para o hash atual.
+ * Falha se já existe a tradução desse texto ou uma reserva recente para ele.
+ */
+async function reservar(db: DbTx, vacancyId: string, idioma: Idioma, hash: string): Promise<boolean> {
+  const pend = `pendente:${hash}`;
+  const rows = await db.$queryRaw<{ id: string }[]>`
+    INSERT INTO "Traducao" ("id", "vacancyId", "idioma", "idiomaOrigem", "hashOrigem", "conteudo", "updatedAt")
+    VALUES (gen_random_uuid()::text, ${vacancyId}, ${idioma}, 'pendente', ${pend}, NULL, now())
+    ON CONFLICT ("vacancyId", "idioma") DO UPDATE SET "idiomaOrigem" = 'pendente', "hashOrigem" = ${pend}, "conteudo" = NULL, "modelo" = NULL, "updatedAt" = now()
+    WHERE "Traducao"."hashOrigem" <> ${hash}
+      AND NOT ("Traducao"."hashOrigem" = ${pend} AND "Traducao"."updatedAt" > now() - make_interval(mins => ${RESERVA_MIN}))
+    RETURNING "id"`;
+  return rows.length > 0;
+}
+
 /**
  * Traduz uma vaga para os idiomas que faltam. O primeiro pedido revela o idioma original;
  * o idioma igual ao original vira uma linha sem conteúdo (não gasta IA de novo).
@@ -220,6 +248,8 @@ export async function traduzirVaga(db: DbTx, vacancyId: string, chat: ChatTraduc
       res.mesmoIdioma++;
       continue;
     }
+    // Reserva o par vaga/idioma antes da IA: duas buscas ao mesmo tempo não pagam a mesma tradução.
+    if (!(await reservar(db, vacancyId, idioma, hash))) continue;
     const uso = await consumirUso(db as unknown as PrismaClient, await chaveUso("traducao", "geral"), LIMITE_TRADUCOES_DIA, now).catch(() => ({ permitido: false, total: 0 }));
     if (!uso.permitido) {
       res.semLimite = true;
@@ -264,8 +294,23 @@ export async function pedirTraducaoVagas(db: DbTx, ids: string[], max = 3): Prom
 /** Cron diário: vagas ativas sem tradução atual (inclui as que já existiam antes do 2.7). */
 export async function traduzirPendentes(db: DbTx, chat: ChatTraducaoFn, limite = 30, now: Date = new Date()): Promise<ResumoTraducao & { vagas: number }> {
   const total: ResumoTraducao & { vagas: number } = { traduzidas: 0, mesmoIdioma: 0, falhas: 0, semLimite: false, vagas: 0 };
-  const ativas = await db.vacancy.findMany({ where: { status: "ativa", expiresAt: { gt: now } }, select: { id: true }, orderBy: { updatedAt: "desc" }, take: 500 });
-  const faltam = (await vagasSemTraducao(db, ativas.map((a) => a.id))).slice(0, limite);
+  // Percorre todas as vagas ativas em páginas até juntar `limite` pendentes (não só as 500 mais novas).
+  const faltam: string[] = [];
+  let depois: string | undefined;
+  while (faltam.length < limite) {
+    const pagina = await db.vacancy.findMany({
+      where: { status: "ativa", expiresAt: { gt: now } },
+      select: { id: true },
+      orderBy: { id: "asc" },
+      take: 500,
+      ...(depois ? { cursor: { id: depois }, skip: 1 } : {}),
+    });
+    if (!pagina.length) break;
+    faltam.push(...(await vagasSemTraducao(db, pagina.map((a) => a.id))));
+    depois = pagina[pagina.length - 1].id;
+    if (pagina.length < 500) break;
+  }
+  faltam.splice(limite);
   for (const id of faltam) {
     const r = await traduzirVaga(db, id, chat, now);
     total.vagas++;

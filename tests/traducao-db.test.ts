@@ -77,6 +77,19 @@ describeDb("tradução de vagas (2.7a)", () => {
     expect(await db.traducao.count({ where: { vacancyId: vaga } })).toBe(3);
   });
 
+  it("duas chamadas ao mesmo tempo não pagam a mesma tradução duas vezes", async () => {
+    const { traduzirVaga } = await import("../lib/traducao");
+    await db.vacancy.update({ where: { id: vaga }, data: { titulo: "Desenvolvedora Sênior Go" } });
+    const antes = pedidos.length;
+    const lento: ChatTraducaoFn = async (t, req) => {
+      await new Promise((r) => setTimeout(r, 150));
+      return chat(t, req);
+    };
+    await Promise.all([traduzirVaga(db, vaga, lento), traduzirVaga(db, vaga, lento)]);
+    expect(pedidos.length - antes).toBe(2);
+    expect(await db.traducao.count({ where: { vacancyId: vaga, NOT: { hashOrigem: { startsWith: "pendente:" } } } })).toBe(3);
+  });
+
   it("apagar a vaga apaga as traduções", async () => {
     await db.vacancy.delete({ where: { id: vaga } });
     expect(await db.traducao.count({ where: { vacancyId: vaga } })).toBe(0);
