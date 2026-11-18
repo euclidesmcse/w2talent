@@ -890,7 +890,11 @@
     "selo": "How we use AI",
     "seloParecidas": "How we choose",
     "footerLink": "How we use AI",
-    "voltar": "See jobs"
+    "voltar": "See jobs",
+    "ajudaTarefa": "Questions in Help",
+    "ajudaFaz": "Finds the help article passages closest to the question and writes a short answer using only them, with the article link. If the articles do not answer it, it says so and offers to send the question to the team.",
+    "ajudaDados": "The question, without email or phone, and the help articles. Nothing from your account. Unanswered questions are kept for 90 days, without IP or account, so we can improve the articles.",
+    "ajudaDecide": "You check the linked article. The team answers what AI does not know."
   },
   "empresa": {
     "title": "My company",
@@ -1103,6 +1107,23 @@
     "voltar": "← All articles",
     "trilha": "Help navigation",
     "outros": "Read next",
-    "link": "Help"
+    "link": "Help",
+    "perguntaTitulo": "Ask",
+    "perguntaRotulo": "Your question",
+    "perguntaDica": "Answers come only from the help articles. Do not write personal data.",
+    "perguntar": "Ask",
+    "pensando": "Searching the articles…",
+    "respostaTitulo": "Answer",
+    "fontes": "Source:",
+    "respostaIa": "Answer written by AI from the articles. Check the link.",
+    "semResposta": "We did not find this in the help articles.",
+    "equipeLead": "Want to send the question to the team? The answer goes to your email.",
+    "equipeEmail": "Your email",
+    "equipeEnviar": "Send to the team",
+    "equipeEnviado": "Question sent. We will answer by email.",
+    "erroTamanho": "Write the question in 5 to 500 characters.",
+    "erroLimite": "You reached today's limit. Try again tomorrow.",
+    "erroEmail": "Check the email.",
+    "erroGeral": "That did not work now. Try again in a moment."
   }
 }

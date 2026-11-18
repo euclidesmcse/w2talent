@@ -64,8 +64,9 @@ describe("conteúdo da ajuda", () => {
       }
   });
 
-  it("os artigos não prometem o que ainda não existe (respostas da IA na ajuda entram no 2.6a-2)", () => {
-    for (const l of IDIOMAS) for (const a of ARTIGOS[l]) expect(a.corpo).not.toMatch(/nesta ajuda|in this help|en esta ayuda/i);
+  it("o artigo de IA conta que a ajuda responde perguntas (2.6a-2)", () => {
+    const frase = { "pt-BR": /nesta ajuda/, en: /in this help/, es: /en esta ayuda/ } as const;
+    for (const l of IDIOMAS) expect(ARTIGOS[l].find((a) => a.slug === "ia")?.corpo).toMatch(frase[l]);
   });
 });
 

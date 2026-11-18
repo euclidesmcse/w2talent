@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
+import { AjudaPergunta } from "@/components/ajuda-pergunta";
 import { AppHeader } from "@/components/app-header";
 import { organizarAjuda, type ArtigoBruto } from "@/lib/ajuda";
 import { EMAIL_REVISAO } from "@/lib/ia-transparencia";
@@ -44,6 +45,7 @@ export default async function AjudaPage({ searchParams }: { searchParams: Promis
           <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.02em] md:text-[36px]">{t("title")}</h1>
           <p className="text-[17px] text-ink">{t("lead")}</p>
         </header>
+        <AjudaPergunta de={g.tela} />
         <Lista id="ajuda-tela" titulo={t("sobreEstaTela")} artigos={g.destaque} />
         <Lista id="ajuda-comecar" titulo={t("grupoComecar")} artigos={g.comecar} />
         <Lista id="ajuda-candidato" titulo={t("grupoCandidato")} artigos={g.candidato} />

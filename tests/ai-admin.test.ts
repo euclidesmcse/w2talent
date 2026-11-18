@@ -210,7 +210,7 @@ describe("o que impede um modelo numa tarefa", () => {
   it("lista os motivos em código", () => {
     expect(blockers("extract_cv", { embedding: false, contexto: 128_000, tests: {} })).toEqual(["nao_testado"]);
     expect(blockers("extract_cv", { embedding: false, contexto: 128_000, tests: { ...PASS, json: { ok: false } } })).toEqual(["sem_json"]);
-    expect(blockers("support_chat", { embedding: false, contexto: 128_000, tests: { ...PASS, json: { ok: false } } })).toEqual([]);
+    expect(blockers("translate_ui", { embedding: false, contexto: 128_000, tests: { ...PASS, json: { ok: false } } })).toEqual([]);
     expect(blockers("extract_cv", { embedding: false, contexto: 16_000, tests: PASS })).toEqual(["contexto_curto"]);
     expect(blockers("extract_cv", { embedding: false, contexto: 16_000, tests: { ...PASS, contexto_longo: { ok: true } } })).toEqual([]);
     expect(blockers("extract_cv", { embedding: false, contexto: null, tests: PASS })).toEqual(["contexto_desconhecido"]);

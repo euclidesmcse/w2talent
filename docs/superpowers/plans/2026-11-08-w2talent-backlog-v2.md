@@ -46,7 +46,7 @@
 | 2.3 | Resumos em tabela | Selecionar, comparar, exportar (CSV/XLSX/PDF) e receber resumos em tabela. | ⏳ |
 | 2.4 | Painel RH | Vagas com funil leve (novas, triagem, entrevista, proposta), métricas básicas. | ⏳ |
 | 2.5 | Agenda | Google Calendar e Outlook/Microsoft 365; link de agendamento com horários livres. | ⏳ |
-| 2.6 | Coach + chat de suporte | Coach do candidato e do RH; chat de suporte com escalonamento para pessoa (Durable Objects). Do plano SAP: **2.6a** assistente de dúvidas só com textos do W2Talent (embeddings no Neon, sem dado pessoal, sem resposta segura → e-mail do admin pela fila) (A6); **2.6b** chat ao vivo com escalonamento; depois "o que falta para as vagas" no `/painel` (B1). Plano 2.6a https://claude.ai/artifact/6rdLK68qJGL4gWHTXucY2G (D1–D6). | 🔄 2.6a-1 |
+| 2.6 | Coach + chat de suporte | Coach do candidato e do RH; chat de suporte com escalonamento para pessoa (Durable Objects). Do plano SAP: **2.6a** assistente de dúvidas só com textos do W2Talent (embeddings no Neon, sem dado pessoal, sem resposta segura → e-mail do admin pela fila) (A6); **2.6b** chat ao vivo com escalonamento; depois "o que falta para as vagas" no `/painel` (B1). Plano 2.6a https://claude.ai/artifact/6rdLK68qJGL4gWHTXucY2G (D1–D6). | ✅ 2.6a (PRs #42 e #43); falta 2.6b e B1 |
 | 2.7 | Idiomas automáticos | Outros idiomas por tradução com IA, cache em KV, aviso de "tradução automática". | ⏳ |
 | 2.8 | Sinais de aprendizado | `FeedbackSignal` (aprovou, rejeitou, contratou) gravado para a Fase 3. Antecipado pelo plano SAP (A2), logo depois do 2.0. | 🔄 em PR (aprovou, desfez, caiu, enviou; recrutador depois) |
 

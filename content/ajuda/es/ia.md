@@ -15,6 +15,7 @@ La IA ayuda en tareas de texto. No aprueba, no rechaza y no le pone nota a nadie
 - Leer el texto de la vacante y llenar los campos.
 - Reescribir la vacante sin términos de sesgo, cuando el reclutador lo pide.
 - Sugerir preguntas de entrevista.
+- Responder preguntas en esta ayuda, solo con lo que dicen los artículos y siempre con el enlace de la fuente.
 
 ## Dónde no entra
 

@@ -489,3 +489,36 @@ model TwoFactor {
   @@index([secret])
   @@index([userId])
 }
+
+// ── 2.6a Assistente de dúvidas (plano https://claude.ai/artifact/6rdLK68qJGL4gWHTXucY2G) ──
+// Trechos dos artigos de ajuda (content/ajuda) com vetor bge-m3. O Worker refaz o índice de um
+// idioma quando a versão (hash do texto dos artigos) muda; ver lib/ajuda-ia.ts.
+model AjudaTrecho {
+  id        String                      @id @default(cuid())
+  idioma    String
+  versao    String
+  slug      String
+  ordem     Int
+  secao     String
+  texto     String
+  embedding Unsupported("vector(1024)")?
+  createdAt DateTime                    @default(now())
+
+  @@unique([idioma, slug, ordem])
+  @@index([idioma, versao])
+}
+
+// Perguntas que a ajuda não soube responder, para ver o que falta nos artigos.
+// Sem IP, sem conta, sem e-mail; contatos tirados do texto. Apagadas em 90 dias (Cron diário).
+model PerguntaSemResposta {
+  id            String   @id @default(cuid())
+  idioma        String
+  tela          String?
+  texto         String
+  motivo        String
+  similaridade  Float?
+  enviadaEquipe Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+}

@@ -890,7 +890,11 @@
     "selo": "Cómo usamos la IA",
     "seloParecidas": "Cómo elegimos",
     "footerLink": "Cómo usamos la IA",
-    "voltar": "Ver vacantes"
+    "voltar": "Ver vacantes",
+    "ajudaTarefa": "Preguntas en Ayuda",
+    "ajudaFaz": "Busca en los artículos de ayuda los fragmentos más cercanos a la pregunta y escribe una respuesta corta solo con ellos, con el enlace del artículo. Si los artículos no responden, lo dice y ofrece enviar la pregunta al equipo.",
+    "ajudaDados": "La pregunta, sin correo ni teléfono, y los artículos de ayuda. Nada de tu cuenta. Las preguntas sin respuesta se guardan 90 días, sin IP ni cuenta, para mejorar los artículos.",
+    "ajudaDecide": "Revisas el artículo del enlace. Lo que la IA no sabe, lo responde el equipo."
   },
   "empresa": {
     "title": "Mi empresa",
@@ -1103,6 +1107,23 @@
     "voltar": "← Todos los artículos",
     "trilha": "Navegación de la ayuda",
     "outros": "Lee también",
-    "link": "Ayuda"
+    "link": "Ayuda",
+    "perguntaTitulo": "Pregunta",
+    "perguntaRotulo": "Tu pregunta",
+    "perguntaDica": "La respuesta sale solo de los artículos de ayuda. No escribas datos personales.",
+    "perguntar": "Preguntar",
+    "pensando": "Buscando en los artículos…",
+    "respostaTitulo": "Respuesta",
+    "fontes": "Fuente:",
+    "respostaIa": "Respuesta escrita por IA a partir de los artículos. Revisa el enlace.",
+    "semResposta": "No encontramos esto en los artículos de ayuda.",
+    "equipeLead": "¿Quieres enviar la pregunta al equipo? La respuesta llega a tu correo.",
+    "equipeEmail": "Tu correo",
+    "equipeEnviar": "Enviar al equipo",
+    "equipeEnviado": "Pregunta enviada. Te responderemos por correo.",
+    "erroTamanho": "Escribe la pregunta con 5 a 500 caracteres.",
+    "erroLimite": "Llegaste al límite de hoy. Inténtalo mañana.",
+    "erroEmail": "Revisa el correo.",
+    "erroGeral": "No funcionó ahora. Inténtalo de nuevo en un momento."
   }
 }

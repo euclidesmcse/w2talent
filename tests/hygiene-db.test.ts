@@ -57,6 +57,7 @@ describeDb("Higiene no banco", () => {
   beforeEach(async () => {
     fila = [];
     await db.hygieneEvent.deleteMany();
+    await db.perguntaSemResposta.deleteMany();
     await db.application.deleteMany();
     await db.consentLog.deleteMany();
     await db.candidateProfile.deleteMany();
@@ -207,5 +208,13 @@ describeDb("Higiene no banco", () => {
       ["Vale", "ativa"],
       ["Vencida", "arquivada"],
     ]);
+  });
+
+  it("apaga perguntas da Ajuda sem resposta depois de 90 dias (2.6a)", async () => {
+    await db.perguntaSemResposta.create({ data: { idioma: "pt-BR", texto: "velha", motivo: "sem_trecho", createdAt: new Date(NOW.getTime() - 91 * DAY) } });
+    await db.perguntaSemResposta.create({ data: { idioma: "pt-BR", texto: "nova", motivo: "sem_trecho", createdAt: new Date(NOW.getTime() - 89 * DAY) } });
+    const r = await runHygiene(db, deps());
+    expect(r.perguntasApagadas).toBe(1);
+    expect((await db.perguntaSemResposta.findMany()).map((p) => p.texto)).toEqual(["nova"]);
   });
 });

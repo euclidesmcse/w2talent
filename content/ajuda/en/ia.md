@@ -15,6 +15,7 @@ AI helps with text tasks. It does not approve, reject or score anyone.
 - Reading the job text and filling in the fields.
 - Rewriting the job without biased terms, when the recruiter asks.
 - Suggesting interview questions.
+- Answering questions in this help, only with what the articles say and always with the source link.
 
 ## Where it does not
 
