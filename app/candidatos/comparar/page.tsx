@@ -90,7 +90,10 @@ export default function CompararPage() {
         if (!r.ok) return setEstado({ t: "erro" });
         const j = (await r.json()) as { itens: ItemComparacao[]; fora: string[]; vaga: { id: string; titulo: string } | null };
         if (meu !== ultimo.current) return;
-        setEstado(j.itens.length ? { t: "pronto", itens: j.itens, fora: j.fora.length, vaga: j.vaga } : { t: "vazio" });
+        // Quem foi tirado enquanto o pedido estava a caminho não volta para a tabela.
+        const atual = new Set(lerSelecao());
+        const itensAtuais = j.itens.filter((it) => atual.has(it.id));
+        setEstado(itensAtuais.length ? { t: "pronto", itens: itensAtuais, fora: j.fora.length, vaga: j.vaga } : { t: "vazio" });
       })
       .catch(() => { if (meu === ultimo.current) setEstado({ t: "erro" }); });
   }, [liberado, pronto, vaga]);

@@ -31,8 +31,9 @@ export async function POST(req: NextRequest) {
       if (!vaga) return NextResponse.json({ error: "vaga_nao_encontrada" }, { status: 404, headers: NO_STORE });
     }
 
-    const perfis = await prisma.candidateProfile.findMany({ where: { id: { in: ids }, status: "ativo" } });
     const now = new Date();
+    // Como na busca: perfil vencido (antes da higiene arquivar) também fica de fora.
+    const perfis = await prisma.candidateProfile.findMany({ where: { id: { in: ids }, status: "ativo", expiresAt: { gt: now } } });
     const porId = new Map(perfis.map((p) => [p.id, p]));
     // Na ordem em que o recrutador selecionou; quem saiu do ar (arquivado, apagado) vem em "fora".
     const itens = ids

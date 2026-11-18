@@ -18,7 +18,7 @@ const describeDb = localDb(process.env.DATABASE_URL) ? describe : describe.skip;
 const REC_A = "cmp-teste-rec-a";
 const REC_B = "cmp-teste-rec-b";
 const USERS = [REC_A, REC_B];
-const IDS = ["cmp-teste-ana", "cmp-teste-beto", "cmp-teste-arquivada"];
+const IDS = ["cmp-teste-ana", "cmp-teste-beto", "cmp-teste-arquivada", "cmp-teste-vencida"];
 const rec = (id: string, extra: Partial<ContaTeste> = {}): ContaTeste => ({ id, perfil: "recrutador", mfaLigado: true, ...extra });
 
 describeDb("POST /api/candidates/comparar", () => {
@@ -62,6 +62,8 @@ describeDb("POST /api/candidates/comparar", () => {
     await perfil(IDS[0], { stack: [{ skillId: "aws", anos: 4 }, { skillId: "kubernetes", anos: 2 }], senioridade: "pleno", regimePreferido: ["PJ"], modo: "remoto" });
     await perfil(IDS[1], { stack: [{ skillId: "aws", anos: 1 }], senioridade: "junior", regimePreferido: ["CLT"] });
     await perfil(IDS[2], { status: "arquivado" });
+    // Vencido, mas a higiene ainda não arquivou.
+    await perfil(IDS[3], { expiresAt: new Date(Date.now() - 864e5) });
   });
   afterAll(async () => {
     await limpar();
@@ -80,12 +82,12 @@ describeDb("POST /api/candidates/comparar", () => {
   });
 
   it("devolve na ordem pedida, sem arquivados e sem contato completo", async () => {
-    const r = await pedir(rec(REC_A), { ids: [IDS[1], IDS[2], IDS[0]] });
+    const r = await pedir(rec(REC_A), { ids: [IDS[1], IDS[2], IDS[0], IDS[3]] });
     expect(r.status).toBe(200);
     expect(r.headers.get("cache-control")).toBe("no-store");
     const j = await r.json();
     expect(j.itens.map((i: { id: string }) => i.id)).toEqual([IDS[1], IDS[0]]);
-    expect(j.fora).toEqual([IDS[2]]);
+    expect(j.fora).toEqual([IDS[2], IDS[3]]);
     expect(j.vaga).toBeNull();
     expect(j.itens[0].match).toBeNull();
     const texto = JSON.stringify(j);

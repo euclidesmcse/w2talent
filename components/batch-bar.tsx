@@ -152,7 +152,8 @@ export function BatchBar({ variant = "vagas", onAction, actionEnabled = false, c
           {/* limite 10 mensagem sempre acessível para testes */}
           <span aria-hidden className="sr-only">limite 10 por lote — máximo {SELECTION_LIMIT}</span>
         </div>
-        <div className="flex items-center gap-2">
+        {/* 2.3a: com o "Comparar", as ações quebram linha no celular estreito em vez de vazar da tela. */}
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <button
             type="button"
             data-action="abrir-selecao"
