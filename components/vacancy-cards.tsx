@@ -7,6 +7,7 @@ import type { VacancyRow } from "./vacancy-table";
 import { buttonClasses } from "@/components/ui/button";
 import { SkillChips } from "@/components/skill-chips";
 import { MatchCell } from "@/components/vacancy-match";
+import { NaoVerificada } from "@/components/empresa-etiqueta";
 // breakpoints 360/768/1024/1280 — Tailwind xs/md/lg/xl; cards <ul><li aria-label> WCAG 2.1 AA
 
 function getSkillIds(row: VacancyRow): string[] {
@@ -75,6 +76,7 @@ export function VacancyCards({
               <div className="min-w-0 flex-1">
                 <strong className="block font-semibold leading-snug">{row.titulo}</strong>
                 <span className="text-[13px] text-muted">{[row.company?.nome, row.nivel].filter(Boolean).join(" · ")}</span>
+                {row.company?.verificada === false ? <span className="mt-1.5 block"><NaoVerificada company={row.company} /></span> : null}
                 {enviadaEm ? <span data-enviada={row.id} className="mt-1.5 inline-flex items-center gap-1 rounded-pill bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success-ink"><span aria-hidden>✓</span>{t("vagas.sentOn", { date: diaMes(enviadaEm, locale) })}</span> : null}
               </div>
               <button type="button" data-detail-id={row.id} onClick={() => onOpenDetail?.(row.id)} className={buttonClasses("secondary", "sm")}>

@@ -28,7 +28,10 @@
     "areaRecrutadores": "Recruiters",
     "areaAdmin": "Admin",
     "ia": "AI",
-    "painel": "Dashboard"
+    "painel": "Dashboard",
+    "empresa": "My company",
+    "empresaCurto": "Company",
+    "empresas": "Companies"
   },
   "lang": {
     "label": "Language",
@@ -118,7 +121,8 @@
     "onlyCandidates": "Applications are for candidate accounts. This is a recruiter account.",
     "searchMore": "Add another term",
     "jaEnviada": "You already applied to this job on {date}.",
-    "parecidas": "Similar jobs"
+    "parecidas": "Similar jobs",
+    "naoVerificada": "Unverified company"
   },
   "candidatos": {
     "title": "Candidates",
@@ -819,5 +823,63 @@
     "seloParecidas": "How we choose",
     "footerLink": "How we use AI",
     "voltar": "See jobs"
+  },
+  "empresa": {
+    "title": "My company",
+    "intro": "Jobs you post go out under this company. Until W2Talent checks the details, they show the \"Unverified company\" label.",
+    "nome": "Company name",
+    "site": "Website",
+    "siteHint": "E.g.: company.com",
+    "cnpj": "CNPJ (optional)",
+    "cnpjHint": "Brazilian company number, with or without punctuation. Helps verification.",
+    "emailContato": "Email for applications",
+    "emailContatoHint": "Every application a candidate approves arrives at this address.",
+    "criar": "Register company",
+    "salvar": "Save changes",
+    "criada": "Company registered.",
+    "salva": "Details saved.",
+    "statusLabel": "Status",
+    "status": {
+      "pendente": "Under review",
+      "validado": "Verified",
+      "rejeitado": "Declined"
+    },
+    "statusHint": {
+      "pendente": "Your jobs already show, with the \"Unverified company\" label.",
+      "validado": "Your jobs show without a label.",
+      "rejeitado": "We could not verify the company and its jobs were archived. Contact contato@w2talent.com."
+    },
+    "reverificar": "Changing the name or CNPJ sends the company for a new review.",
+    "gateTitle": "Company registration is for recruiters",
+    "gateBody": "Sign in with a recruiter account to register your company.",
+    "gateCandidate": "This is a candidate account. To register a company, sign in with a recruiter account.",
+    "mfaBody": "To register the company, turn on the authenticator. It protects jobs and people's data.",
+    "erros": {
+      "nome": "Type the company name (2 to 120 characters).",
+      "site": "Invalid website address.",
+      "cnpj": "Invalid CNPJ. Check the 14 digits.",
+      "emailContato": "Invalid email.",
+      "cnpj_em_uso": "This CNPJ is already registered by another account. Contact contato@w2talent.com.",
+      "ja_tem_empresa": "Your account already has a company.",
+      "generic": "Could not save. Try again."
+    }
+  },
+  "adminEmpresas": {
+    "title": "Companies",
+    "intro": "Check each company's details before verifying. Declining archives its active jobs.",
+    "loginTitle": "Sign in to admin",
+    "vazio": "No companies registered.",
+    "cnpj": "CNPJ",
+    "site": "Website",
+    "membros": "Registered by",
+    "vagas": "Active jobs",
+    "criada": "Registered",
+    "acoes": "Actions",
+    "validar": "Verify",
+    "rejeitar": "Decline",
+    "validada": "Company verified.",
+    "rejeitada": "Company declined. {count, plural, =0 {No active jobs} one {# job archived} other {# jobs archived}}.",
+    "erro": "Could not save. Try again.",
+    "confirmar": "Decline {name}? Its active jobs will be archived."
   }
 }

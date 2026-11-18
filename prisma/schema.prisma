@@ -64,6 +64,22 @@ model CompanyProfile {
   updatedAt        DateTime         @updatedAt
   vacancies        Vacancy[]
   applications     Application[]
+  membros          CompanyMember[]
+}
+
+// ── CompanyMember (2.1a) ─────────────────────────────────────────────
+// Liga a conta do recrutador à empresa. Por enquanto uma empresa por conta (userId único);
+// a empresa pode ter vários membros quando houver convite. Quem cadastra vira "dono".
+model CompanyMember {
+  id        String         @id @default(cuid())
+  userId    String         @unique
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId String
+  company   CompanyProfile @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  papel     String         @default("dono")
+  createdAt DateTime       @default(now())
+
+  @@index([companyId])
 }
 
 // ── CandidateProfile ─────────────────────────────────────────────────
@@ -397,20 +413,21 @@ model QueryEmbedding {
 // Nomes e campos são os que o Better Auth espera (adaptador Prisma). Ver lib/auth-server.ts.
 
 model User {
-  id               String       @id
+  id               String         @id
   name             String
-  email            String       @unique
-  emailVerified    Boolean      @default(false)
+  email            String         @unique
+  emailVerified    Boolean        @default(false)
   image            String?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  twoFactorEnabled Boolean?     @default(false)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  twoFactorEnabled Boolean?       @default(false)
   /// "candidato" | "recrutador"; vazio até a pessoa escolher na primeira entrada (decisão 3).
   perfil           String?
   sessions         Session[]
   accounts         Account[]
   twoFactors       TwoFactor[]
   consentLogs      ConsentLog[]
+  empresa          CompanyMember?
 }
 
 model Session {

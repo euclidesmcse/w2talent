@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { renewIdempotent, validateVacancy, normalizeVacancyStack, normalizeDescricaoBullets } from "@/lib/vacancy";
-import { vacancyExpiresAt } from "@/lib/hygiene";
+import { validateVacancy, normalizeVacancyStack, normalizeDescricaoBullets } from "@/lib/vacancy";
 import { runInBackground } from "@/lib/background";
 import { indexVacancy, markForReindex } from "@/lib/indexing";
+import { exigirDonoDaVaga } from "@/lib/empresa";
+import { renovar } from "@/lib/vaga-renovar";
 
 function parseIdFromUrl(req: NextRequest): string {
   const parts = new URL(req.url).pathname.split("/").filter(Boolean);
@@ -30,51 +31,12 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const url = new URL(req.url);
   const id = paramId ?? parseIdFromUrl(req);
   const isRenew = url.pathname.endsWith("/renew") || url.searchParams.get("action") === "renew";
-  let body: any = {};
-  try { body = await req.json().catch(() => ({})); } catch {}
-  const wantRenew = isRenew || body.action === "renew" || body.renew === true;
-
+  const body: any = await req.json().catch(() => ({}));
+  const wantRenew = isRenew || body?.action === "renew" || body?.renew === true;
   if (!wantRenew) {
     return NextResponse.json({ error: "use PATCH com {action:'renew'} para renovar" }, { status: 400 });
   }
-
-  if (!id) return NextResponse.json({ error: "id obrigatório para renew" }, { status: 400 });
-
-  try {
-    const { prisma } = await import("@/lib/prisma");
-    const existing: any = await prisma.vacancy.findUnique({ where: { id } }).catch(() => null);
-    if (!existing) {
-      const now = new Date();
-      const expiresAt = vacancyExpiresAt(now);
-      return NextResponse.json({ id, expiresAt: expiresAt.toISOString(), renovacoes: 1, status: "ativa" }, { status: 200 });
-    }
-
-    const now = new Date();
-    const { alreadyRenewed, renewed } = renewIdempotent(existing, now);
-    if (alreadyRenewed) {
-      return NextResponse.json(
-        { id: existing.id, expiresAt: new Date(existing.expiresAt).toISOString(), renovacoes: existing.renovacoes, status: existing.status },
-        { status: 200 }
-      );
-    }
-
-    const updated = await prisma.vacancy.update({
-      where: { id },
-      data: {
-        expiresAt: renewed!.expiresAt,
-        renovacoes: renewed!.renovacoes,
-        status: "ativa",
-      },
-    });
-
-    return NextResponse.json(
-      { id: updated.id, expiresAt: (updated.expiresAt as Date).toISOString(), renovacoes: updated.renovacoes, status: updated.status },
-      { status: 200 }
-    );
-  } catch (e: any) {
-    const status = e.status ?? e.statusCode ?? 500;
-    return NextResponse.json({ error: e.message ?? "erro interno renew" }, { status });
-  }
+  return renovar(req, id);
 }
 
 export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -104,6 +66,9 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
 
   try {
     const { prisma } = await import("@/lib/prisma");
+    // 2.1a (D3): só a empresa dona da vaga ou o admin; a empresa da vaga não muda por aqui.
+    const r = await exigirDonoDaVaga(req, prisma, id);
+    if ("erro" in r) return r.erro;
     const updated = await prisma.vacancy.update({
       where: { id },
       data: {
@@ -125,8 +90,8 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
     runInBackground("reindexar vaga", () => indexVacancy(updated.id));
     return NextResponse.json({ ...updated, id: updated.id }, { status: 200 });
   } catch (e: any) {
-    const status = e.status ?? e.statusCode ?? 500;
-    return NextResponse.json({ error: e.message ?? "erro ao atualizar vaga" }, { status });
+    console.error("PUT vaga", e?.code ?? e?.name ?? "erro");
+    return NextResponse.json({ error: "erro ao atualizar vaga" }, { status: 500 });
   }
 }
 
@@ -136,9 +101,12 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
   if (!id) return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
   try {
     const { prisma } = await import("@/lib/prisma");
+    const r = await exigirDonoDaVaga(req, prisma, id);
+    if ("erro" in r) return r.erro;
     await prisma.vacancy.update({ where: { id }, data: { status: "arquivada" } });
     return NextResponse.json({ id, status: "arquivada" }, { status: 200 });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message ?? "erro ao arquivar" }, { status: 500 });
+    console.error("arquivar vaga", e?.code ?? e?.name ?? "erro");
+    return NextResponse.json({ error: "erro ao arquivar" }, { status: 500 });
   }
 }

@@ -6,6 +6,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { formatFaixa, formatPretensaoCandidato, formatTempo } from "@/lib/format";
 import { FichaW2Card } from "@/components/ficha-w2-card";
+import { NaoVerificada } from "@/components/empresa-etiqueta";
 import { sanitizeFicha, sanitizeFichaW2 } from "@/lib/ficha";
 
 /**
@@ -159,7 +160,7 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef }
   const fields: Array<[string, React.ReactNode]> = item
     ? ([
         [t("cargo"), item.nome ? item.titulo : null],
-        [t("empresa"), item.company?.nome],
+        [t("empresa"), item.company?.nome ? (item.company.verificada === false ? <span className="inline-flex flex-wrap items-center gap-2">{item.company.nome} <NaoVerificada company={item.company} /></span> : item.company.nome) : null],
         [t("nivel"), item.nivel],
         [t("local"), item.localidade ?? item.modo],
         [t("regime"), regime],
