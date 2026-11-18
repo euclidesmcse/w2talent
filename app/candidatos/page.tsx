@@ -45,6 +45,8 @@ export default function CandidatosPage() {
   const [pronto, setPronto] = React.useState(false);
   const [vagas, setVagas] = React.useState<VagaOpcao[] | null>(null);
   const [vagaSumiu, setVagaSumiu] = React.useState(false);
+  // vaga usada na busca que trouxe `items` (o match de cada linha vale só para ela)
+  const [itensDaVaga, setItensDaVaga] = React.useState<string | null>(null);
   // 2.2c: no computador (lg, 1024px+) a Ficha W2 abre num painel ao lado; abaixo disso, na janela.
   const [painelLado, setPainelLado] = React.useState(false);
   React.useEffect(() => {
@@ -118,6 +120,7 @@ export default function CandidatosPage() {
     const data = await res.json();
     if (minha !== ultimaBusca.current) return false;
     setItems(data.items ?? []);
+    setItensDaVaga(f.vaga ?? null);
     setTotal(data.total ?? 0);
     setTotalPages(data.totalPages ?? 1);
     setSuggestion(data.suggestion ?? null);
@@ -148,11 +151,16 @@ export default function CandidatosPage() {
   };
   const closeModal = React.useCallback(() => setModalOpen(false), []);
   const vagaTitulo = filtros.vaga ? vagas?.find((v) => v.id === filtros.vaga)?.titulo ?? null : null;
-  const matchDoDetalhe = filtros.vaga && modalItem && typeof modalItem.match === "number"
-    ? <MatchDaVaga vaga={vagaTitulo} match={modalItem.match} gaps={modalItem.gaps} />
+  // O detalhe aberto acompanha a lista atual: trocar a vaga atualiza o match do mesmo candidato,
+  // e enquanto a nova busca não chega (ou se ele saiu da lista) a linha do match some.
+  const idDetalhe = modalItem ? String(modalItem.id ?? modalItem.userId) : null;
+  const itemDaLista = idDetalhe ? items.find((x) => String(x.id ?? x.userId) === idDetalhe) : undefined;
+  const itemDetalhe = itemDaLista ?? modalItem;
+  const matchDoDetalhe = filtros.vaga && itensDaVaga === filtros.vaga && itemDaLista && typeof itemDaLista.match === "number"
+    ? <MatchDaVaga vaga={vagaTitulo} match={itemDaLista.match} gaps={itemDaLista.gaps} />
     : null;
-  const tituloDetalhe = modalItem?.nome ?? modalItem?.titulo ?? tr("detail.title");
-  const painelAberto = painelLado && modalOpen && !!modalItem;
+  const tituloDetalhe = itemDetalhe?.nome ?? itemDetalhe?.titulo ?? tr("detail.title");
+  const painelAberto = painelLado && modalOpen && !!itemDetalhe;
   // Com o painel aberto a página usa mais da tela, para a tabela não apertar.
   const largura = painelAberto ? "max-w-[1480px]" : "max-w-page";
   const selectedSet = React.useMemo(() => new Set(selected), [selected]);
@@ -256,9 +264,9 @@ export default function CandidatosPage() {
           </nav>
         ) : null}
         </div>
-        {painelAberto ? <FichaPainel item={modalItem} titulo={tituloDetalhe} antes={matchDoDetalhe} onClose={closeModal} triggerRef={activeTrigger} /> : null}
+        {painelAberto ? <FichaPainel item={itemDetalhe} titulo={tituloDetalhe} antes={matchDoDetalhe} onClose={closeModal} triggerRef={activeTrigger} /> : null}
         </div>
-        {!painelLado ? <DetailModal open={modalOpen} onClose={closeModal} item={modalItem} triggerRef={activeTrigger} title={tituloDetalhe} antes={matchDoDetalhe} /> : null}
+        {!painelLado ? <DetailModal open={modalOpen} onClose={closeModal} item={itemDetalhe} triggerRef={activeTrigger} title={tituloDetalhe} antes={matchDoDetalhe} /> : null}
         <BatchBar variant="candidatos" onAction={(ids) => { void ids; }} />
       </div>
       </main>
