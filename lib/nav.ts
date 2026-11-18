@@ -19,8 +19,8 @@ export const NAV: Record<Area, NavLink[]> = {
     { href: "/minha-ficha", key: "minhaFicha", shortKey: "minhaFichaCurto" },
     { href: "/minhas-candidaturas", key: "minhasCandidaturas", shortKey: "minhasCandidaturasCurto" },
   ],
-  // "Painel" do recrutador entra aqui quando existir
   recrutador: [
+    { href: "/rh", key: "painelRh", shortKey: "painelRhCurto" },
     { href: "/candidatos", key: "candidatos" },
     { href: "/publicar", key: "publicar", shortKey: "publicarCurto" },
     { href: "/empresa", key: "empresa", shortKey: "empresaCurto" },
@@ -45,6 +45,7 @@ const PREFIXES: [string, Area][] = [
   ["/candidatos", "recrutador"],
   ["/empresa", "recrutador"],
   ["/publicar", "recrutador"],
+  ["/rh", "recrutador"],
   ["/painel", "candidato"],
   ["/vagas", "candidato"],
   ["/minha-ficha", "candidato"],

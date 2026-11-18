@@ -223,6 +223,19 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
       ],
       "ordem": 15,
       "corpo": "A IA ajuda em tarefas de texto. Ela não aprova, não reprova e não dá nota a ninguém.\n\n## Onde ela aparece\n\n- Ler o CV e preencher a ficha.\n- Escrever o resumo e os destaques da Ficha W2.\n- Ler o texto da vaga e preencher os campos.\n- Reescrever a vaga sem termos de viés, quando o recrutador pede.\n- Sugerir perguntas de entrevista.\n- Responder perguntas nesta ajuda, só com o que está nos artigos e sempre com o link da fonte.\n\n## Onde ela não entra\n\nO [match](/ajuda/match) é uma conta com pesos fixos. A busca usa texto e significado para ordenar, mas não esconde candidatos.\n\nA lista completa, com os dados que cada tarefa usa, está em [Como usamos IA](/ia)."
+    },
+    {
+      "slug": "painel-rh",
+      "titulo": "Painel RH",
+      "resumo": "As vagas da empresa, as candidaturas que chegaram e os números de resposta.",
+      "areas": [
+        "recrutador"
+      ],
+      "telas": [
+        "/rh"
+      ],
+      "ordem": 16,
+      "corpo": "O [Painel RH](/rh) mostra as vagas da sua empresa e as candidaturas que chegaram a cada uma.\n\n## Números da empresa\n\n- **Vagas ativas** e as que **vencem em até 3 dias** (renove antes de vencer).\n- **Candidaturas** recebidas e quantas ainda estão **novas, sem resposta**.\n- **Tempo até a primeira resposta:** a média entre a candidatura chegar e você mudar a etapa dela pela primeira vez.\n- **Taxa de resposta:** quantas candidaturas já receberam alguma resposta.\n\nOs números são só da sua empresa.\n\n## Vagas\n\nCada vaga mostra a situação, o total de candidaturas e as novas. Em \"Candidatos compatíveis\" você busca perfis parecidos com a vaga, mesmo de quem ainda não se candidatou."
     }
   ],
   "en": [
@@ -446,6 +459,19 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
       ],
       "ordem": 15,
       "corpo": "AI helps with text tasks. It does not approve, reject or score anyone.\n\n## Where it shows up\n\n- Reading the CV and filling in the profile.\n- Writing the summary and highlights of the W2 Profile.\n- Reading the job text and filling in the fields.\n- Rewriting the job without biased terms, when the recruiter asks.\n- Suggesting interview questions.\n- Answering questions in this help, only with what the articles say and always with the source link.\n\n## Where it does not\n\nThe [match](/ajuda/match) is a calculation with fixed weights. Search uses text and meaning to sort, but does not hide candidates.\n\nThe full list, with the data each task uses, is in [How we use AI](/ia)."
+    },
+    {
+      "slug": "painel-rh",
+      "titulo": "HR dashboard",
+      "resumo": "Your company's jobs, the applications they received and reply numbers.",
+      "areas": [
+        "recrutador"
+      ],
+      "telas": [
+        "/rh"
+      ],
+      "ordem": 16,
+      "corpo": "The [HR dashboard](/rh) shows your company's jobs and the applications each one received.\n\n## Company numbers\n\n- **Active jobs** and the ones that **expire within 3 days** (renew them before they expire).\n- **Applications** received and how many are still **new, with no reply**.\n- **Time to first reply:** the average time between an application arriving and you first changing its stage.\n- **Reply rate:** how many applications have received a reply.\n\nThe numbers cover only your company.\n\n## Jobs\n\nEach job shows its status, the total number of applications and the new ones. \"Matching candidates\" searches for profiles close to the job, including people who have not applied yet."
     }
   ],
   "es": [
@@ -669,6 +695,19 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
       ],
       "ordem": 15,
       "corpo": "La IA ayuda en tareas de texto. No aprueba, no rechaza y no le pone nota a nadie.\n\n## Dónde aparece\n\n- Leer el CV y llenar la ficha.\n- Escribir el resumen y los destacados de la Ficha W2.\n- Leer el texto de la vacante y llenar los campos.\n- Reescribir la vacante sin términos de sesgo, cuando el reclutador lo pide.\n- Sugerir preguntas de entrevista.\n- Responder preguntas en esta ayuda, solo con lo que dicen los artículos y siempre con el enlace de la fuente.\n\n## Dónde no entra\n\nEl [match](/ajuda/match) es una cuenta con pesos fijos. La búsqueda usa texto y significado para ordenar, pero no oculta candidatos.\n\nLa lista completa, con los datos que usa cada tarea, está en [Cómo usamos la IA](/ia)."
+    },
+    {
+      "slug": "painel-rh",
+      "titulo": "Panel de RR. HH.",
+      "resumo": "Las vacantes de la empresa, las postulaciones recibidas y los números de respuesta.",
+      "areas": [
+        "recrutador"
+      ],
+      "telas": [
+        "/rh"
+      ],
+      "ordem": 16,
+      "corpo": "El [panel de RR. HH.](/rh) muestra las vacantes de tu empresa y las postulaciones que recibió cada una.\n\n## Números de la empresa\n\n- **Vacantes activas** y las que **vencen en hasta 3 días** (renuévalas antes de que venzan).\n- **Postulaciones** recibidas y cuántas siguen **nuevas, sin respuesta**.\n- **Tiempo hasta la primera respuesta:** el promedio entre la llegada de la postulación y el primer cambio de etapa que haces.\n- **Tasa de respuesta:** cuántas postulaciones ya recibieron alguna respuesta.\n\nLos números son solo de tu empresa.\n\n## Vacantes\n\nCada vacante muestra su estado, el total de postulaciones y las nuevas. En \"Candidatos compatibles\" buscas perfiles parecidos a la vacante, incluso de quienes aún no se postularon."
     }
   ]
 };

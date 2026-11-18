@@ -34,7 +34,9 @@
     "empresas": "Empresas",
     "publicar": "Publicar vaga",
     "publicarCurto": "Publicar",
-    "ajuda": "Ajuda"
+    "ajuda": "Ajuda",
+    "painelRh": "Painel RH",
+    "painelRhCurto": "Painel"
   },
   "lang": {
     "label": "Idioma",
@@ -1182,5 +1184,42 @@
     "baixarXlsx": "Baixar Excel",
     "imprimirPdf": "Imprimir ou PDF",
     "paraVaga": "Para a vaga: {vaga}"
+  },
+  "rh": {
+    "title": "Painel RH",
+    "lead": "As vagas de {empresa} e as candidaturas que chegaram.",
+    "gateTitle": "O Painel RH é para recrutadores",
+    "gateBody": "Entre com uma conta de recrutador para ver as vagas e as candidaturas da sua empresa.",
+    "gateCandidate": "Esta conta é de candidato. Para ver o Painel RH, entre com uma conta de recrutador.",
+    "semEmpresaTitle": "Cadastre a sua empresa primeiro",
+    "semEmpresaBody": "O painel mostra as vagas e as candidaturas da empresa ligada à sua conta.",
+    "irEmpresa": "Ir para Minha empresa",
+    "erro": "Não foi possível carregar o painel. Tente de novo em instantes.",
+    "tentar": "Tentar de novo",
+    "numerosTitle": "Números da empresa",
+    "vagasAtivas": "Vagas ativas",
+    "vencendo": "Vencem em até 3 dias",
+    "candidaturas": "Candidaturas",
+    "novas": "Novas, sem resposta",
+    "tempoMedio": "Tempo até a primeira resposta",
+    "taxaResposta": "Taxa de resposta",
+    "semDado": "Sem dados ainda",
+    "horas": "{n} h",
+    "dias": "{n} dias",
+    "pct": "{n}%",
+    "vagasTitle": "Vagas",
+    "vagasVazioTitle": "Nenhuma vaga publicada",
+    "vagasVazioBody": "Publique a primeira vaga para receber candidaturas.",
+    "publicar": "Publicar vaga",
+    "colVaga": "Vaga",
+    "colSituacao": "Situação",
+    "colCandidaturas": "Candidaturas",
+    "colNovas": "Novas",
+    "situacao_ativa": "Ativa",
+    "situacao_vencendo": "Vence em {data}",
+    "situacao_vencida": "Vencida",
+    "situacao_arquivada": "Arquivada",
+    "compativeis": "Candidatos compatíveis",
+    "compativeisLabel": "Candidatos compatíveis com {vaga}"
   }
 }
