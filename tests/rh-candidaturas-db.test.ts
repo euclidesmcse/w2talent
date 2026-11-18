@@ -6,7 +6,13 @@ import { cookieDeTeste, type ContaTeste } from "./helpers/sessao-mock";
 jest.mock("../lib/sessao", () => require("./helpers/sessao-mock").sessaoMock());
 jest.mock("../lib/background", () => ({ runInBackground: () => undefined }));
 const enfileirados: any[] = [];
-jest.mock("../lib/notifications", () => ({ enqueueEmail: async (m: any) => void enfileirados.push(m) }));
+let filaFora = false;
+jest.mock("../lib/notifications", () => ({
+  enqueueEmail: async (m: any) => {
+    if (filaFora) throw new Error("fila fora do ar");
+    enfileirados.push(m);
+  },
+}));
 
 function localDb(url: string | undefined): boolean {
   try {
@@ -123,6 +129,7 @@ describeDb("candidaturas da vaga (2.4b/2.4c)", () => {
     let a = await db.application.findUniqueOrThrow({ where: { id: apps[CANDS[0]] } });
     expect([a.etapa, a.status]).toEqual(["entrevista", "respondido"]);
     const primeira = a.respondidaEm;
+    expect(a.emailPendente).toBeNull(); // entrou na fila: nada pendente
     expect(primeira).not.toBeNull();
 
     // Tela velha: a etapa já não é "nova".
@@ -167,5 +174,28 @@ describeDb("candidaturas da vaga (2.4b/2.4c)", () => {
     const a = await db.application.findUniqueOrThrow({ where: { id: apps[CANDS[2]] } });
     expect([a.status, a.etapa, a.respondidaEm]).toEqual(["visualizado", "nova", null]);
     expect((await mudar(rec(REC_B), apps[CANDS[2]], { visto: true })).status).toBe(404);
+  });
+
+  it("se a fila falhar, o aviso fica guardado e o Cron manda depois", async () => {
+    const { reenviarEmailsPendentes } = await import("../lib/envio");
+    filaFora = true;
+    try {
+      const r = await mudar(rec(REC_A), apps[CANDS[2]], { de: "nova", para: "proposta" });
+      expect(r.status).toBe(200);
+      expect((await r.json()).contato).toMatchObject({ email: `${CANDS[2]}@exemplo.com` });
+    } finally {
+      filaFora = false;
+    }
+    const antes = enfileirados.length;
+    let a = await db.application.findUniqueOrThrow({ where: { id: apps[CANDS[2]] } });
+    expect(a.contatoLiberadoEm).not.toBeNull();
+    expect(a.emailPendente).toMatchObject({ to: `${CANDS[2]}@exemplo.com`, idempotencyKey: `entrevista:${apps[CANDS[2]]}` });
+
+    const fila: any[] = [];
+    await reenviarEmailsPendentes(db, async (m) => void fila.push(m));
+    expect(fila.map((m) => m.idempotencyKey)).toContain(`entrevista:${apps[CANDS[2]]}`);
+    a = await db.application.findUniqueOrThrow({ where: { id: apps[CANDS[2]] } });
+    expect(a.emailPendente).toBeNull();
+    expect(enfileirados.length).toBe(antes);
   });
 });

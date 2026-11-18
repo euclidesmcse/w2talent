@@ -432,7 +432,7 @@ function mensagemGuardada(v: unknown): EmailMessage | null {
 }
 
 /**
- * E-mails de candidatura que não entraram na fila no envio (fila fora do ar, por exemplo).
+ * E-mails de candidatura (e avisos de entrevista, 2.4c) que não entraram na fila (fila fora do ar, por exemplo).
  * Roda no Cron diário; tenta os dos últimos 7 dias, com o conteúdo guardado no envio (não remonta
  * a partir do perfil ou da vaga, que podem ter mudado). A chave de idempotência evita e-mail repetido.
  */
@@ -443,7 +443,11 @@ export async function reenviarEmailsPendentes(
   limite = 50,
 ): Promise<{ enviados: number; falhas: number }> {
   const apps = await db.application.findMany({
-    where: { emailPendente: { not: Prisma.DbNull }, createdAt: { gt: new Date(now.getTime() - 7 * 86_400_000) } },
+    // createdAt: e-mail da candidatura; etapaEm: aviso de entrevista (2.4c), guardado ao mudar a etapa.
+    where: {
+      emailPendente: { not: Prisma.DbNull },
+      OR: [{ createdAt: { gt: new Date(now.getTime() - 7 * 86_400_000) } }, { etapaEm: { gt: new Date(now.getTime() - 7 * 86_400_000) } }],
+    },
     orderBy: { createdAt: "asc" },
     take: limite,
     select: { id: true, emailPendente: true },

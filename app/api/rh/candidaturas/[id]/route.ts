@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { exigirConta, NO_STORE } from "@/lib/sessao";
 import { empresaDaConta, mesmaOrigem } from "@/lib/empresa";
-import { ehEtapa, marcarVista, mudarEtapa } from "@/lib/rh-candidaturas";
+import { avisoEnfileirado, ehEtapa, marcarVista, mudarEtapa } from "@/lib/rh-candidaturas";
 import { enqueueEmail } from "@/lib/notifications";
 
 /**
@@ -32,8 +32,14 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     if (!res.ok) return NextResponse.json({ error: res.erro }, { status: res.erro === "mudou" ? 409 : 404, headers: NO_STORE });
     const { aviso, ...resposta } = res;
     if (aviso) {
-      // Depois do commit: a etapa e a liberação já valem mesmo se a fila falhar.
-      await enqueueEmail(aviso).catch((e) => console.error(`[rh/candidaturas] aviso de entrevista ${id} não entrou na fila:`, e instanceof Error ? e.message : e));
+      // Depois do commit: a etapa e a liberação já valem. Se a fila falhar, o aviso continua em
+      // emailPendente e o Cron diário tenta de novo (reenviarEmailsPendentes).
+      try {
+        await enqueueEmail(aviso);
+        await avisoEnfileirado(prisma, id, aviso);
+      } catch (e) {
+        console.error(`[rh/candidaturas] aviso de entrevista ${id} não entrou na fila:`, e instanceof Error ? e.message : e);
+      }
     }
     return NextResponse.json(resposta, { headers: NO_STORE });
   } catch (e) {

@@ -7,9 +7,10 @@
  * - D6: só a empresa da vaga; cada mudança grava o sinal "etapa_mudou" (de, para).
  * - D4 (2.4c): ir para Entrevista (ou pular direto para Proposta/Contratada) libera o e-mail e o
  *   telefone da ficha só para a empresa daquela vaga (contatoLiberadoEm) e avisa o candidato por e-mail.
- *   Liberado uma vez, fica liberado, mesmo que a etapa volte.
+ *   Liberado uma vez, fica liberado, mesmo que a etapa volte. O aviso fica guardado em emailPendente na
+ *   mesma transação; quem chama limpa depois de pôr na fila, e o Cron diário tenta de novo se a fila falhar.
  */
-import type { PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient } from "@prisma/client";
 import { withoutContacts } from "./search";
 import { matchCandidato, type GapCandidato } from "./match-candidato";
 import { gravarSinais } from "./sinais";
@@ -148,7 +149,7 @@ export async function mudarEtapa(
     const app = await tx.application.findFirst({
       where: { id: applicationId, companyId, origem: "candidaturaLote" },
       select: {
-        id: true, etapa: true, etapaEm: true, status: true, respondidaEm: true, contatoLiberadoEm: true, candidateId: true, vacancyId: true,
+        id: true, etapa: true, etapaEm: true, status: true, respondidaEm: true, contatoLiberadoEm: true, emailPendente: true, candidateId: true, vacancyId: true,
         candidate: { select: { nome: true, email: true, celular: true, idiomaOriginal: true } },
         vacancy: { select: { titulo: true } },
         company: { select: { nome: true } },
@@ -162,23 +163,6 @@ export async function mudarEtapa(
     }
     const status = statusDaEtapa(app.status as StatusCandidatura, para);
     const libera = !app.contatoLiberadoEm && ETAPAS_COM_CONTATO.includes(para);
-    const r = await tx.application.updateMany({
-      where: { id: app.id, etapa: de },
-      data: {
-        etapa: para,
-        etapaEm: now,
-        status,
-        ...(app.respondidaEm || para === "nova" ? {} : { respondidaEm: now }),
-        ...(libera ? { contatoLiberadoEm: now } : {}),
-      },
-    });
-    if (r.count === 0) return { ok: false, erro: "mudou" } as const;
-    await gravarSinais(tx, [
-      {
-        tipo: "etapa_mudou", ator: "recrutador", candidateId: app.candidateId, vacancyId: app.vacancyId, applicationId: app.id,
-        dados: libera ? { de, para, contatoLiberado: true } : { de, para }, createdAt: now,
-      },
-    ]);
     let aviso: EmailMessage | null = null;
     if (libera && app.candidate.email) {
       const m = renderEntrevistaEmail({
@@ -190,12 +174,40 @@ export async function mudarEtapa(
       });
       aviso = { to: app.candidate.email, ...m, idempotencyKey: `entrevista:${app.id}` };
     }
+    // Guarda o aviso para o Cron reenviar se a fila falhar; não sobrescreve outro e-mail ainda pendente.
+    const guarda = aviso && app.emailPendente == null;
+    const r = await tx.application.updateMany({
+      where: { id: app.id, etapa: de },
+      data: {
+        etapa: para,
+        etapaEm: now,
+        status,
+        ...(app.respondidaEm || para === "nova" ? {} : { respondidaEm: now }),
+        ...(libera ? { contatoLiberadoEm: now } : {}),
+        ...(guarda ? { emailPendente: aviso as unknown as Prisma.InputJsonValue } : {}),
+      },
+    });
+    if (r.count === 0) return { ok: false, erro: "mudou" } as const;
+    await gravarSinais(tx, [
+      {
+        tipo: "etapa_mudou", ator: "recrutador", candidateId: app.candidateId, vacancyId: app.vacancyId, applicationId: app.id,
+        dados: libera ? { de, para, contatoLiberado: true } : { de, para }, createdAt: now,
+      },
+    ]);
     const liberado = libera || !!app.contatoLiberadoEm;
     return { ok: true, etapa: para, status, etapaEm: now.toISOString(), contato: liberado ? contatoDe : null, aviso } as const;
   });
 }
 
 /** O recrutador abriu a ficha: "Enviada" vira "Vista" para o candidato (D3). Não conta como resposta. */
+/** O aviso entrou na fila: limpa o emailPendente, só se ainda for este aviso. */
+export async function avisoEnfileirado(db: PrismaClient, applicationId: string, aviso: EmailMessage): Promise<void> {
+  await db.application.updateMany({
+    where: { id: applicationId, emailPendente: { path: ["idempotencyKey"], equals: aviso.idempotencyKey } },
+    data: { emailPendente: Prisma.DbNull },
+  });
+}
+
 export async function marcarVista(db: PrismaClient, companyId: string, applicationId: string): Promise<boolean> {
   const r = await db.application.updateMany({
     where: { id: applicationId, companyId, origem: "candidaturaLote", status: "enviado" },
