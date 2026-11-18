@@ -1175,6 +1175,12 @@
     "campo_resumo": "Resumo",
     "campo_destaques": "Destaques",
     "campo_contato": "Contato",
-    "campo_atualizado": "Atualizada"
+    "campo_atualizado": "Atualizada",
+    "campo_nome": "Nome",
+    "exportar": "Exportar a comparação",
+    "baixarCsv": "Baixar CSV",
+    "baixarXlsx": "Baixar Excel",
+    "imprimirPdf": "Imprimir ou PDF",
+    "paraVaga": "Para a vaga: {vaga}"
   }
 }
