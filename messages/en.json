@@ -961,7 +961,11 @@
     "mercadoTarefa": "Market numbers",
     "mercadoFaz": "Not AI: a daily calculation over the site's jobs and profiles. It shows salary ranges, the most requested skills and candidates' expected pay as ranges, only with 10 or more records (and 3 or more companies, for jobs).",
     "mercadoDados": "Ranges of active jobs and monthly expected pay from published profiles, without names or contacts. Sample jobs and profiles are left out.",
-    "mercadoDecide": "No one: these are reference numbers only. Recruiters see expected pay only as a range over 10 or more profiles, never anyone's own."
+    "mercadoDecide": "No one: these are reference numbers only. Recruiters see expected pay only as a range over 10 or more profiles, never anyone's own.",
+    "rankingTarefa": "Candidate order",
+    "rankingFaz": "Changes only the order of a job's candidates, based on who the company moves to interview and who it marks as not moving forward. The match % shown is still the same calculation.",
+    "rankingDados": "The 5 parts of the match (skills, level, conditions, how recent, completeness). Never age, gender, photo, marital status or address. Sample data and data from rejected companies are left out.",
+    "rankingDecide": "It is not AI and decides nothing: each weight changes by at most 50%, and only after 30 decisions. Recruiters can see the default order, and the admin can turn it off."
   },
   "empresa": {
     "title": "My company",
@@ -1495,5 +1499,14 @@
     "respostaMeio": "Half of the replies arrive between {de} and {ate}.",
     "horas": "{n} h",
     "dias": "{n, plural, one {# day} other {# days}}"
+  },
+  "ordemRanking": {
+    "ajustadaEmpresa": "Order adjusted to what your company picks.",
+    "ajustadaGlobal": "Order adjusted to what companies pick.",
+    "padrao": "Default order, by match %.",
+    "verPadrao": "See default order",
+    "verAjustada": "See adjusted order",
+    "comoFunciona": "How it works",
+    "comoFuncionaLabel": "How it works: candidate order"
   }
 }

@@ -25,6 +25,8 @@ Cada vacante muestra su estado, el total de postulaciones y las nuevas. Una vaca
 
 En "Ver postulaciones" aparecen las personas que se postularon, de mayor a menor compatibilidad con la vacante.
 
+**Orden ajustado:** después de 30 decisiones, el orden tiene en cuenta a quién tu empresa pasa a Entrevista (o después) y a quién marca como No siguió. Solo cambia el orden: el % de compatibilidad sigue siendo el mismo cálculo, y nunca cuentan edad, género, foto, estado civil ni dirección. Arriba de la lista aparece "Orden ajustado según lo que elige tu empresa"; en "Ver en el orden estándar" vuelves al orden por % de compatibilidad. Lo mismo vale en Candidatos cuando hay una vacante de referencia. Detalles en [Cómo usamos la IA](/ia#ranking).
+
 - **Etapa:** Nueva, En análisis, Entrevista, Oferta, Contratada o No siguió. Cámbiala con un clic; no hay formulario.
 - **Lo que ve el candidato:** "Vista" cuando abres la ficha o la pasas a En análisis, "Respondida" desde Entrevista y "Cerrada" en No siguió. Las etapas internas no se le muestran.
 - **Contacto:** al pasar a Entrevista (o después), el correo y el teléfono del candidato aparecen en la lista, solo para tu empresa, y recibe un aviso por correo. Liberado una vez, queda liberado.

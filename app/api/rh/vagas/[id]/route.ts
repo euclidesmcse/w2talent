@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { exigirConta, NO_STORE } from "@/lib/sessao";
 import { empresaDaConta } from "@/lib/empresa";
 import { candidaturasDaVaga } from "@/lib/rh-candidaturas";
+import { lerOrdem } from "@/lib/ranking";
 import { comTraducaoDasFichas, idiomaDoPedido } from "@/lib/traducao";
 
 /**
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   const { id } = await ctx.params;
   try {
     const empresa = await empresaDaConta(prisma, r.conta.id);
-    const dados = empresa && id ? await candidaturasDaVaga(prisma, empresa.id, id) : null;
+    const dados = empresa && id ? await candidaturasDaVaga(prisma, empresa.id, id, new Date(), { ordem: lerOrdem(req.nextUrl.searchParams.get("ordem")) }) : null;
     if (!dados) return NextResponse.json({ error: "vaga_nao_encontrada" }, { status: 404, headers: NO_STORE });
     // 2.7b: a ficha de cada candidatura no idioma de quem vê, quando a tradução está pronta.
     const candidatos = await comTraducaoDasFichas(prisma, dados.itens.map((it) => it.candidato), idiomaDoPedido(req));

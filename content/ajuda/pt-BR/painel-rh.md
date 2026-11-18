@@ -25,6 +25,8 @@ Cada vaga mostra a situação, o total de candidaturas e as novas. Vaga ativa co
 
 Em "Ver candidaturas" aparecem as pessoas que se candidataram, da maior para a menor compatibilidade com a vaga.
 
+**Ordem ajustada:** depois de 30 decisões, a ordem passa a levar em conta quem a sua empresa leva para Entrevista (ou depois) e quem marca como Não seguiu. Só muda a ordem: a % de match continua a mesma conta, e nunca entram idade, gênero, foto, estado civil ou endereço. Acima da lista aparece "Ordem ajustada pelo que sua empresa escolhe"; em "Ver na ordem padrão" você volta para a ordem pela % de match. O mesmo vale em Candidatos, quando há uma vaga de referência. Detalhes em [Como usamos IA](/ia#ranking).
+
 - **Etapa:** Nova, Em análise, Entrevista, Proposta, Contratada ou Não seguiu. Mude com um clique; não há formulário.
 - **O que o candidato vê:** "Vista" quando você abre a ficha ou move para Em análise, "Respondida" a partir de Entrevista e "Encerrada" em Não seguiu. As etapas internas não aparecem para ele.
 - **Contato:** ao mover para Entrevista (ou depois), o e-mail e o telefone do candidato aparecem na lista, só para a sua empresa, e ele recebe um aviso por e-mail. Liberado uma vez, fica liberado.

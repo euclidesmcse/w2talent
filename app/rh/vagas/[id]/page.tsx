@@ -5,6 +5,7 @@
  * (1 clique, sem arrastar: D2). Abrir a ficha marca a candidatura como vista para o candidato (D3).
  * Marcar até 10 leva à tela Comparar do 2.3, que também exporta.
  * 2.5a: com o contato liberado (Entrevista em diante), cada linha oferece horários de entrevista.
+ * 3.1b: a ordem usa os pesos que a empresa sustenta; ?ordem=padrao (na URL) volta à ordem pela % de match.
  */
 import * as React from "react";
 import Link from "next/link";
@@ -23,12 +24,14 @@ import { contaRecusada, linkEntrar, useConta } from "@/lib/conta-client";
 import { selectionStore } from "@/lib/selection-store";
 import { ETAPAS, type Etapa } from "@/lib/painel-rh";
 import type { CandidaturaRh, VagaDaPagina } from "@/lib/rh-candidaturas";
+import type { OrdemInfo } from "@/lib/ranking";
+import { OrdemRanking } from "@/components/ordem-ranking";
 
 type Estado =
   | { t: "carregando" }
   | { t: "erro" }
   | { t: "nao_encontrada" }
-  | { t: "ok"; vaga: VagaDaPagina; itens: CandidaturaRh[]; total: number };
+  | { t: "ok"; vaga: VagaDaPagina; itens: CandidaturaRh[]; total: number; ordem?: OrdemInfo };
 
 const nomeDe = (it: CandidaturaRh) => String(it.candidato.nome ?? "");
 
@@ -50,6 +53,10 @@ export default function CandidaturasDaVagaPage() {
   const [selecionados, setSelecionados] = React.useState<string[]>([]);
   const gatilho = React.useRef<HTMLElement | null>(null);
   const pedido = React.useRef(0);
+  // 3.1b: fica na URL, como os filtros de Candidatos (o link mandado a um colega abre na mesma ordem).
+  const [ordemPadrao, setOrdemPadrao] = React.useState(() => {
+    try { return typeof window !== "undefined" && new URLSearchParams(window.location.search).get("ordem") === "padrao"; } catch { return false; }
+  });
 
   React.useEffect(() => {
     const mql = window.matchMedia?.("(min-width: 1024px)");
@@ -69,7 +76,8 @@ export default function CandidaturasDaVagaPage() {
   const carregar = React.useCallback(async () => {
     const meu = ++pedido.current;
     try {
-      const r = await fetch(`/api/rh/vagas/${encodeURIComponent(id)}?lang=${encodeURIComponent(locale)}`, { cache: "no-store" });
+      const qs = new URLSearchParams([["lang", locale], ...(ordemPadrao ? [["ordem", "padrao"] as [string, string]] : [])]);
+      const r = await fetch(`/api/rh/vagas/${encodeURIComponent(id)}?${qs.toString()}`, { cache: "no-store" });
       if (meu !== pedido.current) return;
       if (r.status === 401 || r.status === 403) {
         contaRecusada();
@@ -77,12 +85,22 @@ export default function CandidaturasDaVagaPage() {
       }
       if (r.status === 404) return setEstado({ t: "nao_encontrada" });
       if (!r.ok) throw new Error(String(r.status));
-      const j = (await r.json()) as { vaga: VagaDaPagina; itens: CandidaturaRh[]; total: number };
+      const j = (await r.json()) as { vaga: VagaDaPagina; itens: CandidaturaRh[]; total: number; ordem?: OrdemInfo };
       if (meu === pedido.current) setEstado({ t: "ok", ...j });
     } catch {
       if (meu === pedido.current) setEstado({ t: "erro" });
     }
-  }, [id, locale]);
+  }, [id, locale, ordemPadrao]);
+
+  const trocarOrdem = (padrao: boolean) => {
+    setOrdemPadrao(padrao);
+    try {
+      const url = new URL(window.location.href);
+      if (padrao) url.searchParams.set("ordem", "padrao");
+      else url.searchParams.delete("ordem");
+      window.history.replaceState(null, "", url.toString());
+    } catch {}
+  };
 
   React.useEffect(() => {
     if (liberado && id) void carregar();
@@ -198,6 +216,7 @@ export default function CandidaturasDaVagaPage() {
               {estado.t === "ok" ? t("vagaLead", { total: estado.total }) : estado.t === "carregando" ? tr("common.loading") : ""}
               {estado.t === "ok" && estado.total > estado.itens.length ? ` ${t("maisDe", { n: estado.itens.length })}` : ""}
             </p>
+            {estado.t === "ok" && estado.itens.length > 1 ? <OrdemRanking className="mt-1" ordem={estado.ordem} onTrocar={trocarOrdem} /> : null}
           </>
         )}
 

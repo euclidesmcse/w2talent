@@ -29,6 +29,8 @@ export type FiltrosCandidatos = {
   /** Começa em até (quem não informou continua aparecendo). */
   disponibilidade?: (typeof DISPONIBILIDADES)[number];
   atualizadaDias?: (typeof ATUALIZADA_DIAS)[number];
+  /** 3.1b: com vaga de referência, "padrao" pede a ordem pela % de match (sem os pesos aprendidos). Não é filtro. */
+  ordem?: "padrao";
 };
 
 /** Nome do idioma como as pessoas escrevem na ficha, em PT, EN e ES (já sem acento). */
@@ -65,6 +67,7 @@ export function lerFiltros(sp: URLSearchParams): FiltrosCandidatos {
     idiomaNivel: sp.get("idioma") ? umDe(NIVEIS_IDIOMA, sp.get("idiomaNivel")) : undefined,
     disponibilidade: umDe(DISPONIBILIDADES, sp.get("disponibilidade")),
     atualizadaDias: umDe(ATUALIZADA_DIAS, sp.get("atualizada")),
+    ordem: sp.get("ordem") === "padrao" ? "padrao" : undefined,
   };
 }
 
@@ -81,12 +84,13 @@ export function filtrosParaUrl(f: FiltrosCandidatos): [string, string][] {
   if (f.idioma && f.idiomaNivel) out.push(["idiomaNivel", f.idiomaNivel]);
   if (f.disponibilidade) out.push(["disponibilidade", f.disponibilidade]);
   if (f.atualizadaDias) out.push(["atualizada", String(f.atualizadaDias)]);
+  if (f.ordem) out.push(["ordem", f.ordem]);
   return out;
 }
 
-/** Quantos filtros estão ligados (a vaga de referência não filtra, só ordena). */
+/** Quantos filtros estão ligados (a vaga de referência e a ordem não filtram, só ordenam). */
 export function contarFiltros(f: FiltrosCandidatos): number {
-  return filtrosParaUrl({ ...f, vaga: undefined }).filter(([k]) => k !== "idiomaNivel").length;
+  return filtrosParaUrl({ ...f, vaga: undefined, ordem: undefined }).filter(([k]) => k !== "idiomaNivel").length;
 }
 
 /** Para cada competência pedida, os ids que a atendem por inteiro (exata, igual ou que cobre). */

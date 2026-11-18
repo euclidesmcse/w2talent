@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
   const params = { q, page, pageSize, modo: filtros.modo ?? modo, regime: filtros.regime ?? regime, nivel, faixaAte, lang, filtros } as any;
 
   let vaga = null;
+  let ordem: { pesos: import("@/lib/match").PesosMatch | null; info: import("@/lib/ranking").OrdemInfo } | null = null;
   if (filtros.vaga) {
     const { prisma } = await import("@/lib/prisma");
     const empresa = await empresaDaConta(prisma, acesso.conta.id);
@@ -40,9 +41,12 @@ export async function GET(req: NextRequest) {
       : null;
     if (!v) return NextResponse.json({ error: "vaga_nao_encontrada" }, { status: 404, headers: NO_STORE });
     vaga = v;
+    // 3.1b: ordem ajustada pelos pesos da empresa, salvo ?ordem=padrao.
+    const { lerOrdem, ordemDaEmpresa } = await import("@/lib/ranking");
+    ordem = await ordemDaEmpresa(prisma, empresa!.id, lerOrdem(url.searchParams.get("ordem")));
   }
 
-  const result = await searchCandidates(params, undefined, vaga);
+  const result = await searchCandidates(params, undefined, vaga, ordem?.pesos);
   // 2.7b: título, resumo e experiências da ficha no idioma de quem vê, quando a tradução está pronta.
   const { prisma } = await import("@/lib/prisma");
   const items = await comTraducaoDasFichas(prisma, result.items, lang);
@@ -56,6 +60,7 @@ export async function GET(req: NextRequest) {
       pageSize: result.pageSize,
       totalPages: result.totalPages,
       suggestion: result.suggestion ?? null,
+      ordem: ordem?.info ?? null,
       emptyCTA: result.emptyCTA ?? null,
       tookMs: result.tookMs ?? tookMs,
       vaga: vaga ? { id: vaga.id, titulo: vaga.titulo } : null,

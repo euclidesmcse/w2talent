@@ -961,7 +961,11 @@
     "mercadoTarefa": "Números do mercado",
     "mercadoFaz": "Não é IA: é uma conta sobre as vagas e fichas do site, feita uma vez por dia. Mostra faixas salariais, competências mais pedidas e a pretensão dos candidatos em faixas, só com 10 ou mais registros (e 3 ou mais empresas, no caso das vagas).",
     "mercadoDados": "Faixas das vagas ativas e pretensão mensal das fichas publicadas, sem nome nem contatos. Vagas e fichas de exemplo ficam de fora.",
-    "mercadoDecide": "Ninguém: são só números de referência. O recrutador vê a pretensão apenas como faixa de 10 ou mais fichas, nunca a de uma pessoa."
+    "mercadoDecide": "Ninguém: são só números de referência. O recrutador vê a pretensão apenas como faixa de 10 ou mais fichas, nunca a de uma pessoa.",
+    "rankingTarefa": "Ordem dos candidatos",
+    "rankingFaz": "Muda só a ordem dos candidatos de uma vaga, a partir de quem a empresa leva para entrevista e de quem ela marca como não seguiu. A % de match mostrada continua a mesma conta.",
+    "rankingDados": "As 5 partes do match (competências, nível, condições, atualização, completude). Nunca idade, gênero, foto, estado civil ou endereço. Dados de exemplo e de empresa recusada ficam de fora.",
+    "rankingDecide": "Não é IA nem decide nada: cada peso muda no máximo 50% e só depois de 30 decisões. O recrutador pode ver a ordem padrão, e o admin pode desligar."
   },
   "empresa": {
     "title": "Minha empresa",
@@ -1495,5 +1499,14 @@
     "respostaMeio": "Metade das respostas chega entre {de} e {ate}.",
     "horas": "{n} h",
     "dias": "{n, plural, one {# dia} other {# dias}}"
+  },
+  "ordemRanking": {
+    "ajustadaEmpresa": "Ordem ajustada pelo que sua empresa escolhe.",
+    "ajustadaGlobal": "Ordem ajustada pelo que as empresas escolhem.",
+    "padrao": "Ordem padrão, pela % de match.",
+    "verPadrao": "Ver na ordem padrão",
+    "verAjustada": "Ver na ordem ajustada",
+    "comoFunciona": "Como funciona",
+    "comoFuncionaLabel": "Como funciona a ordem dos candidatos"
   }
 }
