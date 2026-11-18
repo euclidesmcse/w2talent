@@ -90,6 +90,11 @@ describe("match do lado do recrutador", () => {
     expect(r.pct).toBe(100);
   });
 
+  it("vaga sem local não pede modelo", () => {
+    const r = matchCandidato({ ...ana, modo: "presencial" }, { stack: [], localidade: null }, agora);
+    expect(r.gaps).toEqual([]);
+  });
+
   it("nível escrito de vários jeitos", () => {
     expect(senioridadesDoNivel("Sênior")).toEqual(["senior", "especialista", "lideranca"]);
     expect(senioridadesDoNivel("Júnior")).toEqual(["junior"]);

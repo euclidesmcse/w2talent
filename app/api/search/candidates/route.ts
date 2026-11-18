@@ -32,7 +32,8 @@ export async function GET(req: NextRequest) {
     const empresa = await empresaDaConta(prisma, acesso.conta.id);
     const v = empresa
       ? await prisma.vacancy.findFirst({
-          where: { id: filtros.vaga, companyId: empresa.id },
+          // Mesmo critério da lista do "Para a vaga": só vaga ativa e dentro do prazo.
+          where: { id: filtros.vaga, companyId: empresa.id, status: "ativa", expiresAt: { gt: new Date() } },
           select: { id: true, titulo: true, stack: true, nivel: true, regime: true, localidade: true, faixaDe: true, faixaAte: true, faixaMoeda: true, descricaoBullets: true, updatedAt: true, createdAt: true },
         })
       : null;

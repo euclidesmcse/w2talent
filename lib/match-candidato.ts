@@ -73,7 +73,8 @@ export function matchCandidato(perfil: unknown, v: VagaParaMatch, now: number = 
     cond.push(regime ? 1 : 0);
     if (!regime) gaps.push({ kind: "regime", want: v.regime, have: f.regimes });
   }
-  const modoVaga = vacancyModo(v.localidade);
+  // Vaga sem local não pede modelo: o critério não conta (no lado do candidato, sem local = remoto).
+  const modoVaga = v.localidade?.trim() ? vacancyModo(v.localidade) : null;
   if (modoVaga) {
     const ok = f.modo === modoVaga;
     cond.push(ok ? 1 : 0);

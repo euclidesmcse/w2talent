@@ -126,12 +126,15 @@ export default function CandidatosPage() {
   const isEmpty = loaded && items.length === 0;
 
   if (!liberado) {
+    // Volta para a mesma busca (vaga e filtros da URL) depois de entrar.
+    const aqui = typeof window !== "undefined" ? window.location.pathname + window.location.search : "/candidatos";
+    const volta = encodeURIComponent(aqui.startsWith("/candidatos") ? aqui : "/candidatos");
     const proximo =
-      conta.estado === "mfa" ? `/entrar/codigo?volta=%2Fcandidatos`
-      : conta.estado === "sem_perfil" ? `/entrar/perfil?volta=%2Fcandidatos`
-      : conta.estado === "mfa_obrigatorio" ? `/conta/seguranca?volta=%2Fcandidatos`
+      conta.estado === "mfa" ? `/entrar/codigo?volta=${volta}`
+      : conta.estado === "sem_perfil" ? `/entrar/perfil?volta=${volta}`
+      : conta.estado === "mfa_obrigatorio" ? `/conta/seguranca?volta=${volta}`
       : conta.estado === "ok" ? null
-      : linkEntrar("/candidatos");
+      : linkEntrar(aqui.startsWith("/candidatos") ? aqui : "/candidatos");
     const corpo = conta.estado === "ok" ? tr("candidatos.gateCandidate") : conta.estado === "mfa_obrigatorio" ? tr("conta.mfaRequiredBody") : tr("candidatos.gateBody");
     return (
       <div>

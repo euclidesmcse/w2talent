@@ -131,6 +131,10 @@ describeDb("tela Candidatos no banco", () => {
   it("vaga de outra empresa não serve de referência", async () => {
     expect((await busca(`vaga=${vagaB}`)).status).toBe(404);
     expect((await busca(`vaga=nao-existe`)).status).toBe(404);
+    // Vaga vencida ou arquivada também não serve (a tela tira a vaga da URL).
+    await db.vacancy.update({ where: { id: vagaA }, data: { status: "arquivada" } });
+    expect((await busca(`vaga=${vagaA}`)).status).toBe(404);
+    await db.vacancy.update({ where: { id: vagaA }, data: { status: "ativa" } });
   });
 
   it("lista de vagas do 'Para a vaga': só as ativas da própria empresa", async () => {
