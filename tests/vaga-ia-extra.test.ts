@@ -1,5 +1,5 @@
 // 2.1c: reescrita sem viés e perguntas de entrevista (IA falsa; sem rede).
-import { gerarPerguntas, MAX_ITEM_REVISAR, perguntasPorModelo, reescreverSemVies, sanitizarPerguntas, textoParaRevisar, type ChatExtraFn } from "@/lib/vaga-ia-extra";
+import { gerarPerguntas, MAX_ITEM_REVISAR, MAX_TOTAL_REVISAR, tokensDaReescrita, perguntasPorModelo, reescreverSemVies, sanitizarPerguntas, textoParaRevisar, type ChatExtraFn } from "@/lib/vaga-ia-extra";
 import { rascunhoVazio } from "@/lib/vaga-campos";
 
 const resposta = (obj: unknown): ChatExtraFn => async () => ({ text: JSON.stringify(obj) });

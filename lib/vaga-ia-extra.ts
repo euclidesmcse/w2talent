@@ -31,6 +31,8 @@ export function avisosDoTexto(v: TextoVaga): AvisoVies[] {
 export const MAX_TITULO_REVISAR = 200;
 export const MAX_ITENS_REVISAR = 60;
 export const MAX_ITEM_REVISAR = 2000;
+/** Total de letras que a IA reescreve de uma vez; acima disso a resposta não caberia no limite de saída. */
+export const MAX_TOTAL_REVISAR = 12_000;
 
 function itens(v: unknown): string[] | null {
   if (!Array.isArray(v)) return v === undefined || v === null ? [] : null;
@@ -55,7 +57,26 @@ export function textoParaRevisar(input: unknown): TextoVaga | null {
   const descricaoBullets = itens(o.descricaoBullets);
   const beneficios = itens(o.beneficios);
   if (!descricaoBullets || !beneficios) return null;
+  const total = titulo.length + [...descricaoBullets, ...beneficios].reduce((n, s) => n + s.length, 0);
+  if (total > MAX_TOTAL_REVISAR) return null;
   return { titulo, descricaoBullets, beneficios };
+}
+
+/** Saída da IA em tokens: cabe o texto inteiro de volta (≈ 3 letras por token) com folga para o JSON. */
+export function tokensDaReescrita(v: TextoVaga): number {
+  const letras = v.titulo.length + [...v.descricaoBullets, ...v.beneficios].reduce((n, s) => n + s.length, 0);
+  return Math.min(8000, Math.max(2000, Math.ceil(letras / 3) + 600));
+}
+
+/**
+ * A IA recebe o texto sem contatos ([EMAIL], [TELEFONE]). Item que voltou igual ao que ela recebeu
+ * volta a ser o original, com o contato do recrutador.
+ */
+function restaurar(saida: string[], recebido: string[], original: string[]): string[] {
+  return saida.map((s) => {
+    const i = recebido.indexOf(s);
+    return i >= 0 ? original[i] : s;
+  });
 }
 
 const SYSTEM_VIES = `You edit job postings to remove exclusionary language. Reply with one JSON object only.
@@ -79,7 +100,7 @@ export async function reescreverSemVies(v: TextoVaga, chat: ChatExtraFn): Promis
     const r = await chat("review_bias", {
       json: true,
       temperature: 0,
-      maxTokens: 2000,
+      maxTokens: tokensDaReescrita(v),
       messages: [
         { role: "system", content: SYSTEM_VIES },
         { role: "user", content: JSON.stringify(entrada) },
@@ -95,10 +116,10 @@ export async function reescreverSemVies(v: TextoVaga, chat: ChatExtraFn): Promis
       beneficios: lido.beneficios.map(redactContacts),
     };
     const out: TextoVaga = {
-      titulo: limpo.titulo || v.titulo,
+      titulo: !limpo.titulo || limpo.titulo === entrada.titulo ? v.titulo : limpo.titulo,
       // Lista vazia quase sempre é resposta quebrada: mantém a do recrutador.
-      descricaoBullets: limpo.descricaoBullets.length || !v.descricaoBullets.length ? limpo.descricaoBullets : v.descricaoBullets,
-      beneficios: limpo.beneficios.length || !v.beneficios.length ? limpo.beneficios : v.beneficios,
+      descricaoBullets: limpo.descricaoBullets.length || !v.descricaoBullets.length ? restaurar(limpo.descricaoBullets, entrada.descricaoBullets, v.descricaoBullets) : v.descricaoBullets,
+      beneficios: limpo.beneficios.length || !v.beneficios.length ? restaurar(limpo.beneficios, entrada.beneficios, v.beneficios) : v.beneficios,
     };
     if (JSON.stringify(out) === JSON.stringify({ titulo: v.titulo, descricaoBullets: v.descricaoBullets, beneficios: v.beneficios })) return "igual";
     return { ...out, restantes: avisosDoTexto(out).length };
