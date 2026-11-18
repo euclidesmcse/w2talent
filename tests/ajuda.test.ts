@@ -93,6 +93,21 @@ describe("ordem da lista", () => {
     for (const a of g.destaque) expect(resto).not.toContain(a.slug);
   });
 
+  it("sem ?de=, nenhum artigo aparece em dois grupos", () => {
+    for (const l of IDIOMAS) {
+      const g = organizarAjuda(l, null);
+      const slugs = [...g.comecar, ...g.candidato, ...g.recrutador].map((a) => a.slug);
+      expect(new Set(slugs).size).toBe(slugs.length);
+      expect(slugs.length).toBe(ARTIGOS[l].length);
+    }
+  });
+
+  it("o match explica que, na busca de vagas, atualização e completude são da vaga", () => {
+    expect(artigo("pt-BR", "match")?.corpo).toMatch(/olham para a vaga/);
+    expect(artigo("en", "match")?.corpo).toMatch(/look at the job/);
+    expect(artigo("es", "match")?.corpo).toMatch(/miran la vacante/);
+  });
+
   it("subtela conta como a tela; o início só vale para /", () => {
     const aprovar = artigo("pt-BR", "aprovar-e-enviar")!;
     expect(falaDaTela(aprovar, "/vagas/aprovar")).toBe(true);

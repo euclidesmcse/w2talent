@@ -170,7 +170,7 @@ export default async function HomePage() {
         <div className="mx-auto flex max-w-page flex-wrap justify-between gap-2 px-6 py-5 text-[13px] text-muted">
           <span>{t("footer")}</span>
           <span className="flex gap-4">
-            <Link href="/ajuda" className="text-muted underline underline-offset-2 hover:text-ink">{tn("ajuda")}</Link>
+            <Link href="/ajuda?de=%2F" className="text-muted underline underline-offset-2 hover:text-ink">{tn("ajuda")}</Link>
             <Link href="/ia" className="text-muted underline underline-offset-2 hover:text-ink">{ti("footerLink")}</Link>
             <span>© 2026</span>
           </span>

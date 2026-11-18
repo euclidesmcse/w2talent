@@ -13,8 +13,10 @@ El match es una cuenta con pesos fijos. No es IA y no usa edad, género, foto ni
 | Competencias | 40 |
 | Nivel | 20 |
 | Régimen, modalidad y rango salarial | 20 |
-| Ficha actualizada hace poco | 10 |
-| Ficha completa | 10 |
+| Actualizada hace poco | 10 |
+| Registro completo | 10 |
+
+En la búsqueda de empleos, las dos últimas filas miran la vacante: vacante publicada o renovada hace poco y con todos los campos llenos. Para el reclutador, en Candidatos, miran la ficha del candidato.
 
 ## Competencias cercanas
 

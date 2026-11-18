@@ -13,8 +13,10 @@ O match é uma conta com pesos fixos. Não é IA e não usa idade, gênero, foto
 | Competências | 40 |
 | Nível | 20 |
 | Regime, modelo de trabalho e faixa | 20 |
-| Ficha atualizada há pouco | 10 |
-| Ficha completa | 10 |
+| Atualizada há pouco | 10 |
+| Cadastro completo | 10 |
+
+Na busca de vagas, as duas últimas linhas olham para a vaga: vaga publicada ou renovada há pouco e com todos os campos preenchidos. Para o recrutador, em Candidatos, olham para a ficha do candidato.
 
 ## Competências próximas
 

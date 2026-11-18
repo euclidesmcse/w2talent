@@ -90,6 +90,10 @@ export function falaDaTela(a: ArtigoBruto, tela: string): boolean {
   return a.telas.some((t) => (t === "/" ? tela === "/" : tela === t || tela.startsWith(t + "/")));
 }
 
+function paraTodos(a: ArtigoBruto): boolean {
+  return a.areas.includes("publico") || (a.areas.includes("candidato") && a.areas.includes("recrutador"));
+}
+
 /** Artigos desta tela primeiro (na ordem dos artigos), depois o resto separado por área. */
 export function organizarAjuda(locale: string | null | undefined, de?: string | null) {
   const todos = artigosDe(locale);
@@ -98,6 +102,7 @@ export function organizarAjuda(locale: string | null | undefined, de?: string | 
   const usados = new Set(destaque.map((a) => a.slug));
   const resto = todos.filter((a) => !usados.has(a.slug));
   const grupo = (area: AreaAjuda) =>
-    resto.filter((a) => (area === "publico" ? a.areas.includes("publico") : a.areas.includes(area) && !a.areas.includes("publico")));
+    // Artigo de candidato e de recrutador ao mesmo tempo fica em "Para todos", para não aparecer duas vezes.
+    resto.filter((a) => (area === "publico" ? paraTodos(a) : a.areas.includes(area) && !paraTodos(a)));
   return { tela, destaque, comecar: grupo("publico"), candidato: grupo("candidato"), recrutador: grupo("recrutador") };
 }

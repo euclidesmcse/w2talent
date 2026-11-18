@@ -13,8 +13,10 @@ The match is a calculation with fixed weights. It is not AI and does not use age
 | Skills | 40 |
 | Level | 20 |
 | Contract type, work model and pay range | 20 |
-| Profile updated recently | 10 |
-| Complete profile | 10 |
+| Updated recently | 10 |
+| Complete listing | 10 |
+
+In job search, the last two rows look at the job: posted or renewed recently and with every field filled in. For recruiters, in Candidates, they look at the candidate's profile.
 
 ## Close skills
 
