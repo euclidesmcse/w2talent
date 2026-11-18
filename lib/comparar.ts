@@ -35,6 +35,8 @@ export type ItemComparacao = {
   updatedAt: string | null;
   match: number | null;
   gaps: GapCandidato[];
+  /** 2.7b: título, resumo e destaques no idioma de quem vê, quando a tradução está pronta (só para a tela). */
+  traducao?: { titulo: string; resumo: string; destaques: string[]; cargos: string[]; idiomaOrigem: string };
 };
 
 /** Lê os ids pedidos: texto, sem repetição, de 1 a 10. Fora disso, null. */

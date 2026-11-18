@@ -7,6 +7,7 @@ import { CandidateTable } from "@/components/candidate-table";
 import { CandidateCards } from "@/components/candidate-cards";
 import { DetailModal } from "@/components/detail-modal";
 import { FichaPainel } from "@/components/ficha-painel";
+import { useTraducaoFicha } from "@/components/traducao-ficha";
 import { MatchDaVaga } from "@/components/candidato-match";
 import { BatchBar } from "@/components/batch-bar";
 import { EmptyState } from "@/components/empty-state";
@@ -164,6 +165,9 @@ export default function CandidatosPage() {
     const ver = Array.from(document.querySelectorAll<HTMLElement>(`[data-detail-id="${CSS.escape(idDetalhe)}"]`)).find((el) => el.offsetParent !== null);
     return ver ?? document.querySelector<HTMLElement>('form[role="search"] input');
   }, [idDetalhe]);
+  // 2.7b: a ficha no idioma da tela quando há tradução, com "Ver original".
+  const traducao = useTraducaoFicha(itemDetalhe);
+  const antesDetalhe = traducao.aviso || matchDoDetalhe ? <>{matchDoDetalhe}{traducao.aviso}</> : null;
   const tituloDetalhe = itemDetalhe?.nome ?? itemDetalhe?.titulo ?? tr("detail.title");
   const painelAberto = painelLado && modalOpen && !!itemDetalhe;
   // Com o painel aberto a página usa mais da tela, para a tabela não apertar.
@@ -269,9 +273,9 @@ export default function CandidatosPage() {
           </nav>
         ) : null}
         </div>
-        {painelAberto ? <FichaPainel item={itemDetalhe} titulo={tituloDetalhe} antes={matchDoDetalhe} onClose={closeModal} triggerRef={activeTrigger} focoVolta={focoVolta} /> : null}
+        {painelAberto ? <FichaPainel item={traducao.item} titulo={tituloDetalhe} antes={antesDetalhe} onClose={closeModal} triggerRef={activeTrigger} focoVolta={focoVolta} /> : null}
         </div>
-        {!painelLado ? <DetailModal open={modalOpen} onClose={closeModal} item={itemDetalhe} triggerRef={activeTrigger} title={tituloDetalhe} antes={matchDoDetalhe} /> : null}
+        {!painelLado ? <DetailModal open={modalOpen} onClose={closeModal} item={traducao.item} triggerRef={activeTrigger} title={tituloDetalhe} antes={antesDetalhe} /> : null}
         <BatchBar variant="candidatos" onAction={(ids) => { void ids; }} compararHref={`/candidatos/comparar${filtros.vaga ? `?vaga=${encodeURIComponent(filtros.vaga)}` : ""}`} />
       </div>
       </main>

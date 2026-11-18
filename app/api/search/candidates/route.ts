@@ -4,6 +4,7 @@ import { isValidLocale, defaultLocale, type Locale } from "@/i18n";
 import { exigirConta, NO_STORE } from "@/lib/sessao";
 import { lerFiltros } from "@/lib/candidatos-filtros";
 import { empresaDaConta } from "@/lib/empresa";
+import { comTraducaoDasFichas } from "@/lib/traducao";
 
 /** Busca de candidatos: só recrutador logado, com o autenticador (1.5.5, decisões 2 e 4). */
 export async function GET(req: NextRequest) {
@@ -42,11 +43,14 @@ export async function GET(req: NextRequest) {
   }
 
   const result = await searchCandidates(params, undefined, vaga);
+  // 2.7b: título, resumo e experiências da ficha no idioma de quem vê, quando a tradução está pronta.
+  const { prisma } = await import("@/lib/prisma");
+  const items = await comTraducaoDasFichas(prisma, result.items, lang);
   const tookMs = Date.now() - start;
 
   return NextResponse.json(
     {
-      items: result.items,
+      items,
       total: result.total,
       page: result.page,
       pageSize: result.pageSize,

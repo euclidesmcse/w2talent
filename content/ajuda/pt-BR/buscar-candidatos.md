@@ -31,3 +31,7 @@ No computador, "Ver" abre a Ficha W2 ao lado da lista. No celular, abre numa jan
 Marque até 10 candidatos e use "Comparar" na barra de baixo. A tela mostra os candidatos lado a lado, com os campos da Ficha W2 em linhas e, com uma vaga escolhida, o match e o que falta. O contato aparece mascarado, como na busca. "Tirar" remove alguém da comparação e da seleção.
 
 "Baixar CSV" e "Baixar Excel" salvam a tabela com uma linha por candidato; "Imprimir ou PDF" abre a impressão do navegador, onde dá para salvar em PDF. Os arquivos são montados no seu navegador e levam o contato mascarado. O W2Talent guarda só que houve uma exportação, sem o conteúdo.
+
+## Tradução automática
+
+Quando a Ficha W2 foi escrita em outro idioma, a lista, a ficha e a comparação mostram o título, o resumo, os destaques e os cargos traduzidos para o idioma do site, com o aviso "Tradução automática". "Ver original" mostra o texto como o candidato escreveu. Nome, empresas, cidades, números e competências não são traduzidos. Os arquivos baixados (CSV, Excel e PDF) saem sempre com o texto original.
