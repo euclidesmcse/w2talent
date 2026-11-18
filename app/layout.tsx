@@ -4,7 +4,15 @@ import { getMessages, getLocale, getTranslations } from "next-intl/server";
 import { defaultLocale } from "@/i18n";
 import { ToastProvider } from "@/components/ui/toast";
 import { OfflineBanner, PwaInit } from "@/components/pwa";
+import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+
+// Fontes servidas pelo próprio site (next/font baixa no build): sem CSS de terceiro bloqueando a
+// primeira pintura. Antes vinham do fonts.googleapis.com e o tempo até esse servidor fazia o
+// Lighthouse do CI oscilar (FCP 1,5 s ↔ 2,8 s) e cair abaixo de 90 em telas sorteadas.
+const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"], display: "swap", variable: "--font-inter" });
+const mono = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500"], display: "swap", variable: "--font-mono", preload: false });
+const grotesk = Space_Grotesk({ subsets: ["latin"], weight: ["500", "600", "700"], display: "swap", variable: "--font-grotesk" });
 
 export const dynamic = "force-dynamic";
 
@@ -36,16 +44,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   });
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className={`${inter.variable} ${mono.variable} ${grotesk.variable}`}>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap"
-          rel="stylesheet"
-        />
       </head>
       <body className="bg-canvas font-sans text-ink antialiased [padding-left:env(safe-area-inset-left)] [padding-right:env(safe-area-inset-right)]">
         <NextIntlClientProvider locale={locale} messages={messages}>

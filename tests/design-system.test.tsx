@@ -12,16 +12,17 @@ describe("tokens do protótipo aprovado", () => {
     expect(colors.canvas).toBe("#F7F8FA");
     expect(colors.line.DEFAULT).toBe("#E5E7EB");
     expect(colors.ink.DEFAULT).toBe("#111827");
-    expect(fontFamily.sans[0]).toBe("Inter");
+    // fontes servidas pelo site (next/font): a variável vem primeiro, o nome fica de reserva
+    expect(fontFamily.sans.slice(0, 2)).toEqual(["var(--font-inter)", "Inter"]);
     expect(radius.control).toBe("6px");
     expect(radius.card).toBe("4px");
-    expect(fontFamily.display[0]).toBe("Space Grotesk");
+    expect(fontFamily.display.slice(0, 2)).toEqual(["var(--font-grotesk)", "Space Grotesk"]);
   });
 
   it("Tailwind lê os tokens da mesma fonte", () => {
     const cfg = require("../tailwind.config.js");
     expect(cfg.theme.extend.colors.brand.DEFAULT).toBe("#1F4FD8");
-    expect(cfg.theme.extend.fontFamily.sans[0]).toBe("Inter");
+    expect(cfg.theme.extend.fontFamily.sans[0]).toBe("var(--font-inter)");
   });
 
   it("o visual antigo saiu da landing e das listas", () => {
