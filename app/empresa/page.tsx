@@ -39,22 +39,21 @@ export default function EmpresaPage() {
   const [erro, setErro] = React.useState<{ campo?: Campo; texto: string } | null>(null);
   const [salvando, setSalvando] = React.useState(false);
 
+  const recarregar = React.useCallback(async () => {
+    try {
+      const r = await fetch("/api/conta/empresa", { cache: "no-store" });
+      if (r.status === 401 || r.status === 403) contaRecusada();
+      const j = r.ok ? ((await r.json()) as { empresa: Empresa | null }) : { empresa: null };
+      setEmpresa(j.empresa);
+      setForm(formDe(j.empresa));
+    } catch {
+      setEmpresa(null);
+    }
+  }, []);
+
   React.useEffect(() => {
-    if (!liberado) return;
-    let vivo = true;
-    fetch("/api/conta/empresa", { cache: "no-store" })
-      .then((r) => {
-        if (r.status === 401 || r.status === 403) contaRecusada();
-        return r.ok ? (r.json() as Promise<{ empresa: Empresa | null }>) : { empresa: null };
-      })
-      .then((j) => {
-        if (!vivo) return;
-        setEmpresa(j.empresa);
-        setForm(formDe(j.empresa));
-      })
-      .catch(() => { if (vivo) setEmpresa(null); });
-    return () => { vivo = false; };
-  }, [liberado]);
+    if (liberado) void recarregar();
+  }, [liberado, recarregar]);
 
   const muda = (c: Campo) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [c]: e.target.value }));
 
@@ -75,7 +74,9 @@ export default function EmpresaPage() {
         setForm(formDe(j.empresa));
         return;
       }
-      if (res.status === 401 || res.status === 403) contaRecusada();
+      // 403 "rejeitada" é da empresa (o admin recusou no meio do caminho), não do login.
+      if (res.status === 401 || (res.status === 403 && j.error !== "rejeitada")) contaRecusada();
+      if (j.error === "mudou" || j.error === "rejeitada") void recarregar();
       if (j.error === "campo_invalido" && j.campo) setErro({ campo: j.campo, texto: t(`erros.${j.campo}`) });
       else if (j.error === "cnpj_em_uso") setErro({ campo: "cnpj", texto: t("erros.cnpj_em_uso") });
       else if (j.error === "ja_tem_empresa") setErro({ texto: t("erros.ja_tem_empresa") });

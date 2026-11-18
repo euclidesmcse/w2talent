@@ -33,19 +33,27 @@ export default function AdminEmpresasPage() {
   const { show } = useToast();
   const [auth, setAuth] = React.useState<"loading" | "login" | "disabled" | "ok">("loading");
   const [linhas, setLinhas] = React.useState<Linha[]>([]);
-  const [paginas, setPaginas] = React.useState(1);
   const [temMais, setTemMais] = React.useState(false);
+  const [carregando, setCarregando] = React.useState(false);
+  // Só a leitura mais nova vale ("Mostrar mais" e a recarga depois de uma decisão podem se cruzar).
+  const ultima = React.useRef(0);
+  const paginasRef = React.useRef(1);
   const [confirmando, setConfirmando] = React.useState<string | null>(null);
   const [ocupado, setOcupado] = React.useState<string | null>(null);
 
   /** Recarrega as páginas já abertas (até `ate`), para a lista não encolher depois de uma decisão. */
   const load = React.useCallback(async (ate = 1) => {
+    const minha = ++ultima.current;
+    // Quantas páginas a lista deve ter: uma decisão no meio de "Mostrar mais" recarrega todas elas.
+    paginasRef.current = ate;
+    setCarregando(true);
     try {
       const todas: Linha[] = [];
       let mais = false;
       for (let p = 1; p <= ate; p++) {
         const res = await fetch(`/api/admin/empresas?pagina=${p}`, { cache: "no-store" });
         const j = (await res.json().catch(() => ({}))) as { empresas?: Linha[]; temMais?: boolean; error?: string };
+        if (minha !== ultima.current) return;
         if (res.status === 401) return setAuth("login");
         if (j.error === "admin_desligado") return setAuth("disabled");
         if (!res.ok) throw new Error(j.error ?? "erro");
@@ -53,13 +61,16 @@ export default function AdminEmpresasPage() {
         mais = !!j.temMais;
         if (!mais) break;
       }
+      if (minha !== ultima.current) return;
       setLinhas(todas);
       setTemMais(mais);
-      setPaginas(ate);
       setAuth("ok");
     } catch {
+      if (minha !== ultima.current) return;
       setAuth((a) => (a === "loading" ? "login" : a));
       show(t("erro"), "error");
+    } finally {
+      if (minha === ultima.current) setCarregando(false);
     }
   }, [show, t]);
 
@@ -78,7 +89,7 @@ export default function AdminEmpresasPage() {
       if (!res.ok) throw new Error();
       show(acao === "validar" ? t("validada") : t("rejeitada", { count: j.arquivadas ?? 0 }), "success");
       setConfirmando(null);
-      await load(paginas);
+      await load(paginasRef.current);
     } catch {
       show(t("erro"), "error");
     } finally {
@@ -172,7 +183,7 @@ export default function AdminEmpresasPage() {
               </Table>
               {temMais ? (
                 <div className="border-t border-line-soft p-4">
-                  <Button variant="secondary" size="sm" onClick={() => load(paginas + 1)}>{t("mais")}</Button>
+                  <Button variant="secondary" size="sm" disabled={carregando} onClick={() => load(paginasRef.current + 1)}>{t("mais")}</Button>
                 </div>
               ) : null}
             </Card>
