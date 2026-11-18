@@ -606,3 +606,27 @@ model Traducao {
   @@unique([vacancyId, idioma])
   @@unique([candidateId, idioma])
 }
+
+// 3.2 Inteligência de mercado: agregados anônimos calculados pelo Cron diário, uma foto por semana (12 semanas).
+// Grupo vazio ("") = todos. p25/p50/p75 só são gravados quando o grupo passa no anonimato (n ≥ 10 e, para vagas, 3+ empresas).
+model MarketStat {
+  id          String   @id @default(cuid())
+  semana      DateTime // segunda-feira 00:00 UTC da semana do cálculo
+  metrica     String // faixa_de | faixa_ate | pretensao | demanda | oferta | resposta_horas
+  skillId     String   @default("")
+  nivel       String   @default("")
+  regime      String   @default("")
+  modo        String   @default("")
+  moeda       String   @default("")
+  n           Int
+  nEmpresas   Int?
+  nRecentes   Int? // demanda: vagas publicadas nos últimos 30 dias
+  nAnteriores Int? // demanda: vagas publicadas 30 a 60 dias atrás
+  p25         Float?
+  p50         Float?
+  p75         Float?
+  createdAt   DateTime @default(now())
+
+  @@unique([semana, metrica, skillId, nivel, regime, modo, moeda])
+  @@index([metrica, skillId])
+}
