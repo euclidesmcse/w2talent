@@ -2,7 +2,7 @@
 titulo: How the match is calculated
 resumo: The match weights, close skills and what "missing" means.
 areas: candidato, recrutador
-telas: /vagas, /candidatos
+telas: /vagas, /candidatos, /painel
 ordem: 7
 ---
 
@@ -25,6 +25,10 @@ A similar skill counts half. Example: someone with OpenShift gets half a point i
 ## What "missing" means
 
 Next to the number you see the first thing missing, the one with the highest weight. A criterion the job did not ask for counts as met.
+
+## On your dashboard
+
+With your profile published, the [dashboard](/painel) shows what it most lacks for the closest open jobs (up to 30, with a match of 40% or more): missing skills, skills where you only have a close one, and level, contract type or work model when they weigh. The salary range is left out, so nobody feels pushed to ask for less. None of this is stored.
 
 ## For recruiters
 

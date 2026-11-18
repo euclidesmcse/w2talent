@@ -2,7 +2,7 @@
 titulo: Cómo se calcula el match
 resumo: Los pesos del match, las competencias cercanas y qué quiere decir "falta".
 areas: candidato, recrutador
-telas: /vagas, /candidatos
+telas: /vagas, /candidatos, /painel
 ordem: 7
 ---
 
@@ -25,6 +25,10 @@ Una competencia parecida cuenta la mitad. Ejemplo: quien tiene OpenShift suma me
 ## Qué quiere decir "falta"
 
 Junto al número aparece lo primero que faltó, lo de mayor peso. Un criterio que la vacante no pidió cuenta como cumplido.
+
+## En tu panel
+
+Con la ficha publicada, el [panel](/painel) muestra lo que más le falta para las vacantes abiertas más parecidas (hasta 30, con match de 40% o más): las competencias que faltan, las que solo tienes parecidas, y nivel, régimen o modalidad cuando pesan. El rango salarial no entra, para que nadie se sienta empujado a pedir menos. Nada de esto se guarda.
 
 ## Para el reclutador
 

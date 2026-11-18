@@ -3,6 +3,7 @@
  * Painel do candidato (ideia trazida do portal emagine, aprovada em 2026-11-12).
  * Mostra quanto da ficha está pronto, o que falta para publicar, as candidaturas e a seleção.
  * A ficha vem do rascunho deste navegador (como na "Minha ficha"); publicada e candidaturas, da conta.
+ * B1: "O que falta para as vagas" vem da ficha publicada (components/painel-lacunas.tsx).
  */
 import * as React from "react";
 import Link from "next/link";
@@ -13,6 +14,7 @@ import { cn } from "@/components/ui/cn";
 import { postEnvio } from "@/lib/envio-client";
 import { ehCandidato, linkEntrar, useConta } from "@/lib/conta-client";
 import { selectionStore } from "@/lib/selection-store";
+import { PainelLacunas } from "@/components/painel-lacunas";
 import { contarCandidaturas, resumoDoTexto, type ContagemCandidaturas, type ResumoFicha } from "@/lib/painel";
 
 const CHAVE_FICHA = "w2talent:ficha";
@@ -163,6 +165,9 @@ export default function PainelPage() {
                 <p className="text-sm text-success-ink" data-testid="painel-completa">{t("faltaNada")}</p>
               )}
             </section>
+
+            {/* B1: o que mais falta na ficha publicada para as vagas próximas (só candidato logado) */}
+            {candidato ? <PainelLacunas /> : null}
 
             {/* Candidaturas e seleção: o resto do caminho (selecionar, aprovar, enviar) */}
             <section aria-labelledby="painel-envios" className="flex flex-col gap-3 rounded-card border border-line bg-surface p-5">
