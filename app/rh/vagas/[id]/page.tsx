@@ -9,12 +9,13 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
 import { Button, Select, useToast } from "@/components/ui";
 import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { FichaPainel } from "@/components/ficha-painel";
+import { tituloDaFicha, useTraducaoFicha } from "@/components/traducao-ficha";
 import { DetailModal } from "@/components/detail-modal";
 import { MatchCandidatoCell, MatchDaVaga } from "@/components/candidato-match";
 import { AgendaEntrevista } from "@/components/agenda-entrevista";
@@ -35,6 +36,7 @@ export default function CandidaturasDaVagaPage() {
   const t = useTranslations("rh");
   const tr = useTranslations();
   const fmt = useFormatter();
+  const locale = useLocale();
   const { show } = useToast();
   const params = useParams<{ id: string }>();
   const id = params?.id ?? "";
@@ -67,7 +69,7 @@ export default function CandidaturasDaVagaPage() {
   const carregar = React.useCallback(async () => {
     const meu = ++pedido.current;
     try {
-      const r = await fetch(`/api/rh/vagas/${encodeURIComponent(id)}`, { cache: "no-store" });
+      const r = await fetch(`/api/rh/vagas/${encodeURIComponent(id)}?lang=${encodeURIComponent(locale)}`, { cache: "no-store" });
       if (meu !== pedido.current) return;
       if (r.status === 401 || r.status === 403) {
         contaRecusada();
@@ -80,7 +82,7 @@ export default function CandidaturasDaVagaPage() {
     } catch {
       if (meu === pedido.current) setEstado({ t: "erro" });
     }
-  }, [id]);
+  }, [id, locale]);
 
   React.useEffect(() => {
     if (liberado && id) void carregar();
@@ -143,6 +145,10 @@ export default function CandidaturasDaVagaPage() {
     } catch {}
   };
 
+  // 2.7b: a ficha aberta no idioma da tela quando há tradução, com "Ver original".
+  const candidatoAberto = estado.t === "ok" && aberto ? estado.itens.find((x) => x.applicationId === aberto)?.candidato ?? null : null;
+  const traducao = useTraducaoFicha(candidatoAberto);
+
   if (!liberado) {
     return (
       <div>
@@ -172,7 +178,7 @@ export default function CandidaturasDaVagaPage() {
   const vagaAtiva = estado.t === "ok" && estado.vaga.status === "ativa" && new Date(estado.vaga.expiresAt).getTime() > Date.now();
   const marcados = new Set(selecionados);
   const compararHref = `/candidatos/comparar${vagaAtiva ? `?vaga=${encodeURIComponent(id)}` : ""}`;
-  const antes = itemAberto && estado.t === "ok" ? <MatchDaVaga vaga={estado.vaga.titulo} match={itemAberto.match} gaps={itemAberto.gaps} /> : null;
+  const antes = itemAberto && estado.t === "ok" ? <><MatchDaVaga vaga={estado.vaga.titulo} match={itemAberto.match} gaps={itemAberto.gaps} />{traducao.aviso}</> : null;
   const painelAberto = painelLado && !!itemAberto;
 
   return (
@@ -249,7 +255,7 @@ export default function CandidaturasDaVagaPage() {
                         />
                         <div className="flex min-w-0 flex-[1_1_200px] flex-col gap-0.5">
                           <span className="font-medium">{nome}</span>
-                          <span className="text-[13px] text-muted">{String(it.candidato.titulo ?? "")}</span>
+                          <span className="text-[13px] text-muted">{tituloDaFicha(it.candidato)}</span>
                           <span className="text-[12px] text-muted">
                             {t("enviadaEm", { data: fmt.dateTime(new Date(it.enviadaEm), { day: "numeric", month: "short" }) })}
                             {!it.fichaAtiva ? <span className="ml-2 inline-flex whitespace-nowrap h-5 items-center rounded-control bg-neutral-soft px-1.5 text-[11px] text-ink-soft">{t("fichaFora")}</span> : null}
@@ -307,7 +313,7 @@ export default function CandidaturasDaVagaPage() {
             </section>
             {painelAberto && itemAberto ? (
               <FichaPainel
-                item={itemAberto.candidato}
+                item={traducao.item}
                 titulo={nomeDe(itemAberto)}
                 antes={antes}
                 onClose={fechar}
@@ -319,7 +325,7 @@ export default function CandidaturasDaVagaPage() {
         ) : null}
 
         {!painelLado ? (
-          <DetailModal open={!!itemAberto} onClose={fechar} item={itemAberto?.candidato ?? null} triggerRef={gatilho} title={itemAberto ? nomeDe(itemAberto) : ""} antes={antes} />
+          <DetailModal open={!!itemAberto} onClose={fechar} item={traducao.item} triggerRef={gatilho} title={itemAberto ? nomeDe(itemAberto) : ""} antes={antes} />
         ) : null}
 
         {selecionados.length > 0 ? (

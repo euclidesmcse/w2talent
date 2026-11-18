@@ -452,6 +452,7 @@
         "compose_message": "Escrever mensagem",
         "translate_ui": "Traduzir a interface",
         "translate_content": "Traduzir conteúdo",
+        "translate_profile": "Traduzir a Ficha W2",
         "embed": "Busca por significado (embeddings)"
       }
     },
@@ -499,6 +500,18 @@
     "erroInvalido": "Este link não é válido. Abra o e-mail e clique no botão de novo.",
     "erroPerfil": "Não encontramos o seu perfil. Ele pode já ter sido apagado.",
     "erroGeral": "Não deu certo agora. Tente de novo em alguns minutos."
+  },
+  "traducaoFicha": {
+    "aviso": "Tradução automática. Original em {lingua}.",
+    "avisoVarias": "Alguns textos foram traduzidos automaticamente. Os arquivos baixados saem com o texto original.",
+    "avisoOriginal": "Texto original, em {lingua}.",
+    "avisoVariasOriginal": "Mostrando os textos originais.",
+    "verOriginal": "Ver original",
+    "verTraducao": "Ver tradução",
+    "lingua_pt": "português",
+    "lingua_en": "inglês",
+    "lingua_es": "espanhol",
+    "lingua_outro": "outro idioma"
   },
   "ficha": {
     "title": "Minha ficha",
@@ -922,8 +935,8 @@
     "ajudaDados": "A pergunta, sem e-mail nem telefone, e os artigos de ajuda. Nada da sua conta. Pergunta sem resposta fica guardada por 90 dias, sem IP nem conta, para melhorarmos os artigos.",
     "ajudaDecide": "Você confere no artigo do link. O que a IA não sabe, a equipe responde.",
     "traducaoTarefa": "Tradução automática",
-    "traducaoFaz": "Traduz o título, a descrição e os benefícios das vagas para português, inglês e espanhol, para cada pessoa ler no idioma do site. Nomes de tecnologia, números e contatos não mudam; a tradução que mexe neles é descartada.",
-    "traducaoDados": "Só o texto da vaga, sem e-mail nem telefone.",
+    "traducaoFaz": "Traduz o título, a descrição e os benefícios das vagas e, para o recrutador, o título, o resumo, os destaques e os cargos da Ficha W2, para cada pessoa ler no idioma do site. Nomes de tecnologia, números e contatos não mudam; a tradução que mexe neles é descartada.",
+    "traducaoDados": "O texto da vaga e o da Ficha W2 publicada, sem e-mail, telefone nem o nome da pessoa.",
     "traducaoDecide": "Você. A tradução aparece marcada e o botão \"Ver original\" mostra o texto escrito pela empresa. Quem publicou continua vendo só o original."
   },
   "empresa": {

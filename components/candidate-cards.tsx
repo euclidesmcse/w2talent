@@ -6,6 +6,7 @@ import type { CandidateRow } from "./candidate-table";
 import { buttonClasses } from "@/components/ui/button";
 import { SkillChips } from "@/components/skill-chips";
 import { MatchCandidatoCell } from "@/components/candidato-match";
+import { tituloDaFicha } from "@/components/traducao-ficha";
 
 function getSkillIds(row: CandidateRow): string[] {
   if (!Array.isArray(row.stack)) return [];
@@ -64,7 +65,7 @@ export function CandidateCards({
                   data-select-id={rid} checked={isSelected} onChange={() => onToggle?.(rid)} className="mt-1 h-5 w-5 shrink-0 cursor-pointer accent-brand" />
               <div className="min-w-0 flex-1">
                 <strong className="block font-semibold leading-snug">{row.nome}</strong>
-                <span className="text-[13px] text-muted">{row.titulo}</span>
+                <span className="text-[13px] text-muted">{tituloDaFicha(row)}</span>
               </div>
               <button type="button" data-detail-id={rid} onClick={() => onOpenDetail?.(rid)} className={buttonClasses("secondary", "sm")}>
                 {t("common.view")}

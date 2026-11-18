@@ -39,6 +39,8 @@ export const TASKS = {
   compose_message: { kind: "chat", minContext: 8_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
   translate_ui: { kind: "chat", minContext: 8_000, defaultWorkersModel: TEXT_MODEL },
   translate_content: { kind: "chat", minContext: 8_000, defaultWorkersModel: TEXT_MODEL },
+  // 2.7b: a Ficha W2 é dado pessoal; tarefa separada para a vaga continuar com a rota de translate_content.
+  translate_profile: { kind: "chat", minContext: 8_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
   // personalData: o texto de um perfil vira vetor; fornecedor externo só com aceite (1.5.9).
   embed: { kind: "embed", personalData: true, defaultWorkersModel: "@cf/baai/bge-m3" },
 } as const satisfies Record<string, TaskSpec>;

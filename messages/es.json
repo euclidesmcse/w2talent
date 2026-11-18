@@ -452,6 +452,7 @@
         "compose_message": "Escribir mensaje",
         "translate_ui": "Traducir la interfaz",
         "translate_content": "Traducir contenido",
+        "translate_profile": "Traducir la Ficha W2",
         "embed": "Búsqueda por significado (embeddings)"
       }
     },
@@ -499,6 +500,18 @@
     "erroInvalido": "Este enlace no es válido. Abre el correo y haz clic en el botón otra vez.",
     "erroPerfil": "No encontramos tu perfil. Puede que ya se haya borrado.",
     "erroGeral": "No funcionó ahora. Inténtalo de nuevo en unos minutos."
+  },
+  "traducaoFicha": {
+    "aviso": "Traducción automática. Original en {lingua}.",
+    "avisoVarias": "Algunos textos se tradujeron automáticamente. Los archivos descargados mantienen el texto original.",
+    "avisoOriginal": "Texto original, en {lingua}.",
+    "avisoVariasOriginal": "Mostrando los textos originales.",
+    "verOriginal": "Ver original",
+    "verTraducao": "Ver traducción",
+    "lingua_pt": "portugués",
+    "lingua_en": "inglés",
+    "lingua_es": "español",
+    "lingua_outro": "otro idioma"
   },
   "ficha": {
     "title": "Mi ficha",
@@ -922,8 +935,8 @@
     "ajudaDados": "La pregunta, sin correo ni teléfono, y los artículos de ayuda. Nada de tu cuenta. Las preguntas sin respuesta se guardan 90 días, sin IP ni cuenta, para mejorar los artículos.",
     "ajudaDecide": "Revisas el artículo del enlace. Lo que la IA no sabe, lo responde el equipo.",
     "traducaoTarefa": "Traducción automática",
-    "traducaoFaz": "Traduce el título, la descripción y los beneficios de las vacantes al portugués, inglés y español, para que cada persona las lea en el idioma del sitio. Los nombres de tecnología, los números y los contactos no cambian; la traducción que los altera se descarta.",
-    "traducaoDados": "Solo el texto de la vacante, sin correo ni teléfono.",
+    "traducaoFaz": "Traduce el título, la descripción y los beneficios de las vacantes y, para el reclutador, el título, el resumen, los destacados y los cargos de la Ficha W2, para que cada persona los lea en el idioma del sitio. Los nombres de tecnología, los números y los contactos no cambian; la traducción que los altera se descarta.",
+    "traducaoDados": "El texto de la vacante y el de la Ficha W2 publicada, sin correo, teléfono ni el nombre de la persona.",
     "traducaoDecide": "Tú. La traducción aparece marcada y el botón \"Ver original\" muestra el texto que escribió la empresa. Quien la publicó sigue viendo solo el original."
   },
   "empresa": {

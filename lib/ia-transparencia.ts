@@ -28,7 +28,7 @@ export const LINHAS_IA: LinhaIa[] = [
   // 2.6a-2: perguntas na Ajuda, respondidas só com os artigos.
   { id: "ajuda", ancora: "ajuda", tarefas: ["support_chat", "embed"] },
   // 2.7a: tradução automática das vagas para o idioma de quem vê (o original fica a um clique).
-  { id: "traducao", ancora: "traducao", tarefas: ["translate_content"] },
+  { id: "traducao", ancora: "traducao", tarefas: ["translate_content", "translate_profile"] },
 ];
 
 export const CAMPOS_LINHA = ["Tarefa", "Faz", "Dados", "Decide"] as const;
