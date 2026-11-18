@@ -14,7 +14,8 @@ import { Prisma, type PrismaClient } from "@prisma/client";
 import { withoutContacts } from "./search";
 import { matchCandidato, type GapCandidato } from "./match-candidato";
 import { gravarSinais, registrarSinal } from "./sinais";
-import { partesParaSinal } from "./ranking";
+import { ordemDaEmpresa, partesParaSinal, type OrdemInfo, type OrdemPedida } from "./ranking";
+import { notaComPesos } from "./match";
 import { ETAPAS, type Etapa } from "./painel-rh";
 import { emailLocale, renderEntrevistaEmail } from "./email-templates";
 import { entrevistasDasCandidaturas, type ResumoEntrevista } from "./entrevista";
@@ -89,7 +90,8 @@ export async function candidaturasDaVaga(
   companyId: string,
   vacancyId: string,
   now = new Date(),
-): Promise<{ vaga: VagaDaPagina; itens: CandidaturaRh[]; total: number } | null> {
+  opts: { ordem?: OrdemPedida } = {},
+): Promise<{ vaga: VagaDaPagina; itens: CandidaturaRh[]; total: number; ordem: OrdemInfo } | null> {
   const vaga = await db.vacancy.findFirst({ where: { id: vacancyId, companyId }, select: VAGA });
   if (!vaga) return null;
   const where = { vacancyId, companyId, origem: "candidaturaLote" as const };
@@ -104,9 +106,13 @@ export async function candidaturasDaVaga(
   ]);
   const t = now.getTime();
   const entrevistas = await entrevistasDasCandidaturas(db, apps.map((a) => a.id), now);
+  // 3.1b (D5): a ordem usa os pesos que a empresa sustenta; a % mostrada continua a conta fixa.
+  const ordem = await ordemDaEmpresa(db, companyId, opts.ordem);
+  const nota = new Map<string, number>();
   const itens = apps.map((a): CandidaturaRh => {
     const { expiresAt, ...perfil } = a.candidate;
     const m = matchCandidato(perfil as any, vaga as any, t);
+    nota.set(a.id, ordem.pesos ? notaComPesos(m.partes, ordem.pesos) : m.pct);
     return {
       applicationId: a.id,
       etapa: a.etapa as Etapa,
@@ -120,9 +126,9 @@ export async function candidaturasDaVaga(
       entrevista: entrevistas.get(a.id) ?? null,
     };
   });
-  // Melhor match primeiro; empate, quem chegou antes.
-  itens.sort((a, b) => b.match - a.match || a.enviadaEm.localeCompare(b.enviadaEm));
-  return { vaga: { id: vaga.id, titulo: vaga.titulo, status: vaga.status, expiresAt: vaga.expiresAt.toISOString() }, itens, total };
+  // Melhor nota primeiro (ajustada ou padrão); empate, a % mostrada e depois quem chegou antes.
+  itens.sort((a, b) => nota.get(b.applicationId)! - nota.get(a.applicationId)! || b.match - a.match || a.enviadaEm.localeCompare(b.enviadaEm));
+  return { vaga: { id: vaga.id, titulo: vaga.titulo, status: vaga.status, expiresAt: vaga.expiresAt.toISOString() }, itens, total, ordem: ordem.info };
 }
 
 export type ResultadoEtapa =

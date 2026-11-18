@@ -25,6 +25,8 @@ Each job shows its status, the total number of applications and the new ones. An
 
 "See applications" lists the people who applied, from best to lowest match with the job.
 
+**Adjusted order:** after 30 decisions, the order takes into account who your company moves to Interview (or later) and who it marks as Not moving forward. Only the order changes: the match % is still the same calculation, and age, gender, photo, marital status or address never count. Above the list you see "Order adjusted to what your company picks"; "See default order" goes back to ordering by match %. The same applies in Candidates when a reference job is chosen. Details in [How we use AI](/ia#ranking).
+
 - **Stage:** New, Reviewing, Interview, Offer, Hired or Not moving forward. Change it with one click; there is no form.
 - **What the candidate sees:** "Seen" when you open the profile or move it to Reviewing, "Answered" from Interview on, and "Closed" for Not moving forward. Internal stages are not shown to them.
 - **Contact:** when you move someone to Interview (or later), their email and phone show in the list, only for your company, and they get a notice by email. Once released, it stays released.

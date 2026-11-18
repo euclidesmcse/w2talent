@@ -76,7 +76,7 @@ export function CandidatosFiltros({
           {t("mostrar")}{ativos ? ` · ${t("ativos", { count: ativos })}` : ""}
         </Button>
         {ativos ? (
-          <Button variant="ghost" size="md" onClick={() => onChange({ vaga: filtros.vaga, skills: [] })}>{t("limpar")}</Button>
+          <Button variant="ghost" size="md" onClick={() => onChange({ vaga: filtros.vaga, ordem: filtros.ordem, skills: [] })}>{t("limpar")}</Button>
         ) : null}
       </div>
       <p id={ajudaVagaId} className="-mt-1 text-[13px] text-muted">{vagas && !vagas.length ? t("semVagas") : t("vagaAjuda")}</p>

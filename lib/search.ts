@@ -12,7 +12,7 @@
 import { HYBRID_WEIGHTS, searchVacanciesDb, searchCandidatesDb, type DbSearchPage } from "./search-db";
 import { normalizeSkill, SKILLS, getSkill } from "./taxonomy";
 import { parseQueryIntent, skillTextTerms, type IntentChip } from "./query-intent";
-import { hasCriteria, matchVacancy } from "./match";
+import { hasCriteria, matchVacancy, notaComPesos, type PesosMatch } from "./match";
 import { vizinhasDe } from "./taxonomia-proximas";
 import { passaNosFiltros, type FiltrosCandidatos } from "./candidatos-filtros";
 import { matchCandidato, type VagaParaMatch } from "./match-candidato";
@@ -505,7 +505,13 @@ export function withoutContacts<T extends Record<string, any>>(row: T) {
   };
 }
 
-export async function searchCandidates(params: SearchParams, dataSource?: any[], vaga?: VagaParaMatch | null): Promise<SearchResult<any>> {
+export async function searchCandidates(
+  params: SearchParams,
+  dataSource?: any[],
+  vaga?: VagaParaMatch | null,
+  /** 3.1b: pesos aprendidos da empresa para a ordem; a % mostrada continua a conta fixa. */
+  pesos?: PesosMatch | null,
+): Promise<SearchResult<any>> {
   if (!vaga) {
     const r = await searchKind("candidate", params, dataSource);
     return { ...r, items: r.items.map(withoutContacts) };
@@ -518,9 +524,10 @@ export async function searchCandidates(params: SearchParams, dataSource?: any[],
   const ranked = r.items
     .map((it: any) => {
       const m = matchCandidato(it, vaga, now);
-      return { ...it, match: m.pct, gaps: m.gaps };
+      return { ...it, match: m.pct, gaps: m.gaps, _ordem: pesos ? notaComPesos(m.partes, pesos) : m.pct };
     })
-    .sort((a: any, b: any) => b.match - a.match || (b._rank ?? 0) - (a._rank ?? 0));
+    .sort((a: any, b: any) => b._ordem - a._ordem || b.match - a.match || (b._rank ?? 0) - (a._rank ?? 0))
+    .map(({ _ordem, ...it }: any) => it);
   const total = Math.min(r.total, ranked.length);
   const start = (page - 1) * pageSize;
   return {

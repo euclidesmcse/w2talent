@@ -36,6 +36,15 @@ describe("filtros na URL", () => {
     expect(contarFiltros(f)).toBe(7);
   });
 
+  it("3.1b: ordem=padrao vai e volta na URL e não conta como filtro", () => {
+    const f = lerFiltros(new URLSearchParams("vaga=v1&ordem=padrao&skills=aws"));
+    expect(f.ordem).toBe("padrao");
+    expect(filtrosParaUrl(f)).toContainEqual(["ordem", "padrao"]);
+    expect(lerFiltros(new URLSearchParams(new URLSearchParams(filtrosParaUrl(f)).toString()))).toEqual(f);
+    expect(contarFiltros(f)).toBe(1);
+    expect(lerFiltros(new URLSearchParams("ordem=outra")).ordem).toBeUndefined();
+  });
+
   it("nível do idioma sem idioma não vale", () => {
     expect(lerFiltros(new URLSearchParams("idiomaNivel=fluente")).idiomaNivel).toBeUndefined();
   });

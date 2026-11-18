@@ -961,7 +961,11 @@
     "mercadoTarefa": "Números del mercado",
     "mercadoFaz": "No es IA: es un cálculo diario sobre las vacantes y fichas del sitio. Muestra rangos salariales, las competencias más pedidas y la pretensión de los candidatos en rangos, solo con 10 o más registros (y 3 o más empresas, en el caso de las vacantes).",
     "mercadoDados": "Rangos de las vacantes activas y pretensión mensual de las fichas publicadas, sin nombre ni contactos. Las vacantes y fichas de ejemplo quedan fuera.",
-    "mercadoDecide": "Nadie: son solo números de referencia. El reclutador ve la pretensión solo como rango de 10 o más fichas, nunca la de una persona."
+    "mercadoDecide": "Nadie: son solo números de referencia. El reclutador ve la pretensión solo como rango de 10 o más fichas, nunca la de una persona.",
+    "rankingTarefa": "Orden de los candidatos",
+    "rankingFaz": "Cambia solo el orden de los candidatos de una vacante, a partir de a quién la empresa pasa a entrevista y a quién marca como no siguió. El % de compatibilidad mostrado sigue siendo el mismo cálculo.",
+    "rankingDados": "Las 5 partes de la compatibilidad (competencias, nivel, condiciones, actualización, completitud). Nunca edad, género, foto, estado civil ni dirección. Los datos de ejemplo y de empresas rechazadas quedan fuera.",
+    "rankingDecide": "No es IA ni decide nada: cada peso cambia como máximo un 50% y solo después de 30 decisiones. El reclutador puede ver el orden estándar, y el admin puede desactivarlo."
   },
   "empresa": {
     "title": "Mi empresa",
@@ -1495,5 +1499,14 @@
     "respostaMeio": "La mitad de las respuestas llega entre {de} y {ate}.",
     "horas": "{n} h",
     "dias": "{n, plural, one {# día} other {# días}}"
+  },
+  "ordemRanking": {
+    "ajustadaEmpresa": "Orden ajustado según lo que elige tu empresa.",
+    "ajustadaGlobal": "Orden ajustado según lo que eligen las empresas.",
+    "padrao": "Orden estándar, por % de compatibilidad.",
+    "verPadrao": "Ver en el orden estándar",
+    "verAjustada": "Ver en el orden ajustado",
+    "comoFunciona": "Cómo funciona",
+    "comoFuncionaLabel": "Cómo funciona el orden de los candidatos"
   }
 }

@@ -182,4 +182,30 @@ export async function pesosDaEmpresa(db: Pick<PrismaClient, "rankingWeights">, c
   return escolherPesos(linhas, companyId);
 }
 
+/** O que a tela pediu: "ajustada" (padrão da tela) ou "padrao" (o recrutador escolheu a conta fixa). */
+export type OrdemPedida = "ajustada" | "padrao";
+/** escopo: de onde vêm os pesos ("padrao" = nada aprendido, a tela não mostra a linha); usada: a ordem aplicada. */
+export type OrdemInfo = { escopo: "empresa" | "global" | "padrao"; usada: OrdemPedida };
+
+export function lerOrdem(x: string | null | undefined): OrdemPedida {
+  return x === "padrao" ? "padrao" : "ajustada";
+}
+
+/**
+ * 3.1b (D5): os pesos para ordenar os candidatos da empresa. null = ordem padrão (a % de sempre).
+ * Se a leitura falhar, segue na ordem padrão (nunca quebra a tela).
+ */
+export async function ordemDaEmpresa(
+  db: Pick<PrismaClient, "rankingWeights">,
+  companyId: string,
+  pedida: OrdemPedida = "ajustada",
+): Promise<{ pesos: PesosMatch | null; info: OrdemInfo }> {
+  const r = await pesosDaEmpresa(db, companyId).catch((e) => {
+    console.error("[ranking] pesos não lidos:", e instanceof Error ? e.name : e);
+    return { pesos: PADRAO, escopo: "padrao" as const };
+  });
+  const ajusta = pedida === "ajustada" && r.escopo !== "padrao";
+  return { pesos: ajusta ? r.pesos : null, info: { escopo: r.escopo, usada: ajusta ? "ajustada" : "padrao" } };
+}
+
 export { PADRAO as PESOS_PADRAO };

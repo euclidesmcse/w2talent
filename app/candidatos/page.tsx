@@ -16,6 +16,8 @@ import { buttonClasses } from "@/components/ui/button";
 import { linkEntrar, useConta } from "@/lib/conta-client";
 import { CandidatosFiltros, type VagaOpcao } from "@/components/candidatos-filtros";
 import { filtrosParaUrl, lerFiltros, type FiltrosCandidatos } from "@/lib/candidatos-filtros";
+import { OrdemRanking } from "@/components/ordem-ranking";
+import type { OrdemInfo } from "@/lib/ranking";
 
 type Item = any;
 
@@ -48,6 +50,8 @@ export default function CandidatosPage() {
   const [vagaSumiu, setVagaSumiu] = React.useState(false);
   // vaga usada na busca que trouxe `items` (o match de cada linha vale só para ela)
   const [itensDaVaga, setItensDaVaga] = React.useState<string | null>(null);
+  // 3.1b: ordem da busca com vaga de referência (ajustada pelos pesos da empresa ou padrão).
+  const [ordem, setOrdem] = React.useState<OrdemInfo | null>(null);
   // 2.2c: no computador (lg, 1024px+) a Ficha W2 abre num painel ao lado; abaixo disso, na janela.
   const [painelLado, setPainelLado] = React.useState(false);
   React.useEffect(() => {
@@ -122,6 +126,7 @@ export default function CandidatosPage() {
     if (minha !== ultimaBusca.current) return false;
     setItems(data.items ?? []);
     setItensDaVaga(f.vaga ?? null);
+    setOrdem(data.ordem ?? null);
     setTotal(data.total ?? 0);
     setTotalPages(data.totalPages ?? 1);
     setSuggestion(data.suggestion ?? null);
@@ -140,7 +145,7 @@ export default function CandidatosPage() {
     });
   }, [q, page, filtros, fetchPage, liberado, pronto]);
 
-  const handleClearFilters = () => { setDraft(""); setQ(""); setFiltros((f) => ({ vaga: f.vaga, skills: [] })); setPage(1); };
+  const handleClearFilters = () => { setDraft(""); setQ(""); setFiltros((f) => ({ vaga: f.vaga, ordem: f.ordem, skills: [] })); setPage(1); };
   const handleUseSuggestion = (s: string) => { setDraft(s); setQ(s); setPage(1); };
   const toggle = (id: string) => { const it = items.find((x) => String(x.id ?? x.userId) === id); if (it) selectionStore.rememberLabel(id, [it.nome, it.titulo].filter(Boolean).join(" · ")); const res = selectionStore.toggle(id); setSelected([...selectionStore.getState().selectedIds]); void res; };
   const openDetail = (id: string) => {
@@ -234,6 +239,9 @@ export default function CandidatosPage() {
           <p className="mt-2 text-[13px] text-muted">
             {tr("candidatos.match.explica")} <a href="/ia#match" className="text-brand underline">{tr("candidatos.match.comoFunciona")}</a>
           </p>
+        ) : null}
+        {filtros.vaga && itensDaVaga === filtros.vaga ? (
+          <OrdemRanking className="mt-1" ordem={ordem} onTrocar={(padrao) => mudarFiltros({ ...filtros, ordem: padrao ? "padrao" : undefined })} />
         ) : null}
       </div>
 
