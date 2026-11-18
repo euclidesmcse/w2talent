@@ -1024,6 +1024,10 @@
     "mais": "Mostrar mais"
   },
   "adminRanking": {
+    "buscaRotulo": "Procurar empresa (nome ou id)",
+    "buscar": "Procurar",
+    "limparBusca": "Ver todas",
+    "buscaVazia": "Nenhuma empresa com pesos para essa busca.",
     "title": "Ranking adaptativo",
     "intro": "Os pesos do match aprendem com as decisões do RH. Entrevista, proposta e contratação contam a favor. \"Não seguiu\" conta contra.",
     "regra": "Um escopo só vale com {count} sinais ou mais. Desligar volta ao padrão na hora. Religar volta aos pesos aprendidos.",

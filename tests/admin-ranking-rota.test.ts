@@ -19,10 +19,10 @@ const SECRET = "segredo-de-teste-com-mais-de-24-caracteres";
 const EMP_A = "rank-adm-emp-a";
 const EMP_B = "rank-adm-emp-b";
 
-function req(method: string, cookie: string | null, body?: unknown, extra: Record<string, string> = {}) {
+function req(method: string, cookie: string | null, body?: unknown, extra: Record<string, string> = {}, query = "") {
   const headers: Record<string, string> = { "content-type": "application/json", ...extra };
   if (cookie) headers.cookie = cookie;
-  return new NextRequest("https://w2.test/api/admin/ranking", { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+  return new NextRequest(`https://w2.test/api/admin/ranking${query}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
 }
 
 describeDb("admin do ranking adaptativo", () => {
@@ -102,8 +102,21 @@ describeDb("admin do ranking adaptativo", () => {
     const row = await db.rankingWeights.findUnique({ where: { escopo_escopoId: { escopo: "empresa", escopoId: EMP_B } } });
     expect(row).toMatchObject({ desligado: true, n: 80, pesos });
 
+    // Desligada aparece antes das outras empresas, para religar sem procurar.
+    const lista = await (await rota.GET(req("GET", cookie))).json();
+    expect(lista.linhas[1]).toMatchObject({ escopoId: EMP_B, desligado: true });
+
     const on = await rota.POST(req("POST", cookie, { escopo: "empresa", escopoId: EMP_B, desligado: false }));
     expect((await on.json()).linha.desligado).toBe(false);
+  });
+
+  it("busca pelo nome ou id acha a empresa, sem a linha global", async () => {
+    const porNome = await (await rota.GET(req("GET", cookie, undefined, {}, "?busca=acme"))).json();
+    expect(porNome.linhas.map((l: { escopoId: string }) => l.escopoId)).toEqual([EMP_A]);
+    const porId = await (await rota.GET(req("GET", cookie, undefined, {}, `?busca=${EMP_B}`))).json();
+    expect(porId.linhas.map((l: { escopoId: string }) => l.escopoId)).toEqual([EMP_B]);
+    const nada = await (await rota.GET(req("GET", cookie, undefined, {}, "?busca=zzz-nenhuma"))).json();
+    expect(nada.linhas).toEqual([]);
   });
 
   it("desligar um escopo sem linha cria com o padrão e zero exemplos", async () => {

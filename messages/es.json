@@ -1024,6 +1024,10 @@
     "mais": "Mostrar más"
   },
   "adminRanking": {
+    "buscaRotulo": "Buscar empresa (nombre o id)",
+    "buscar": "Buscar",
+    "limparBusca": "Ver todas",
+    "buscaVazia": "Ninguna empresa con pesos para esta búsqueda.",
     "title": "Ranking adaptativo",
     "intro": "Los pesos del match aprenden de las decisiones de RR. HH. Entrevista, oferta y contratación cuentan a favor. \"No siguió\" cuenta en contra.",
     "regra": "Un alcance solo vale con {count} señales o más. Apagarlo vuelve al estándar al instante. Encenderlo vuelve a los pesos aprendidos.",

@@ -1,6 +1,7 @@
 /**
- * Ranking adaptativo (3.1, D7). GET: os pesos de cada escopo (global primeiro, depois as empresas com
- * mais exemplos), com o padrão e o mínimo de exemplos para comparar.
+ * Ranking adaptativo (3.1, D7). GET: os pesos de cada escopo (global primeiro, depois as empresas
+ * desligadas e as com mais exemplos), com o padrão e o mínimo de exemplos para comparar.
+ * ?busca=texto procura a empresa pelo nome ou id, para achar qualquer uma além das primeiras 200.
  * POST {escopo, escopoId, desligado}: desliga (volta ao padrão) ou religa um escopo.
  * Só com o cookie de admin (lib/admin-auth.ts).
  */
@@ -20,11 +21,22 @@ export async function GET(req: NextRequest) {
   if (denied) return denied;
   try {
     const db = getPrisma();
+    const busca = (req.nextUrl.searchParams.get("busca") ?? "").trim().slice(0, 100);
+    let filtro: Prisma.RankingWeightsWhereInput = { escopo: "empresa" };
+    if (busca) {
+      const achadas = await db.companyProfile.findMany({
+        where: { OR: [{ id: busca }, { nome: { contains: busca, mode: "insensitive" } }] },
+        select: { id: true },
+        take: 500,
+      });
+      filtro = { escopo: "empresa", escopoId: { in: achadas.map((c) => c.id) } };
+    }
     const [global, empresas] = await Promise.all([
-      db.rankingWeights.findFirst({ where: { escopo: "global", escopoId: "" }, select: SELECT }),
+      busca ? null : db.rankingWeights.findFirst({ where: { escopo: "global", escopoId: "" }, select: SELECT }),
       db.rankingWeights.findMany({
-        where: { escopo: "empresa" },
-        orderBy: [{ n: "desc" }, { escopoId: "asc" }],
+        where: filtro,
+        // Desligadas primeiro: sempre dá para religar sem procurar.
+        orderBy: [{ desligado: "desc" }, { n: "desc" }, { escopoId: "asc" }],
         take: MAX_LINHAS - 1,
         select: SELECT,
       }),
@@ -37,7 +49,7 @@ export async function GET(req: NextRequest) {
       ...(global ? [{ ...global, empresaNome: null }] : []),
       ...empresas.map((e) => ({ ...e, empresaNome: nomes.get(e.escopoId) ?? null })),
     ];
-    return NextResponse.json({ padrao: PESOS_PADRAO, minimo: MIN_EXEMPLOS, linhas }, { headers: NO_STORE });
+    return NextResponse.json({ padrao: PESOS_PADRAO, minimo: MIN_EXEMPLOS, linhas, busca, limite: MAX_LINHAS - 1 }, { headers: NO_STORE });
   } catch (err) {
     console.error("[admin/ranking] falhou: lista", (err as { code?: string })?.code ?? (err as Error)?.name);
     return NextResponse.json({ error: "erro_interno" }, { status: 500, headers: NO_STORE });

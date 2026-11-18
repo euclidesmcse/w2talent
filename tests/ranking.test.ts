@@ -39,6 +39,17 @@ describe("calcularPesos", () => {
     expect(soma(r.pesos)).toBeCloseTo(100, 0);
   });
 
+  it("separação perfeita pesa mais que uma separação pela metade (o limite é no peso, não na diferença)", () => {
+    const com = (alto: number, baixo: number): Exemplo[] => [
+      ...Array.from({ length: 100 }, () => ({ partes: p(alto), positivo: true })),
+      ...Array.from({ length: 100 }, () => ({ partes: p(baixo), positivo: false })),
+    ];
+    const inteira = calcularPesos(com(1, 0)).pesos.skills;
+    const metade = calcularPesos(com(0.75, 0.25)).pesos.skills;
+    expect(inteira).toBeGreaterThan(metade);
+    expect(inteira).toBeLessThanOrEqual(60);
+  });
+
   it("com poucos exemplos mexe pouco", () => {
     const poucos: Exemplo[] = [{ partes: p(1), positivo: true }, { partes: p(0), positivo: false }];
     const muitos: Exemplo[] = [...Array(50)].flatMap(() => poucos);

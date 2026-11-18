@@ -4,8 +4,8 @@
  *   Nada de critério novo; nunca idade, gênero, foto, estado civil ou endereço.
  * - D2: positivo = a candidatura chegou a Entrevista, Proposta ou Contratada; negativo = "Não seguiu"
  *   sem nunca ter chegado lá. Ficha vista e exportar não entram. Exemplo, teste e empresa recusada ficam de fora.
- * - D3: para cada parte, média nos positivos menos média nos negativos; o peso sobe ou desce até ±50%,
- *   encolhido para o padrão com poucos sinais (n / (n + 30)); a soma volta a 100. Sem IA.
+ * - D3: para cada parte, média nos positivos menos média nos negativos (inteira) multiplica o peso,
+ *   encolhido para o padrão com poucos sinais (n / (n + 30)); depois cada peso fica em ±50% do padrão e a soma volta a 100. Sem IA.
  * - D4: escopo global e por empresa; cada um só vale com 30 exemplos ou mais.
  * - D6: as partes vêm do sinal etapa_mudou (gravadas no momento da decisão); sinal antigo sem partes não entra.
  * - D7: o admin pode desligar um escopo (volta ao padrão).
@@ -80,7 +80,8 @@ export function calcularPesos(exemplos: Exemplo[], base: PesosMatch = PADRAO): C
   const raw = {} as PesosMatch;
   for (const k of PARTES) {
     const d = media(pos.map((e) => e.partes[k])) - media(neg.map((e) => e.partes[k]));
-    const mult = 1 + encolhe * limitar(d, -LIMITE, LIMITE);
+    // d vai de -1 a 1; o limite de ±50% é aplicado aos pesos, na normalização (não à diferença).
+    const mult = Math.max(0, 1 + encolhe * d);
     raw[k] = base[k] * mult;
   }
   return { pesos: normalizar(raw, base), ...r };

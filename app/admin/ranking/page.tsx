@@ -7,7 +7,7 @@ import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
 import { AdminLoginCard } from "@/components/admin-login";
-import { Button, Card, Table, THead, Th, Tr, Td, useToast } from "@/components/ui";
+import { Button, Card, Input, Table, THead, Th, Tr, Td, useToast } from "@/components/ui";
 import { cn } from "@/components/ui/cn";
 import { intlTag } from "@/lib/locale";
 
@@ -46,11 +46,15 @@ export default function AdminRankingPage() {
   const [minimo, setMinimo] = React.useState(30);
   const [ocupado, setOcupado] = React.useState<string | null>(null);
   const ultima = React.useRef(0);
+  // Busca pelo nome ou id da empresa: acha qualquer uma além das primeiras da lista.
+  const [texto, setTexto] = React.useState("");
+  const buscaRef = React.useRef("");
 
   const load = React.useCallback(async () => {
     const minha = ++ultima.current;
     try {
-      const res = await fetch("/api/admin/ranking", { cache: "no-store" });
+      const q = buscaRef.current ? `?busca=${encodeURIComponent(buscaRef.current)}` : "";
+      const res = await fetch(`/api/admin/ranking${q}`, { cache: "no-store" });
       const j = (await res.json().catch(() => ({}))) as { padrao?: Pesos; minimo?: number; linhas?: Linha[]; error?: string };
       if (minha !== ultima.current) return;
       if (res.status === 401) return setAuth("login");
@@ -111,7 +115,7 @@ export default function AdminRankingPage() {
   const data = (iso: string) => new Date(iso).toLocaleDateString(intlTag(locale), { day: "2-digit", month: "2-digit", year: "numeric" });
   const temGlobal = linhas.some((l) => l.escopo === "global");
   // Sem linha global (o Cron ainda não rodou), o admin ainda pode desligar o global de antemão.
-  const linhasTela: Linha[] = temGlobal || auth !== "ok"
+  const linhasTela: Linha[] = temGlobal || auth !== "ok" || buscaRef.current
     ? linhas
     : [{ escopo: "global", escopoId: "", empresaNome: null, pesos: null, n: 0, nPositivos: 0, nNegativos: 0, desligado: false, atualizadoEm: "" }, ...linhas];
 
@@ -135,6 +139,37 @@ export default function AdminRankingPage() {
           </Card>
         ) : null}
         {auth === "login" ? <AdminLoginCard onDone={() => load()} titulo={t("loginTitle")} /> : null}
+        {auth === "ok" ? (
+          <form
+            role="search"
+            className="flex flex-wrap items-end gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              buscaRef.current = texto.trim();
+              load();
+            }}
+          >
+            <label className="flex min-w-[240px] flex-1 flex-col gap-1 text-sm md:max-w-sm">
+              <span>{t("buscaRotulo")}</span>
+              <Input type="search" value={texto} maxLength={100} onChange={(e) => setTexto(e.target.value)} />
+            </label>
+            <Button type="submit" variant="secondary">{t("buscar")}</Button>
+            {buscaRef.current ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setTexto("");
+                  buscaRef.current = "";
+                  load();
+                }}
+              >
+                {t("limparBusca")}
+              </Button>
+            ) : null}
+          </form>
+        ) : null}
+        {auth === "ok" && buscaRef.current && linhasTela.length === 0 ? <p className="text-sm text-muted">{t("buscaVazia")}</p> : null}
         {auth === "ok" ? (
           <Card>
             <Table minWidth={980}>

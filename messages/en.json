@@ -1024,6 +1024,10 @@
     "mais": "Show more"
   },
   "adminRanking": {
+    "buscaRotulo": "Find a company (name or id)",
+    "buscar": "Search",
+    "limparBusca": "Show all",
+    "buscaVazia": "No company with weights matches this search.",
     "title": "Adaptive ranking",
     "intro": "Match weights learn from recruiter decisions. Interview, offer and hire count in favor. \"Not moving forward\" counts against.",
     "regra": "A scope only applies with {count} signals or more. Turning it off goes back to the default right away. Turning it on uses the learned weights again.",
