@@ -6,6 +6,7 @@
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Chip } from "@/components/ui/chip";
+import { IaLink } from "@/components/ia-link";
 import { skillName } from "@/components/skill-chips";
 import { formatPretensoes } from "@/lib/format";
 import { anosExperiencia, nomeCurto, topSkills, type Ficha, type FichaW2 } from "@/lib/ficha";
@@ -77,7 +78,9 @@ export function FichaW2Card({ ficha, w2, children }: { ficha: Ficha; w2: FichaW2
         ) : null}
       </dl>
       {children}
-      <p className="mt-4 border-t border-line pt-3 text-xs text-muted">{w2.editada ? t("w2Rodape") : t("w2RodapeIa")}</p>
+      <p className="mt-4 border-t border-line pt-3 text-xs text-muted">
+        {w2.editada ? t("w2Rodape") : t("w2RodapeIa")} · <IaLink ancora="ficha-w2" />
+      </p>
     </article>
   );
 }
