@@ -27,6 +27,8 @@ export function AjudaPergunta({ de }: { de?: string | null }) {
   const [pergunta, setPergunta] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [erroEmail, setErroEmail] = React.useState(false);
+  // Falha ao mandar para a equipe: o formulário continua na tela para tentar de novo.
+  const [erroEquipe, setErroEquipe] = React.useState<"erroLimite" | "erroGeral" | null>(null);
   const [enviando, setEnviando] = React.useState(false);
   const [estado, setEstado] = React.useState<Estado>({ t: "vazio" });
   const seq = React.useRef(0);
@@ -36,6 +38,8 @@ export function AjudaPergunta({ de }: { de?: string | null }) {
     const p = pergunta.trim();
     if (p.length < MIN || p.length > MAX) return setEstado({ t: "erro", chave: "erroTamanho" });
     const meu = ++seq.current;
+    setErroEquipe(null);
+    setErroEmail(false);
     setEstado({ t: "pensando" });
     try {
       const r = await fetch("/api/ajuda/perguntar", {
@@ -46,12 +50,12 @@ export function AjudaPergunta({ de }: { de?: string | null }) {
       if (meu !== seq.current) return;
       if (r.status === 429) return setEstado({ t: "erro", chave: "erroLimite" });
       if (r.status === 422) return setEstado({ t: "erro", chave: "erroTamanho" });
-      if (!r.ok) return setEstado({ t: "sem_resposta", id: null, pergunta: p });
+      if (!r.ok) return setEstado({ t: "erro", chave: "erroGeral" });
       const j = (await r.json()) as { tipo: "resposta"; resposta: string; fontes: Fonte[] } | { tipo: "sem_resposta"; id: string };
       if (meu !== seq.current) return;
       setEstado(j.tipo === "resposta" ? { t: "resposta", resposta: j.resposta, fontes: j.fontes } : { t: "sem_resposta", id: j.id, pergunta: p });
     } catch {
-      if (meu === seq.current) setEstado({ t: "sem_resposta", id: null, pergunta: p });
+      if (meu === seq.current) setEstado({ t: "erro", chave: "erroGeral" });
     }
   }
 
@@ -60,6 +64,7 @@ export function AjudaPergunta({ de }: { de?: string | null }) {
     if (estado.t !== "sem_resposta") return;
     const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
     setErroEmail(!ok);
+    setErroEquipe(null);
     if (!ok) return;
     setEnviando(true);
     try {
@@ -70,9 +75,9 @@ export function AjudaPergunta({ de }: { de?: string | null }) {
       });
       if (r.ok) setEstado({ t: "enviado" });
       else if (r.status === 422) setErroEmail(true);
-      else setEstado({ t: "erro", chave: r.status === 429 ? "erroLimite" : "erroGeral" });
+      else setErroEquipe(r.status === 429 ? "erroLimite" : "erroGeral");
     } catch {
-      setEstado({ t: "erro", chave: "erroGeral" });
+      setErroEquipe("erroGeral");
     } finally {
       setEnviando(false);
     }
@@ -139,6 +144,7 @@ export function AjudaPergunta({ de }: { de?: string | null }) {
               className="md:max-w-[360px]"
             />
             {erroEmail && <p id="ajuda-equipe-erro" className="text-[13px] text-danger">{t("erroEmail")}</p>}
+            {erroEquipe && <p role="alert" className="text-[13px] text-danger">{t(erroEquipe)}</p>}
             <div>
               <Button type="submit" variant="secondary" data-action="mandar-equipe" disabled={enviando}>{t("equipeEnviar")}</Button>
             </div>
