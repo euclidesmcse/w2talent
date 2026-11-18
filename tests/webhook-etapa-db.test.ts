@@ -242,6 +242,20 @@ describeDb("webhook 3.4b: etapa e pausa", () => {
     expect((await db.webhook.findUniqueOrThrow({ where: { companyId } })).falhasSeguidas).toBe(antes);
   });
 
+  it("um sucesso que chega depois da pausa não zera a contagem nem tira o aviso", async () => {
+    const { entregarWebhook, lerConfig, WEBHOOK_PAUSA_FALHAS } = await import("../lib/webhook");
+    await db.webhook.update({ where: { companyId }, data: { falhasSeguidas: 0, ativo: true } });
+    // A entrega já saiu quando outra entrega pausa o webhook; o 200 chega depois.
+    const lenta = jest.fn(async () => {
+      await db.webhook.update({ where: { companyId }, data: { ativo: false, falhasSeguidas: WEBHOOK_PAUSA_FALHAS } });
+      return new Response("", { status: 200 });
+    });
+    const msg: MensagemWebhook = { tipo: "webhook", evento: "candidatura.etapa", id: "evt_wh34b_lenta", companyId, applicationId: appA, occurredAt: new Date().toISOString(), etapaDe: "nova", etapaPara: "em_analise" };
+    expect(await entregarWebhook(db, msg, 1, { fetch: lenta as unknown as typeof fetch, master: MASTER, appUrl: "https://w2.test/" })).toMatchObject({ resultado: "ok" });
+    expect(await db.webhook.findUniqueOrThrow({ where: { companyId } })).toMatchObject({ ativo: false, falhasSeguidas: WEBHOOK_PAUSA_FALHAS });
+    expect(await lerConfig(db, companyId)).toMatchObject({ ativo: false, pausada: true });
+  });
+
   it("ativar de novo pela tela zera a contagem e tira a pausa", async () => {
     const rota = await import("../app/api/conta/empresa/webhook/route");
     const r = await rota.PATCH(

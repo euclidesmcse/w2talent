@@ -26,16 +26,20 @@ export function temaEfetivo(t: Tema, sistemaEscuro: boolean): "light" | "dark" {
   return t === "escuro" || (t === "sistema" && sistemaEscuro) ? "dark" : "light";
 }
 
+// Sem armazenamento (o navegador recusa o localStorage), a escolha fica só na memória desta página.
+let temaNaMemoria: Tema | null = null;
+
 export function lerTema(): Tema {
   try {
     return normalizarTema(window.localStorage.getItem(TEMA_CHAVE));
   } catch {
-    return "sistema";
+    return temaNaMemoria ?? "sistema";
   }
 }
 
 /** Grava a escolha (sem "sistema" guardado: apaga a chave) e aplica na hora. */
 export function escolherTema(t: Tema) {
+  temaNaMemoria = t;
   try {
     if (t === "sistema") window.localStorage.removeItem(TEMA_CHAVE);
     else window.localStorage.setItem(TEMA_CHAVE, t);

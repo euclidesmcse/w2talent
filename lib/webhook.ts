@@ -321,7 +321,14 @@ export async function entregarWebhook(db: Db, m: MensagemWebhook, tentativa: num
         data: { webhookId: wh.id, evento: m.evento, deliveryId: m.id, status: r.status ?? null, erro: r.erro ?? null, tentativa, duracaoMs: Math.max(0, Date.now() - inicio) },
       }),
       // O teste não conta na sequência de falhas (o 3.4b pausa o webhook com 50).
-      ...(m.evento === "teste" ? [] : [db.webhook.update({ where: { id: wh.id }, data: { falhasSeguidas: ok ? 0 : { increment: 1 } } })]),
+      // Um sucesso que chega depois da pausa não zera o contador: a tela segue mostrando "Pausada" até o dono reativar.
+      ...(m.evento === "teste"
+        ? []
+        : [
+            ok
+              ? db.webhook.updateMany({ where: { id: wh.id, ativo: true }, data: { falhasSeguidas: 0 } })
+              : db.webhook.update({ where: { id: wh.id }, data: { falhasSeguidas: { increment: 1 } } }),
+          ]),
       db.webhookEntrega.deleteMany({ where: { webhookId: wh.id, createdAt: { lt: new Date(agora().getTime() - WEBHOOK_ENTREGAS_DIAS * 86_400_000) } } }),
     ]);
     // 3.4b: a 50ª falha seguida pausa o webhook e avisa o dono.

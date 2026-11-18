@@ -65,4 +65,33 @@ describe("tema", () => {
     expect(layout).toContain("suppressHydrationWarning");
     expect(layout).toContain('media: "(prefers-color-scheme: dark)"');
   });
+
+  it("sem armazenamento, a escolha fica na memória e o botão continua andando", async () => {
+    const { escolherTema, lerTema } = await import("../lib/tema");
+    const g = globalThis as unknown as { window?: unknown };
+    const antes = g.window;
+    const attrs: Record<string, string> = {};
+    g.window = {
+      get localStorage(): Storage {
+        throw new Error("SecurityError");
+      },
+      matchMedia: () => ({ matches: false }),
+      dispatchEvent: () => true,
+    };
+    const docAntes = (globalThis as unknown as { document?: unknown }).document;
+    (globalThis as unknown as { document: unknown }).document = {
+      documentElement: { setAttribute: (k: string, v: string) => (attrs[k] = v) },
+      querySelectorAll: () => [],
+    };
+    try {
+      expect(lerTema()).toBe("sistema");
+      escolherTema("claro");
+      expect(lerTema()).toBe("claro");
+      escolherTema("escuro");
+      expect(lerTema()).toBe("escuro");
+    } finally {
+      g.window = antes;
+      (globalThis as unknown as { document?: unknown }).document = docAntes;
+    }
+  });
 });

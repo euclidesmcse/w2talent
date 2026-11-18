@@ -73,6 +73,16 @@ export default function CompararPage() {
       } catch {}
     }
     setPronto(true);
+    // Outro link colado na mesma aba só muda o "#": acompanha a troca para a tabela seguir o link do endereço.
+    const naTroca = () => {
+      const novo = tokenDoEndereco();
+      if (novo) {
+        setLinkExpira(null);
+        setLink(novo);
+      }
+    };
+    window.addEventListener("hashchange", naTroca);
+    return () => window.removeEventListener("hashchange", naTroca);
   }, []);
 
   // A vaga escolhida fica na URL, como em Candidatos (no link compartilhado, a vaga vem do link).
