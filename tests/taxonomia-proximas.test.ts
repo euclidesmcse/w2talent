@@ -2,6 +2,7 @@
 import { getSkill } from "@/lib/taxonomy";
 import { PARES_PROXIMAS, PESO_PROXIMA, melhorCompetencia, pesoCompetencia, vizinhasDe } from "@/lib/taxonomia-proximas";
 import { matchVacancy } from "@/lib/match";
+import { searchVacancies } from "@/lib/search";
 
 const ids = (lista: readonly (readonly [string, string])[]) => lista.flatMap(([a, b]) => [a, b]);
 
@@ -36,6 +37,14 @@ describe("mapa de competências próximas", () => {
     expect(pesoCompetencia("sap-abap", "abap")).toBe(1);
   });
 
+  it("ids iguais herdam as ligações um do outro", () => {
+    expect(pesoCompetencia("playwright-test", "cypress")).toBe(PESO_PROXIMA);
+    expect(pesoCompetencia("supabase", "postgresql")).toBe(1);
+    expect(pesoCompetencia("supabase-db", "postgresql")).toBe(1);
+    expect(vizinhasDe("playwright-test")).toEqual(expect.arrayContaining(["cypress", "playwright"]));
+    expect(vizinhasDe("cypress")).toEqual(expect.arrayContaining(["playwright", "playwright-test"]));
+  });
+
   it("melhor competência da pessoa para uma pedida", () => {
     expect(melhorCompetencia(["vue", "openshift"], "kubernetes")).toEqual({ skill: "openshift", peso: PESO_PROXIMA });
     expect(melhorCompetencia(["openshift", "eks"], "kubernetes")).toEqual({ skill: "eks", peso: 1 });
@@ -67,5 +76,15 @@ describe("match com competências próximas", () => {
   it("competência que cobre conta inteira, sem lacuna", () => {
     const r = matchVacancy(vaga(["javascript"]), crit(["typescript"]), agora);
     expect(r.gaps).toEqual([]);
+  });
+
+  it("busca em memória também traz a vaga com a vizinha, com metade dos pontos", async () => {
+    const r = await searchVacancies({ q: "kubernetes" }, [
+      { id: "exata", titulo: "Engenharia Kubernetes", stack: ["kubernetes"], status: "ativa", updatedAt: new Date() },
+      { id: "proxima", titulo: "OpenShift specialist", stack: ["openshift"], status: "ativa", updatedAt: new Date() },
+      { id: "nada", titulo: "Analista COBOL", stack: ["cobol"], status: "ativa", updatedAt: new Date() },
+    ]);
+    expect(r.items.map((i: any) => i.id)).toEqual(["exata", "proxima"]);
+    expect(r.items[1].gaps).toEqual([{ kind: "skill", skill: "kubernetes", proxima: "openshift" }]);
   });
 });

@@ -106,18 +106,21 @@ const IGUAIS: [string, string][] = [
 export const PARES_PROXIMAS = { PROXIMAS, COBRE, IGUAIS } as const;
 
 const chave = (a: string, b: string) => `${a}\u0000${b}`;
+/** Ids iguais viram um só (o primeiro do par), antes de montar e de consultar o mapa. */
+const CANONICO = new Map<string, string>(IGUAIS.map(([a, b]) => [b, a]));
+const canon = (id: string) => CANONICO.get(id) ?? id;
+const MESMOS = new Map<string, string[]>();
+for (const [a, b] of IGUAIS) MESMOS.set(a, [...(MESMOS.get(a) ?? [a]), b]);
 const PESO = new Map<string, number>();
-for (const [a, b] of PROXIMAS) {
+for (const [x, y] of PROXIMAS) {
+  const [a, b] = [canon(x), canon(y)];
   PESO.set(chave(a, b), PESO_PROXIMA);
   PESO.set(chave(b, a), PESO_PROXIMA);
 }
-for (const [maior, menor] of COBRE) {
+for (const [x, y] of COBRE) {
+  const [maior, menor] = [canon(x), canon(y)];
   PESO.set(chave(maior, menor), 1);
   if (!PESO.has(chave(menor, maior))) PESO.set(chave(menor, maior), PESO_PROXIMA);
-}
-for (const [a, b] of IGUAIS) {
-  PESO.set(chave(a, b), 1);
-  PESO.set(chave(b, a), 1);
 }
 
 /**
@@ -125,8 +128,9 @@ for (const [a, b] of IGUAIS) {
  * 0,5 (próxima) ou 0. "Pessoa" é sempre o lado do candidato, mesmo quando é ele quem busca.
  */
 export function pesoCompetencia(daPessoa: string, pedida: string): number {
-  if (daPessoa === pedida) return 1;
-  return PESO.get(chave(daPessoa, pedida)) ?? 0;
+  const [a, b] = [canon(daPessoa), canon(pedida)];
+  if (a === b) return 1;
+  return PESO.get(chave(a, b)) ?? 0;
 }
 
 /** Melhor competência da pessoa para uma pedida: a exata, a que cobre, ou a próxima. */
@@ -142,10 +146,14 @@ export function melhorCompetencia(daPessoa: Iterable<string>, pedida: string): {
 
 /** Competências que valem alguma coisa para quem tem `id` (ela mesma primeiro, depois as que cobre e as próximas). */
 export function vizinhasDe(id: string): string[] {
-  const out = [id];
+  const c = canon(id);
+  const ids = [c];
   for (const k of PESO.keys()) {
     const [a, b] = k.split("\u0000");
-    if (a === id && b !== id && !out.includes(b)) out.push(b);
+    if (a === c && !ids.includes(b)) ids.push(b);
   }
+  // Cada uma com os seus ids iguais; a própria competência pedida primeiro.
+  const out = [id];
+  for (const x of ids) for (const y of MESMOS.get(x) ?? [x]) if (!out.includes(y)) out.push(y);
   return out;
 }
