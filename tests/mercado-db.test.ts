@@ -19,6 +19,7 @@ describeDb("mercado (3.2a)", () => {
   const futuro = new Date(Date.now() + 30 * 864e5);
 
   const limpar = async () => {
+    await db.application.deleteMany({ where: { proxyThreadId: { startsWith: "mkt-teste-" } } });
     await db.vacancy.deleteMany({ where: { companyId: { in: [...EMPRESAS, "demo-company"] }, titulo: { startsWith: "MKT" } } });
     await db.companyProfile.deleteMany({ where: { id: { in: EMPRESAS } } });
     await db.candidateProfile.deleteMany({ where: { OR: [{ userId: { startsWith: FICHA } }, { userId: { startsWith: "demo-mkt" } }] } });
@@ -70,6 +71,20 @@ describeDb("mercado (3.2a)", () => {
 
     const remoto = await lerMercado(db, { skillId: SKILL, modo: "remoto" });
     expect(remoto.faixas[0]).toMatchObject({ modo: "remoto", n: 12 });
+  });
+
+  it("candidatura de ficha de exemplo não entra no tempo de resposta", async () => {
+    const { atualizarMercado } = await import("../lib/mercado");
+    const contar = async () => (await db.marketStat.findFirst({ where: { metrica: "resposta_horas" } }))!.n;
+    await atualizarMercado(db);
+    const antes = await contar();
+    const demo = await db.candidateProfile.findUniqueOrThrow({ where: { userId: "demo-mkt-1" } });
+    const criada = new Date(Date.now() - 2 * 864e5);
+    for (const [i, companyId] of EMPRESAS.entries()) {
+      await db.application.create({ data: { candidateId: demo.id, companyId, origem: "candidaturaLote", proxyThreadId: `mkt-teste-${i}`, createdAt: criada, respondidaEm: new Date(criada.getTime() + 36e5) } });
+    }
+    await atualizarMercado(db);
+    expect(await contar()).toBe(antes);
   });
 
   it("empresa recusada sai da conta e o grupo perde os números", async () => {

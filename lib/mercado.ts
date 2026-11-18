@@ -297,7 +297,7 @@ export async function atualizarMercado(db: DbMercado, now = new Date()): Promise
   );
   const respostas = (await todas((c) =>
     db.application.findMany({
-      where: { origem: "candidaturaLote", respondidaEm: { not: null }, createdAt: { gt: new Date(t - DIAS_RESPOSTA * DIA) }, companyId: { not: "demo-company" } },
+      where: { origem: "candidaturaLote", respondidaEm: { not: null }, createdAt: { gt: new Date(t - DIAS_RESPOSTA * DIA) }, companyId: { not: "demo-company" }, company: { validacaoStatus: { not: "rejeitado" } }, candidate: FICHA_REAL },
       select: { id: true, companyId: true, createdAt: true, respondidaEm: true },
       ...pagina(c),
     }),
