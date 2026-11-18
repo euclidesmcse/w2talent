@@ -209,12 +209,13 @@ export const RESERVA_MIN = 10;
  * Reserva atômica da tradução de uma vaga num idioma: grava a linha como "pendente" para o hash atual.
  * Falha se já existe a tradução desse texto ou uma reserva recente para ele.
  */
-async function reservar(db: DbTx, vacancyId: string, idioma: Idioma, hash: string): Promise<boolean> {
+async function reservar(db: Pick<PrismaClient, "$queryRaw">, coluna: "vacancyId" | "candidateId", id: string, idioma: Idioma, hash: string): Promise<boolean> {
   const pend = `pendente:${hash}`;
+  const col = Prisma.raw(`"${coluna}"`);
   const rows = await db.$queryRaw<{ id: string }[]>`
-    INSERT INTO "Traducao" ("id", "vacancyId", "idioma", "idiomaOrigem", "hashOrigem", "conteudo", "updatedAt")
-    VALUES (gen_random_uuid()::text, ${vacancyId}, ${idioma}, 'pendente', ${pend}, NULL, now())
-    ON CONFLICT ("vacancyId", "idioma") DO UPDATE SET "idiomaOrigem" = 'pendente', "hashOrigem" = ${pend}, "conteudo" = NULL, "modelo" = NULL, "updatedAt" = now()
+    INSERT INTO "Traducao" ("id", ${col}, "idioma", "idiomaOrigem", "hashOrigem", "conteudo", "updatedAt")
+    VALUES (gen_random_uuid()::text, ${id}, ${idioma}, 'pendente', ${pend}, NULL, now())
+    ON CONFLICT (${col}, "idioma") DO UPDATE SET "idiomaOrigem" = 'pendente', "hashOrigem" = ${pend}, "conteudo" = NULL, "modelo" = NULL, "updatedAt" = now()
     WHERE "Traducao"."hashOrigem" <> ${hash}
       AND NOT ("Traducao"."hashOrigem" = ${pend} AND "Traducao"."updatedAt" > now() - make_interval(mins => ${RESERVA_MIN}))
     RETURNING "id"`;
@@ -249,7 +250,7 @@ export async function traduzirVaga(db: DbTx, vacancyId: string, chat: ChatTraduc
       continue;
     }
     // Reserva o par vaga/idioma antes da IA: duas buscas ao mesmo tempo não pagam a mesma tradução.
-    if (!(await reservar(db, vacancyId, idioma, hash))) continue;
+    if (!(await reservar(db, "vacancyId", vacancyId, idioma, hash))) continue;
     const uso = await consumirUso(db as unknown as PrismaClient, await chaveUso("traducao", "geral"), LIMITE_TRADUCOES_DIA, now).catch(() => ({ permitido: false, total: 0 }));
     if (!uso.permitido) {
       res.semLimite = true;
@@ -493,6 +494,7 @@ export async function traduzirFicha(db: DbFicha, candidateId: string, chat: Chat
       res.mesmoIdioma++;
       continue;
     }
+    if (!(await reservar(db, "candidateId", candidateId, idioma, hash))) continue;
     const uso = await consumirUso(db as unknown as PrismaClient, await chaveUso("traducao", "geral"), LIMITE_TRADUCOES_DIA, now).catch(() => ({ permitido: false, total: 0 }));
     if (!uso.permitido) {
       res.semLimite = true;
@@ -537,8 +539,23 @@ export async function pedirTraducaoFichas(db: DbFicha, ids: string[], max = 3): 
 /** Cron diário: fichas publicadas (ativas e no prazo) sem tradução atual. */
 export async function traduzirFichasPendentes(db: DbFicha, chat: ChatTraducaoFichaFn, limite = 30, now: Date = new Date()): Promise<ResumoTraducao & { fichas: number }> {
   const total: ResumoTraducao & { fichas: number } = { traduzidas: 0, mesmoIdioma: 0, falhas: 0, semLimite: false, fichas: 0 };
-  const ativas = await db.candidateProfile.findMany({ where: { status: "ativo", expiresAt: { gt: now } }, select: { id: true }, orderBy: { updatedAt: "desc" }, take: 500 });
-  const faltam = (await fichasSemTraducao(db, ativas.map((a) => a.id))).slice(0, limite);
+  // Percorre todas as fichas publicadas em páginas até juntar `limite` pendentes.
+  const faltam: string[] = [];
+  let depois: string | undefined;
+  while (faltam.length < limite) {
+    const pagina = await db.candidateProfile.findMany({
+      where: { status: "ativo", expiresAt: { gt: now } },
+      select: { id: true },
+      orderBy: { id: "asc" },
+      take: 500,
+      ...(depois ? { cursor: { id: depois }, skip: 1 } : {}),
+    });
+    if (!pagina.length) break;
+    faltam.push(...(await fichasSemTraducao(db, pagina.map((a) => a.id))));
+    depois = pagina[pagina.length - 1].id;
+    if (pagina.length < 500) break;
+  }
+  faltam.splice(limite);
   for (const id of faltam) {
     const r = await traduzirFicha(db, id, chat, now);
     total.fichas++;
