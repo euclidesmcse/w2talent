@@ -96,8 +96,13 @@ export type HygieneSummary = {
   vagasArquivadas: number;
   perfisArquivados: number;
   perfisApagados: number;
+  /** 2.6a: perguntas sem resposta da Ajuda apagadas depois de 90 dias. */
+  perguntasApagadas: number;
   emails: { enfileirados: number; porMarco: Record<string, number>; ficamParaAmanha: number; falhas: number; aviso?: string };
 };
+
+/** 2.6a: quanto tempo uma pergunta sem resposta da Ajuda fica guardada. */
+export const PERGUNTAS_AJUDA_DIAS = 90;
 
 export async function runHygiene(db: PrismaClient, deps: HygieneDeps): Promise<HygieneSummary> {
   const now = deps.now ?? new Date();
@@ -107,8 +112,13 @@ export async function runHygiene(db: PrismaClient, deps: HygieneDeps): Promise<H
     vagasArquivadas: 0,
     perfisArquivados: 0,
     perfisApagados: 0,
+    perguntasApagadas: 0,
     emails: { enfileirados: 0, porMarco: {}, ficamParaAmanha: 0, falhas: 0 },
   };
+
+  // 0) 2.6a: perguntas da Ajuda que ficaram sem resposta só ficam 90 dias.
+  const perguntas = await db.perguntaSemResposta.deleteMany({ where: { createdAt: { lte: new Date(now.getTime() - PERGUNTAS_AJUDA_DIAS * DAY) } } });
+  summary.perguntasApagadas = perguntas.count;
 
   // 1) Vagas vencidas saem da busca.
   const vagas = await db.vacancy.updateMany({ where: { status: "ativa", expiresAt: { lte: now } }, data: { status: "arquivada" } });

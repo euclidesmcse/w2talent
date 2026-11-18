@@ -14,6 +14,9 @@ export const LIMITE_LEITURAS_VAGA_DIA = 30;
 /** 2.1c: reescritas sem viés e listas de perguntas de entrevista pela IA, por conta. */
 export const LIMITE_REVISOES_VAGA_DIA = 30;
 export const LIMITE_PERGUNTAS_VAGA_DIA = 30;
+/** 2.6a: perguntas na Ajuda (sem login) e pedidos "mandar para a equipe", por IP. */
+export const LIMITE_PERGUNTAS_AJUDA_DIA = 20;
+export const LIMITE_AJUDA_EQUIPE_DIA = 3;
 
 export function ipDaRequisicao(req: NextRequest | Request): string {
   return req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "sem-ip";

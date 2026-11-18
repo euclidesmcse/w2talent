@@ -8,7 +8,7 @@ import type { TaskName } from "@/lib/ai/tasks";
 
 export type LinhaIa = {
   /** Prefixo das chaves em messages ("cv" → ia.cvTarefa, ia.cvFaz, ia.cvDados, ia.cvDecide) e âncora na página. */
-  id: "cv" | "w2" | "vaga" | "vies" | "perguntas" | "busca" | "parecidas" | "match";
+  id: "cv" | "w2" | "vaga" | "vies" | "perguntas" | "busca" | "parecidas" | "match" | "ajuda";
   ancora: string;
   /** Tarefas do roteador de IA usadas. Vazio = não é IA (o match é uma conta com pesos fixos). */
   tarefas: TaskName[];
@@ -25,6 +25,8 @@ export const LINHAS_IA: LinhaIa[] = [
   { id: "busca", ancora: "busca", tarefas: ["embed"] },
   { id: "parecidas", ancora: "parecidas", tarefas: ["embed"] },
   { id: "match", ancora: "match", tarefas: [] },
+  // 2.6a-2: perguntas na Ajuda, respondidas só com os artigos.
+  { id: "ajuda", ancora: "ajuda", tarefas: ["support_chat", "embed"] },
 ];
 
 export const CAMPOS_LINHA = ["Tarefa", "Faz", "Dados", "Decide"] as const;

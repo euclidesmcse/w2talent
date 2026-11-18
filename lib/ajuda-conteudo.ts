@@ -220,7 +220,7 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
         "/ia"
       ],
       "ordem": 15,
-      "corpo": "A IA ajuda em tarefas de texto. Ela não aprova, não reprova e não dá nota a ninguém.\n\n## Onde ela aparece\n\n- Ler o CV e preencher a ficha.\n- Escrever o resumo e os destaques da Ficha W2.\n- Ler o texto da vaga e preencher os campos.\n- Reescrever a vaga sem termos de viés, quando o recrutador pede.\n- Sugerir perguntas de entrevista.\n\n## Onde ela não entra\n\nO [match](/ajuda/match) é uma conta com pesos fixos. A busca usa texto e significado para ordenar, mas não esconde candidatos.\n\nA lista completa, com os dados que cada tarefa usa, está em [Como usamos IA](/ia)."
+      "corpo": "A IA ajuda em tarefas de texto. Ela não aprova, não reprova e não dá nota a ninguém.\n\n## Onde ela aparece\n\n- Ler o CV e preencher a ficha.\n- Escrever o resumo e os destaques da Ficha W2.\n- Ler o texto da vaga e preencher os campos.\n- Reescrever a vaga sem termos de viés, quando o recrutador pede.\n- Sugerir perguntas de entrevista.\n- Responder perguntas nesta ajuda, só com o que está nos artigos e sempre com o link da fonte.\n\n## Onde ela não entra\n\nO [match](/ajuda/match) é uma conta com pesos fixos. A busca usa texto e significado para ordenar, mas não esconde candidatos.\n\nA lista completa, com os dados que cada tarefa usa, está em [Como usamos IA](/ia)."
     }
   ],
   "en": [
@@ -441,7 +441,7 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
         "/ia"
       ],
       "ordem": 15,
-      "corpo": "AI helps with text tasks. It does not approve, reject or score anyone.\n\n## Where it shows up\n\n- Reading the CV and filling in the profile.\n- Writing the summary and highlights of the W2 Profile.\n- Reading the job text and filling in the fields.\n- Rewriting the job without biased terms, when the recruiter asks.\n- Suggesting interview questions.\n\n## Where it does not\n\nThe [match](/ajuda/match) is a calculation with fixed weights. Search uses text and meaning to sort, but does not hide candidates.\n\nThe full list, with the data each task uses, is in [How we use AI](/ia)."
+      "corpo": "AI helps with text tasks. It does not approve, reject or score anyone.\n\n## Where it shows up\n\n- Reading the CV and filling in the profile.\n- Writing the summary and highlights of the W2 Profile.\n- Reading the job text and filling in the fields.\n- Rewriting the job without biased terms, when the recruiter asks.\n- Suggesting interview questions.\n- Answering questions in this help, only with what the articles say and always with the source link.\n\n## Where it does not\n\nThe [match](/ajuda/match) is a calculation with fixed weights. Search uses text and meaning to sort, but does not hide candidates.\n\nThe full list, with the data each task uses, is in [How we use AI](/ia)."
     }
   ],
   "es": [
@@ -662,7 +662,7 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
         "/ia"
       ],
       "ordem": 15,
-      "corpo": "La IA ayuda en tareas de texto. No aprueba, no rechaza y no le pone nota a nadie.\n\n## Dónde aparece\n\n- Leer el CV y llenar la ficha.\n- Escribir el resumen y los destacados de la Ficha W2.\n- Leer el texto de la vacante y llenar los campos.\n- Reescribir la vacante sin términos de sesgo, cuando el reclutador lo pide.\n- Sugerir preguntas de entrevista.\n\n## Dónde no entra\n\nEl [match](/ajuda/match) es una cuenta con pesos fijos. La búsqueda usa texto y significado para ordenar, pero no oculta candidatos.\n\nLa lista completa, con los datos que usa cada tarea, está en [Cómo usamos la IA](/ia)."
+      "corpo": "La IA ayuda en tareas de texto. No aprueba, no rechaza y no le pone nota a nadie.\n\n## Dónde aparece\n\n- Leer el CV y llenar la ficha.\n- Escribir el resumen y los destacados de la Ficha W2.\n- Leer el texto de la vacante y llenar los campos.\n- Reescribir la vacante sin términos de sesgo, cuando el reclutador lo pide.\n- Sugerir preguntas de entrevista.\n- Responder preguntas en esta ayuda, solo con lo que dicen los artículos y siempre con el enlace de la fuente.\n\n## Dónde no entra\n\nEl [match](/ajuda/match) es una cuenta con pesos fijos. La búsqueda usa texto y significado para ordenar, pero no oculta candidatos.\n\nLa lista completa, con los datos que usa cada tarea, está en [Cómo usamos la IA](/ia)."
     }
   ]
 };

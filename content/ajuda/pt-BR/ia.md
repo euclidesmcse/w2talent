@@ -15,6 +15,7 @@ A IA ajuda em tarefas de texto. Ela não aprova, não reprova e não dá nota a 
 - Ler o texto da vaga e preencher os campos.
 - Reescrever a vaga sem termos de viés, quando o recrutador pede.
 - Sugerir perguntas de entrevista.
+- Responder perguntas nesta ajuda, só com o que está nos artigos e sempre com o link da fonte.
 
 ## Onde ela não entra
 
