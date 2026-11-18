@@ -5,13 +5,20 @@
  *   abrir ou Em análise → visualizado; Entrevista, Proposta, Contratada → respondido;
  *   Não seguiu → arquivado ("Encerrada" na tela do candidato).
  * - D6: só a empresa da vaga; cada mudança grava o sinal "etapa_mudou" (de, para).
- * Contato continua mascarado aqui; o 2.4c libera na Entrevista (D4).
+ * - D4 (2.4c): ir para Entrevista (ou pular direto para Proposta/Contratada) libera o e-mail e o
+ *   telefone da ficha só para a empresa daquela vaga (contatoLiberadoEm) e avisa o candidato por e-mail.
+ *   Liberado uma vez, fica liberado, mesmo que a etapa volte.
  */
 import type { PrismaClient } from "@prisma/client";
 import { withoutContacts } from "./search";
 import { matchCandidato, type GapCandidato } from "./match-candidato";
 import { gravarSinais } from "./sinais";
 import { ETAPAS, type Etapa } from "./painel-rh";
+import { emailLocale, renderEntrevistaEmail } from "./email-templates";
+import type { EmailMessage } from "./email";
+
+/** Etapas que liberam o contato (D4): a partir da Entrevista. */
+export const ETAPAS_COM_CONTATO: readonly Etapa[] = ["entrevista", "proposta", "contratada"];
 
 export type StatusCandidatura = "enviado" | "visualizado" | "respondido" | "arquivado";
 
@@ -51,6 +58,8 @@ export type CandidaturaRh = {
   fichaAtiva: boolean;
   match: number;
   gaps: GapCandidato[];
+  /** 2.4c: e-mail e telefone completos, só depois da Entrevista (D4); antes, null. */
+  contato: { email: string; celular: string | null } | null;
   /** Perfil sem contato (emailMasked/celularMasked), no mesmo formato da busca de Candidatos. */
   candidato: Record<string, unknown>;
 };
@@ -82,7 +91,7 @@ export async function candidaturasDaVaga(
   const [apps, total] = await Promise.all([
     db.application.findMany({
       where,
-      select: { id: true, etapa: true, etapaEm: true, createdAt: true, candidate: { select: PERFIL } },
+      select: { id: true, etapa: true, etapaEm: true, createdAt: true, contatoLiberadoEm: true, candidate: { select: PERFIL } },
       orderBy: { createdAt: "asc" },
       take: RH_MAX_CANDIDATURAS,
     }),
@@ -100,6 +109,7 @@ export async function candidaturasDaVaga(
       fichaAtiva: perfil.status === "ativo" && expiresAt.getTime() > t,
       match: m.pct,
       gaps: m.gaps,
+      contato: a.contatoLiberadoEm ? { email: perfil.email, celular: perfil.celular ?? null } : null,
       candidato: withoutContacts(perfil),
     };
   });
@@ -109,7 +119,16 @@ export async function candidaturasDaVaga(
 }
 
 export type ResultadoEtapa =
-  | { ok: true; etapa: Etapa; status: StatusCandidatura; etapaEm: string }
+  | {
+      ok: true;
+      etapa: Etapa;
+      status: StatusCandidatura;
+      etapaEm: string;
+      /** Contato liberado (agora ou antes): e-mail e telefone para a tela. */
+      contato: { email: string; celular: string | null } | null;
+      /** Aviso ao candidato, só na primeira liberação; quem chama põe na fila depois do commit. */
+      aviso: EmailMessage | null;
+    }
   | { ok: false; erro: "nao_encontrada" | "mudou" };
 
 /**
@@ -123,25 +142,56 @@ export async function mudarEtapa(
   de: Etapa,
   para: Etapa,
   now = new Date(),
+  opts: { appUrl?: string } = {},
 ): Promise<ResultadoEtapa> {
   return db.$transaction(async (tx) => {
     const app = await tx.application.findFirst({
       where: { id: applicationId, companyId, origem: "candidaturaLote" },
-      select: { id: true, etapa: true, etapaEm: true, status: true, respondidaEm: true, candidateId: true, vacancyId: true },
+      select: {
+        id: true, etapa: true, etapaEm: true, status: true, respondidaEm: true, contatoLiberadoEm: true, candidateId: true, vacancyId: true,
+        candidate: { select: { nome: true, email: true, celular: true, idiomaOriginal: true } },
+        vacancy: { select: { titulo: true } },
+        company: { select: { nome: true } },
+      },
     });
     if (!app) return { ok: false, erro: "nao_encontrada" } as const;
     if (app.etapa !== de) return { ok: false, erro: "mudou" } as const;
-    if (de === para) return { ok: true, etapa: para, status: app.status as StatusCandidatura, etapaEm: (app.etapaEm ?? now).toISOString() } as const;
+    const contatoDe = { email: app.candidate.email, celular: app.candidate.celular ?? null };
+    if (de === para) {
+      return { ok: true, etapa: para, status: app.status as StatusCandidatura, etapaEm: (app.etapaEm ?? now).toISOString(), contato: app.contatoLiberadoEm ? contatoDe : null, aviso: null } as const;
+    }
     const status = statusDaEtapa(app.status as StatusCandidatura, para);
+    const libera = !app.contatoLiberadoEm && ETAPAS_COM_CONTATO.includes(para);
     const r = await tx.application.updateMany({
       where: { id: app.id, etapa: de },
-      data: { etapa: para, etapaEm: now, status, ...(app.respondidaEm || para === "nova" ? {} : { respondidaEm: now }) },
+      data: {
+        etapa: para,
+        etapaEm: now,
+        status,
+        ...(app.respondidaEm || para === "nova" ? {} : { respondidaEm: now }),
+        ...(libera ? { contatoLiberadoEm: now } : {}),
+      },
     });
     if (r.count === 0) return { ok: false, erro: "mudou" } as const;
     await gravarSinais(tx, [
-      { tipo: "etapa_mudou", ator: "recrutador", candidateId: app.candidateId, vacancyId: app.vacancyId, applicationId: app.id, dados: { de, para }, createdAt: now },
+      {
+        tipo: "etapa_mudou", ator: "recrutador", candidateId: app.candidateId, vacancyId: app.vacancyId, applicationId: app.id,
+        dados: libera ? { de, para, contatoLiberado: true } : { de, para }, createdAt: now,
+      },
     ]);
-    return { ok: true, etapa: para, status, etapaEm: now.toISOString() } as const;
+    let aviso: EmailMessage | null = null;
+    if (libera && app.candidate.email) {
+      const m = renderEntrevistaEmail({
+        locale: emailLocale(app.candidate.idiomaOriginal),
+        nome: app.candidate.nome,
+        empresa: app.company.nome,
+        vagaTitulo: app.vacancy?.titulo ?? "",
+        url: `${(opts.appUrl ?? "").replace(/\/$/, "")}/minhas-candidaturas`,
+      });
+      aviso = { to: app.candidate.email, ...m, idempotencyKey: `entrevista:${app.id}` };
+    }
+    const liberado = libera || !!app.contatoLiberadoEm;
+    return { ok: true, etapa: para, status, etapaEm: now.toISOString(), contato: liberado ? contatoDe : null, aviso } as const;
   });
 }
 

@@ -103,9 +103,11 @@ export default function CandidaturasDaVagaPage() {
         return;
       }
       if (!r.ok) throw new Error(String(r.status));
-      const j = (await r.json()) as { etapa: Etapa; etapaEm: string };
+      const j = (await r.json()) as { etapa: Etapa; etapaEm: string; contato: CandidaturaRh["contato"] };
       setEstado((e) =>
-        e.t === "ok" ? { ...e, itens: e.itens.map((x) => (x.applicationId === it.applicationId ? { ...x, etapa: j.etapa, etapaEm: j.etapaEm } : x)) } : e,
+        e.t === "ok"
+          ? { ...e, itens: e.itens.map((x) => (x.applicationId === it.applicationId ? { ...x, etapa: j.etapa, etapaEm: j.etapaEm, contato: j.contato ?? x.contato } : x)) }
+          : e,
       );
       show(t("etapaSalva", { nome: nomeDe(it), etapa: nomeEtapa(j.etapa) }), "success");
     } catch {
@@ -250,6 +252,14 @@ export default function CandidaturasDaVagaPage() {
                             {t("enviadaEm", { data: fmt.dateTime(new Date(it.enviadaEm), { day: "numeric", month: "short" }) })}
                             {!it.fichaAtiva ? <span className="ml-2 inline-flex whitespace-nowrap h-5 items-center rounded-control bg-neutral-soft px-1.5 text-[11px] text-ink-soft">{t("fichaFora")}</span> : null}
                           </span>
+                          {it.contato ? (
+                            <span className="flex flex-wrap gap-x-3 text-[13px]" data-testid="rh-contato">
+                              <a href={`mailto:${it.contato.email}`} className="text-brand underline underline-offset-2" aria-label={t("contatoEmail", { nome })}>{it.contato.email}</a>
+                              {it.contato.celular ? (
+                                <a href={`tel:${it.contato.celular.replace(/[^\d+]/g, "")}`} className="text-brand underline underline-offset-2" aria-label={t("contatoTel", { nome })}>{it.contato.celular}</a>
+                              ) : null}
+                            </span>
+                          ) : null}
                         </div>
                         <div className="min-w-[140px] flex-[0_1_200px]"><MatchCandidatoCell match={it.match} gaps={it.gaps} /></div>
                         <div className="flex flex-wrap items-center gap-2">

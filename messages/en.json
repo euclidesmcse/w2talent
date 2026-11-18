@@ -70,7 +70,7 @@
     "faq1q": "Do I have to pay to apply?",
     "faq1a": "No. Candidates use it for free.",
     "faq2q": "Are my phone and email exposed?",
-    "faq2a": "No. Your contact stays protected until you reply to a company.",
+    "faq2a": "No. Your contact stays protected until you reply to a company or get invited to an interview; then only that job's company sees your e-mail and phone, and you get a notice.",
     "faq3q": "Does it work on mobile?",
     "faq3a": "Yes. The same account works on computer and phone, and you can install it as an app.",
     "faq4q": "Is w2talent.com live yet?",
@@ -272,7 +272,7 @@
     "visualizado": "Seen",
     "respondido": "Answered",
     "arquivado": "Closed",
-    "footnote": "Your contact stays protected: the company talks to you through a W2Talent address until you reply.",
+    "footnote": "Your contact stays protected. If a company invites you to an interview, only that company can see your e-mail and phone, and you get a notice by e-mail.",
     "sentOn": "Sent on {date}"
   },
   "time": {
@@ -646,7 +646,7 @@
     "usage": "{used} of {max} sent in the last 24 h",
     "jobTitle": "The job",
     "companyGets": "What the company will get",
-    "companyGetsHint": "No e-mail, phone or links. Only the expected pay for the job's contract type.",
+    "companyGetsHint": "No e-mail, phone or links. Only the expected pay for the job's contract type. If the company invites you to an interview, it can see your e-mail and phone, and you get a notice.",
     "skills": "Skills",
     "description": "Description",
     "benefits": "Benefits",
@@ -1251,6 +1251,8 @@
     "maisDe": "Showing the first {n}.",
     "selecaoCheia": "The selection already has {max}. Remove someone or clear it.",
     "selecionadosDica": "{n} of {max} selected (the selection is shared with Candidates).",
-    "limparSelecao": "Clear selection"
+    "limparSelecao": "Clear selection",
+    "contatoEmail": "E-mail {nome}",
+    "contatoTel": "Call {nome}"
   }
 }

@@ -224,3 +224,53 @@ export function renderCandidaturaEmail(i: CandidaturaEmailInput): { subject: str
 </table></td></tr></table></body></html>`;
   return { subject, html, text };
 }
+
+// ── 2.4c Entrevista: aviso ao candidato quando o contato é liberado (plano 2.4, D4) ──
+
+const ENTREVISTA: Record<
+  EmailLocale,
+  { assunto: (e: string) => string; ola: (n: string) => string; corpo: (e: string, v: string) => string; contato: string; botao: string; rodape: string }
+> = {
+  "pt-BR": {
+    assunto: (e) => `${e} quer conversar com você`,
+    ola: (n) => (n ? `Olá, ${n}` : "Olá"),
+    corpo: (e, v) => `${e} chamou você para entrevista na vaga ${v}.`,
+    contato: "Por isso, a empresa passou a ver o seu e-mail e o seu telefone da Ficha W2 e deve falar com você por eles.",
+    botao: "Ver minhas candidaturas",
+    rodape: "Você recebeu este aviso porque se candidatou a esta vaga pelo W2Talent.",
+  },
+  en: {
+    assunto: (e) => `${e} wants to talk to you`,
+    ola: (n) => (n ? `Hi ${n}` : "Hi"),
+    corpo: (e, v) => `${e} invited you to an interview for the ${v} job.`,
+    contato: "So the company can now see the e-mail and phone on your W2 profile and should contact you through them.",
+    botao: "See my applications",
+    rodape: "You got this notice because you applied to this job through W2Talent.",
+  },
+  es: {
+    assunto: (e) => `${e} quiere hablar contigo`,
+    ola: (n) => (n ? `Hola, ${n}` : "Hola"),
+    corpo: (e, v) => `${e} te llamó a entrevista para la vacante ${v}.`,
+    contato: "Por eso, la empresa ahora ve el e-mail y el teléfono de tu Ficha W2 y debería contactarte por ellos.",
+    botao: "Ver mis postulaciones",
+    rodape: "Recibiste este aviso porque te postulaste a esta vacante por W2Talent.",
+  },
+};
+
+export type EntrevistaEmailInput = { locale: EmailLocale; nome?: string | null; empresa: string; vagaTitulo: string; url: string };
+
+export function renderEntrevistaEmail(i: EntrevistaEmailInput): { subject: string; html: string; text: string } {
+  const c = ENTREVISTA[i.locale];
+  const saudacao = c.ola(primeiroNome(i.nome));
+  const subject = c.assunto(i.empresa);
+  const text = `${saudacao},\n\n${c.corpo(i.empresa, i.vagaTitulo)}\n${c.contato}\n\n${c.botao}: ${i.url}\n\n${c.rodape}\n`;
+  const html = `<!doctype html><html lang="${i.locale}"><body style="margin:0;padding:0;background:#F7F8FA;font-family:Inter,Segoe UI,Arial,sans-serif;color:#111827">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F8FA;padding:24px 12px"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px">
+<tr><td style="padding:24px 24px 0;font:700 18px 'Space Grotesk',Inter,Arial,sans-serif">W2<span style="color:#1F4FD8">Talent</span></td></tr>
+<tr><td style="padding:16px 24px 0;font-size:16px;line-height:24px"><p style="margin:0 0 12px">${esc(saudacao)},</p><p style="margin:0 0 8px;font-weight:600">${esc(c.corpo(i.empresa, i.vagaTitulo))}</p><p style="margin:0">${esc(c.contato)}</p></td></tr>
+<tr><td style="padding:20px 24px 0"><a href="${esc(i.url)}" style="display:inline-block;background:#1F4FD8;color:#FFFFFF;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:999px">${esc(c.botao)}</a></td></tr>
+<tr><td style="padding:20px 24px 24px;font-size:13px;line-height:20px;color:#4B5563">${esc(c.rodape)}</td></tr>
+</table></td></tr></table></body></html>`;
+  return { subject, html, text };
+}

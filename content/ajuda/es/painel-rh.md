@@ -27,4 +27,5 @@ En "Ver postulaciones" aparecen las personas que se postularon, de mayor a menor
 
 - **Etapa:** Nueva, En análisis, Entrevista, Oferta, Contratada o No siguió. Cámbiala con un clic; no hay formulario.
 - **Lo que ve el candidato:** "Vista" cuando abres la ficha o la pasas a En análisis, "Respondida" desde Entrevista y "Cerrada" en No siguió. Las etapas internas no se le muestran.
+- **Contacto:** al pasar a Entrevista (o después), el correo y el teléfono del candidato aparecen en la lista, solo para tu empresa, y recibe un aviso por correo. Liberado una vez, queda liberado.
 - **Comparar:** marca hasta 10 personas para compararlas lado a lado y exportar.

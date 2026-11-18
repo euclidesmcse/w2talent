@@ -5,6 +5,8 @@ import { cookieDeTeste, type ContaTeste } from "./helpers/sessao-mock";
 
 jest.mock("../lib/sessao", () => require("./helpers/sessao-mock").sessaoMock());
 jest.mock("../lib/background", () => ({ runInBackground: () => undefined }));
+const enfileirados: any[] = [];
+jest.mock("../lib/notifications", () => ({ enqueueEmail: async (m: any) => void enfileirados.push(m) }));
 
 function localDb(url: string | undefined): boolean {
   try {
@@ -21,7 +23,7 @@ const USERS = [REC_A, REC_B];
 const CANDS = ["rhc-teste-ana", "rhc-teste-beto", "rhc-teste-caio"];
 const rec = (id: string, extra: Partial<ContaTeste> = {}): ContaTeste => ({ id, perfil: "recrutador", mfaLigado: true, ...extra });
 
-describeDb("candidaturas da vaga (2.4b)", () => {
+describeDb("candidaturas da vaga (2.4b/2.4c)", () => {
   let db: PrismaClient;
   let vagaA = "";
   let vagaB = "";
@@ -110,7 +112,14 @@ describeDb("candidaturas da vaga (2.4b)", () => {
 
     const r = await mudar(rec(REC_A), apps[CANDS[0]], { de: "nova", para: "entrevista" });
     expect(r.status).toBe(200);
-    expect(await r.json()).toMatchObject({ ok: true, etapa: "entrevista", status: "respondido" });
+    const j1 = await r.json();
+    expect(j1).toMatchObject({ ok: true, etapa: "entrevista", status: "respondido", contato: { email: `${CANDS[0]}@exemplo.com`, celular: "+5511988887777" } });
+    expect(j1.aviso).toBeUndefined();
+    // 2.4c: o candidato recebe um aviso, uma vez só.
+    expect(enfileirados).toHaveLength(1);
+    expect(enfileirados[0]).toMatchObject({ to: `${CANDS[0]}@exemplo.com`, idempotencyKey: `entrevista:${apps[CANDS[0]]}` });
+    expect(enfileirados[0].subject).toContain("Acme RHC");
+    expect(enfileirados[0].html).toContain("/minhas-candidaturas");
     let a = await db.application.findUniqueOrThrow({ where: { id: apps[CANDS[0]] } });
     expect([a.etapa, a.status]).toEqual(["entrevista", "respondido"]);
     const primeira = a.respondidaEm;
@@ -124,12 +133,31 @@ describeDb("candidaturas da vaga (2.4b)", () => {
     a = await db.application.findUniqueOrThrow({ where: { id: apps[CANDS[0]] } });
     expect([a.etapa, a.status]).toEqual(["em_analise", "respondido"]);
     expect(a.respondidaEm?.getTime()).toBe(primeira?.getTime());
+    // Liberado uma vez, fica liberado; voltar para Entrevista não manda outro aviso.
+    expect(a.contatoLiberadoEm).not.toBeNull();
+    const volta = await (await mudar(rec(REC_A), apps[CANDS[0]], { de: "em_analise", para: "entrevista" })).json();
+    expect(volta.contato).toMatchObject({ email: `${CANDS[0]}@exemplo.com` });
+    expect(enfileirados).toHaveLength(1);
+    await mudar(rec(REC_A), apps[CANDS[0]], { de: "entrevista", para: "em_analise" });
+
+    // A lista mostra o contato só de quem foi liberado.
+    const lista = await (await ler(rec(REC_A), vagaA)).json();
+    expect(lista.itens.find((i: any) => i.candidato.id === CANDS[0]).contato).toEqual({ email: `${CANDS[0]}@exemplo.com`, celular: "+5511988887777" });
+    expect(lista.itens.filter((i: any) => i.candidato.id !== CANDS[0]).every((i: any) => i.contato === null)).toBe(true);
 
     await mudar(rec(REC_A), apps[CANDS[1]], { de: "nova", para: "nao_seguiu" });
-    expect((await db.application.findUniqueOrThrow({ where: { id: apps[CANDS[1]] } })).status).toBe("arquivado");
+    const b = await db.application.findUniqueOrThrow({ where: { id: apps[CANDS[1]] } });
+    expect([b.status, b.contatoLiberadoEm]).toEqual(["arquivado", null]);
+    expect(enfileirados).toHaveLength(1);
 
     const sinais = await db.feedbackSignal.findMany({ where: { candidateId: { in: CANDS }, tipo: "etapa_mudou" }, orderBy: { createdAt: "asc" } });
-    expect(sinais.map((s) => s.dados)).toEqual([{ de: "nova", para: "entrevista" }, { de: "entrevista", para: "em_analise" }, { de: "nova", para: "nao_seguiu" }]);
+    expect(sinais.map((s) => s.dados)).toEqual([
+      { de: "nova", para: "entrevista", contatoLiberado: true },
+      { de: "entrevista", para: "em_analise" },
+      { de: "em_analise", para: "entrevista" },
+      { de: "entrevista", para: "em_analise" },
+      { de: "nova", para: "nao_seguiu" },
+    ]);
     expect(sinais.every((s) => s.ator === "recrutador" && s.vacancyId === vagaA)).toBe(true);
   });
 

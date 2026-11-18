@@ -8,7 +8,7 @@ ordem: 10
 
 ## Contacto protegido
 
-En la búsqueda de candidatos, el correo y el teléfono aparecen enmascarados (por ejemplo, a***@e***.com). El contacto completo solo llega a la empresa después de que le respondes.
+En la búsqueda de candidatos, el correo y el teléfono aparecen enmascarados (por ejemplo, a***@e***.com). El contacto completo solo llega a la empresa después de que le respondes o cuando te llama a una entrevista en una vacante a la que te postulaste (y recibes un aviso).
 
 ## Cuánto tiempo queda el perfil en la búsqueda
 

@@ -17,6 +17,6 @@ En [Mis postulaciones](/minhas-candidaturas) aparece cada vacante enviada, con l
 
 ## Contacto protegido
 
-La empresa habla contigo por una dirección de W2Talent. Tu correo y teléfono solo le aparecen después de que respondes.
+La empresa habla contigo por una dirección de W2Talent. Tu correo y teléfono solo le aparecen después de que respondes o cuando te llama a una entrevista. En ese caso, solo la empresa de esa vacante ve tu contacto, y recibes un aviso por correo.
 
 El [panel](/painel) muestra los mismos números de forma resumida.

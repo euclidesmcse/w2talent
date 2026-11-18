@@ -17,6 +17,6 @@ ordem: 9
 
 ## Protected contact
 
-The company talks to you through a W2Talent address. Your email and phone only show to them after you reply.
+The company talks to you through a W2Talent address. Your email and phone only show to them after you reply or when they invite you to an interview. In that case only that job's company sees your contact, and you get a notice by email.
 
 The [dashboard](/painel) shows the same numbers in short.

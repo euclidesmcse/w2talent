@@ -27,4 +27,5 @@ Each job shows its status, the total number of applications and the new ones. "M
 
 - **Stage:** New, Reviewing, Interview, Offer, Hired or Not moving forward. Change it with one click; there is no form.
 - **What the candidate sees:** "Seen" when you open the profile or move it to Reviewing, "Answered" from Interview on, and "Closed" for Not moving forward. Internal stages are not shown to them.
+- **Contact:** when you move someone to Interview (or later), their email and phone show in the list, only for your company, and they get a notice by email. Once released, it stays released.
 - **Compare:** tick up to 10 people to compare them side by side and export.

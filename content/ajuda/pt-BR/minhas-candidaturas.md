@@ -17,6 +17,6 @@ Em [Minhas candidaturas](/minhas-candidaturas) aparece cada vaga enviada, com a 
 
 ## Contato protegido
 
-A empresa fala com você por um endereço do W2Talent. Seu e-mail e telefone só aparecem para ela depois que você responde.
+A empresa fala com você por um endereço do W2Talent. Seu e-mail e telefone só aparecem para ela depois que você responde ou quando ela chama você para uma entrevista. Nesse caso, só a empresa daquela vaga vê o contato, e você recebe um aviso por e-mail.
 
 O [painel](/painel) mostra os mesmos números de forma resumida.

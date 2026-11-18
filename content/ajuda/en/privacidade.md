@@ -8,7 +8,7 @@ ordem: 10
 
 ## Protected contact
 
-In candidate search, email and phone are masked (for example, a***@e***.com). The full contact only reaches the company after you reply to it.
+In candidate search, email and phone are masked (for example, a***@e***.com). The full contact only reaches the company after you reply to it or when it invites you to an interview for a job you applied to (and you get a notice).
 
 ## How long a profile stays in search
 
