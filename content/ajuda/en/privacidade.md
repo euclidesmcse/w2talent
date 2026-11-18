@@ -10,6 +10,10 @@ ordem: 10
 
 In candidate search, email and phone are masked (for example, a***@e***.com). The full contact only reaches the company after you reply to it or when it invites you to an interview for a job you applied to (and you get a notice).
 
+## The company's hiring system
+
+Some companies turn on the integration with their hiring system (ATS). In that case, the application you send also goes to that system, with the same content you approved: the W2 Profile, without e-mail, phone or links. There, it follows the company's privacy rules.
+
 ## Salary expectation
 
 The salary expectation you put in your profile shows to recruiters on your W2 Profile and in candidate search. In the market numbers ([Tech job market](/mercado) and Post a job), recruiters only see aggregated ranges from **10 or more profiles**, never anyone's own expectation, and never the minimum or the maximum.

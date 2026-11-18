@@ -23,5 +23,6 @@ Para enviar você precisa entrar como candidato e ter a ficha publicada.
 - A mesma vaga nunca é enviada duas vezes.
 - Se a empresa mudar a vaga depois da sua aprovação, a aprovação cai e a vaga volta para você conferir.
 - Vaga vencida ou arquivada não é enviada.
+- A empresa recebe por e-mail e, se ligou a integração com ATS, também no sistema de seleção dela. O conteúdo é o mesmo, sem seu e-mail e telefone.
 
 Depois do envio, acompanhe em [Minhas candidaturas](/minhas-candidaturas).

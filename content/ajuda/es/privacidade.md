@@ -10,6 +10,10 @@ ordem: 10
 
 En la búsqueda de candidatos, el correo y el teléfono aparecen enmascarados (por ejemplo, a***@e***.com). El contacto completo solo llega a la empresa después de que le respondes o cuando te llama a una entrevista en una vacante a la que te postulaste (y recibes un aviso).
 
+## Sistema de selección de la empresa
+
+Algunas empresas activan la integración con su sistema de selección (ATS). En ese caso, la postulación que envíes también va a ese sistema, con el mismo contenido que aprobaste: la Ficha W2, sin e-mail, teléfono ni enlaces. Allí, sigue las reglas de privacidad de la empresa.
+
 ## Pretensión salarial
 
 La pretensión que pones en tu ficha aparece para los reclutadores en tu Ficha W2 y en la búsqueda de candidatos. En los números de mercado ([Mercado de TI](/mercado) y Publicar vacante), los reclutadores ven solo rangos agregados de **10 o más fichas**, nunca la pretensión de alguien, y nunca el mínimo ni el máximo.

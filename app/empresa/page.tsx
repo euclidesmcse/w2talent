@@ -10,6 +10,7 @@ import { Button, Card, CardBody, Field, Input, useToast } from "@/components/ui"
 import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { contaRecusada, linkEntrar, useConta } from "@/lib/conta-client";
+import { EmpresaWebhook } from "@/components/empresa-webhook";
 
 type Status = "pendente" | "validado" | "rejeitado";
 type Empresa = { id: string; nome: string; site: string | null; cnpj: string | null; emailContato: string | null; validacaoStatus: Status };
@@ -165,6 +166,8 @@ export default function EmpresaPage() {
             </CardBody>
           </Card>
         )}
+        {/* 3.4a: integração com ATS, depois de a empresa existir (a API confere se a conta é a dona). */}
+        {empresa && status !== "rejeitado" ? <EmpresaWebhook /> : null}
       </main>
     </div>
   );

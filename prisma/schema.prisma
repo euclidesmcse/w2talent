@@ -76,6 +76,7 @@ model CompanyProfile {
   vacancies        Vacancy[]
   applications     Application[]
   membros          CompanyMember[]
+  webhook          Webhook?
 }
 
 // ── CompanyMember (2.1a) ─────────────────────────────────────────────
@@ -708,4 +709,36 @@ model ConversaCodigo {
   createdAt  DateTime @default(now())
 
   @@index([conversaId])
+}
+
+// 3.4a Integração com ATS: um webhook por empresa. O segredo da assinatura fica cifrado
+// (AES-GCM com AI_KEYS_MASTER, lib/ai/keys.ts). falhasSeguidas: entregas que falharam em sequência
+// (zera no sucesso; o 3.4b pausa com 50).
+model Webhook {
+  id             String           @id @default(cuid())
+  companyId      String           @unique
+  company        CompanyProfile   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  url            String
+  segredoCifrado String
+  ativo          Boolean          @default(true)
+  falhasSeguidas Int              @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  entregas       WebhookEntrega[]
+}
+
+// Uma linha por tentativa de entrega. Nunca guarda o corpo enviado nem a resposta.
+model WebhookEntrega {
+  id         String   @id @default(cuid())
+  webhookId  String
+  webhook    Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  evento     String
+  deliveryId String
+  status     Int? // HTTP da resposta; null quando não houve resposta
+  erro       String? // tempo, rede, url, redirecionamento, candidatura_apagada...
+  tentativa  Int
+  duracaoMs  Int
+  createdAt  DateTime @default(now())
+
+  @@index([webhookId, createdAt])
 }
