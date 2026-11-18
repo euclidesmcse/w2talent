@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { searchCandidates, PAGE_SIZE } from "@/lib/search";
 import { isValidLocale, defaultLocale, type Locale } from "@/i18n";
 import { exigirConta, NO_STORE } from "@/lib/sessao";
+import { lerFiltros } from "@/lib/candidatos-filtros";
+import { empresaDaConta } from "@/lib/empresa";
 
 /** Busca de candidatos: só recrutador logado, com o autenticador (1.5.5, decisões 2 e 4). */
 export async function GET(req: NextRequest) {
@@ -19,9 +21,26 @@ export async function GET(req: NextRequest) {
   const lang: Locale = isValidLocale(langRaw) ? langRaw : defaultLocale;
 
   // lang: idioma da resposta; o vetor da busca (bge-m3) é o mesmo nos três idiomas.
-  const params = { q, page, pageSize, modo, regime, nivel, lang } as any;
+  // 2.2b: filtros da tela (na URL) e vaga de referência, só da empresa de quem busca.
+  const filtros = lerFiltros(url.searchParams);
+  const faixaAte = filtros.faixaAte ?? null;
+  const params = { q, page, pageSize, modo: filtros.modo ?? modo, regime: filtros.regime ?? regime, nivel, faixaAte, lang, filtros } as any;
 
-  const result = await searchCandidates(params);
+  let vaga = null;
+  if (filtros.vaga) {
+    const { prisma } = await import("@/lib/prisma");
+    const empresa = await empresaDaConta(prisma, acesso.conta.id);
+    const v = empresa
+      ? await prisma.vacancy.findFirst({
+          where: { id: filtros.vaga, companyId: empresa.id },
+          select: { id: true, titulo: true, stack: true, nivel: true, regime: true, localidade: true, faixaDe: true, faixaAte: true, faixaMoeda: true, descricaoBullets: true, updatedAt: true, createdAt: true },
+        })
+      : null;
+    if (!v) return NextResponse.json({ error: "vaga_nao_encontrada" }, { status: 404, headers: NO_STORE });
+    vaga = v;
+  }
+
+  const result = await searchCandidates(params, undefined, vaga);
   const tookMs = Date.now() - start;
 
   return NextResponse.json(
@@ -34,6 +53,7 @@ export async function GET(req: NextRequest) {
       suggestion: result.suggestion ?? null,
       emptyCTA: result.emptyCTA ?? null,
       tookMs: result.tookMs ?? tookMs,
+      vaga: vaga ? { id: vaga.id, titulo: vaga.titulo } : null,
     },
     { status: 200, headers: { ...NO_STORE, "x-took-ms": String(tookMs) } }
   );

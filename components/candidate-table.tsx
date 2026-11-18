@@ -4,6 +4,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { formatPretensaoCandidato, formatTempo, initials, maskEmail, maskPhone } from "@/lib/format";
 import { buttonClasses } from "@/components/ui/button";
 import { SkillChips } from "@/components/skill-chips";
+import { MatchCandidatoCell } from "@/components/candidato-match";
+import type { GapCandidato } from "@/lib/match-candidato";
 
 export type CandidateRow = {
   id: string;
@@ -30,6 +32,9 @@ export type CandidateRow = {
   celular?: string;
   telefone?: string;
   status?: string;
+  /** 2.2b: match com a vaga de referência (só quando o recrutador escolhe uma). */
+  match?: number | null;
+  gaps?: GapCandidato[];
 };
 
 function getSkillIds(row: CandidateRow): string[] {
@@ -56,6 +61,8 @@ export function CandidateTable({
   const locale = useLocale();
   // Coluna "Pretensão" só aparece quando alguma linha tem valor.
   const showPretensao = items.some((r: any) => formatPretensaoCandidato(r, locale) !== "—");
+  // Coluna "Match" só com vaga de referência escolhida.
+  const showMatch = items.some((r) => r.match != null);
 
   return (
     <table aria-label={t("candidatos.tableLabel")} className="candidate-table w-full min-w-[760px] border-collapse text-sm tabular-nums">
@@ -63,6 +70,7 @@ export function CandidateTable({
         <tr className="text-left text-xs text-muted [&>th]:px-2 [&>th]:py-2.5 [&>th]:font-medium [&>th:first-child]:pl-4 [&>th:last-child]:pr-4">
           <th scope="col"><span className="sr-only">{t("table.selection")}</span></th>
           <th scope="col">{t("candidatos.colCandidato")}</th>
+          {showMatch ? <th scope="col">{t("candidatos.match.col")}</th> : null}
           <th scope="col">{t("table.skills")}</th>
           <th scope="col">{t("table.modelo")}</th>
           {showPretensao ? <th scope="col">{t("candidatos.colPretensao")}</th> : null}
@@ -115,6 +123,11 @@ export function CandidateTable({
                   </div>
                 </div>
               </td>
+              {showMatch ? (
+                <td className="px-2 py-3.5 align-top" data-testid="match-candidato">
+                  <MatchCandidatoCell match={row.match} gaps={row.gaps} />
+                </td>
+              ) : null}
               <td className="px-2 py-3.5 align-top text-ink-soft">
                 <SkillChips ids={skillIds} limit={3} />
               </td>
@@ -131,7 +144,7 @@ export function CandidateTable({
         })}
         {items.length === 0 ? (
           <tr>
-            <td colSpan={showPretensao ? 7 : 6} className="empty px-4 py-8 text-center text-muted">
+            <td colSpan={6 + (showPretensao ? 1 : 0) + (showMatch ? 1 : 0)} className="empty px-4 py-8 text-center text-muted">
               {t("candidatos.empty")}
             </td>
           </tr>

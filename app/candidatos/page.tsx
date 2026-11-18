@@ -11,6 +11,8 @@ import { EmptyState } from "@/components/empty-state";
 import { selectionStore } from "@/lib/selection-store";
 import { buttonClasses } from "@/components/ui/button";
 import { linkEntrar, useConta } from "@/lib/conta-client";
+import { CandidatosFiltros, type VagaOpcao } from "@/components/candidatos-filtros";
+import { filtrosParaUrl, lerFiltros, type FiltrosCandidatos } from "@/lib/candidatos-filtros";
 
 type Item = any;
 
@@ -36,6 +38,41 @@ export default function CandidatosPage() {
   const [modalItem, setModalItem] = React.useState<Item | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [activeTrigger, setActiveTrigger] = React.useState<React.RefObject<HTMLElement | null> | undefined>(undefined);
+  // 2.2b: filtros e vaga de referência ficam na URL (dá para mandar o link a um colega da empresa).
+  const [filtros, setFiltros] = React.useState<FiltrosCandidatos>({ skills: [] });
+  const [pronto, setPronto] = React.useState(false);
+  const [vagas, setVagas] = React.useState<VagaOpcao[] | null>(null);
+  const [vagaSumiu, setVagaSumiu] = React.useState(false);
+
+  React.useEffect(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const q0 = sp.get("q") ?? "";
+      setQ(q0);
+      setDraft(q0);
+      setFiltros(lerFiltros(sp));
+    } catch {}
+    setPronto(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (!liberado) return;
+    fetch("/api/conta/empresa/vagas", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { vagas: [] }))
+      .then((d) => setVagas(Array.isArray(d.vagas) ? d.vagas : []))
+      .catch(() => setVagas([]));
+  }, [liberado]);
+
+  React.useEffect(() => {
+    if (!pronto) return;
+    try {
+      const url = new URL(window.location.href);
+      url.search = new URLSearchParams([...(q ? [["q", q] as [string, string]] : []), ...filtrosParaUrl(filtros)]).toString();
+      window.history.replaceState(null, "", url.toString());
+    } catch {}
+  }, [q, filtros, pronto]);
+
+  const mudarFiltros = (f: FiltrosCandidatos) => { setVagaSumiu(false); setFiltros(f); setPage(1); };
 
   React.useEffect(() => {
     const sync = () => { try { setSelected([...selectionStore.getState().selectedIds]); } catch {} };
@@ -53,10 +90,16 @@ export default function CandidatosPage() {
   }, [draft, q]);
   const submitSearch = (e: React.FormEvent) => { e.preventDefault(); setQ(draft); setPage(1); };
 
-  const fetchPage = React.useCallback(async (query: string, p: number) => {
+  const fetchPage = React.useCallback(async (query: string, p: number, f: FiltrosCandidatos) => {
     const lang = locale;
-    const params = new URLSearchParams({ q: query, page: String(p), pageSize: "20", lang });
+    const params = new URLSearchParams([["q", query], ["page", String(p)], ["pageSize", "20"], ["lang", lang], ...filtrosParaUrl(f)]);
     const res = await fetch(`/api/search/candidates?${params.toString()}`);
+    if (res.status === 404 && f.vaga) {
+      // Vaga vencida, arquivada ou de outra empresa: tira a vaga e busca de novo.
+      setVagaSumiu(true);
+      setFiltros({ ...f, vaga: undefined });
+      return;
+    }
     const data = await res.json();
     setItems(data.items ?? []);
     setTotal(data.total ?? 0);
@@ -66,9 +109,9 @@ export default function CandidatosPage() {
     setLoaded(true);
   }, [locale]);
 
-  React.useEffect(() => { if (!liberado) return; setSearching(true); fetchPage(q, page).catch(() => {}).finally(() => { setLoaded(true); setSearching(false); }); }, [q, page, fetchPage, liberado]);
+  React.useEffect(() => { if (!liberado || !pronto) return; setSearching(true); fetchPage(q, page, filtros).catch(() => {}).finally(() => { setLoaded(true); setSearching(false); }); }, [q, page, filtros, fetchPage, liberado, pronto]);
 
-  const handleClearFilters = () => { setDraft(""); setQ(""); setPage(1); };
+  const handleClearFilters = () => { setDraft(""); setQ(""); setFiltros((f) => ({ vaga: f.vaga, skills: [] })); setPage(1); };
   const handleUseSuggestion = (s: string) => { setDraft(s); setQ(s); setPage(1); };
   const toggle = (id: string) => { const it = items.find((x) => String(x.id ?? x.userId) === id); if (it) selectionStore.rememberLabel(id, [it.nome, it.titulo].filter(Boolean).join(" · ")); const res = selectionStore.toggle(id); setSelected([...selectionStore.getState().selectedIds]); void res; };
   const openDetail = (id: string) => {
@@ -132,6 +175,13 @@ export default function CandidatosPage() {
           <Button type="submit" variant="primary" size="md">{tr("common.search")}</Button>
           <span aria-live="polite" className="basis-full text-[13px] text-muted md:basis-auto">{searching && loaded ? tr("common.searching") : tr("candidatos.count", { count: total })}</span>
         </form>
+        <CandidatosFiltros filtros={filtros} onChange={mudarFiltros} vagas={vagas} />
+        {vagaSumiu ? <p role="status" className="mt-2 text-[13px] text-danger">{tr("candidatos.filtros.vagaSumiu")}</p> : null}
+        {filtros.vaga ? (
+          <p className="mt-2 text-[13px] text-muted">
+            {tr("candidatos.match.explica")} <a href="/ia#match" className="text-brand underline">{tr("candidatos.match.comoFunciona")}</a>
+          </p>
+        ) : null}
       </div>
 
       <div className="mx-auto max-w-page px-6 pt-4 pb-24">
