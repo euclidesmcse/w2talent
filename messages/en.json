@@ -1465,7 +1465,25 @@
     "baixarCsv": "Download CSV",
     "baixarXlsx": "Download Excel",
     "imprimirPdf": "Print or PDF",
-    "paraVaga": "For the job: {vaga}"
+    "paraVaga": "For the job: {vaga}",
+    "link": {
+      "copiar": "Copy link",
+      "criando": "Creating the link…",
+      "copiado": "Link copied. Valid until {data} and opens only for recruiter accounts from your company.",
+      "copieAbaixo": "Copy the link below. Valid until {data} and opens only for people from your company.",
+      "semEmpresa": "To share, link your account to a company.",
+      "irEmpresa": "Go to My company",
+      "erro": "Couldn't create the link right now. Try again.",
+      "gate": "This comparison link opens only for recruiters from the company that created it.",
+      "aberto": "Comparison shared by someone from your company. The link is valid until {data}.",
+      "vencidoTitle": "This link has expired",
+      "vencidoBody": "Comparison links are valid for 14 days. Ask whoever shared it for a new one.",
+      "semAcessoTitle": "No access to this comparison",
+      "semAcessoBody": "The link opens only for people from the company that created it.",
+      "invalidoTitle": "Invalid link",
+      "invalidoBody": "The link is incomplete or was changed. Ask whoever shared it for a new one.",
+      "irCandidatos": "Go to Candidates"
+    }
   },
   "rh": {
     "title": "HR dashboard",

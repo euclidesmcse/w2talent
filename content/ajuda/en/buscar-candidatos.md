@@ -32,6 +32,8 @@ Select up to 10 candidates and use "Compare" in the bottom bar. The screen shows
 
 "Download CSV" and "Download Excel" save the table with one row per candidate; "Print or PDF" opens the browser's print dialog, where you can save as PDF. The files are built in your browser and carry masked contact details. W2Talent only records that an export happened, not its content.
 
+"Copy link" creates an address to send the comparison to colleagues: it opens the same table, with the same job, only for people signed in with a recruiter account from your company, and it is valid for 14 days. Anyone from another company, or not signed in, sees no candidates. After 14 days the link expires and you need to create a new one. The link only stores which candidates and which job; the table is built again when opened, so profiles that went offline do not show.
+
 ## Automatic translation
 
 When a W2 Profile was written in another language, the list, the profile and the comparison show the title, summary, highlights and job titles translated into the site language, with the note "Automatic translation". "See original" shows the text as the candidate wrote it. Names, companies, cities, numbers and skills are not translated. Downloaded files (CSV, Excel and PDF) always keep the original text.

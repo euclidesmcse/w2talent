@@ -1465,7 +1465,25 @@
     "baixarCsv": "Baixar CSV",
     "baixarXlsx": "Baixar Excel",
     "imprimirPdf": "Imprimir ou PDF",
-    "paraVaga": "Para a vaga: {vaga}"
+    "paraVaga": "Para a vaga: {vaga}",
+    "link": {
+      "copiar": "Copiar link",
+      "criando": "Criando o link…",
+      "copiado": "Link copiado. Vale até {data} e abre só para quem entra com uma conta de recrutador da sua empresa.",
+      "copieAbaixo": "Copie o link abaixo. Vale até {data} e abre só para quem é da sua empresa.",
+      "semEmpresa": "Para compartilhar, ligue a sua conta a uma empresa.",
+      "irEmpresa": "Ir para Minha empresa",
+      "erro": "Não deu para criar o link agora. Tente de novo.",
+      "gate": "Este link de comparação abre só para recrutadores da empresa que o criou.",
+      "aberto": "Comparação compartilhada por alguém da sua empresa. O link vale até {data}.",
+      "vencidoTitle": "Este link venceu",
+      "vencidoBody": "Links de comparação valem 14 dias. Peça um novo a quem compartilhou.",
+      "semAcessoTitle": "Sem acesso a esta comparação",
+      "semAcessoBody": "O link abre só para quem é da empresa que o criou.",
+      "invalidoTitle": "Link inválido",
+      "invalidoBody": "O link está incompleto ou foi alterado. Peça um novo a quem compartilhou.",
+      "irCandidatos": "Ir para Candidatos"
+    }
   },
   "rh": {
     "title": "Painel RH",

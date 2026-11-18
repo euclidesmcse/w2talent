@@ -1465,7 +1465,25 @@
     "baixarCsv": "Descargar CSV",
     "baixarXlsx": "Descargar Excel",
     "imprimirPdf": "Imprimir o PDF",
-    "paraVaga": "Para la vacante: {vaga}"
+    "paraVaga": "Para la vacante: {vaga}",
+    "link": {
+      "copiar": "Copiar enlace",
+      "criando": "Creando el enlace…",
+      "copiado": "Enlace copiado. Vale hasta el {data} y solo se abre con una cuenta de reclutador de tu empresa.",
+      "copieAbaixo": "Copia el enlace de abajo. Vale hasta el {data} y solo se abre para personas de tu empresa.",
+      "semEmpresa": "Para compartir, vincula tu cuenta a una empresa.",
+      "irEmpresa": "Ir a Mi empresa",
+      "erro": "No se pudo crear el enlace ahora. Inténtalo de nuevo.",
+      "gate": "Este enlace de comparación solo se abre para reclutadores de la empresa que lo creó.",
+      "aberto": "Comparación compartida por alguien de tu empresa. El enlace vale hasta el {data}.",
+      "vencidoTitle": "Este enlace venció",
+      "vencidoBody": "Los enlaces de comparación valen 14 días. Pide uno nuevo a quien lo compartió.",
+      "semAcessoTitle": "Sin acceso a esta comparación",
+      "semAcessoBody": "El enlace solo se abre para personas de la empresa que lo creó.",
+      "invalidoTitle": "Enlace inválido",
+      "invalidoBody": "El enlace está incompleto o fue modificado. Pide uno nuevo a quien lo compartió.",
+      "irCandidatos": "Ir a Candidatos"
+    }
   },
   "rh": {
     "title": "Panel de RR. HH.",
