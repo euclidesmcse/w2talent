@@ -6,6 +6,8 @@ import { Button, Input } from "@/components/ui";
 import { CandidateTable } from "@/components/candidate-table";
 import { CandidateCards } from "@/components/candidate-cards";
 import { DetailModal } from "@/components/detail-modal";
+import { FichaPainel } from "@/components/ficha-painel";
+import { MatchDaVaga } from "@/components/candidato-match";
 import { BatchBar } from "@/components/batch-bar";
 import { EmptyState } from "@/components/empty-state";
 import { selectionStore } from "@/lib/selection-store";
@@ -43,6 +45,17 @@ export default function CandidatosPage() {
   const [pronto, setPronto] = React.useState(false);
   const [vagas, setVagas] = React.useState<VagaOpcao[] | null>(null);
   const [vagaSumiu, setVagaSumiu] = React.useState(false);
+  // vaga usada na busca que trouxe `items` (o match de cada linha vale só para ela)
+  const [itensDaVaga, setItensDaVaga] = React.useState<string | null>(null);
+  // 2.2c: no computador (lg, 1024px+) a Ficha W2 abre num painel ao lado; abaixo disso, na janela.
+  const [painelLado, setPainelLado] = React.useState(false);
+  React.useEffect(() => {
+    const mql = window.matchMedia?.("(min-width: 1024px)");
+    const update = () => setPainelLado(!!mql?.matches);
+    update();
+    mql?.addEventListener?.("change", update);
+    return () => mql?.removeEventListener?.("change", update);
+  }, []);
 
   React.useEffect(() => {
     try {
@@ -107,6 +120,7 @@ export default function CandidatosPage() {
     const data = await res.json();
     if (minha !== ultimaBusca.current) return false;
     setItems(data.items ?? []);
+    setItensDaVaga(f.vaga ?? null);
     setTotal(data.total ?? 0);
     setTotalPages(data.totalPages ?? 1);
     setSuggestion(data.suggestion ?? null);
@@ -135,7 +149,25 @@ export default function CandidatosPage() {
     const btn = Array.from(document.querySelectorAll<HTMLElement>(`[data-detail-id="${CSS.escape(id)}"]`)).find((el) => el.offsetParent !== null);
     if (btn) setActiveTrigger({ current: btn });
   };
-  const closeModal = () => setModalOpen(false);
+  const closeModal = React.useCallback(() => setModalOpen(false), []);
+  const vagaTitulo = filtros.vaga ? vagas?.find((v) => v.id === filtros.vaga)?.titulo ?? null : null;
+  // O detalhe aberto acompanha a lista atual: trocar a vaga atualiza o match do mesmo candidato,
+  // e enquanto a nova busca não chega (ou se ele saiu da lista) a linha do match some.
+  const idDetalhe = modalItem ? String(modalItem.id ?? modalItem.userId) : null;
+  const itemDaLista = idDetalhe ? items.find((x) => String(x.id ?? x.userId) === idDetalhe) : undefined;
+  const itemDetalhe = itemDaLista ?? modalItem;
+  const matchDoDetalhe = filtros.vaga && itensDaVaga === filtros.vaga && itemDaLista && typeof itemDaLista.match === "number"
+    ? <MatchDaVaga vaga={vagaTitulo} match={itemDaLista.match} gaps={itemDaLista.gaps} />
+    : null;
+  const focoVolta = React.useCallback((): HTMLElement | null => {
+    if (!idDetalhe) return null;
+    const ver = Array.from(document.querySelectorAll<HTMLElement>(`[data-detail-id="${CSS.escape(idDetalhe)}"]`)).find((el) => el.offsetParent !== null);
+    return ver ?? document.querySelector<HTMLElement>('form[role="search"] input');
+  }, [idDetalhe]);
+  const tituloDetalhe = itemDetalhe?.nome ?? itemDetalhe?.titulo ?? tr("detail.title");
+  const painelAberto = painelLado && modalOpen && !!itemDetalhe;
+  // Com o painel aberto a página usa mais da tela, para a tabela não apertar.
+  const largura = painelAberto ? "max-w-[1480px]" : "max-w-page";
   const selectedSet = React.useMemo(() => new Set(selected), [selected]);
   const isEmpty = loaded && items.length === 0;
 
@@ -177,7 +209,7 @@ export default function CandidatosPage() {
     <div>
       <AppHeader area="recrutador" active="/candidatos" />
       <main>
-      <div className="mx-auto max-w-page px-6 pt-6">
+      <div className={`mx-auto ${largura} px-6 pt-6`}>
         <h1 className="text-xl font-semibold">{tr("candidatos.title")}</h1>
         <p className="mt-1 text-sm text-muted">{tr("candidatos.subtitle")}</p>
         <form role="search" onSubmit={submitSearch} className="mt-4 flex flex-wrap items-center gap-3">
@@ -201,7 +233,9 @@ export default function CandidatosPage() {
         ) : null}
       </div>
 
-      <div className="mx-auto max-w-page px-6 pt-4 pb-24">
+      <div className={`mx-auto ${largura} px-6 pt-4 pb-24`}>
+        <div className={painelAberto ? "grid grid-cols-[minmax(0,1fr)_360px] items-start gap-5" : ""}>
+        <div className="min-w-0">
         {suggestion ? <div role="status" data-testid="sugestao" className="mb-3 rounded-card border border-line bg-brand-soft px-3.5 py-2.5 text-[13px] text-brand-ink">{tr("empty.didYouMean", { suggestion })} <Button variant="ghost" size="sm" onClick={() => handleUseSuggestion(suggestion)}>{tr("empty.viewSuggestion")}</Button></div> : null}
         {isEmpty ? <EmptyState query={q} suggestion={suggestion} emptyCTA={emptyCTA} variant="candidatos" onClearFilters={handleClearFilters} onUseSuggestion={handleUseSuggestion} /> : null}
         {!loaded ? (
@@ -217,7 +251,7 @@ export default function CandidatosPage() {
         ) : (
           <div aria-busy={searching} className={`transition-opacity ${searching ? "opacity-60" : ""}`}>
           <div className="hidden md:block">
-            <div className="overflow-hidden rounded-card border border-line bg-surface">
+            <div className="overflow-x-auto rounded-card border border-line bg-surface">
               <CandidateTable items={items} selectedIds={selectedSet} onToggle={toggle} onOpenDetail={openDetail} />
             </div>
           </div>
@@ -234,7 +268,10 @@ export default function CandidatosPage() {
             </div>
           </nav>
         ) : null}
-        <DetailModal open={modalOpen} onClose={closeModal} item={modalItem} triggerRef={activeTrigger} title={modalItem?.nome ?? modalItem?.titulo ?? tr("detail.title")} />
+        </div>
+        {painelAberto ? <FichaPainel item={itemDetalhe} titulo={tituloDetalhe} antes={matchDoDetalhe} onClose={closeModal} triggerRef={activeTrigger} focoVolta={focoVolta} /> : null}
+        </div>
+        {!painelLado ? <DetailModal open={modalOpen} onClose={closeModal} item={itemDetalhe} triggerRef={activeTrigger} title={tituloDetalhe} antes={matchDoDetalhe} /> : null}
         <BatchBar variant="candidatos" onAction={(ids) => { void ids; }} />
       </div>
       </main>

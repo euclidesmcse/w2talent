@@ -50,3 +50,25 @@ export function MatchCandidatoCell({ match, gaps }: { match?: number | null; gap
     </div>
   );
 }
+
+/** Linha "Para a vaga X: 87%" com todas as lacunas, no topo da Ficha W2 (2.2c). */
+export function MatchDaVaga({ vaga, match, gaps }: { vaga?: string | null; match?: number | null; gaps?: GapCandidato[] }) {
+  const t = useTranslations("candidatos.match");
+  const gapText = useGapCandidatoText();
+  if (match == null) return null;
+  const pct = Math.round(match);
+  return (
+    <section data-testid="match-da-vaga" aria-label={t("col")} className="rounded-card border border-line bg-canvas px-4 py-3">
+      <p className="font-medium text-ink">
+        {vaga ? t("paraVaga", { vaga, pct }) : t("paraEstaVaga", { pct })}
+      </p>
+      {gaps?.length ? (
+        <ul className="mt-1 list-disc space-y-0.5 pl-5 text-[13px] text-ink-soft">
+          {gaps.map((g, i) => <li key={i}>{gapText(g)}</li>)}
+        </ul>
+      ) : (
+        <p className="mt-1 text-[13px] text-ink-soft">{t("semLacunas")}</p>
+      )}
+    </section>
+  );
+}

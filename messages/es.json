@@ -193,7 +193,10 @@
       "gapModoNone": "modalidad no informada",
       "gapFaixa": "pretensión {have}, por encima del rango",
       "explica": "El match es un cálculo con pesos fijos, no es IA.",
-      "comoFunciona": "Cómo funciona"
+      "comoFunciona": "Cómo funciona",
+      "paraVaga": "Para la vacante {vaga}: {pct}%",
+      "paraEstaVaga": "Para la vacante elegida: {pct}%",
+      "semLacunas": "Cumple todo lo que pide la vacante."
     }
   },
   "table": {

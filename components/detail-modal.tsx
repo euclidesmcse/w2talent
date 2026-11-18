@@ -26,6 +26,8 @@ export type DetailModalProps = {
   /** item a exibir — vaga ou candidato canônico */
   item?: any;
   triggerRef?: React.RefObject<HTMLElement | null>;
+  /** aparece no topo do corpo (ex.: o match com a vaga escolhida) */
+  antes?: React.ReactNode;
 };
 
 function getFocusable(container: HTMLElement): HTMLElement[] {
@@ -35,10 +37,80 @@ function getFocusable(container: HTMLElement): HTMLElement[] {
   );
 }
 
-export function DetailModal({ open, onClose, title, children, item, triggerRef }: DetailModalProps) {
+/** Corpo do detalhe (Ficha W2 do candidato ou campos da vaga), usado na janela e no painel ao lado (2.2c). */
+export function DetailBody({ item, antes, children }: { item: any; antes?: React.ReactNode; children?: React.ReactNode }) {
+  const t = useTranslations("detail");
+  const locale = useLocale();
+  const skills: string[] = item?.stack && Array.isArray(item.stack) ? item.stack.map((x: any) => x?.skillId ?? x).filter(Boolean) : [];
+  const faixa = item
+    ? item.nome
+      ? formatPretensaoCandidato(item, locale)
+      : formatFaixa(item.faixaDe ?? null, item.faixaAte ?? null, item.faixaMoeda ?? "BRL", locale)
+    : "";
+  const regime = item ? (Array.isArray(item.regimePreferido) ? item.regimePreferido.join(", ") : item.regime ?? item.regimePreferido) : null;
+  const fields: Array<[string, React.ReactNode]> = item
+    ? ([
+        [t("cargo"), item.nome ? item.titulo : null],
+        [t("empresa"), item.company?.nome ? (item.company.verificada === false ? <span className="inline-flex flex-wrap items-center gap-2">{item.company.nome} <NaoVerificada company={item.company} /></span> : item.company.nome) : null],
+        [t("nivel"), item.nivel],
+        [t("local"), item.localidade ?? item.modo],
+        [t("regime"), regime],
+        [item.nome ? t("pretensao") : t("faixa"), faixa],
+        [t("atualizada"), formatTempo((item.updatedAt ?? item.createdAt) as any, locale)],
+      ].filter(([, v]) => v && v !== "—") as Array<[string, React.ReactNode]>)
+    : [];
+
+  // Candidato com Ficha W2 (1.5.11): o cartão padronizado substitui a lista de campos.
+  const w2 = item?.nome ? sanitizeFichaW2(item.fichaW2) : null;
+
+  return w2 ? (
+    <div className="detail-content flex flex-col gap-5 text-sm">
+      {antes}
+      <FichaW2Card ficha={sanitizeFicha(item)} w2={w2} />
+      <p className="text-xs text-muted">
+        {t("atualizada")}: {formatTempo((item.updatedAt ?? item.createdAt) as any, locale)}
+      </p>
+      {children}
+    </div>
+  ) : item ? (
+    <div className="detail-content flex flex-col gap-5 text-sm">
+      {antes}
+      {fields.length ? (
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
+          {fields.map(([k, v]) => (
+            <React.Fragment key={k}>
+              <dt className="text-muted">{k}</dt>
+              <dd className="text-ink">{v}</dd>
+            </React.Fragment>
+          ))}
+        </dl>
+      ) : null}
+      {skills.length ? (
+        <div className="flex flex-col gap-2">
+          <span className="text-[13px] font-medium text-ink">{t("skills")}</span>
+          <div aria-label="skills" className="flex flex-wrap gap-2">
+            {skills.map((sk) => (
+              <Chip key={sk}>{skillName(sk)}</Chip>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {item.descricaoBullets ? (
+        <ul className="list-disc space-y-1 pl-5 text-ink-soft">
+          {(Array.isArray(item.descricaoBullets) ? item.descricaoBullets : [item.descricaoBullets]).map((b: string, i: number) => (
+            <li key={i}>{b}</li>
+          ))}
+        </ul>
+      ) : null}
+      {children}
+    </div>
+  ) : null;
+
+}
+
+export function DetailModal({ open, onClose, title, children, item, triggerRef, antes }: DetailModalProps) {
   const t = useTranslations("detail");
   const tc = useTranslations("common");
-  const locale = useLocale();
   const overlayRef = React.useRef<HTMLDivElement | null>(null);
   const dialogRef = React.useRef<HTMLDivElement | null>(null);
   const previouslyFocused = React.useRef<HTMLElement | null>(null);
@@ -150,70 +222,7 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef }
     }
   };
 
-  const skills: string[] = item?.stack && Array.isArray(item.stack) ? item.stack.map((x: any) => x?.skillId ?? x).filter(Boolean) : [];
-  const faixa = item
-    ? item.nome
-      ? formatPretensaoCandidato(item, locale)
-      : formatFaixa(item.faixaDe ?? null, item.faixaAte ?? null, item.faixaMoeda ?? "BRL", locale)
-    : "";
-  const regime = item ? (Array.isArray(item.regimePreferido) ? item.regimePreferido.join(", ") : item.regime ?? item.regimePreferido) : null;
-  const fields: Array<[string, React.ReactNode]> = item
-    ? ([
-        [t("cargo"), item.nome ? item.titulo : null],
-        [t("empresa"), item.company?.nome ? (item.company.verificada === false ? <span className="inline-flex flex-wrap items-center gap-2">{item.company.nome} <NaoVerificada company={item.company} /></span> : item.company.nome) : null],
-        [t("nivel"), item.nivel],
-        [t("local"), item.localidade ?? item.modo],
-        [t("regime"), regime],
-        [item.nome ? t("pretensao") : t("faixa"), faixa],
-        [t("atualizada"), formatTempo((item.updatedAt ?? item.createdAt) as any, locale)],
-      ].filter(([, v]) => v && v !== "—") as Array<[string, React.ReactNode]>)
-    : [];
-
-  // Candidato com Ficha W2 (1.5.11): o cartão padronizado substitui a lista de campos.
-  const w2 = item?.nome ? sanitizeFichaW2(item.fichaW2) : null;
-
-  const content = w2 ? (
-    <div className="detail-content flex flex-col gap-5 text-sm">
-      <FichaW2Card ficha={sanitizeFicha(item)} w2={w2} />
-      <p className="text-xs text-muted">
-        {t("atualizada")}: {formatTempo((item.updatedAt ?? item.createdAt) as any, locale)}
-      </p>
-      {children}
-    </div>
-  ) : item ? (
-    <div className="detail-content flex flex-col gap-5 text-sm">
-      {fields.length ? (
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
-          {fields.map(([k, v]) => (
-            <React.Fragment key={k}>
-              <dt className="text-muted">{k}</dt>
-              <dd className="text-ink">{v}</dd>
-            </React.Fragment>
-          ))}
-        </dl>
-      ) : null}
-      {skills.length ? (
-        <div className="flex flex-col gap-2">
-          <span className="text-[13px] font-medium text-ink">{t("skills")}</span>
-          <div aria-label="skills" className="flex flex-wrap gap-2">
-            {skills.map((sk) => (
-              <Chip key={sk}>{skillName(sk)}</Chip>
-            ))}
-          </div>
-        </div>
-      ) : null}
-      {item.descricaoBullets ? (
-        <ul className="list-disc space-y-1 pl-5 text-ink-soft">
-          {(Array.isArray(item.descricaoBullets) ? item.descricaoBullets : [item.descricaoBullets]).map((b: string, i: number) => (
-            <li key={i}>{b}</li>
-          ))}
-        </ul>
-      ) : null}
-      {children}
-    </div>
-  ) : (
-    children ?? <div>{title ?? t("title")}</div>
-  );
+  const content = item ? <DetailBody item={item} antes={antes}>{children}</DetailBody> : children ?? <div>{title ?? t("title")}</div>;
 
   // bottom sheet mobile vs modal desktop — same component, CSS switches position
   // media: @media (max-width: 768px) -> bottom sheet
