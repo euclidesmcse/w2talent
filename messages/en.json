@@ -648,7 +648,30 @@
     "w2Rodape": "Card written by AI, reviewed by the candidate",
     "w2RodapeIa": "Card written by AI",
     "w2Mudanca": "open to relocation",
-    "publicarEntrar": "Sign in"
+    "publicarEntrar": "Sign in",
+    "vies": {
+      "titulo": "{count, plural, one {1 phrase may reveal sensitive data} other {# phrases may reveal sensitive data}}",
+      "intro": "Just a heads-up: these words tell employers something the job does not need and may work against you. You decide what to change, and the profile saves either way.",
+      "comoFunciona": "How it works",
+      "campos": {
+        "titulo": "role",
+        "objetivo": "goal",
+        "resumo": "summary",
+        "destaque": "highlight {n}"
+      },
+      "cat": {
+        "idade": "reveals your age.",
+        "genero": "mentions gender.",
+        "aparencia": "talks about your looks or asks for a photo.",
+        "origem": "reveals your origin; for languages, prefer your fluency level.",
+        "familia": "tells about family or marital status.",
+        "saude": "tells about health or disability.",
+        "religiao": "mentions religion."
+      },
+      "trocarPor": "Replace with \"{troca}\"",
+      "tirar": "Remove \"{trecho}\"",
+      "reescrever": "Rewrite this part if you want."
+    }
   },
   "aprovar": {
     "title": "Review and approve",
@@ -923,10 +946,10 @@
     "vagaFaz": "Fills in the job fields from the pasted text, warns about a similar job the company already posted and suggests a salary range from the median of 5 or more similar jobs.",
     "vagaDados": "The job text, without email or phone.",
     "vagaDecide": "The recruiter checks every field and decides whether to post.",
-    "viesTarefa": "Bias reviewer (recruiter)",
-    "viesFaz": "Fixed rules flag words in the job text that exclude people by age, gender, appearance, origin, family, health or religion, and suggest a replacement. If the recruiter asks, AI proposes a rewrite without those words.",
-    "viesDados": "The job title, description and benefits, without email or phone. The rules run in the browser; AI only gets the text when the recruiter asks.",
-    "viesDecide": "The recruiter. The warning does not block publishing, and the AI proposal is only used if they choose it.",
+    "viesTarefa": "Bias reviewer (recruiter and candidate)",
+    "viesFaz": "Fixed rules flag words in the job text that exclude people by age, gender, appearance, origin, family, health or religion, and suggest a replacement. If the recruiter asks, AI proposes a rewrite without those words. The same rules check the role, goal, summary and highlights of the W2 Profile and warn the candidate when the text reveals one of these details; there is no AI rewrite on the W2 Profile.",
+    "viesDados": "The job title, description and benefits, without email or phone; on the W2 Profile, the role, goal, summary and highlights. The rules run in the browser; AI only gets the job text when the recruiter asks, and the W2 Profile text is not sent to AI by this reviewer.",
+    "viesDecide": "Whoever writes the text. The warning does not block publishing a job or saving or publishing the W2 Profile, and the AI proposal is only used if the recruiter chooses it.",
     "perguntasTarefa": "Interview questions (recruiter)",
     "perguntasFaz": "Suggests 6 to 8 questions, the same for every candidate, based on the job's skills and responsibilities, and what to look for in the answer.",
     "perguntasDados": "The job title, level, skills and responsibilities. Nothing about candidates.",

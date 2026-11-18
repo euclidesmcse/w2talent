@@ -21,6 +21,10 @@ A IA não recebe nem escreve nome completo, e-mail ou telefone. O contato fica p
 
 O candidato pode gerar a Ficha W2 de novo depois de mudar a ficha. Saiba mais em [Como usamos IA](/ia#ficha-w2).
 
+## Aviso de dado sensível
+
+As mesmas regras do revisor de viés das vagas olham o cargo, o objetivo, o resumo e os destaques. Se o texto conta a sua idade, estado civil, filhos, religião, saúde, aparência ou origem (por exemplo "jovem", "casado", "boa aparência", "inglês nativo"), aparece um aviso ao lado, com "Tirar" ou "Trocar por" quando há uma troca boa. Esses dados não ajudam na vaga e podem atrapalhar você. É só um aviso: você decide, e a ficha salva e publica do mesmo jeito. Essas regras rodam no seu navegador, sem IA. Veja em [Como usamos IA](/ia#revisor-vies).
+
 ## Tradução automática
 
 Para recrutadores que usam o site em outro idioma, a IA traduz o título, o resumo, os destaques e os cargos da Ficha W2 publicada. Nome, empresas, cidades, números e competências ficam como estão, e o nome, o e-mail e o telefone não vão para a IA. O recrutador vê o aviso "Tradução automática" e pode abrir o original. O candidato continua vendo a ficha como escreveu. Se a ficha mudar, a tradução é refeita.

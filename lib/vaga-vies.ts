@@ -3,6 +3,7 @@
  * Regras fixas em PT, EN e ES apontam termos que excluem gente por idade, gênero, aparência,
  * origem, família, saúde ou religião, e sugerem uma troca quando existe uma boa. Só avisa:
  * quem decide é o recrutador. Roda no navegador e no servidor (sem dependências).
+ * As mesmas regras valem para o texto livre da Ficha W2 (`lib/ficha-vies.ts`), com outra mensagem.
  */
 
 export type CategoriaVies = "idade" | "genero" | "aparencia" | "origem" | "familia" | "saude" | "religiao";
@@ -82,31 +83,37 @@ const COMPILADAS = REGRAS.map((r) => ({ ...r, re: new RegExp(`${BORDA_ANTES}(?:$
 
 export type CamposVies = Partial<Record<CampoVies, string>>;
 
+/** Achado das regras num texto solto (sem campo). Base do revisor da vaga e da Ficha W2 (`lib/ficha-vies.ts`). */
+export type AchadoVies = Omit<AvisoVies, "campo">;
+
+/** Aplica as regras num texto: achados sem sobreposição, na ordem do texto. */
+export function achadosVies(texto: string): AchadoVies[] {
+  if (!texto.trim()) return [];
+  const pegos: AchadoVies[] = [];
+  for (const r of COMPILADAS) {
+    r.re.lastIndex = 0;
+    for (let m = r.re.exec(texto); m; m = r.re.exec(texto)) {
+      if (!m[0]) {
+        r.re.lastIndex++;
+        continue;
+      }
+      const inicio = m.index;
+      const ini = texto.lastIndexOf("\n", inicio) + 1;
+      const fimLinha = texto.indexOf("\n", inicio);
+      if (INCLUSAO.test(texto.slice(ini, fimLinha < 0 ? undefined : fimLinha))) continue;
+      const fim = inicio + m[0].length;
+      if (pegos.some((p) => inicio < p.inicio + p.trecho.length && p.inicio < fim)) continue;
+      pegos.push({ regra: r.id, categoria: r.categoria, trecho: m[0], inicio, troca: r.troca });
+    }
+  }
+  return pegos.sort((a, b) => a.inicio - b.inicio);
+}
+
 /** Avisos de viés por campo, na ordem do texto. No máximo `max` (padrão 20). */
 export function revisarVies(campos: CamposVies, max = 20): AvisoVies[] {
   const out: AvisoVies[] = [];
   for (const campo of CAMPOS_VIES) {
-    const texto = campos[campo] ?? "";
-    if (!texto.trim()) continue;
-    const pegos: AvisoVies[] = [];
-    for (const r of COMPILADAS) {
-      r.re.lastIndex = 0;
-      for (let m = r.re.exec(texto); m; m = r.re.exec(texto)) {
-        if (!m[0]) {
-          r.re.lastIndex++;
-          continue;
-        }
-        const inicio = m.index;
-        const ini = texto.lastIndexOf("\n", inicio) + 1;
-        const fimLinha = texto.indexOf("\n", inicio);
-        if (INCLUSAO.test(texto.slice(ini, fimLinha < 0 ? undefined : fimLinha))) continue;
-        const fim = inicio + m[0].length;
-        if (pegos.some((p) => inicio < p.inicio + p.trecho.length && p.inicio < fim)) continue;
-        pegos.push({ regra: r.id, categoria: r.categoria, campo, trecho: m[0], inicio, troca: r.troca });
-      }
-    }
-    pegos.sort((a, b) => a.inicio - b.inicio);
-    out.push(...pegos);
+    out.push(...achadosVies(campos[campo] ?? "").map((a) => ({ ...a, campo })));
     if (out.length >= max) break;
   }
   return out.slice(0, max);
