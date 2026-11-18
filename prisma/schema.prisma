@@ -630,3 +630,19 @@ model MarketStat {
   @@unique([semana, metrica, skillId, nivel, regime, modo, moeda])
   @@index([metrica, skillId])
 }
+
+// 3.1 Ranking adaptativo: pesos das 5 partes do match aprendidos com as etapas que a empresa escolhe.
+// escopo "global" (escopoId "") ou "empresa" (escopoId = companyId). Só vale com n ≥ 30; desligado = padrão.
+model RankingWeights {
+  id           String   @id @default(cuid())
+  escopo       String
+  escopoId     String   @default("")
+  pesos        Json // { skills, nivel, condicoes, recencia, completude }, soma 100
+  n            Int
+  nPositivos   Int
+  nNegativos   Int
+  desligado    Boolean  @default(false)
+  atualizadoEm DateTime @default(now())
+
+  @@unique([escopo, escopoId])
+}

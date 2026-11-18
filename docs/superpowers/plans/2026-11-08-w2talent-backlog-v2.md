@@ -56,7 +56,7 @@
 
 | # | Item | Status |
 |---|------|--------|
-| 3.1 | Ranking adaptativo (`RankingWeights` por recrutador/vaga a partir dos sinais) | ⏳ |
+| 3.1 | Ranking adaptativo (`RankingWeights` global e por empresa a partir das etapas; plano https://claude.ai/artifact/2rZ6JLB2nttLtaZxBXe4Bd) | ✅ 3.1a · ⏳ 3.1b |
 | 3.2 | Inteligência de mercado (`MarketStat`: faixas, demanda por skill). Plano https://claude.ai/artifact/REZMdpPqMMgLgUvwxXYRox (D1–D7): **3.2a** tabela + Cron + página pública `/mercado`; **3.2b** números no `/painel`, `/publicar` e `/rh`. | ✅ 3.2a · ✅ 3.2b |
 | 3.3 | App nas lojas (a partir do PWA) | ⏳ |
 | 3.4 | Integração com ATS (feeder) | ⏳ |
