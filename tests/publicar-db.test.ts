@@ -189,4 +189,33 @@ describeDb("publicar vaga", () => {
     const depois = await db.vacancy.findUniqueOrThrow({ where: { id: v.id } });
     expect(depois).toMatchObject({ titulo: "Vaga nova", nivel: "Pleno", faixaDe: null, faixaAte: null, localidade: "Remoto", stack: [{ skillId: "aws" }] });
   });
+
+  it("2.1c revisar: só quem grava vagas, só com aviso das regras; sem IA, 503", async () => {
+    const { POST } = await import("../app/api/vacancies/revisar/route");
+    const corpo = { titulo: "Vendedor", descricaoBullets: ["Buscamos pessoa jovem", "Boa aparência"], beneficios: [] };
+    expect((await POST(req("/api/vacancies/revisar", "POST", null, corpo))).status).toBe(401);
+    expect((await POST(req("/api/vacancies/revisar", "POST", { id: CAND, perfil: "candidato", mfaLigado: false }, corpo))).status).toBe(403);
+    const sem = await POST(req("/api/vacancies/revisar", "POST", rec(REC_A), { titulo: "Analista", descricaoBullets: ["AWS"], beneficios: [] }));
+    expect(sem.status).toBe(422);
+    expect((await sem.json()).error).toBe("sem_avisos");
+    const r = await POST(req("/api/vacancies/revisar", "POST", rec(REC_A), corpo));
+    expect(r.status).toBe(503);
+    expect((await r.json()).error).toBe("ia_indisponivel");
+  });
+
+  it("2.1c perguntas: sem IA, saem dos modelos no idioma pedido; nada é guardado", async () => {
+    const { POST } = await import("../app/api/vacancies/perguntas/route");
+    const rascunho = { titulo: "Analista Cloud", stack: ["aws", "terraform"], descricaoBullets: ["Automatizar a infraestrutura"] };
+    expect((await POST(req("/api/vacancies/perguntas", "POST", null, { rascunho }))).status).toBe(401);
+    const vazio = await POST(req("/api/vacancies/perguntas", "POST", rec(REC_A), { rascunho: { titulo: "X" } }));
+    expect(vazio.status).toBe(422);
+    const antes = await db.vacancy.count();
+    const r = await POST(req("/api/vacancies/perguntas", "POST", rec(REC_A), { rascunho, idioma: "en" }));
+    expect(r.status).toBe(200);
+    const j = await r.json();
+    expect(j.origem).toBe("regras");
+    expect(j.perguntas.length).toBeGreaterThanOrEqual(3);
+    expect(j.perguntas[0].pergunta).toMatch(/^Tell me about/);
+    expect(await db.vacancy.count()).toBe(antes);
+  });
 });

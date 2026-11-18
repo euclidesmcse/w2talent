@@ -384,6 +384,8 @@
       "names": {
         "extract_cv": "Read CV",
         "extract_vacancy": "Read vacancy",
+        "review_bias": "Review job bias",
+        "interview_questions": "Interview questions",
         "ficha_w2": "W2 sheet",
         "match_explain": "Explain match",
         "coach_candidate": "Candidate coach",
@@ -808,6 +810,14 @@
     "vagaFaz": "Fills in the job fields from the pasted text, warns about a similar job the company already posted and suggests a salary range from the median of 5 or more similar jobs.",
     "vagaDados": "The job text, without email or phone.",
     "vagaDecide": "The recruiter checks every field and decides whether to post.",
+    "viesTarefa": "Bias reviewer (recruiter)",
+    "viesFaz": "Fixed rules flag words in the job text that exclude people by age, gender, appearance, origin, family, health or religion, and suggest a replacement. If the recruiter asks, AI proposes a rewrite without those words.",
+    "viesDados": "The job title, description and benefits, without email or phone. The rules run in the browser; AI only gets the text when the recruiter asks.",
+    "viesDecide": "The recruiter. The warning does not block publishing, and the AI proposal is only used if they choose it.",
+    "perguntasTarefa": "Interview questions (recruiter)",
+    "perguntasFaz": "Suggests 6 to 8 questions, the same for every candidate, based on the job's skills and responsibilities, and what to look for in the answer.",
+    "perguntasDados": "The job title, level, skills and responsibilities. Nothing about candidates.",
+    "perguntasDecide": "The recruiter decides whether to use them. Questions are not stored and score no one.",
     "buscaTarefa": "Search by meaning",
     "buscaFaz": "Finds jobs and profiles that use different words for the same thing.",
     "buscaDados": "The search text and the text of jobs and profiles, without contact details.",
@@ -976,6 +986,53 @@
       "sumiu": "The job you were updating is no longer available. Post it as a new job.",
       "publicar": "Couldn't post. Try again.",
       "faixaValor": "Enter the range with numbers only. E.g.: 8000 or 8,000."
+    },
+    "vies": {
+      "titulo": "{count, plural, one {1 term may put candidates off} other {# terms may put candidates off}}",
+      "semAvisos": "No terms flagged right now",
+      "intro": "Just a warning: you decide what changes, and the job publishes either way.",
+      "comoFunciona": "How it works",
+      "campos": {
+        "titulo": "title",
+        "descricao": "description",
+        "beneficios": "benefits"
+      },
+      "cat": {
+        "idade": "limits by age.",
+        "genero": "limits by gender.",
+        "aparencia": "judges by appearance.",
+        "origem": "requires origin or native language; prefer a fluency level.",
+        "familia": "asks about family or marital status.",
+        "saude": "excludes by health or disability.",
+        "religiao": "mentions religion."
+      },
+      "trocarPor": "Replace with \"{troca}\"",
+      "tirar": "Remove \"{trecho}\"",
+      "reescrever": "Rewrite this part.",
+      "pedirIa": "Ask AI for a version without these terms",
+      "reescrevendo": "Rewriting...",
+      "propostaTitulo": "AI proposal",
+      "propostaLimpa": "The rules flag nothing in this text. Check it before using it.",
+      "propostaRestantes": "{count, plural, one {1 flagged term is left.} other {# flagged terms are left.}} Check it before using it.",
+      "usarProposta": "Use this text",
+      "manter": "Keep mine",
+      "erros": {
+        "ia_indisponivel": "AI did not answer right now. Use the replacements above or edit the text.",
+        "limite_dia": "You reached today's rewrite limit. Use the replacements above or edit the text.",
+        "sem_avisos": "There are no flagged terms to rewrite."
+      }
+    },
+    "perguntas": {
+      "titulo": "Interview questions",
+      "intro": "Suggestions based on this job's skills and responsibilities, the same for every candidate. They stay on this screen only: they are not stored and score no one.",
+      "gerar": "Suggest questions",
+      "gerarDeNovo": "Suggest others",
+      "gerando": "Generating...",
+      "observar": "Look for: {texto}",
+      "erros": {
+        "sem_competencias": "Fill in the skills or the description to get questions.",
+        "falha": "Could not suggest questions right now. Try again."
+      }
     }
   }
 }
