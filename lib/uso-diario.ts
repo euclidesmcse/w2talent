@@ -9,6 +9,8 @@ import { sha256Hex } from "./admin-auth";
 
 export const LIMITE_LEITURAS_DIA = 10;
 export const LIMITE_FICHAS_W2_DIA = 20;
+/** 2.1b: leituras de texto de vaga pela IA, por conta de recrutador. */
+export const LIMITE_LEITURAS_VAGA_DIA = 30;
 
 export function ipDaRequisicao(req: NextRequest | Request): string {
   return req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "sem-ip";
