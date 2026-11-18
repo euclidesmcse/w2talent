@@ -40,7 +40,16 @@ export async function POST(req: NextRequest) {
           return { traduzidas: 0, mesmoIdioma: 0, falhas: -1, semLimite: false, vagas: 0 };
         })
       : null;
-    return NextResponse.json({ ok: true, ...summary, emailsCandidatura: candidaturas, emailsAgenda: agenda, traducoes }, { status: 200 });
+    // 2.7b: Fichas W2 publicadas sem tradução atual (tarefa translate_profile, dado pessoal).
+    const fichas = await (async () => {
+      const { chatDeTraducaoFicha, traduzirFichasPendentes } = await import("@/lib/traducao");
+      const c = await chatDeTraducaoFicha();
+      return c ? traduzirFichasPendentes(prisma, c, 30) : null;
+    })().catch((e) => {
+      console.error("[traducao] cron das fichas falhou:", e instanceof Error ? e.name : e);
+      return null;
+    });
+    return NextResponse.json({ ok: true, ...summary, emailsCandidatura: candidaturas, emailsAgenda: agenda, traducoes, traducoesFichas: fichas }, { status: 200 });
   } catch (e) {
     console.error("[higiene] falhou:", e instanceof Error ? `${e.name}: ${e.message}` : e);
     return NextResponse.json({ error: "hygiene_failed" }, { status: 500 });

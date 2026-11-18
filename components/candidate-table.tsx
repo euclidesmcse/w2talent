@@ -5,6 +5,7 @@ import { formatPretensaoCandidato, formatTempo, initials, maskEmail, maskPhone }
 import { buttonClasses } from "@/components/ui/button";
 import { SkillChips } from "@/components/skill-chips";
 import { MatchCandidatoCell } from "@/components/candidato-match";
+import { tituloDaFicha } from "@/components/traducao-ficha";
 import type { GapCandidato } from "@/lib/match-candidato";
 
 export type CandidateRow = {
@@ -115,7 +116,7 @@ export function CandidateTable({
                       {row.nome}
                     </button>
                     <div className="text-[13px] text-muted">
-                      {row.titulo}
+                      {tituloDaFicha(row)}
                       {contatoMascarado ? (
                         <span aria-label="contato mascarado" title={t("candidatos.contactHint", { contact: contatoMascarado })}> · {t("table.contatoProtegido")}</span>
                       ) : null}

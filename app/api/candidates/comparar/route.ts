@@ -5,6 +5,7 @@ import { empresaDaConta } from "@/lib/empresa";
 import { withoutContacts } from "@/lib/search";
 import { matchCandidato } from "@/lib/match-candidato";
 import { idsDoPedido, itemDaComparacao } from "@/lib/comparar";
+import { comTraducaoDasFichas, idiomaDoPedido } from "@/lib/traducao";
 
 /**
  * 2.3a Comparar candidatos (plano 2.3, D3 e D6): só recrutador logado com autenticador,
@@ -13,7 +14,7 @@ import { idsDoPedido, itemDaComparacao } from "@/lib/comparar";
 export async function POST(req: NextRequest) {
   const acesso = await exigirConta(req, { perfil: "recrutador" });
   if ("erro" in acesso) return acesso.erro;
-  const body = (await req.json().catch(() => ({}))) as { ids?: unknown; vaga?: unknown };
+  const body = (await req.json().catch(() => ({}))) as { ids?: unknown; vaga?: unknown; lang?: unknown };
   const ids = idsDoPedido(body.ids);
   if (!ids) return NextResponse.json({ error: "ids" }, { status: 422, headers: NO_STORE });
 
@@ -44,7 +45,9 @@ export async function POST(req: NextRequest) {
         return itemDaComparacao(withoutContacts(p), m ? { match: m.pct, gaps: m.gaps } : null, now);
       });
     const fora = ids.filter((id) => !porId.has(id));
-    return NextResponse.json({ vaga: vaga ? { id: vaga.id, titulo: vaga.titulo } : null, itens, fora }, { headers: NO_STORE });
+    // 2.7b: a tela mostra a tradução; os arquivos exportados saem com o texto original (vem junto).
+    const comTraducao = await comTraducaoDasFichas(prisma, itens, idiomaDoPedido(req, body.lang));
+    return NextResponse.json({ vaga: vaga ? { id: vaga.id, titulo: vaga.titulo } : null, itens: comTraducao, fora }, { headers: NO_STORE });
   } catch (e) {
     console.error("[candidates/comparar] falhou:", e instanceof Error ? e.name : e);
     return NextResponse.json({ error: "erro" }, { status: 500, headers: NO_STORE });

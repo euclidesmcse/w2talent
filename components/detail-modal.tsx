@@ -62,7 +62,8 @@ export function DetailBody({ item, antes, children, langTexto }: { item: any; an
     : [];
 
   // Candidato com Ficha W2 (1.5.11): o cartão padronizado substitui a lista de campos.
-  const w2 = item?.nome ? sanitizeFichaW2(item.fichaW2) : null;
+  // 2.7b: com a tradução aplicada (aplicarTraducaoFicha), o texto pode passar do limite de entrada.
+  const w2 = item?.nome ? sanitizeFichaW2(item.fichaW2, { traduzida: !!item.fichaTraduzida }) : null;
 
   return w2 ? (
     <div className="detail-content flex flex-col gap-5 text-sm">
