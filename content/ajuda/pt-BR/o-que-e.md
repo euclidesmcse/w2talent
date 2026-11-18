@@ -21,6 +21,10 @@ O W2Talent liga candidatos de tecnologia a vagas. O candidato encontra vagas, co
 - Você publica a vaga colando o texto, e a IA organiza os campos.
 - Você busca candidatos e ordena pelo match com uma vaga sua.
 
+## Tema claro ou escuro
+
+O site segue o tema do seu aparelho, claro ou escuro. Para fixar um deles, use o botão do tema no topo, ao lado do idioma: cada toque passa por Seguir o sistema, Claro e Escuro. A escolha fica guardada só neste navegador.
+
 ## Falar com uma pessoa
 
 Não achou a resposta na Ajuda? Em [Falar com uma pessoa](/ajuda/conversa), você escreve para a equipe do W2Talent, com ou sem login.

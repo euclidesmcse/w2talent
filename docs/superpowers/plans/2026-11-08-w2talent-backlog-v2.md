@@ -66,6 +66,7 @@
 ---
 
 ## Pendências fora do backlog
+- Tema escuro (spec v2, item 5 "Modo claro e escuro"; aprovado em 2026-11-18): segue o sistema, botão Seguir o sistema/Claro/Escuro no topo, axe do CI nos dois temas. 🔄 em PR (branch `at-dark`).
 - Preview de PR na Cloudflare falha (comando de não-produção no painel). Aguardando log ou print do Euclides.
 - Trocar o token de API da Cloudflare emprestado de outro projeto (opcional).
 - `w2talent-db` local continua no Docker; não migrar para K8s sem pedido.
