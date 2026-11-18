@@ -101,7 +101,7 @@ export default function PublicarPage() {
   const [faixa, setFaixa] = React.useState<Faixa | null>(null);
   const [editando, setEditando] = React.useState<Duplicada | null>(null);
   const [enviando, setEnviando] = React.useState(false);
-  const [publicada, setPublicada] = React.useState<{ titulo: string; atualizada: boolean } | null>(null);
+  const [publicada, setPublicada] = React.useState<{ titulo: string; atualizada: boolean; semPrazo?: boolean } | null>(null);
   const conferencia = React.useRef(0);
   const tituloRef = React.useRef<HTMLInputElement>(null);
 
@@ -212,7 +212,17 @@ export default function PublicarPage() {
       });
       const j = (await r.json().catch(() => ({}))) as { error?: string };
       if (r.ok) {
-        setPublicada({ titulo: rascunho.titulo, atualizada: !!editando });
+        // Atualizar a existente também renova por 14 dias, como diz o texto de sucesso (uma vez por dia).
+        let semPrazo = false;
+        if (editando) {
+          const rn = await fetch(`/api/vacancies/${encodeURIComponent(editando.id)}`, {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ action: "renew" }),
+          }).catch(() => null);
+          semPrazo = !rn?.ok;
+        }
+        setPublicada({ titulo: rascunho.titulo, atualizada: !!editando, semPrazo });
         setPasso("publicada");
         show(editando ? t("atualizadaToast") : t("publicadaToast"), "success");
         return;
@@ -292,7 +302,7 @@ export default function PublicarPage() {
             <CardBody>
               <div role="status" data-testid="vaga-publicada">
                 <p className="font-semibold">{publicada.atualizada ? t("atualizadaTitle") : t("publicadaTitle")}</p>
-                <p className="mt-1 text-sm text-muted">{empresa?.validacaoStatus === "validado" ? t("publicadaBody") : t("publicadaBodyPendente")}</p>
+                <p className="mt-1 text-sm text-muted">{publicada.semPrazo ? t("atualizadaBodySemPrazo") : empresa?.validacaoStatus === "validado" ? t("publicadaBody") : t("publicadaBodyPendente")}</p>
               </div>
               <div className="mt-4 flex flex-wrap gap-3">
                 <a href={`/vagas?q=${encodeURIComponent(publicada.titulo)}`} className={buttonClasses("secondary", "md", "hover:no-underline")}>{t("verNaBusca")}</a>

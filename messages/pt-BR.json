@@ -905,6 +905,7 @@
     "rejeitadaBody": "O W2Talent não conseguiu verificar a empresa. Fale com contato@w2talent.com.",
     "publicadaTitle": "Vaga publicada",
     "atualizadaTitle": "Vaga atualizada",
+    "atualizadaBodySemPrazo": "As mudanças já aparecem na busca. O prazo da vaga continua o mesmo de antes.",
     "publicadaBody": "Ela já aparece na busca de vagas e fica ativa por 14 dias.",
     "publicadaBodyPendente": "Ela já aparece na busca, com a etiqueta \"Empresa não verificada\" até o W2Talent conferir a empresa. Fica ativa por 14 dias.",
     "verNaBusca": "Ver na busca",

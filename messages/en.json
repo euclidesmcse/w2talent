@@ -905,6 +905,7 @@
     "rejeitadaBody": "W2Talent couldn't verify the company. Contact contato@w2talent.com.",
     "publicadaTitle": "Job posted",
     "atualizadaTitle": "Job updated",
+    "atualizadaBodySemPrazo": "Your changes already show in search. The job keeps its previous end date.",
     "publicadaBody": "It already shows in the job search and stays active for 14 days.",
     "publicadaBodyPendente": "It already shows in the search, with the \"Unverified company\" label until W2Talent checks the company. It stays active for 14 days.",
     "verNaBusca": "See in search",
