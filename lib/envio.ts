@@ -18,6 +18,7 @@ import { formatPretensoes, nomeRegime } from "./format";
 import { getSkill } from "./taxonomy";
 import { emailLocale, renderCandidaturaEmail } from "./email-templates";
 import type { EmailMessage } from "./email";
+import { gravarSinais, registrarSinal, type Sinal } from "./sinais";
 
 export const ENVIO_LIMITE_LOTE = 10;
 export const ENVIO_LIMITE_24H = 30;
@@ -254,11 +255,13 @@ export async function aprovarVaga(db: PrismaClient, candidateId: string, vacancy
     create: { candidateId, vacancyId, ...dados },
     update: dados,
   });
+  await registrarSinal(db, { tipo: "vaga_aprovada", ator: "candidato", candidateId, vacancyId, createdAt: now });
   return { ok: true, aprovadaEm: now.toISOString() };
 }
 
 export async function desfazerAprovacao(db: PrismaClient, candidateId: string, vacancyId: string): Promise<void> {
-  await db.applicationApproval.deleteMany({ where: { candidateId, vacancyId } });
+  const r = await db.applicationApproval.deleteMany({ where: { candidateId, vacancyId } });
+  if (r.count) await registrarSinal(db, { tipo: "aprovacao_desfeita", ator: "candidato", candidateId, vacancyId });
 }
 
 // ── envio ────────────────────────────────────────────────────────────────
@@ -313,6 +316,7 @@ export async function enviarCandidaturas(
     ]);
     const itens: ResultadoItem[] = [];
     const prontas: VagaRow[] = [];
+    const sinais: Sinal[] = [];
     for (const id of todos) {
       const v = vagas.get(id);
       if (enviadas.some((a) => a.vacancyId === id)) itens.push({ vacancyId: id, status: "ja_enviada" });
@@ -325,11 +329,14 @@ export async function enviarCandidaturas(
         else if (ap.vacancyHash !== (await hashVaga(snap))) {
           // A vaga mudou depois da aprovação: a aprovação cai e a pessoa revisa de novo.
           await tx.applicationApproval.delete({ where: { id: ap.id } });
-          itens.push({ vacancyId: id, status: "mudou", campos: camposMudados(ap.snapshot, snap) });
+          const campos = camposMudados(ap.snapshot, snap);
+          itens.push({ vacancyId: id, status: "mudou", campos });
+          sinais.push({ tipo: "aprovacao_caiu", ator: "sistema", candidateId: perfil.id, vacancyId: id, dados: { campos: campos.join(",") }, createdAt: now });
         } else prontas.push(v);
       }
     }
     if (prontas.length && usadas + prontas.length > ENVIO_LIMITE_24H) {
+      await gravarSinais(tx, sinais);
       return { ok: false as const, erro: "limite_dia" as const, max: ENVIO_LIMITE_24H, usadas24h: usadas, restantes: Math.max(0, ENVIO_LIMITE_24H - usadas) };
     }
     const emails: { applicationId: string; mensagem: EmailMessage }[] = [];
@@ -337,7 +344,8 @@ export async function enviarCandidaturas(
       const proxyThreadId = novoProxyThreadId();
       // O e-mail é montado agora, com o perfil e a vaga que a pessoa aprovou, e guardado com a
       // candidatura até entrar na fila: uma nova tentativa manda exatamente o mesmo conteúdo.
-      const mensagem = mensagemCandidatura(perfil, { referencia: proxyThreadId, vaga: v, match: matchDoPerfil(perfil.ficha, v, now) });
+      const match = matchDoPerfil(perfil.ficha, v, now);
+      const mensagem = mensagemCandidatura(perfil, { referencia: proxyThreadId, vaga: v, match });
       const app = await tx.application.create({
         data: {
           vacancyId: v.id,
@@ -355,7 +363,9 @@ export async function enviarCandidaturas(
       await tx.vacancy.update({ where: { id: v.id }, data: { candidaturasCount: { increment: 1 } } });
       itens.push({ vacancyId: v.id, status: "enviada", applicationId: app.id, email: !!v.company.emailContato });
       if (mensagem) emails.push({ applicationId: app.id, mensagem });
+      sinais.push({ tipo: "candidatura_enviada", ator: "candidato", candidateId: perfil.id, vacancyId: v.id, applicationId: app.id, matchPct: match.pct, dados: { loteId }, createdAt: now });
     }
+    await gravarSinais(tx, sinais);
     return { ok: true as const, itens, usadas24h: usadas + prontas.length, emails };
   });
 

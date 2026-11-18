@@ -12,6 +12,7 @@ jest.mock("../lib/notifications", () => ({ enqueueEmail: async (m: EmailMessage)
 import {
   ENVIO_LIMITE_24H,
   aprovarVaga,
+  desfazerAprovacao,
   enviarCandidaturas,
   estadoDasVagas,
   hashVaga,
@@ -181,6 +182,31 @@ describeDb("Aprovar antes de enviar", () => {
     const de_novo = await enviarCandidaturas(db, perfil, [a.id], { now: NOW });
     expect(de_novo).toMatchObject({ ok: true, itens: [{ status: "ja_enviada" }] });
     expect((await estadoDasVagas(db, perfil, [a.id], NOW))[0]).toMatchObject({ estado: "enviada", enviadaEm: NOW.toISOString() });
+  });
+
+  it("2.8: grava sinais de aprovar, desfazer, aprovação que caiu e envio, sem contatos", async () => {
+    const a = await vaga("Sinal enviada");
+    const b = await vaga("Sinal desfeita");
+    const c = await vaga("Sinal caiu");
+    await aprova(a.id);
+    await aprova(b.id);
+    await desfazerAprovacao(db, perfil.id, b.id);
+    await desfazerAprovacao(db, perfil.id, b.id); // sem aprovação: não grava de novo
+    await aprova(c.id);
+    await db.vacancy.update({ where: { id: c.id }, data: { regime: "CLT" } });
+    const r = await enviarCandidaturas(db, perfil, [a.id, c.id], { now: NOW, loteId: "lote-sinais" });
+    expect(r.ok).toBe(true);
+    const sinais = await db.feedbackSignal.findMany({ where: { vacancyId: { in: [a.id, b.id, c.id] } }, orderBy: { createdAt: "asc" } });
+    const por = (vid: string) => sinais.filter((x) => x.vacancyId === vid).map((x) => x.tipo).sort();
+    expect(por(a.id)).toEqual(["candidatura_enviada", "vaga_aprovada"]);
+    expect(por(b.id)).toEqual(["aprovacao_desfeita", "vaga_aprovada"]);
+    expect(por(c.id)).toEqual(["aprovacao_caiu", "vaga_aprovada"]);
+    const enviada = sinais.find((x) => x.tipo === "candidatura_enviada")!;
+    expect(enviada).toMatchObject({ ator: "candidato", candidateId: perfil.id, dados: { loteId: "lote-sinais" } });
+    expect(enviada.applicationId).toBeTruthy();
+    expect(enviada.matchPct).toBeGreaterThan(0);
+    expect(sinais.find((x) => x.tipo === "aprovacao_caiu")).toMatchObject({ ator: "sistema", dados: { campos: "regime" } });
+    expect(JSON.stringify(sinais)).not.toContain(EMAIL);
   });
 
   it("não aprova uma versão da vaga diferente da que a tela mostrou", async () => {
