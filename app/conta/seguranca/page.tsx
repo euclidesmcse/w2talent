@@ -1,9 +1,10 @@
 "use client";
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { TreinoConsentimento } from "@/components/treino-consentimento";
-import { Button, Field, Input } from "@/components/ui";
+import { Button, Field, Input, buttonClasses } from "@/components/ui";
 import { CampoSenha } from "@/components/campo-senha";
 import { QrCode } from "@/components/qr-code";
 import { TelaConta, useVolta } from "@/components/tela-conta";
@@ -68,6 +69,8 @@ export default function SegurancaPage() {
   // "Criar senha" usa o mesmo pedido do Esqueci a senha, que passa pelo desafio da Cloudflare.
   const podeCriarSenha = !temSenha && senhaLigada && !!info.conta?.email;
   const captcha = useTurnstile(podeCriarSenha ? info.config?.turnstileSiteKey : null);
+  // Saída da tela: para onde a pessoa ia, ou o painel do perfil dela.
+  const destino = volta && volta !== "/" ? volta : recrutador ? "/rh" : "/painel";
   const comSenha = (): Record<string, unknown> => (temSenha ? { password: senhaMfa } : {});
   const erroMfa = (r: RespostaAuth | null) => (r?.code === "INVALID_PASSWORD" ? t("errorCurrentPassword") : r?.status === 429 ? t("errorTooMany") : t("errorGeneric"));
 
@@ -261,6 +264,9 @@ export default function SegurancaPage() {
               {!recrutador ? <Button variant="ghost" disabled={ocupado || faltaSenhaMfa} onClick={desligar}>{t("mfaTurnOff")}</Button> : null}
             </div>
             {recrutador ? <p className="text-[13px] text-muted">{t("mfaRequired")}</p> : null}
+            <Link href={destino} data-action="continuar-seguranca" className={buttonClasses("primary", "lg", "self-start hover:no-underline")}>
+              {novosCodigos ? t("securityDoneCodes") : t("securityDone")}
+            </Link>
           </div>
         ) : null}
         {erro && !config ? <p role="alert" className="text-sm text-danger">{erro}</p> : null}

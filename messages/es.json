@@ -827,6 +827,8 @@
     "download": "Descargar .txt",
     "mfaConfirm": "Activar",
     "mfaOn": "Autenticador activado.",
+    "securityDone": "Continuar",
+    "securityDoneCodes": "Ya guardé los códigos, continuar",
     "mfaOff": "Autenticador desactivado.",
     "mfaOffConfirm": "¿Desactivar el autenticador? Tu cuenta quedará menos protegida.",
     "mfaTurnOff": "Desactivar el autenticador",

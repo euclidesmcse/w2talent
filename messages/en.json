@@ -827,6 +827,8 @@
     "download": "Download .txt",
     "mfaConfirm": "Turn on",
     "mfaOn": "Authenticator turned on.",
+    "securityDone": "Continue",
+    "securityDoneCodes": "I saved the codes, continue",
     "mfaOff": "Authenticator turned off.",
     "mfaOffConfirm": "Turn off the authenticator? Your account will be less protected.",
     "mfaTurnOff": "Turn off the authenticator",
