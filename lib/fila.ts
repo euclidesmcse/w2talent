@@ -4,6 +4,9 @@
  * - "email": envia pelo Resend, um por vez (o Resend aceita poucos por segundo);
  * - "webhook": entrega um evento ao sistema da empresa (ATS). A mensagem leva só ids; quem entrega
  *   monta o corpo na hora, assina e grava a tentativa (`WebhookEntrega`), sem guardar o corpo.
+ * - "whatsapp" (3.5a): aviso ao candidato. A mensagem leva só o id do aviso (`WhatsappAviso`) e o tipo;
+ *   a rota interna `/api/whatsapp/entregar` confere de novo se a pessoa ainda quer, monta o texto e envia.
+ *   Mesmas novas tentativas do webhook (até 10).
  *
  * Este arquivo não importa o Prisma: o Worker já leva o app do OpenNext, e o banco é usado pela rota
  * interna `/api/webhooks/entregar` (ver `custom-worker.ts`). Assim o pacote não carrega o Prisma duas vezes.
@@ -27,6 +30,9 @@ export type MensagemWebhook = {
   etapaPara?: string;
 };
 
+/** 3.5a: aviso de WhatsApp na fila. Só ids; o texto é montado na entrega. */
+export type MensagemWhatsapp = { tipo: "whatsapp"; avisoId: string; aviso: string };
+
 /** O que a entrega devolve: "repetir" volta para a fila; "ok" e "desistir" saem dela. */
 export type ResultadoEntrega = { resultado: "ok" | "repetir" | "desistir"; status?: number | null; erro?: string | null; atrasoSeg?: number };
 
@@ -37,6 +43,10 @@ export type DepsFila = {
   emailEnv: EmailEnv;
   /** Entrega um webhook (no Worker: a rota interna do app). `tentativa` começa em 1. */
   entregarWebhook: (m: MensagemWebhook, tentativa: number) => Promise<ResultadoEntrega>;
+  /** 3.5a: entrega um aviso de WhatsApp (no Worker: a rota interna do app). Sem ela, o aviso é descartado. */
+  entregarWhatsapp?: (m: MensagemWhatsapp, tentativa: number) => Promise<ResultadoEntrega>;
+  /** 3.5: põe o aviso de volta na fila como mensagem nova (a espera até as 8h não gasta as 10 tentativas). */
+  reenfileirarWhatsapp?: (m: MensagemWhatsapp, atrasoSeg: number) => Promise<void>;
   enviarEmail?: (m: EmailMessage, env: EmailEnv) => Promise<SendResult>;
   pausa?: (ms: number) => Promise<void>;
 };
@@ -65,6 +75,11 @@ export function ehWebhook(b: unknown): b is MensagemWebhook {
   );
 }
 
+export function ehWhatsapp(b: unknown): b is MensagemWhatsapp {
+  const m = b as Record<string, unknown> | null;
+  return !!m && m.tipo === "whatsapp" && typeof m.avisoId === "string" && m.avisoId.length > 0 && m.avisoId.length <= 64 && typeof m.aviso === "string";
+}
+
 /** Espera antes da próxima tentativa: 1, 2, 4, 8... minutos, no máximo 1 hora (cerca de 6 h nas 10). */
 export function atrasoWebhook(tentativa: number): number {
   const n = Math.max(1, Math.floor(tentativa));
@@ -77,6 +92,33 @@ export async function processarFila(batch: MessageBatch, deps: DepsFila): Promis
   const enviar = deps.enviarEmail ?? sendEmail;
   const pausa = deps.pausa ?? pausaPadrao;
   for (const msg of batch.messages) {
+    if (ehWhatsapp(msg.body)) {
+      const tentativa = Math.max(1, msg.attempts || 1);
+      let r: ResultadoEntrega;
+      try {
+        r = deps.entregarWhatsapp ? await deps.entregarWhatsapp(msg.body, tentativa) : { resultado: "desistir", erro: "sem_entrega" };
+      } catch (e) {
+        r = { resultado: "repetir", erro: e instanceof Error ? e.name : "erro" };
+      }
+      if (r.resultado === "repetir" && r.erro === "fora_do_horario" && deps.reenfileirarWhatsapp) {
+        const atraso = r.atrasoSeg ?? 3600;
+        try {
+          await deps.reenfileirarWhatsapp(msg.body, atraso);
+          msg.ack();
+        } catch {
+          msg.retry({ delaySeconds: atraso });
+        }
+        continue;
+      }
+      if (r.resultado === "repetir" && tentativa < WEBHOOK_MAX_TENTATIVAS) {
+        console.warn(`[fila] whatsapp ${msg.body.aviso} não saiu (${r.status ?? r.erro ?? "?"}), nova tentativa ${tentativa + 1}`);
+        msg.retry({ delaySeconds: r.atrasoSeg ?? atrasoWebhook(tentativa) });
+      } else {
+        if (r.resultado !== "ok") console.error(`[fila] whatsapp ${msg.body.aviso} desistiu (${r.status ?? r.erro ?? "?"}) na tentativa ${tentativa}.`);
+        msg.ack();
+      }
+      continue;
+    }
     if (ehWebhook(msg.body)) {
       const tentativa = Math.max(1, msg.attempts || 1);
       let r: ResultadoEntrega;

@@ -11,6 +11,8 @@
  *   mesma transação; quem chama limpa depois de pôr na fila, e o Cron diário tenta de novo se a fila falhar.
  * - 3.4b: depois do commit, a mudança vira o evento "candidatura.etapa" do webhook da empresa (se ligado).
  *   Falha da fila nunca desfaz nem atrapalha a mudança.
+ * - 3.5a: com o WhatsApp ligado, o candidato também recebe "a empresa viu" (primeira vez que a ficha vira
+ *   "Vista") e "mudou de etapa". Depois do commit; o aviso nunca lança nem atrapalha o e-mail.
  */
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { withoutContacts } from "./search";
@@ -23,6 +25,7 @@ import { emailLocale, renderEntrevistaEmail } from "./email-templates";
 import { entrevistasDasCandidaturas, type ResumoEntrevista } from "./entrevista";
 import type { EmailMessage } from "./email";
 import type { MensagemWebhook } from "./fila";
+import type { EnfileirarWhatsapp } from "./whatsapp-db";
 
 /** Etapas que liberam o contato (D4): a partir da Entrevista. */
 export const ETAPAS_COM_CONTATO: readonly Etapa[] = ["entrevista", "proposta", "contratada"];
@@ -158,9 +161,16 @@ export async function mudarEtapa(
   de: Etapa,
   para: Etapa,
   now = new Date(),
-  opts: { appUrl?: string; enviarWebhook?: (m: MensagemWebhook) => Promise<void> } = {},
+  opts: { appUrl?: string; enviarWebhook?: (m: MensagemWebhook) => Promise<void>; enviarWhatsapp?: EnfileirarWhatsapp } = {},
 ): Promise<ResultadoEtapa> {
   const res = await mudarEtapaNoBanco(db, companyId, applicationId, de, para, now, opts);
+  // 3.5a: aviso ao candidato pelo WhatsApp, se ligado. avisarPelaCandidatura não lança.
+  if (res.ok && de !== para && opts.enviarWhatsapp) {
+    const enviar = opts.enviarWhatsapp;
+    await import("./whatsapp-db")
+      .then(({ avisarPelaCandidatura }) => avisarPelaCandidatura(db, applicationId, "etapa", enviar, now))
+      .catch((err) => console.error("[rh/candidaturas] aviso de WhatsApp não entrou na fila:", err instanceof Error ? err.message : err));
+  }
   // 3.4b: o sistema da empresa (ATS) fica sabendo. Depois do commit; enfileirarEtapa não lança.
   if (res.ok && de !== para && opts.enviarWebhook) {
     const enviarWebhook = opts.enviarWebhook;
@@ -247,14 +257,26 @@ export async function avisoEnfileirado(db: PrismaClient, applicationId: string, 
   });
 }
 
-export async function marcarVista(db: PrismaClient, companyId: string, applicationId: string): Promise<boolean> {
+export async function marcarVista(
+  db: PrismaClient,
+  companyId: string,
+  applicationId: string,
+  opts: { enviarWhatsapp?: EnfileirarWhatsapp; now?: Date } = {},
+): Promise<boolean> {
   const a = await db.application.findFirst({
     where: { id: applicationId, companyId, origem: "candidaturaLote" },
     select: { candidateId: true, vacancyId: true, status: true },
   });
   if (!a) return false;
   if (a.status === "enviado") {
-    await db.application.updateMany({ where: { id: applicationId, status: "enviado" }, data: { status: "visualizado" } });
+    const r = await db.application.updateMany({ where: { id: applicationId, status: "enviado" }, data: { status: "visualizado" } });
+    // 3.5a: "a empresa viu sua candidatura", uma vez (só quem fez a troca para "Vista" avisa).
+    if (r.count > 0 && opts.enviarWhatsapp) {
+      const enviar = opts.enviarWhatsapp;
+      await import("./whatsapp-db")
+        .then(({ avisarPelaCandidatura }) => avisarPelaCandidatura(db, applicationId, "vista", enviar, opts.now ?? new Date()))
+        .catch((err) => console.error("[rh/candidaturas] aviso de WhatsApp não entrou na fila:", err instanceof Error ? err.message : err));
+    }
   }
   // 2.8: a primeira vez que o recrutador abre a ficha, mesmo que a etapa já tenha mudado antes.
   // Conta pelo próprio sinal, não pelo status que o candidato vê.

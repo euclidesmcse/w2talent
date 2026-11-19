@@ -73,8 +73,16 @@ export async function POST(req: NextRequest) {
       console.error("[atendimento] cron falhou:", e instanceof Error ? e.name : e);
       return -1;
     });
+    // 3.5a: WhatsApp "suas vagas aprovadas vão vencer" (só quem ligou) e limpeza dos avisos com mais de 30 dias.
+    const whatsapp = await (async () => {
+      const [{ avisarAprovadasVencendo }, { enqueueWhatsapp }] = await Promise.all([import("@/lib/whatsapp-db"), import("@/lib/notifications")]);
+      return avisarAprovadasVencendo(prisma, enqueueWhatsapp);
+    })().catch((e) => {
+      console.error("[whatsapp] cron falhou:", e instanceof Error ? e.name : e);
+      return null;
+    });
     return NextResponse.json(
-      { ok: true, ...summary, emailsCandidatura: candidaturas, emailsAgenda: agenda, traducoes, traducoesFichas: fichas, mercado, ranking, conversasApagadas },
+      { ok: true, ...summary, emailsCandidatura: candidaturas, emailsAgenda: agenda, traducoes, traducoesFichas: fichas, mercado, ranking, conversasApagadas, whatsapp },
       { status: 200 },
     );
   } catch (e) {

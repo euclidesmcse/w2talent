@@ -18,7 +18,7 @@ export default function EscolherPerfilPage() {
   const info = useConta({ fresco: true });
   const volta = useVolta();
   const [perfil, setPerfil] = React.useState<PerfilConta | null>(null);
-  const [aceites, setAceites] = React.useState<Record<TipoConsentimento, boolean>>({ tratamentoBusca: false, contatoProxy: false, nudges: false });
+  const [aceites, setAceites] = React.useState<Record<TipoConsentimento, boolean>>({ tratamentoBusca: false, contatoProxy: false, nudges: false, whatsapp: false });
   const [ocupado, setOcupado] = React.useState(false);
   const [erro, setErro] = React.useState<string | null>(null);
 

@@ -3,9 +3,12 @@
  * da pessoa, e vai inteiro para o ConsentLog com a versão. Mudou o texto: suba a versão.
  */
 export const CONSENTIMENTO_VERSAO = 1;
-export type TipoConsentimento = "tratamentoBusca" | "contatoProxy" | "nudges";
+export type TipoConsentimento = "tratamentoBusca" | "contatoProxy" | "nudges" | "whatsapp";
 export const CONSENTIMENTOS_OBRIGATORIOS: TipoConsentimento[] = ["tratamentoBusca", "contatoProxy"];
+/** Os que a tela de perfil oferece na primeira entrada. O "whatsapp" (3.5a) é aceito em Minha conta. */
 export const CONSENTIMENTOS: TipoConsentimento[] = ["tratamentoBusca", "contatoProxy", "nudges"];
+/** 3.5a: versão do texto do WhatsApp (sobe quando o texto mudar). */
+export const CONSENTIMENTO_WHATSAPP_VERSAO = 1;
 
 type Idioma = "pt-BR" | "en" | "es";
 const TEXTOS: Record<TipoConsentimento, Record<Idioma, string>> = {
@@ -23,6 +26,12 @@ const TEXTOS: Record<TipoConsentimento, Record<Idioma, string>> = {
     "pt-BR": "Quero receber e-mails do W2Talent sobre a minha ficha (por exemplo, quando ela estiver para vencer). Opcional.",
     en: "I want to receive emails from W2Talent about my profile (for example, when it is about to expire). Optional.",
     es: "Quiero recibir correos de W2Talent sobre mi ficha (por ejemplo, cuando esté por vencer). Opcional.",
+  },
+  whatsapp: {
+    "pt-BR":
+      "Quero receber avisos do W2Talent no WhatsApp deste número: quando uma empresa vir minha candidatura, quando ela mudar de etapa, sobre entrevistas, vagas aprovadas que vão vencer e respostas da equipe. Cada aviso traz só o nome da vaga e da empresa e um link para o site. No máximo 3 por dia, das 8h às 20h (Brasília). Posso desligar a qualquer hora em Minha conta ou respondendo SAIR. Opcional.",
+    en: "I want to receive W2Talent notices on WhatsApp at this number: when a company views my application, when it changes stage, about interviews, approved jobs about to expire and replies from the team. Each notice carries only the job title, the company name and a link to the website. At most 3 a day, from 8am to 8pm (Brasília time). I can turn it off at any time in My account or by replying STOP. Optional.",
+    es: "Quiero recibir avisos de W2Talent por WhatsApp en este número: cuando una empresa vea mi postulación, cuando cambie de etapa, sobre entrevistas, vacantes aprobadas por vencer y respuestas del equipo. Cada aviso trae solo el nombre de la vacante y de la empresa y un enlace al sitio. Como máximo 3 por día, de 8 a 20 h (hora de Brasilia). Puedo desactivarlo cuando quiera en Mi cuenta o respondiendo SALIR. Opcional.",
   },
 };
 

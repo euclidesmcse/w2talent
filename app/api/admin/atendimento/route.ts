@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminGuard } from "@/lib/admin-request";
 import { conversaParaAdmin, encerrarConversa, listarConversas, responderConversa, type FiltroAdmin } from "@/lib/atendimento";
-import { enqueueEmail } from "@/lib/notifications";
+import { enqueueEmail, enqueueWhatsapp } from "@/lib/notifications";
 import { getPrisma } from "@/lib/prisma";
 
 const NO_STORE = { "cache-control": "no-store" };
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     }
     if (body.acao === "responder") {
       const appUrl = process.env.APP_URL || req.nextUrl.origin;
-      const r = await responderConversa(getPrisma(), body.id, body.texto, { appUrl, enqueue: enqueueEmail });
+      const r = await responderConversa(getPrisma(), body.id, body.texto, { appUrl, enqueue: enqueueEmail, enviarWhatsapp: enqueueWhatsapp });
       if (r.ok) return json({ ok: true, emailEnviado: r.emailEnviado });
       return json({ error: r.erro }, r.erro === "nao_encontrada" ? 404 : r.erro === "texto_invalido" ? 422 : 409);
     }
