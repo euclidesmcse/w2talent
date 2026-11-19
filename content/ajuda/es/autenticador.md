@@ -6,7 +6,7 @@ telas: /conta/seguranca, /entrar/codigo
 ordem: 3
 ---
 
-El autenticador es el segundo paso del inicio de sesión: además de Google o Microsoft, escribes un código de 6 dígitos de una app en el celular.
+El autenticador es el segundo paso del inicio de sesión: además de Google, Microsoft o la contraseña, escribes un código de 6 dígitos de una app en el celular.
 
 - **Reclutador:** es obligatorio. Sin él, las pantallas de reclutador quedan bloqueadas, y no se puede desactivar.
 - **Candidato:** es opcional, pero recomendado.

@@ -9,9 +9,28 @@ export type EstadoConta = "carregando" | "anonimo" | "mfa" | "sem_perfil" | "mfa
 export type PerfilConta = "candidato" | "recrutador";
 export type InfoConta = {
   estado: EstadoConta;
-  conta?: { nome: string; email?: string; perfil?: PerfilConta | null; mfaLigado?: boolean };
-  config?: { provedores: { google: boolean; microsoft: boolean }; turnstileSiteKey: string | null };
+  conta?: { nome: string; email?: string; perfil?: PerfilConta | null; mfaLigado?: boolean; temSenha?: boolean };
+  /** `senha`: e-mail e senha ligados (só quando o envio de e-mail está configurado). */
+  config?: { provedores: { google: boolean; microsoft: boolean }; turnstileSiteKey: string | null; senha?: boolean };
 };
+
+/** Regra da senha (igual à do servidor): de 10 a 128 caracteres, sem exigir símbolos. */
+export const SENHA_MIN = 10;
+export const SENHA_MAX = 128;
+
+/** Onde o login por e-mail termina (lê a conta de novo e segue para código, perfil ou volta). */
+export function linkContinuar(volta: string): string {
+  return `/entrar/continuar?volta=${encodeURIComponent(volta)}`;
+}
+
+/** Resposta de /api/auth/*: status e o `code` do erro do Better Auth ({code, message}). */
+export type RespostaAuth = { ok: boolean; status: number; code: string; j: Record<string, unknown> };
+
+export async function postAuth(caminho: string, corpo: Record<string, unknown>, headers: Record<string, string> = { "content-type": "application/json" }): Promise<RespostaAuth> {
+  const r = await fetch(`/api/auth${caminho}`, { method: "POST", headers, body: JSON.stringify(corpo) });
+  const j = ((await r.json().catch(() => null)) ?? {}) as Record<string, unknown>;
+  return { ok: r.ok, status: r.status, code: typeof j.code === "string" ? j.code : "", j };
+}
 
 /** O que o Sair apaga deste navegador (decisão do plano 1.5.5). */
 export const CHAVES_LOCAIS = [

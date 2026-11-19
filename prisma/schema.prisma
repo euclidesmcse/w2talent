@@ -553,6 +553,14 @@ model Verification {
   @@index([identifier])
 }
 
+/// Limite de tentativas do login (Better Auth, storage "database"): uma linha por IP + rota.
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+}
+
 model TwoFactor {
   id                      String    @id
   secret                  String

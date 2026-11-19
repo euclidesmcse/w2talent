@@ -6,7 +6,7 @@ telas: /conta/seguranca, /entrar/codigo
 ordem: 3
 ---
 
-The authenticator is the second step of sign-in: besides Google or Microsoft, you type a 6-digit code from an app on your phone.
+The authenticator is the second step of sign-in: besides Google, Microsoft or your password, you type a 6-digit code from an app on your phone.
 
 - **Recruiter:** required. Without it, recruiter pages are blocked, and it cannot be turned off.
 - **Candidate:** optional, but recommended.

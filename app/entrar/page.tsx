@@ -2,17 +2,21 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui";
+import { Button, Field, Input } from "@/components/ui";
+import { CampoSenha } from "@/components/campo-senha";
 import { TelaConta, useVolta } from "@/components/tela-conta";
-import { destinoDoEstado, useConta } from "@/lib/conta-client";
+import { useTurnstile } from "@/components/turnstile";
+import { SENHA_MAX, destinoDoEstado, linkContinuar, postAuth, useConta } from "@/lib/conta-client";
 import { useOnline } from "@/lib/pwa-client";
 
 type Provedor = "google" | "microsoft";
-type Turnstile = { render: (el: HTMLElement, o: Record<string, unknown>) => string; reset: (id?: string) => void };
+/** O que deu errado no login por e-mail (cada um tem um texto e, às vezes, uma ação). */
+type FalhaSenha = "senha" | "naoConfirmado" | "bloqueada" | "muitas" | "geral";
 
 /**
- * Entrar (1.5.5): Google ou Microsoft (contas pessoais e de empresa). Sem senha por enquanto.
- * Com TURNSTILE_SITE_KEY, o desafio da Cloudflare aparece antes dos botões.
+ * Entrar (1.5.5): Google ou Microsoft (contas pessoais e de empresa) e, quando o envio de
+ * e-mail está ligado (config.senha), e-mail e senha. Com TURNSTILE_SITE_KEY, o desafio da
+ * Cloudflare aparece antes dos botões e vale para os dois jeitos.
  */
 export default function EntrarPage() {
   const t = useTranslations("conta");
@@ -21,12 +25,16 @@ export default function EntrarPage() {
   const info = useConta({ fresco: true });
   const voltaLida = useVolta();
   const volta = voltaLida ?? "/vagas";
+  const v = encodeURIComponent(volta);
   const [erro, setErro] = React.useState<string | null>(null);
   const [indo, setIndo] = React.useState<Provedor | null>(null);
-  const [captcha, setCaptcha] = React.useState<string | null>(null);
-  const caixa = React.useRef<HTMLDivElement>(null);
-  const widget = React.useRef<string | null>(null);
-  const siteKey = info.config?.turnstileSiteKey ?? null;
+  const captcha = useTurnstile(info.config?.turnstileSiteKey);
+
+  const [email, setEmail] = React.useState("");
+  const [senha, setSenha] = React.useState("");
+  const [enviando, setEnviando] = React.useState(false);
+  const [falha, setFalha] = React.useState<FalhaSenha | null>(null);
+  const [reenvio, setReenvio] = React.useState<"enviando" | "enviado" | null>(null);
 
   // Já entrou: segue para o próximo passo (código, perfil) ou para onde ia.
   React.useEffect(() => {
@@ -39,39 +47,17 @@ export default function EntrarPage() {
     try { if (new URLSearchParams(window.location.search).get("erro")) setErro(t("errorProvider")); } catch {}
   }, [t]);
 
-  React.useEffect(() => {
-    if (!siteKey || !caixa.current) return;
-    const w = window as unknown as { turnstile?: Turnstile };
-    const desenhar = () => {
-      if (!w.turnstile || !caixa.current || widget.current) return;
-      widget.current = w.turnstile.render(caixa.current, {
-        sitekey: siteKey,
-        callback: (tk: string) => setCaptcha(tk),
-        "expired-callback": () => setCaptcha(null),
-        "error-callback": () => setCaptcha(null),
-      });
-    };
-    if (w.turnstile) return desenhar();
-    const s = document.createElement("script");
-    s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-    s.async = true;
-    s.onload = desenhar;
-    document.head.appendChild(s);
-  }, [siteKey]);
-
   async function entrar(provider: Provedor) {
     setErro(null);
     setIndo(provider);
     try {
-      const headers: Record<string, string> = { "content-type": "application/json" };
-      if (captcha) headers["x-captcha-response"] = captcha;
       const r = await fetch("/api/auth/sign-in/social", {
         method: "POST",
-        headers,
+        headers: captcha.headers(),
         body: JSON.stringify({
           provider,
-          callbackURL: `/entrar/continuar?volta=${encodeURIComponent(volta)}`,
-          errorCallbackURL: `/entrar?erro=1&volta=${encodeURIComponent(volta)}`,
+          callbackURL: linkContinuar(volta),
+          errorCallbackURL: `/entrar?erro=1&volta=${v}`,
         }),
       });
       const j = (await r.json().catch(() => ({}))) as { url?: string };
@@ -84,24 +70,64 @@ export default function EntrarPage() {
       setErro(t("errorProvider"));
     }
     setIndo(null);
-    setCaptcha(null);
-    try { (window as unknown as { turnstile?: Turnstile }).turnstile?.reset(widget.current ?? undefined); } catch {}
+    captcha.reset();
+  }
+
+  async function entrarComSenha(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim() || !senha) return;
+    setEnviando(true);
+    setFalha(null);
+    setReenvio(null);
+    setErro(null);
+    const r = await postAuth("/sign-in/email", { email: email.trim(), password: senha, callbackURL: linkContinuar(volta) }, captcha.headers()).catch(() => null);
+    captcha.reset();
+    if (r?.ok) {
+      if (r.j.twoFactorRedirect) router.push(`/entrar/codigo?via=senha&volta=${v}`);
+      else window.location.href = linkContinuar(volta);
+      return;
+    }
+    setEnviando(false);
+    if (!r) return setFalha("geral");
+    if (r.status === 403 && r.code === "EMAIL_NOT_VERIFIED") setFalha("naoConfirmado");
+    else if (r.status === 403 && r.code === "CONTA_BLOQUEADA") setFalha("bloqueada");
+    else if (r.status === 401) setFalha("senha");
+    else if (r.status === 429) setFalha("muitas");
+    else setFalha("geral");
+  }
+
+  async function reenviarLink() {
+    setReenvio("enviando");
+    await postAuth("/send-verification-email", { email: email.trim(), callbackURL: linkContinuar(volta) }).catch(() => null);
+    // Mesma resposta com ou sem conta: não contamos se o e-mail existe.
+    setReenvio("enviado");
   }
 
   const p = info.config?.provedores;
-  const nenhum = info.estado !== "carregando" && !p?.google && !p?.microsoft;
-  const travado = !online || !!indo || (!!siteKey && !captcha);
+  const temSocial = !!p?.google || !!p?.microsoft;
+  const temSenha = !!info.config?.senha;
+  const nenhum = info.estado !== "carregando" && !temSocial && !temSenha;
+  const travado = !online || !!indo || enviando || !captcha.pronto;
+  const esqueciHref = `/entrar/esqueci?volta=${v}`;
+
+  const textoFalha: Record<FalhaSenha, string> = {
+    senha: t("errorWrongPassword"),
+    naoConfirmado: t("errorNotVerified"),
+    bloqueada: t("errorLocked"),
+    muitas: t("errorTooMany"),
+    geral: t("errorGeneric"),
+  };
 
   return (
     <TelaConta titulo={t("signInTitle")}>
-      <p className="text-sm text-muted">{t("signInBody")}</p>
+      <p className="text-sm text-muted">{temSenha ? (temSocial ? t("signInBodyBoth") : t("signInBodyEmail")) : t("signInBody")}</p>
       {nenhum ? (
         <p role="status" className="rounded-card border border-warning bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning-ink">
           {info.estado === "erro" ? t("errorLoad") : t("notConfigured")}
         </p>
       ) : (
         <div className="flex flex-col gap-3">
-          {siteKey ? <div ref={caixa} data-testid="turnstile" className="min-h-[65px]" /> : null}
+          {captcha.caixa}
           {p?.google ? (
             <Button variant="secondary" size="lg" data-action="entrar-google" disabled={travado} onClick={() => entrar("google")}>
               <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -124,10 +150,57 @@ export default function EntrarPage() {
               {indo === "microsoft" ? t("redirecting") : t("withMicrosoft")}
             </Button>
           ) : null}
+          {erro ? <p role="alert" className="text-sm text-danger">{erro}</p> : null}
+          {temSenha ? (
+            <form onSubmit={entrarComSenha} className="flex flex-col gap-3" aria-labelledby="entrar-email-titulo">
+              {temSocial ? (
+                <div className="flex items-center gap-3 pt-1 text-[13px] text-muted">
+                  <span aria-hidden="true" className="h-px flex-1 bg-line" />
+                  <h2 id="entrar-email-titulo" className="text-[13px] font-medium text-muted">{t("emailSignInTitle")}</h2>
+                  <span aria-hidden="true" className="h-px flex-1 bg-line" />
+                </div>
+              ) : (
+                <h2 id="entrar-email-titulo" className="sr-only">{t("emailSignInTitle")}</h2>
+              )}
+              <Field label={t("emailLabel")}>
+                <Input type="email" name="email" autoComplete="email" inputMode="email" autoCapitalize="none" spellCheck={false} required value={email} onChange={(e) => setEmail(e.target.value)} />
+              </Field>
+              <CampoSenha
+                label={t("passwordLabel")}
+                mostrar={t("showPassword")}
+                esconder={t("hidePassword")}
+                name="password"
+                autoComplete="current-password"
+                maxLength={SENHA_MAX}
+                required
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+              />
+              {falha ? (
+                <div role="alert" className="flex flex-col items-start gap-2 text-sm text-danger">
+                  <p>{textoFalha[falha]}</p>
+                  {falha === "bloqueada" ? <a href={esqueciHref} className="font-semibold">{t("forgotPassword")}</a> : null}
+                  {falha === "naoConfirmado" && reenvio !== "enviado" ? (
+                    <Button variant="secondary" size="sm" data-action="reenviar-link" disabled={!online || reenvio === "enviando"} onClick={reenviarLink}>
+                      {reenvio === "enviando" ? t("sending") : t("resendLink")}
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
+              {reenvio === "enviado" ? <p role="status" className="text-sm text-success">{t("linkSentNeutral")}</p> : null}
+              <Button type="submit" size="lg" data-action="entrar-senha" disabled={travado || !email.trim() || !senha}>
+                {enviando ? t("checking") : t("signIn")}
+              </Button>
+              <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-sm">
+                <a href={esqueciHref}>{t("forgotPassword")}</a>
+                <a href={`/entrar/criar?volta=${v}`} className="font-semibold">{t("createAccount")}</a>
+              </div>
+            </form>
+          ) : null}
           {!online ? <p className="text-[13px] text-muted">{t("needsInternet")}</p> : null}
         </div>
       )}
-      {erro ? <p role="alert" className="text-sm text-danger">{erro}</p> : null}
+      {nenhum && erro ? <p role="alert" className="text-sm text-danger">{erro}</p> : null}
       <p className="text-[13px] text-muted">{t("signInPrivacy")}</p>
     </TelaConta>
   );

@@ -516,3 +516,112 @@ export function renderWebhookPausadoEmail(i: WebhookPausadoEmailInput): { subjec
 </table></td></tr></table></body></html>`;
   return { subject: c.assunto, html, text };
 }
+
+// ── Login com e-mail e senha (plano 2026-11-19, D1/D7/D8) ──
+
+export type LoginEmailTipo = "confirmar" | "redefinir" | "ja_tem_conta" | "senha_trocada";
+
+type LoginCopy = { assunto: string; corpo: string; botao: string; rodape: string };
+
+const LOGIN: Record<EmailLocale, { ola: (n: string) => string } & Record<LoginEmailTipo, LoginCopy>> = {
+  "pt-BR": {
+    ola: (n) => (n ? `Olá, ${n}` : "Olá"),
+    confirmar: {
+      assunto: "Confirme seu e-mail no W2Talent",
+      corpo: "Para terminar de criar sua conta, confirme seu e-mail no botão abaixo. O link vale 1 hora.",
+      botao: "Confirmar e-mail",
+      rodape: "Se não foi você que pediu, ignore este e-mail: a conta não é criada sem a confirmação.",
+    },
+    redefinir: {
+      assunto: "Crie uma nova senha no W2Talent",
+      corpo: "Recebemos um pedido para criar uma nova senha. Use o botão abaixo; o link vale 1 hora e só funciona uma vez.",
+      botao: "Criar nova senha",
+      rodape: "Se não foi você que pediu, ignore este e-mail: sua senha continua a mesma.",
+    },
+    ja_tem_conta: {
+      assunto: "Você já tem conta no W2Talent",
+      corpo: "Alguém tentou criar uma conta com este e-mail, mas ele já tem conta. Para entrar, use o botão abaixo. Se esqueceu a senha, use \"Esqueci a senha\" na tela de entrar.",
+      botao: "Entrar",
+      rodape: "Se não foi você, ignore este e-mail: nada mudou na sua conta.",
+    },
+    senha_trocada: {
+      assunto: "Sua senha do W2Talent foi trocada",
+      corpo: "A senha da sua conta acabou de ser trocada e saímos dos outros aparelhos. Se foi você, não precisa fazer nada.",
+      botao: "Não fui eu: criar nova senha",
+      rodape: "Se não foi você, crie uma nova senha agora e ligue o autenticador em Minha conta > Segurança.",
+    },
+  },
+  en: {
+    ola: (n) => (n ? `Hi ${n}` : "Hi"),
+    confirmar: {
+      assunto: "Confirm your e-mail on W2Talent",
+      corpo: "To finish creating your account, confirm your e-mail with the button below. The link is valid for 1 hour.",
+      botao: "Confirm e-mail",
+      rodape: "If you didn't ask for this, ignore this e-mail: the account is not created without confirmation.",
+    },
+    redefinir: {
+      assunto: "Create a new W2Talent password",
+      corpo: "We got a request to create a new password. Use the button below; the link is valid for 1 hour and works only once.",
+      botao: "Create new password",
+      rodape: "If you didn't ask for this, ignore this e-mail: your password stays the same.",
+    },
+    ja_tem_conta: {
+      assunto: "You already have a W2Talent account",
+      corpo: "Someone tried to create an account with this e-mail, but it already has one. Use the button below to sign in. If you forgot your password, use \"Forgot password\" on the sign-in screen.",
+      botao: "Sign in",
+      rodape: "If this wasn't you, ignore this e-mail: nothing changed in your account.",
+    },
+    senha_trocada: {
+      assunto: "Your W2Talent password was changed",
+      corpo: "Your account password was just changed and we signed you out of other devices. If it was you, there is nothing to do.",
+      botao: "Not me: create a new password",
+      rodape: "If it wasn't you, create a new password now and turn on the authenticator in My account > Security.",
+    },
+  },
+  es: {
+    ola: (n) => (n ? `Hola, ${n}` : "Hola"),
+    confirmar: {
+      assunto: "Confirma tu correo en W2Talent",
+      corpo: "Para terminar de crear tu cuenta, confirma tu correo con el botón de abajo. El enlace vale 1 hora.",
+      botao: "Confirmar correo",
+      rodape: "Si no lo pediste, ignora este correo: la cuenta no se crea sin la confirmación.",
+    },
+    redefinir: {
+      assunto: "Crea una nueva contraseña en W2Talent",
+      corpo: "Recibimos un pedido para crear una nueva contraseña. Usa el botón de abajo; el enlace vale 1 hora y funciona una sola vez.",
+      botao: "Crear nueva contraseña",
+      rodape: "Si no lo pediste, ignora este correo: tu contraseña sigue igual.",
+    },
+    ja_tem_conta: {
+      assunto: "Ya tienes cuenta en W2Talent",
+      corpo: "Alguien intentó crear una cuenta con este correo, pero ya tiene una. Para entrar, usa el botón de abajo. Si olvidaste la contraseña, usa \"Olvidé la contraseña\" en la pantalla de entrar.",
+      botao: "Entrar",
+      rodape: "Si no fuiste tú, ignora este correo: nada cambió en tu cuenta.",
+    },
+    senha_trocada: {
+      assunto: "Tu contraseña de W2Talent cambió",
+      corpo: "La contraseña de tu cuenta acaba de cambiar y cerramos la sesión en los otros dispositivos. Si fuiste tú, no hace falta hacer nada.",
+      botao: "No fui yo: crear nueva contraseña",
+      rodape: "Si no fuiste tú, crea una nueva contraseña ahora y activa el autenticador en Mi cuenta > Seguridad.",
+    },
+  },
+};
+
+export type LoginEmailInput = { locale: EmailLocale; tipo: LoginEmailTipo; nome?: string | null; url: string };
+
+export function renderLoginEmail(i: LoginEmailInput): { subject: string; html: string; text: string } {
+  const base = LOGIN[i.locale];
+  const c = base[i.tipo];
+  const saudacao = base.ola(primeiroNome(i.nome));
+  const botao = c.botao;
+  const text = `${saudacao},\n\n${c.corpo}\n\n${botao}: ${i.url}\n\n${c.rodape}\n`;
+  const html = `<!doctype html><html lang="${i.locale}"><body style="margin:0;padding:0;background:#F7F8FA;font-family:Inter,Segoe UI,Arial,sans-serif;color:#111827">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F8FA;padding:24px 12px"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px">
+<tr><td style="padding:24px 24px 0;font:700 18px 'Space Grotesk',Inter,Arial,sans-serif">W2<span style="color:#1F4FD8">Talent</span></td></tr>
+<tr><td style="padding:16px 24px 0;font-size:16px;line-height:24px"><p style="margin:0 0 12px">${esc(saudacao)},</p><p style="margin:0">${esc(c.corpo)}</p></td></tr>
+<tr><td style="padding:20px 24px 0"><a href="${esc(i.url)}" style="display:inline-block;background:#1F4FD8;color:#FFFFFF;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:999px">${esc(botao)}</a></td></tr>
+<tr><td style="padding:20px 24px 24px;font-size:13px;line-height:20px;color:#4B5563">${esc(c.rodape)}</td></tr>
+</table></td></tr></table></body></html>`;
+  return { subject: c.assunto, html, text };
+}
