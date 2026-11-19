@@ -22,7 +22,7 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
     {
       "slug": "entrar-e-perfil",
       "titulo": "Entrar e escolher o perfil",
-      "resumo": "Login com Google ou Microsoft e a escolha entre candidato e recrutador.",
+      "resumo": "Login com Google, Microsoft ou e-mail e senha, e a escolha entre candidato e recrutador.",
       "areas": [
         "publico",
         "candidato",
@@ -30,10 +30,12 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
       ],
       "telas": [
         "/entrar",
-        "/entrar/perfil"
+        "/entrar/perfil",
+        "/entrar/criar",
+        "/entrar/esqueci"
       ],
       "ordem": 2,
-      "corpo": "Você entra com uma conta Google ou Microsoft (pessoal ou de empresa). Não há senha própria do W2Talent por enquanto.\n\n## Ver vagas não precisa de login\n\nQualquer pessoa vê e busca as vagas. O login é pedido quando você quer marcar uma vaga, publicar sua ficha, enviar candidaturas ou buscar candidatos.\n\n## Candidato ou recrutador\n\nNo primeiro acesso você escolhe o perfil da conta, uma vez só:\n\n- **Candidato:** monta a ficha, aprova e envia candidaturas. Ao escolher, você aceita os termos de uso e de dados.\n- **Recrutador:** cadastra a empresa, publica vagas e busca candidatos. Precisa do [autenticador](/ajuda/autenticador).\n\nUma conta é candidato ou recrutador, não os dois. Para usar os dois lados, use outra conta Google ou Microsoft.\n\nSe você entrar com Google e depois com Microsoft usando o mesmo e-mail, as duas viram a mesma conta."
+      "corpo": "Você entra com uma conta Google ou Microsoft (pessoal ou de empresa) ou com e-mail e senha.\n\n## E-mail e senha\n\nEm **Criar conta** você informa nome, e-mail e uma senha de pelo menos 10 caracteres. Senhas que já apareceram em vazamentos de dados são recusadas. Mandamos um link para confirmar o e-mail; ele vale 1 hora e só depois dele você consegue entrar.\n\nEsqueceu a senha? Use **Esqueci a senha** na tela de entrar e crie uma nova pelo link do e-mail. Quem entra pelo Google ou Microsoft também pode criar uma senha assim. Trocar ou criar a senha encerra a conta nos outros aparelhos.\n\nDepois de 10 senhas erradas seguidas, o login por senha fica travado até você criar uma nova pelo Esqueci a senha.\n\nSe o e-mail da conta com senha for o mesmo da sua conta Google ou Microsoft, as duas viram uma só, desde que o e-mail esteja confirmado.\n\n## Ver vagas não precisa de login\n\nQualquer pessoa vê e busca as vagas. O login é pedido quando você quer marcar uma vaga, publicar sua ficha, enviar candidaturas ou buscar candidatos.\n\n## Candidato ou recrutador\n\nNo primeiro acesso você escolhe o perfil da conta, uma vez só:\n\n- **Candidato:** monta a ficha, aprova e envia candidaturas. Ao escolher, você aceita os termos de uso e de dados.\n- **Recrutador:** cadastra a empresa, publica vagas e busca candidatos. Precisa do [autenticador](/ajuda/autenticador).\n\nUma conta é candidato ou recrutador, não os dois. Para usar os dois lados, use outra conta (outro e-mail).\n\nSe você entrar com Google e depois com Microsoft usando o mesmo e-mail, as duas viram a mesma conta."
     },
     {
       "slug": "autenticador",
@@ -48,7 +50,7 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
         "/entrar/codigo"
       ],
       "ordem": 3,
-      "corpo": "O autenticador é a segunda etapa do login: além do Google ou Microsoft, você digita um código de 6 dígitos de um aplicativo no celular.\n\n- **Recrutador:** é obrigatório. Sem ele, as telas de recrutador ficam bloqueadas, e não dá para desligar.\n- **Candidato:** é opcional, mas recomendado.\n\n## Como ligar\n\n1. Abra [Segurança da conta](/conta/seguranca).\n2. Leia o QR code com um aplicativo autenticador (Google Authenticator, Microsoft Authenticator ou outro).\n3. Digite o código que aparece no aplicativo.\n4. Guarde os 10 códigos de recuperação em lugar seguro. Cada um funciona uma vez.\n\n## No dia a dia\n\nDepois de digitar o código, este aparelho fica lembrado por 30 dias. Em outro aparelho, ou depois disso, o código é pedido de novo.\n\n## Perdi o celular\n\nUse um dos códigos de recuperação no lugar do código do aplicativo. Depois, ligue o autenticador de novo no celular novo."
+      "corpo": "O autenticador é a segunda etapa do login: além do Google, da Microsoft ou da senha, você digita um código de 6 dígitos de um aplicativo no celular.\n\n- **Recrutador:** é obrigatório. Sem ele, as telas de recrutador ficam bloqueadas, e não dá para desligar.\n- **Candidato:** é opcional, mas recomendado.\n\n## Como ligar\n\n1. Abra [Segurança da conta](/conta/seguranca).\n2. Leia o QR code com um aplicativo autenticador (Google Authenticator, Microsoft Authenticator ou outro).\n3. Digite o código que aparece no aplicativo.\n4. Guarde os 10 códigos de recuperação em lugar seguro. Cada um funciona uma vez.\n\n## No dia a dia\n\nDepois de digitar o código, este aparelho fica lembrado por 30 dias. Em outro aparelho, ou depois disso, o código é pedido de novo.\n\n## Perdi o celular\n\nUse um dos códigos de recuperação no lugar do código do aplicativo. Depois, ligue o autenticador de novo no celular novo."
     },
     {
       "slug": "minha-ficha",
@@ -293,7 +295,7 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
     {
       "slug": "entrar-e-perfil",
       "titulo": "Signing in and choosing a profile",
-      "resumo": "Sign in with Google or Microsoft and choose between candidate and recruiter.",
+      "resumo": "Sign in with Google, Microsoft or email and password, and choose between candidate and recruiter.",
       "areas": [
         "publico",
         "candidato",
@@ -301,10 +303,12 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
       ],
       "telas": [
         "/entrar",
-        "/entrar/perfil"
+        "/entrar/perfil",
+        "/entrar/criar",
+        "/entrar/esqueci"
       ],
       "ordem": 2,
-      "corpo": "You sign in with a Google or Microsoft account (personal or work). W2Talent has no password of its own yet.\n\n## Browsing jobs needs no sign-in\n\nAnyone can see and search jobs. Sign-in is needed to mark a job, publish your profile, send applications or search candidates.\n\n## Candidate or recruiter\n\nOn your first visit you choose the account's profile, only once:\n\n- **Candidate:** builds a profile, approves and sends applications. When you choose it, you accept the terms of use and data terms.\n- **Recruiter:** registers the company, posts jobs and searches candidates. Needs the [authenticator](/ajuda/autenticador).\n\nAn account is either a candidate or a recruiter, not both. To use both sides, use another Google or Microsoft account.\n\nIf you sign in with Google and later with Microsoft using the same email, both become the same account."
+      "corpo": "You sign in with a Google or Microsoft account (personal or work) or with email and password.\n\n## Email and password\n\nIn **Create account** you enter your name, email and a password of at least 10 characters. Passwords that already showed up in data breaches are refused. We send a link to confirm your email; it is valid for 1 hour and you can only sign in after using it.\n\nForgot your password? Use **Forgot password** on the sign-in screen and create a new one from the email link. People who sign in with Google or Microsoft can also create a password this way. Changing or creating the password signs the account out of other devices.\n\nAfter 10 wrong passwords in a row, password sign-in is locked until you create a new one through Forgot password.\n\nIf the email of the password account is the same as your Google or Microsoft account, both become one, as long as the email is confirmed.\n\n## Browsing jobs needs no sign-in\n\nAnyone can see and search jobs. Sign-in is needed to mark a job, publish your profile, send applications or search candidates.\n\n## Candidate or recruiter\n\nOn your first visit you choose the account's profile, only once:\n\n- **Candidate:** builds a profile, approves and sends applications. When you choose it, you accept the terms of use and data terms.\n- **Recruiter:** registers the company, posts jobs and searches candidates. Needs the [authenticator](/ajuda/autenticador).\n\nAn account is either a candidate or a recruiter, not both. To use both sides, use another account (another email).\n\nIf you sign in with Google and later with Microsoft using the same email, both become the same account."
     },
     {
       "slug": "autenticador",
@@ -319,7 +323,7 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
         "/entrar/codigo"
       ],
       "ordem": 3,
-      "corpo": "The authenticator is the second step of sign-in: besides Google or Microsoft, you type a 6-digit code from an app on your phone.\n\n- **Recruiter:** required. Without it, recruiter pages are blocked, and it cannot be turned off.\n- **Candidate:** optional, but recommended.\n\n## How to turn it on\n\n1. Open [Account security](/conta/seguranca).\n2. Scan the QR code with an authenticator app (Google Authenticator, Microsoft Authenticator or another).\n3. Type the code shown in the app.\n4. Keep the 10 recovery codes somewhere safe. Each one works once.\n\n## Day to day\n\nAfter you type the code, this device is remembered for 30 days. On another device, or after that, the code is asked again.\n\n## I lost my phone\n\nUse one of the recovery codes instead of the app code. Then turn on the authenticator again on the new phone."
+      "corpo": "The authenticator is the second step of sign-in: besides Google, Microsoft or your password, you type a 6-digit code from an app on your phone.\n\n- **Recruiter:** required. Without it, recruiter pages are blocked, and it cannot be turned off.\n- **Candidate:** optional, but recommended.\n\n## How to turn it on\n\n1. Open [Account security](/conta/seguranca).\n2. Scan the QR code with an authenticator app (Google Authenticator, Microsoft Authenticator or another).\n3. Type the code shown in the app.\n4. Keep the 10 recovery codes somewhere safe. Each one works once.\n\n## Day to day\n\nAfter you type the code, this device is remembered for 30 days. On another device, or after that, the code is asked again.\n\n## I lost my phone\n\nUse one of the recovery codes instead of the app code. Then turn on the authenticator again on the new phone."
     },
     {
       "slug": "minha-ficha",
@@ -564,7 +568,7 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
     {
       "slug": "entrar-e-perfil",
       "titulo": "Iniciar sesión y elegir el perfil",
-      "resumo": "Inicio de sesión con Google o Microsoft y la elección entre candidato y reclutador.",
+      "resumo": "Inicio de sesión con Google, Microsoft o correo y contraseña, y la elección entre candidato y reclutador.",
       "areas": [
         "publico",
         "candidato",
@@ -572,10 +576,12 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
       ],
       "telas": [
         "/entrar",
-        "/entrar/perfil"
+        "/entrar/perfil",
+        "/entrar/criar",
+        "/entrar/esqueci"
       ],
       "ordem": 2,
-      "corpo": "Inicias sesión con una cuenta de Google o Microsoft (personal o de empresa). Por ahora W2Talent no tiene contraseña propia.\n\n## Ver vacantes no requiere iniciar sesión\n\nCualquiera ve y busca las vacantes. El inicio de sesión se pide para marcar una vacante, publicar tu ficha, enviar postulaciones o buscar candidatos.\n\n## Candidato o reclutador\n\nEn el primer acceso eliges el perfil de la cuenta, una sola vez:\n\n- **Candidato:** arma la ficha, aprueba y envía postulaciones. Al elegirlo, aceptas los términos de uso y de datos.\n- **Reclutador:** registra la empresa, publica vacantes y busca candidatos. Necesita el [autenticador](/ajuda/autenticador).\n\nUna cuenta es candidato o reclutador, no las dos cosas. Para usar los dos lados, usa otra cuenta de Google o Microsoft.\n\nSi entras con Google y luego con Microsoft con el mismo correo, las dos se vuelven la misma cuenta."
+      "corpo": "Inicias sesión con una cuenta de Google o Microsoft (personal o de empresa) o con correo y contraseña.\n\n## Correo y contraseña\n\nEn **Crear cuenta** indicas tu nombre, correo y una contraseña de al menos 10 caracteres. Se rechazan las contraseñas que ya aparecieron en filtraciones de datos. Te enviamos un enlace para confirmar el correo; vale 1 hora y solo después de usarlo puedes entrar.\n\n¿Olvidaste la contraseña? Usa **Olvidé la contraseña** en la pantalla de entrar y crea una nueva con el enlace del correo. Quien entra con Google o Microsoft también puede crear una contraseña así. Cambiar o crear la contraseña cierra la sesión en los otros dispositivos.\n\nDespués de 10 contraseñas incorrectas seguidas, el inicio de sesión con contraseña queda bloqueado hasta que crees una nueva con Olvidé la contraseña.\n\nSi el correo de la cuenta con contraseña es el mismo de tu cuenta de Google o Microsoft, las dos se vuelven una sola, siempre que el correo esté confirmado.\n\n## Ver vacantes no requiere iniciar sesión\n\nCualquiera ve y busca las vacantes. El inicio de sesión se pide para marcar una vacante, publicar tu ficha, enviar postulaciones o buscar candidatos.\n\n## Candidato o reclutador\n\nEn el primer acceso eliges el perfil de la cuenta, una sola vez:\n\n- **Candidato:** arma la ficha, aprueba y envía postulaciones. Al elegirlo, aceptas los términos de uso y de datos.\n- **Reclutador:** registra la empresa, publica vacantes y busca candidatos. Necesita el [autenticador](/ajuda/autenticador).\n\nUna cuenta es candidato o reclutador, no las dos cosas. Para usar los dos lados, usa otra cuenta (otro correo).\n\nSi entras con Google y luego con Microsoft con el mismo correo, las dos se vuelven la misma cuenta."
     },
     {
       "slug": "autenticador",
@@ -590,7 +596,7 @@ export const ARTIGOS: Record<"pt-BR" | "en" | "es", ArtigoBruto[]> = {
         "/entrar/codigo"
       ],
       "ordem": 3,
-      "corpo": "El autenticador es el segundo paso del inicio de sesión: además de Google o Microsoft, escribes un código de 6 dígitos de una app en el celular.\n\n- **Reclutador:** es obligatorio. Sin él, las pantallas de reclutador quedan bloqueadas, y no se puede desactivar.\n- **Candidato:** es opcional, pero recomendado.\n\n## Cómo activarlo\n\n1. Abre [Seguridad de la cuenta](/conta/seguranca).\n2. Escanea el código QR con una app autenticadora (Google Authenticator, Microsoft Authenticator u otra).\n3. Escribe el código que aparece en la app.\n4. Guarda los 10 códigos de recuperación en un lugar seguro. Cada uno funciona una vez.\n\n## En el día a día\n\nDespués de escribir el código, este dispositivo queda recordado por 30 días. En otro dispositivo, o después de ese plazo, se pide el código de nuevo.\n\n## Perdí el celular\n\nUsa uno de los códigos de recuperación en lugar del código de la app. Después, activa el autenticador de nuevo en el celular nuevo."
+      "corpo": "El autenticador es el segundo paso del inicio de sesión: además de Google, Microsoft o la contraseña, escribes un código de 6 dígitos de una app en el celular.\n\n- **Reclutador:** es obligatorio. Sin él, las pantallas de reclutador quedan bloqueadas, y no se puede desactivar.\n- **Candidato:** es opcional, pero recomendado.\n\n## Cómo activarlo\n\n1. Abre [Seguridad de la cuenta](/conta/seguranca).\n2. Escanea el código QR con una app autenticadora (Google Authenticator, Microsoft Authenticator u otra).\n3. Escribe el código que aparece en la app.\n4. Guarda los 10 códigos de recuperación en un lugar seguro. Cada uno funciona una vez.\n\n## En el día a día\n\nDespués de escribir el código, este dispositivo queda recordado por 30 días. En otro dispositivo, o después de ese plazo, se pide el código de nuevo.\n\n## Perdí el celular\n\nUsa uno de los códigos de recuperación en lugar del código de la app. Después, activa el autenticador de nuevo en el celular nuevo."
     },
     {
       "slug": "minha-ficha",

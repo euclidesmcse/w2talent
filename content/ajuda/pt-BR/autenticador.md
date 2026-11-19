@@ -6,7 +6,7 @@ telas: /conta/seguranca, /entrar/codigo
 ordem: 3
 ---
 
-O autenticador é a segunda etapa do login: além do Google ou Microsoft, você digita um código de 6 dígitos de um aplicativo no celular.
+O autenticador é a segunda etapa do login: além do Google, da Microsoft ou da senha, você digita um código de 6 dígitos de um aplicativo no celular.
 
 - **Recrutador:** é obrigatório. Sem ele, as telas de recrutador ficam bloqueadas, e não dá para desligar.
 - **Candidato:** é opcional, mas recomendado.

@@ -9,7 +9,7 @@ import { chromium } from "playwright-core";
 import { AxeBuilder } from "@axe-core/playwright";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3999";
-const TELAS = process.env.TELAS ? process.env.TELAS.split(",") : ["/", "/vagas", "/candidatos", "/empresa", "/publicar", "/minha-ficha", "/minhas-candidaturas", "/ia", "/mercado", "/ajuda", "/ajuda/match", "/ajuda/conversa", "/ajuda/minhas-conversas", "/entrar", "/entrar/perfil", "/entrar/codigo"];
+const TELAS = process.env.TELAS ? process.env.TELAS.split(",") : ["/", "/vagas", "/candidatos", "/empresa", "/publicar", "/minha-ficha", "/minhas-candidaturas", "/ia", "/mercado", "/ajuda", "/ajuda/match", "/ajuda/conversa", "/ajuda/minhas-conversas", "/entrar", "/entrar/perfil", "/entrar/codigo", "/entrar/criar", "/entrar/esqueci", "/entrar/nova-senha", "/entrar/confirme"];
 const LARGURAS = [1280, 390]; // computador e celular
 const IDIOMAS = (process.env.IDIOMAS ?? "pt-BR,en,es").split(",");
 const TEMAS = (process.env.TEMAS ?? "light,dark").split(",");

@@ -17,7 +17,9 @@ jest.mock("../lib/auth-server", () => ({
 }));
 const sessionUpdate = jest.fn(async () => ({}));
 let tentativas = 0;
+const contaCredencial = jest.fn(async (): Promise<{ id: string } | null> => null);
 jest.mock("../lib/prisma", () => ({
+  getPrisma: () => ({ account: { findFirst: () => contaCredencial() } }),
   prisma: {
     session: { update: (...a: unknown[]) => sessionUpdate(...(a as [])) },
     // consumirUso: INSERT ... RETURNING total
@@ -176,6 +178,23 @@ describe("rotas protegidas", () => {
     expect(j.estado).toBe("mfa");
     expect(j.conta).toEqual({ nome: "u1" });
     const anon = await (await GET(new NextRequest("https://w2.test/api/conta"))).json();
-    expect(anon).toMatchObject({ estado: "anonimo", config: { provedores: { google: true, microsoft: false }, turnstileSiteKey: null } });
+    expect(anon).toMatchObject({ estado: "anonimo", config: { provedores: { google: true, microsoft: false }, senha: false, turnstileSiteKey: null } });
+  });
+  it("login por senha: aparece com o Resend configurado e diz se a conta tem senha", async () => {
+    const { GET } = await import("../app/api/conta/route");
+    const antes = process.env.RESEND_API_KEY;
+    process.env.RESEND_API_KEY = "re_teste";
+    try {
+      const anon = await (await GET(new NextRequest("https://w2.test/api/conta"))).json();
+      expect(anon.config.senha).toBe(true);
+      const sem = await (await GET(new NextRequest("https://w2.test/api/conta", { headers: { cookie: cookieDeTeste({ id: "u1" }) } }))).json();
+      expect(sem.conta.temSenha).toBe(false);
+      contaCredencial.mockResolvedValueOnce({ id: "a1" });
+      const com = await (await GET(new NextRequest("https://w2.test/api/conta", { headers: { cookie: cookieDeTeste({ id: "u1" }) } }))).json();
+      expect(com.conta.temSenha).toBe(true);
+    } finally {
+      if (antes === undefined) delete process.env.RESEND_API_KEY;
+      else process.env.RESEND_API_KEY = antes;
+    }
   });
 });
