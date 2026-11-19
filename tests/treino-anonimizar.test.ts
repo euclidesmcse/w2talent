@@ -99,6 +99,18 @@ describe("anonimizar: endereços", () => {
   it("mantém a cidade", () => expect(limpo("São Paulo, SP (Híbrido)")).toBe("São Paulo, SP (Híbrido)"));
 });
 
+describe("anonimizar: razão social em qualquer caixa", () => {
+  it.each([
+    ["Cliente: Acme Tecnologia Ltda.", "Cliente: [EMPRESA]"],
+    ["Cliente: ACME TECNOLOGIA LTDA, em SP", "Cliente: [EMPRESA], em SP"],
+    ["Cliente: acme tecnologia ltda, em SP", "Cliente: [EMPRESA], em SP"],
+    ["Client: globex inc. (remote)", "Client: [EMPRESA] (remote)"],
+    ["Cliente: TELEFÓNICA S.A.", "Cliente: [EMPRESA]"],
+  ])("%s", (entrada, esperado) => expect(anonimizar(entrada)).toBe(esperado));
+
+  it("não troca palavras comuns", () => expect(anonimizar("Incluiu corpo técnico e saltos")).toBe("Incluiu corpo técnico e saltos"));
+});
+
 describe("anonimizar: valores conhecidos", () => {
   it("empresa de 2 letras (HP, EY) também sai, só como palavra inteira", () => {
     const c: Conhecidos = { empresas: ["HP", "EY"] };

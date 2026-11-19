@@ -123,19 +123,26 @@ export default function AdminTreinoPage() {
   const exportar = async (tarefa: Tarefa) => {
     setOcupado(`exportar:${tarefa}`);
     try {
-      const res = await post({ acao: "exportar", tarefa });
-      if (!res.ok) throw new Error();
-      const blob = await res.blob();
-      const nome = /filename="([^"]+)"/.exec(res.headers.get("content-disposition") ?? "")?.[1] ?? `treino-${tarefa}.jsonl`;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = nome;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      show(t("exportou", { count: Number(res.headers.get("x-quantidade") ?? 0) }), "success");
+      // Até 5.000 por arquivo: com mais, baixa uma parte por vez (1, 2, ...).
+      let total = 0;
+      let partes = 1;
+      for (let parte = 1; parte <= partes; parte++) {
+        const res = await post({ acao: "exportar", tarefa, parte });
+        if (!res.ok) throw new Error();
+        partes = Math.max(1, Number(res.headers.get("x-partes") ?? 1));
+        total += Number(res.headers.get("x-quantidade") ?? 0);
+        const blob = await res.blob();
+        const nome = /filename="([^"]+)"/.exec(res.headers.get("content-disposition") ?? "")?.[1] ?? `treino-${tarefa}-${parte}.jsonl`;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = nome;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      show(t("exportou", { count: total }), "success");
       await load();
     } catch {
       show(t("erro"), "error");

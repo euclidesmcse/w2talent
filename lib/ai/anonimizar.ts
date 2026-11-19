@@ -61,8 +61,15 @@ const END_ES = /\b(?:Calle|C\/|Avenida|Avda\.?|Carrera|Cra\.?|Paseo|Plaza|Camino
 const END_EN = /\b\d{1,6}\s+(?:[A-Za-z][A-Za-z'-]+\s){1,4}(?:Street|St\.|Avenue|Ave\.?|Road|Rd\.|Boulevard|Blvd\.?|Lane|Ln\.|Drive|Dr\.|Way|Court|Ct\.)/gi;
 const CEP_ROTULO = /\b(?:CEP|C\.P\.|ZIP)\s*:?\s*\d{5}-?\d{3}\b/gi;
 
-const RAZAO_SOCIAL =
-  /(?:[A-ZÀ-Þ0-9][\p{L}\p{N}&'-]*\s+){0,4}[A-ZÀ-Þ0-9][\p{L}\p{N}&'-]*\s+(?:Ltda\.?|S\.A\.|S\/A|Inc\.?|LLC|Ltd\.?|GmbH|S\.L\.|EIRELI|Corp\.?|Corporation)(?![\p{L}])/gu;
+/** Sufixo de razão social em qualquer caixa ("Ltda", "LTDA", "ltda"). */
+const SUFIXOS_EMPRESA = ["Ltda.", "Ltda", "S.A.", "S/A", "Inc.", "Inc", "LLC", "Ltd.", "Ltd", "GmbH", "S.L.", "EIRELI", "Corp.", "Corp", "Corporation"];
+const qualquerCaixa = (t: string) =>
+  t.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&").replace(/\p{L}/gu, (ch) => (ch.toLowerCase() === ch.toUpperCase() ? ch : `[${ch.toLowerCase()}${ch.toUpperCase()}]`));
+const SUFIXO_EMPRESA = `(?:${SUFIXOS_EMPRESA.map(qualquerCaixa).join("|")})(?![\\p{L}])`;
+/** "Acme Tecnologia Ltda", "ACME TECNOLOGIA LTDA": até 5 palavras que começam com maiúscula ou número. */
+const RAZAO_SOCIAL = new RegExp(`(?:[A-ZÀ-Þ0-9][\\p{L}\\p{N}&'-]*\\s+){0,4}[A-ZÀ-Þ0-9][\\p{L}\\p{N}&'-]*\\s+${SUFIXO_EMPRESA}`, "gu");
+/** Tudo minúsculo ("acme tecnologia ltda"): só as 2 palavras antes, para não engolir a frase. */
+const RAZAO_MINUSCULA = new RegExp(`(?<![\\p{L}\\p{N}])(?:\\p{L}[\\p{L}\\p{N}&'-]*\\s+){1,2}${SUFIXO_EMPRESA}`, "gu");
 
 // ── ajuda ──
 
@@ -179,6 +186,7 @@ export function anonimizar(texto: string, c: Conhecidos = {}): string {
   // Empresas de 2 letras (HP, EY, GE) também contam; a troca é por palavra inteira.
   for (const e of valores(c.empresas, 2).sort((a, b) => b.length - a.length)) out = trocarConhecido(out, e, "[EMPRESA]");
   out = out.replace(RAZAO_SOCIAL, "[EMPRESA]");
+  out = out.replace(RAZAO_MINUSCULA, "[EMPRESA]");
   const nomes = valores(c.nomes, 2).flatMap(partesDoNome);
   for (const n of [...new Set(nomes)].sort((a, b) => b.length - a.length)) out = trocarConhecido(out, n, "[NOME]");
   // "[NOME] [NOME]" de nome e sobrenome trocados separadamente vira um só.

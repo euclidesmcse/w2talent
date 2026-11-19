@@ -171,6 +171,40 @@ describeDb("3.6b Admin > Dados de treino", () => {
     expect(j.exportacoes[0]).toMatchObject({ tarefa: "extract_vacancy", quantidade: 2 });
   });
 
+  it("com mais de 5.000 aprovados, exporta em partes sem repetir nem pular", async () => {
+    const { exportarTarefa, MAX_EXPORTACAO } = await import("../lib/treino-admin");
+    const base = new Date("2020-01-01T00:00:00Z").getTime();
+    const lote = Array.from({ length: MAX_EXPORTACAO + 1 }, (_, i) => ({
+      id: `tr36-lote-${String(i).padStart(5, "0")}`,
+      tarefa: "ficha_w2",
+      donoHash: "tr36-lote",
+      conteudoHash: `tr36-lote-${i}`,
+      sistema: "s",
+      entrada: `entrada ${i}`,
+      saidaIa: "{}",
+      saidaFinal: "{}",
+      status: "aprovado" as const,
+      prova: false,
+      createdAt: new Date(base + i * 1000),
+    }));
+    await db.exemploTreino.createMany({ data: lote });
+    try {
+      const a = await exportarTarefa(db, "ficha_w2", "admin:teste", 1);
+      const b = await exportarTarefa(db, "ficha_w2", "admin:teste", 2);
+      expect([a.partes, a.quantidade, b.parte, b.quantidade]).toEqual([2, MAX_EXPORTACAO, 2, 1]);
+      expect(b.conteudo).toContain(`entrada ${MAX_EXPORTACAO}`);
+      expect(a.conteudo).not.toContain(`entrada ${MAX_EXPORTACAO}"`);
+      // Parte fora do intervalo vira a última.
+      expect((await exportarTarefa(db, "ficha_w2", "admin:teste", 9)).parte).toBe(2);
+      const r = await rota.POST(req("POST", cookie, { acao: "exportar", tarefa: "ficha_w2", parte: 2 }));
+      expect(r.headers.get("x-partes")).toBe("2");
+      expect(r.headers.get("content-disposition")).toMatch(/-parte-2-de-2\.jsonl"/);
+    } finally {
+      await db.exemploTreino.deleteMany({ where: { donoHash: "tr36-lote" } });
+      await db.exportacaoTreino.deleteMany({ where: { quem: "admin:teste" } });
+    }
+  });
+
   it("compara o modelo atual com o escolhido na prova fixa (IA simulada) e grava o custo", async () => {
     chamadas.length = 0;
     const r = await rota.POST(req("POST", cookie, { acao: "comparar", tarefa: "extract_vacancy", modelo: MODELO }));

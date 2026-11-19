@@ -86,16 +86,24 @@ export async function revisarExemplo(db: Db, id: unknown, acao: "aprovar" | "des
 
 // ── exportação ──
 
-/** JSONL dos aprovados fora da prova fixa, com o registro de quem exportou. */
-export async function exportarTarefa(db: Db, tarefa: TarefaTreino, quem: string) {
+/**
+ * JSONL dos aprovados fora da prova fixa, com o registro de quem exportou.
+ * Até 5.000 por arquivo: com mais, sai em partes (`parte` 1, 2, ...), na mesma ordem fixa.
+ */
+export async function exportarTarefa(db: Db, tarefa: TarefaTreino, quem: string, parte = 1) {
+  const where = { tarefa, status: "aprovado" as const, prova: false };
+  const total = await db.exemploTreino.count({ where });
+  const partes = Math.max(1, Math.ceil(total / MAX_EXPORTACAO));
+  const p = Number.isInteger(parte) && parte >= 1 ? Math.min(parte, partes) : 1;
   const exs = await db.exemploTreino.findMany({
-    where: { tarefa, status: "aprovado", prova: false },
+    where,
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    skip: (p - 1) * MAX_EXPORTACAO,
     take: MAX_EXPORTACAO,
     select: { sistema: true, entrada: true, saidaFinal: true },
   });
   await db.exportacaoTreino.create({ data: { tarefa, quantidade: exs.length, quem: quem.slice(0, 120) } });
-  return { conteudo: jsonl(exs), quantidade: exs.length };
+  return { conteudo: jsonl(exs), quantidade: exs.length, parte: p, partes };
 }
 
 export async function apagarTarefa(db: Db, tarefa: TarefaTreino): Promise<number> {

@@ -3,7 +3,7 @@
  * GET: resumo por tarefa e status, exportações recentes, modelo atual e modelos comparáveis;
  *      ?revisar=<tarefa> traz também o próximo exemplo pendente.
  * POST { acao: "aprovar" | "descartar", id }
- *      { acao: "exportar", tarefa } → arquivo JSONL (só aprovados fora da prova fixa), com registro
+ *      { acao: "exportar", tarefa, parte? } → arquivo JSONL (até 5.000; com mais, em partes) (só aprovados fora da prova fixa), com registro
  *      { acao: "apagar_tarefa", tarefa, confirmar: true }
  *      { acao: "comparar", tarefa, modelo, limite? } → nota do modelo atual e do escolhido na prova fixa
  */
@@ -66,15 +66,19 @@ export async function POST(req: NextRequest) {
         const tarefa = tarefaOuErro(body.tarefa);
         // O admin é uma senha só: "quem" = admin + hash do IP (nunca o IP).
         const quem = `admin:${(await sha256Hex(`w2-treino-export:${ipDaRequisicao(req)}`)).slice(0, 16)}`;
-        const r = await exportarTarefa(db, tarefa, quem);
+        const parte = typeof body.parte === "number" ? body.parte : 1;
+        const r = await exportarTarefa(db, tarefa, quem, parte);
         const dia = new Date().toISOString().slice(0, 10);
+        const sufixo = r.partes > 1 ? `-parte-${r.parte}-de-${r.partes}` : "";
         return new NextResponse(r.conteudo, {
           status: 200,
           headers: {
             ...NO_STORE,
             "content-type": "application/x-ndjson; charset=utf-8",
-            "content-disposition": `attachment; filename="w2talent-treino-${tarefa}-${dia}.jsonl"`,
+            "content-disposition": `attachment; filename="w2talent-treino-${tarefa}-${dia}${sufixo}.jsonl"`,
             "x-quantidade": String(r.quantidade),
+            "x-parte": String(r.parte),
+            "x-partes": String(r.partes),
           },
         });
       }
