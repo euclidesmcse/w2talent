@@ -6,7 +6,7 @@ import type { PrismaClient } from "@prisma/client";
 import { NextRequest } from "next/server";
 import { cookieDeTeste, type ContaTeste } from "./helpers/sessao-mock";
 import { DEMO_FICHAS } from "../lib/demo-data";
-import { assinarRecibo, donoHash, lerRecibo, naProva } from "../lib/treino";
+import { assinarRecibo, capturarExemplo, conhecidosDoCandidato, donoHash, lerRecibo, mudarTreino, naProva, sha256 } from "../lib/treino";
 import { segredoDoLogin } from "../lib/segredo-login";
 import { promptFichaW2 } from "../lib/ficha-ai";
 import { sanitizeFicha } from "../lib/ficha";
@@ -125,7 +125,8 @@ describeDb("3.6a exemplos de treino", () => {
     expect(ex.tarefa).toBe("ficha_w2");
     expect(ex.status).toBe("pendente");
     expect(ex.corrigido).toBe(true);
-    expect(ex.prova).toBe(naProva(ex.conteudoHash));
+    // A prova fixa vem só da tarefa + entrada (não das correções).
+    expect(ex.prova).toBe(naProva(await sha256(`ficha_w2\n${ex.entrada}`)));
     const tudo = JSON.stringify(ex);
     for (const proibido of [CAND, "Joana", "Tavares", "joana.tavares@exemplo.com", "Nimbus"]) expect(tudo).not.toContain(proibido);
     expect(ex.entrada).toContain("[EMPRESA]");
@@ -137,6 +138,7 @@ describeDb("3.6a exemplos de treino", () => {
     // Publicar de novo o mesmo conteúdo não repete o exemplo.
     await publicarFicha(cand(CAND), recibo, { resumo: "Analista cloud com 5 anos em AWS.", destaques: ["Migrou 40 servidores para AWS"] });
     expect(await exemplosDe(CAND)).toHaveLength(1);
+
   });
 
   it("sobra depois da anonimização: recusa o exemplo inteiro", async () => {
@@ -204,5 +206,50 @@ describeDb("3.6a exemplos de treino", () => {
     // Depois de revogar, publicar não guarda mais.
     await publicarFicha(cand(CAND), await reciboFicha({ resumo: "Novo.", destaques: [] }), { resumo: "Novo resumo.", destaques: [] });
     expect(await exemplosDe(CAND)).toHaveLength(0);
+  });
+  it("outra correção da mesma entrada fica do mesmo lado da prova fixa", async () => {
+    await mudarTreino(db, CAND, true, "pt-BR", segredoDoLogin());
+    const recibo = await reciboFicha({ resumo: "Analista de nuvem.", destaques: [] });
+    await publicarFicha(cand(CAND), recibo, { resumo: "Analista de nuvem com AWS.", destaques: [] });
+    await publicarFicha(cand(CAND), recibo, { resumo: "Analista de nuvem sênior.", destaques: [] });
+    const exs = (await exemplosDe(CAND)).filter((e) => e.saidaIa.includes("Analista de nuvem."));
+    expect(exs).toHaveLength(2);
+    expect(new Set(exs.map((e) => e.prova)).size).toBe(1);
+  });
+
+  it("empresa que só está no recibo (a pessoa tirou depois) também sai", async () => {
+    await mudarTreino(db, CAND, true, "pt-BR", segredoDoLogin());
+    const recibo = await reciboFicha({ resumo: "Analista cloud há 5 anos.", destaques: ["Cuidou da migração"] });
+    const fichaNova = { ...FICHA, experiencias: [] };
+    const r = await capturarExemplo(db, {
+      userId: CAND,
+      tarefa: "ficha_w2",
+      recibo,
+      final: { resumo: "Analista cloud há 5 anos.", destaques: ["Cuidou da migração para nuvem"] },
+      conhecidos: await conhecidosDoCandidato(db, CAND, fichaNova),
+      segredo: segredoDoLogin(),
+    });
+    expect(r).toBe("guardado");
+    for (const ex of await exemplosDe(CAND)) expect(JSON.stringify(ex)).not.toContain("Nimbus");
+  });
+
+  it("revogar ao mesmo tempo que uma captura: nada sobra depois da revogação", async () => {
+    for (let i = 0; i < 5; i++) {
+      await mudarTreino(db, CAND, true, "pt-BR", segredoDoLogin());
+      const recibo = await reciboFicha({ resumo: `Analista cloud ${i}.`, destaques: [] });
+      const [, rev] = await Promise.all([
+        capturarExemplo(db, {
+          userId: CAND,
+          tarefa: "ficha_w2",
+          recibo,
+          final: { resumo: `Analista cloud corrigido ${i}.`, destaques: [] },
+          conhecidos: await conhecidosDoCandidato(db, CAND, FICHA),
+          segredo: segredoDoLogin(),
+        }),
+        mudarTreino(db, CAND, false, "pt-BR", segredoDoLogin()),
+      ]);
+      expect(rev.ligado).toBe(false);
+      expect(await exemplosDe(CAND)).toHaveLength(0);
+    }
   });
 });

@@ -120,17 +120,68 @@ export async function treinoLigado(db: Db, userId: string): Promise<boolean> {
 }
 
 /** Liga ou desliga. Desligar apaga os exemplos da pessoa. Não grava linha repetida. */
+/**
+ * Trava por pessoa (advisory lock da transação): mudar o consentimento e guardar um exemplo nunca se cruzam.
+ * Sem ela, uma captura que leu "ligado" poderia gravar depois de a revogação apagar tudo.
+ */
+async function comTravaDaPessoa<T>(db: Db, userId: string, fn: (tx: Db) => Promise<T>): Promise<T> {
+  return db.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`treino:${userId}`}))`;
+    return fn(tx as unknown as Db);
+  });
+}
+
 export async function mudarTreino(db: Db, userId: string, ligar: boolean, idioma: string, segredo: string): Promise<{ ligado: boolean; apagados: number }> {
-  const atual = await treinoLigado(db, userId);
-  if (atual !== ligar) {
-    await db.consentLog.create({
-      data: { userId, tipo: TREINO_IA_TIPO, versao: TREINO_IA_VERSAO, texto: textoTreinoIa(idioma, !ligar), baseLegal: ligar ? "consentimento" : "revogacao" },
-    });
+  const dono = await donoHash(userId, segredo);
+  return comTravaDaPessoa(db, userId, async (tx) => {
+    const atual = await treinoLigado(tx, userId);
+    if (atual !== ligar) {
+      await tx.consentLog.create({
+        data: { userId, tipo: TREINO_IA_TIPO, versao: TREINO_IA_VERSAO, texto: textoTreinoIa(idioma, !ligar), baseLegal: ligar ? "consentimento" : "revogacao" },
+      });
+    }
+    let apagados = 0;
+    // Apaga também quando já estava desligado: um pedido de "desligar" sempre limpa.
+    if (!ligar) apagados = (await tx.exemploTreino.deleteMany({ where: { donoHash: dono } })).count;
+    return { ligado: ligar, apagados };
+  });
+}
+
+/**
+ * Valores pessoais que estão no próprio recibo (a entrada que a IA leu): a pessoa pode ter mudado ou tirado
+ * uma empresa, um link ou o nome depois da IA, e o recibo ainda guarda o original.
+ */
+export function conhecidosDoRecibo(entrada: string): Conhecidos {
+  const c: Required<Pick<Conhecidos, "nomes" | "emails" | "telefones" | "empresas" | "links">> = { nomes: [], emails: [], telefones: [], empresas: [], links: [] };
+  let v: unknown;
+  try {
+    v = JSON.parse(entrada);
+  } catch {
+    return c;
   }
-  let apagados = 0;
-  // Apaga também quando já estava desligado: um pedido de "desligar" sempre limpa.
-  if (!ligar) apagados = (await db.exemploTreino.deleteMany({ where: { donoHash: await donoHash(userId, segredo) } })).count;
-  return { ligado: ligar, apagados };
+  const chave: Record<string, keyof typeof c> = {
+    nome: "nomes", name: "nomes", email: "emails", celular: "telefones", telefone: "telefones", phone: "telefones",
+    empresa: "empresas", company: "empresas", link: "links", links: "links", site: "links", url: "links",
+  };
+  // Empresa em qualquer nível (experiências); nome, contatos e links só no nível de cima
+  // (lá dentro, "nome" é de competência, como {nome: "AWS"}).
+  const andar = (x: unknown, k: string | undefined, topo: boolean) => {
+    if (typeof x === "string") {
+      const alvo = k ? chave[k.toLowerCase()] : undefined;
+      if (alvo && x.trim() && (topo || alvo === "empresas")) c[alvo].push(x);
+    } else if (Array.isArray(x)) x.forEach((y) => andar(y, k, topo));
+    else if (x && typeof x === "object") for (const [kk, y] of Object.entries(x)) andar(y, kk, false);
+  };
+  if (v && typeof v === "object" && !Array.isArray(v)) for (const [k, y] of Object.entries(v)) andar(y, k, true);
+  return c;
+}
+
+function juntarConhecidos(a: Conhecidos, b: Conhecidos): Conhecidos {
+  const j = (x?: (string | null | undefined)[], y?: (string | null | undefined)[]) => [...(x ?? []), ...(y ?? [])];
+  return {
+    nomes: j(a.nomes, b.nomes), emails: j(a.emails, b.emails), telefones: j(a.telefones, b.telefones),
+    empresas: j(a.empresas, b.empresas), links: j(a.links, b.links), documentos: j(a.documentos, b.documentos),
+  };
 }
 
 // ── valores conhecidos da conta ──
@@ -193,32 +244,41 @@ export async function capturarExemplo(
     const r = await lerRecibo(args.recibo, args.segredo, args.agora);
     if (!r) return "recibo_invalido";
     if (r.tarefa !== args.tarefa) return "tarefa_errada";
-    const entrada = entradaAnonima(r, args.conhecidos);
-    const saidaIa = anonimizarValor(r.saidaIa ?? null, args.conhecidos);
-    const saidaFinal = anonimizarValor(args.final ?? null, args.conhecidos);
+    const conhecidos = juntarConhecidos(args.conhecidos, conhecidosDoRecibo(r.entrada));
+    const entrada = entradaAnonima(r, conhecidos);
+    const saidaIa = anonimizarValor(r.saidaIa ?? null, conhecidos);
+    const saidaFinal = anonimizarValor(args.final ?? null, conhecidos);
     // Rede de segurança (D3): qualquer sobra recusa o exemplo inteiro.
-    const sobra = [...sobrasValor(entrada.valor, args.conhecidos), ...sobrasValor(saidaIa, args.conhecidos), ...sobrasValor(saidaFinal, args.conhecidos)];
+    const sobra = [...sobrasValor(entrada.valor, conhecidos), ...sobrasValor(saidaIa, conhecidos), ...sobrasValor(saidaFinal, conhecidos)];
     if (sobra.length) return "recusado_anonimizacao";
     const ia = JSON.stringify(saidaIa);
     const fim = JSON.stringify(saidaFinal);
     const conteudoHash = await sha256(`${r.tarefa}\n${entrada.texto}\n${ia}\n${fim}`);
-    const criado = await db.exemploTreino.createMany({
-      data: [
-        {
-          tarefa: r.tarefa,
-          donoHash: await donoHash(args.userId, args.segredo),
-          conteudoHash,
-          idioma: r.idioma ?? null,
-          sistema: r.sistema,
-          entrada: entrada.texto,
-          saidaIa: ia,
-          saidaFinal: fim,
-          corrigido: ia !== fim,
-          prova: naProva(conteudoHash),
-        },
-      ],
-      skipDuplicates: true,
+    // A prova fixa depende só da tarefa e da entrada: versões corrigidas da mesma entrada ficam todas do mesmo lado.
+    const provaHash = await sha256(`${r.tarefa}\n${entrada.texto}`);
+    const dono = await donoHash(args.userId, args.segredo);
+    const criado = await comTravaDaPessoa(db, args.userId, async (tx) => {
+      // Confere de novo dentro da trava: uma revogação que entrou antes ganha.
+      if (!(await treinoLigado(tx, args.userId))) return null;
+      return tx.exemploTreino.createMany({
+        data: [
+          {
+            tarefa: r.tarefa,
+            donoHash: dono,
+            conteudoHash,
+            idioma: r.idioma ?? null,
+            sistema: r.sistema,
+            entrada: entrada.texto,
+            saidaIa: ia,
+            saidaFinal: fim,
+            corrigido: ia !== fim,
+            prova: naProva(provaHash),
+          },
+        ],
+        skipDuplicates: true,
+      });
     });
+    if (!criado) return "sem_consentimento";
     return criado.count ? "guardado" : "repetido";
   } catch (e) {
     console.warn("[treino] exemplo não guardado:", e instanceof Error ? e.name : e);
