@@ -8,7 +8,7 @@ import type { TaskName } from "@/lib/ai/tasks";
 
 export type LinhaIa = {
   /** Prefixo das chaves em messages ("cv" → ia.cvTarefa, ia.cvFaz, ia.cvDados, ia.cvDecide) e âncora na página. */
-  id: "cv" | "w2" | "vaga" | "vies" | "perguntas" | "busca" | "parecidas" | "match" | "ajuda" | "traducao" | "mercado" | "ranking" | "atendimento";
+  id: "cv" | "w2" | "vaga" | "vies" | "perguntas" | "busca" | "parecidas" | "match" | "ajuda" | "traducao" | "mercado" | "ranking" | "atendimento" | "treino";
   ancora: string;
   /** Tarefas do roteador de IA usadas. Vazio = não é IA (o match é uma conta com pesos fixos). */
   tarefas: TaskName[];
@@ -35,6 +35,8 @@ export const LINHAS_IA: LinhaIa[] = [
   { id: "mercado", ancora: "mercado", tarefas: [] },
   // 3.1b: ordem dos candidatos ajustada pelo que a empresa escolhe (não é IA; a % de match não muda).
   { id: "ranking", ancora: "ranking", tarefas: [] },
+  // 3.6a: exemplos de treino (consentimento opcional, anonimizados; não chama IA, só guarda o par IA/corrigido).
+  { id: "treino", ancora: "treino", tarefas: [] },
 ];
 
 export const CAMPOS_LINHA = ["Tarefa", "Faz", "Dados", "Decide"] as const;

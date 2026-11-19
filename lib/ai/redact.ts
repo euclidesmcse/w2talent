@@ -3,7 +3,8 @@
  * O modelo não precisa deles para resumir ou comparar um CV. Troca por marcadores.
  */
 
-const RULES: [RegExp, string][] = [
+/** Regras de contatos (também usadas pela anonimização do treino, lib/ai/anonimizar.ts). */
+export const REDACT_RULES: [RegExp, string][] = [
   // e-mail
   [/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, "[EMAIL]"],
   // CPF 000.000.000-00 ou 11 dígitos colados
@@ -23,6 +24,6 @@ const RULES: [RegExp, string][] = [
 
 export function redactContacts(text: string): string {
   let out = text;
-  for (const [re, mark] of RULES) out = out.replace(re, mark);
+  for (const [re, mark] of REDACT_RULES) out = out.replace(re, mark);
   return out;
 }

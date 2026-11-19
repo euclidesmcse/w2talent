@@ -2,7 +2,7 @@
 titulo: My data and privacy
 resumo: Protected contact, how long the profile and conversations are kept and how to ask for a review.
 areas: publico, candidato, recrutador
-telas: /minha-ficha, /renovar, /ia, /mercado, /conta/seguranca
+telas: /minha-ficha, /renovar, /ia, /mercado, /conta/seguranca, /publicar
 ordem: 10
 ---
 
@@ -36,6 +36,15 @@ They are optional and start off. To turn them on, you confirm your mobile number
 ## AI and review by a person
 
 AI helps read texts and write summaries, but it decides nothing for anyone. If an automated decision affected you, ask for a review by a person at contato@w2talent.com. See [How we use AI](/ia).
+
+## Training the AI with your corrections
+
+It is optional and off by default. If you turn it on (on the W2 Profile, in Post a job or in [Account security](/conta/seguranca)), when you publish your W2 Profile or save a job the AI read, W2Talent keeps an example with what the AI wrote and what you corrected, to train and evaluate W2Talent's own open AI model.
+
+- Before it is stored, names, emails, phone numbers, links, documents (CPF, CNPJ, ID numbers and others), addresses and company names are removed and become markers such as [NOME] and [EMPRESA]. If anything that looks like contact data is left, the example is not stored.
+- The example does not carry your account id, only a code that lets us delete it.
+- A person on the team reviews each example before it is used. Nothing is sent to outside training services without a new decision by the team.
+- Turning it off deletes your stored examples right away.
 
 ## When you sign out
 

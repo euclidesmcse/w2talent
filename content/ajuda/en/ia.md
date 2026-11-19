@@ -24,3 +24,7 @@ The [match](/ajuda/match) is a calculation with fixed weights. Search uses text 
 The conversation in [Talk to a person](/ajuda/conversa) is answered by a person on the team. Nothing in it goes to AI.
 
 The full list, with the data each task uses, is in [How we use AI](/ia).
+
+## A model of our own, in the future
+
+If you want, your corrections can help train an open W2Talent AI model (see [My data and privacy](/ajuda/privacidade)). Training only happens with at least 500 examples reviewed by a person, and the trained model becomes one more option, compared with the current one first. Nothing switches by itself.

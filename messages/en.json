@@ -40,7 +40,9 @@
     "painelRhCurto": "Dashboard",
     "mercado": "Market",
     "atendimento": "Support",
-    "minhasConversas": "My conversations"
+    "minhasConversas": "My conversations",
+    "dadosTreino": "Training data",
+    "dadosTreinoCurto": "Training"
   },
   "lang": {
     "label": "Language",
@@ -1001,7 +1003,11 @@
     "atendimentoTarefa": "Talk to a person (Help)",
     "atendimentoFaz": "Not AI: a person on the W2Talent team answers the conversation. No reply is written or suggested by AI.",
     "atendimentoDados": "What you write in the conversation, the screen you came from and, when signed in, whether the account is a candidate or a recruiter. None of it goes to an AI model. The conversation is deleted 180 days after it is closed.",
-    "atendimentoDecide": "A person on the team reads and replies. AI takes no part."
+    "atendimentoDecide": "A person on the team reads and replies. AI takes no part.",
+    "treinoTarefa": "Training our own model (optional)",
+    "treinoFaz": "People who turn on this consent let W2Talent keep what the AI wrote on the W2 Profile or read from the job post and the version they saved, to train and evaluate an open W2Talent AI model. Off by default.",
+    "treinoDados": "Only examples anonymised before storage: names, emails, phone numbers, links, documents, addresses and companies become markers. No account id. Nothing goes to an AI provider or an outside training service.",
+    "treinoDecide": "It decides nothing. A person on the team reviews each example; training only with 500 approved examples, and the trained model is only used if the team chooses it. Turning it off deletes your examples."
   },
   "empresa": {
     "title": "My company",
@@ -1753,5 +1759,83 @@
     "errorCode": "The code does not match. Check it and try again.",
     "errorConsent": "Tick the authorization to turn on the notices.",
     "errorGeneric": "Something went wrong. Try again."
+  },
+  "treino": {
+    "saibaMais": "Learn more",
+    "ligou": "Done. Your next corrections can help train the AI.",
+    "desligou": "Turned off. {count, plural, =0 {You had no stored examples.} one {# of your examples was deleted.} other {# of your examples were deleted.}}",
+    "erro": "Could not save your choice. Try again.",
+    "titulo": "AI training"
+  },
+  "adminTreino": {
+    "title": "Training data",
+    "intro": "Examples from people who agreed to help train the AI: what the AI wrote and what the person saved after correcting it, already without names, contact details, links, documents, addresses and companies. Review each one before using it.",
+    "regra": "Train only with {count} or more approved examples of a task. One in every 10 approved examples is kept aside as a fixed test set and is not exported.",
+    "lora": "A trained model becomes one more model registered in Admin > AI and is only used if you choose it: nothing switches by itself. Workers AI accepts LoRA adapters for some open models.",
+    "loginTitle": "Sign in to admin",
+    "erro": "Something went wrong. Try again.",
+    "legenda": "Examples by task and status.",
+    "tarefa": "Task",
+    "progresso": "Progress towards training",
+    "acoes": "Actions",
+    "tarefas": {
+      "ficha_w2": "W2 Profile from the CV",
+      "extract_vacancy": "Job reading (Post a job)"
+    },
+    "status": {
+      "pendente": "Pending",
+      "aprovado": "Approved",
+      "descartado": "Discarded"
+    },
+    "treinoProva": "{treino} for training · {prova} in the test set",
+    "pronto": "Already {count} approved: training can be planned.",
+    "faltam": "{atual} of {minimo} ({pct})",
+    "revisar": "Review",
+    "exportar": "Export JSONL",
+    "apagar": "Delete all",
+    "apagarConfirma": "Delete all examples of \"{tarefa}\"? This cannot be undone.",
+    "apagou": "{count, plural, =0 {Nothing to delete.} one {# example deleted.} other {# examples deleted.}}",
+    "exportou": "{count, plural, =0 {No approved examples to export.} one {# example exported.} other {# examples exported.}}",
+    "revisaoTitulo": "Review: {tarefa}",
+    "revisaoDica": "Approve only if the person's version is correct and no personal data is left. When in doubt, discard.",
+    "corrigido": "The person corrected it",
+    "semCorrecao": "The person saved it unchanged",
+    "naProva": "in the fixed test set",
+    "entrada": "Input",
+    "saidaIa": "What the AI wrote",
+    "saidaFinal": "What the person saved",
+    "aprovar": "Approve",
+    "descartar": "Discard",
+    "fecharRevisao": "Close",
+    "aprovou": "Approved.",
+    "descartou": "Discarded.",
+    "nadaPendente": "Nothing pending for this task.",
+    "compararTitulo": "Compare models on the fixed test set",
+    "compararIntro": "Runs the model the task uses today and the chosen model on the fixed test set (up to {count} at a time), within the daily AI budget. It only shows the result: nothing switches by itself.",
+    "outroModelo": "Compare with",
+    "escolha": "Choose a model",
+    "comparar": "Compare",
+    "comparando": "Comparing…",
+    "atual": "Current model: {modelo}",
+    "semModelos": "No other active text model can be used for this task. Register and test one in Admin > AI.",
+    "resultadoLegenda": "{count, plural, one {# example} other {# examples}} from the fixed test set · {tarefa}",
+    "modelo": "Model",
+    "nota": "Score",
+    "falhas": "No valid answer",
+    "custo": "Cost",
+    "rotuloAtual": "Current",
+    "rotuloOutro": "Chosen",
+    "notaExplica": "Score: for jobs, the field-by-field average (title, level, contract, work mode, city, range, skills, items and benefits); for the W2 Profile, how close the text is to what the person saved. An invalid answer counts as zero.",
+    "erros": {
+      "prova_vazia": "This task's fixed test set has no approved examples yet.",
+      "orcamento_insuficiente": "The comparison would go over the daily AI budget. Try tomorrow.",
+      "mesmo_modelo": "That is already the task's current model.",
+      "modelo_nao_serve": "That model cannot be used for this task.",
+      "modelo_atual_nao_serve": "This task's current model can't receive personal data. Change the route in Admin > AI before comparing.",
+      "comparar": "Could not compare. Try again."
+    },
+    "exportacoesTitulo": "Recent exports",
+    "exportacaoItem": "{data} · {tarefa} · {count, plural, one {# example} other {# examples}} · {quem}",
+    "semExportacoes": "No exports yet."
   }
 }

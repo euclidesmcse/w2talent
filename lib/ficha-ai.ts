@@ -126,8 +126,8 @@ async function lerPorRegras(texto: string, contatos: ReturnType<typeof contatosD
 
 const W2_LANG: Record<string, string> = { "pt-BR": "Brazilian Portuguese", en: "English", es: "Spanish" };
 
-/** Ficha conferida → resumo de 3 linhas + até 3 destaques, no idioma pedido. Lança se a IA falhar. */
-export async function gerarFichaW2(ficha: Ficha, idioma: string, chat: ChatFn, now: Date = new Date()): Promise<FichaW2> {
+/** Instruções e entrada da Ficha W2 (3.6a: o mesmo texto vai para o recibo do exemplo de treino). */
+export function promptFichaW2(ficha: Ficha, idioma: string, now: Date = new Date()): { lang: string; sistema: string; entrada: string } {
   const lang = W2_LANG[idioma] ? idioma : "pt-BR";
   // Sem nome nem contatos: a IA escreve sobre "o profissional".
   const dados = {
@@ -140,20 +140,24 @@ export async function gerarFichaW2(ficha: Ficha, idioma: string, chat: ChatFn, n
     idiomas: ficha.idiomas,
     objetivo: ficha.objetivo,
   };
+  const sistema = `You write the standard profile card a recruiter reads in 10 seconds. Reply with one JSON object only: {"resumo": string, "destaques": [string]}.
+"resumo": at most 3 short sentences (max 380 characters), objective, third person, no name, no adjectives like "passionate".
+"destaques": up to 3 concrete achievements or strengths backed by the data (a number or scope when available), each under 140 characters. Only use facts present in the data; never invent numbers.
+${ETICA}
+Write in ${W2_LANG[lang]}.`;
+  return { lang, sistema, entrada: JSON.stringify(dados) };
+}
+
+/** Ficha conferida → resumo de 3 linhas + até 3 destaques, no idioma pedido. Lança se a IA falhar. */
+export async function gerarFichaW2(ficha: Ficha, idioma: string, chat: ChatFn, now: Date = new Date()): Promise<FichaW2> {
+  const { lang, sistema, entrada } = promptFichaW2(ficha, idioma, now);
   const r = await chat("ficha_w2", {
     json: true,
     temperature: 0.2,
     maxTokens: 800,
     messages: [
-      {
-        role: "system",
-        content: `You write the standard profile card a recruiter reads in 10 seconds. Reply with one JSON object only: {"resumo": string, "destaques": [string]}.
-"resumo": at most 3 short sentences (max 380 characters), objective, third person, no name, no adjectives like "passionate".
-"destaques": up to 3 concrete achievements or strengths backed by the data (a number or scope when available), each under 140 characters. Only use facts present in the data; never invent numbers.
-${ETICA}
-Write in ${W2_LANG[lang]}.`,
-      },
-      { role: "user", content: JSON.stringify(dados) },
+      { role: "system", content: sistema },
+      { role: "user", content: entrada },
     ],
   });
   const obj = parseJsonObject(r.text);

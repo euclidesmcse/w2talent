@@ -58,6 +58,11 @@ export async function POST(req: NextRequest) {
     runInBackground("indexar vaga", () => indexVacancy(created.id));
     // 2.7a: tradução automática para os outros idiomas (a IA roda em segundo plano).
     await pedirTraducaoDaVaga(prisma, created.id);
+    // 3.6a: exemplo de treino (só com o consentimento "treinoIA" e o recibo da leitura pela IA).
+    if (body.treino) {
+      const { capturarExemploVaga } = await import("@/lib/treino-vaga");
+      await capturarExemploVaga(prisma, a.acesso, body.treino, created.titulo ?? payload.titulo);
+    }
 
     return NextResponse.json(
       {

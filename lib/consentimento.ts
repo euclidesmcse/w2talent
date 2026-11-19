@@ -39,3 +39,29 @@ export function textoConsentimento(tipo: TipoConsentimento, idioma: string): str
   const l: Idioma = idioma === "en" || idioma === "es" ? idioma : "pt-BR";
   return TEXTOS[tipo][l];
 }
+
+/**
+ * 3.6a (D2): consentimento separado, opcional e desligado por padrão para usar as correções da pessoa
+ * no treino de um modelo aberto. Fica no ConsentLog com tipo "treinoIA"; desligar grava outra linha do
+ * mesmo tipo com baseLegal "revogacao" (vale a linha mais recente). Mudou o texto: suba a versão.
+ */
+export const TREINO_IA_TIPO = "treinoIA";
+export const TREINO_IA_VERSAO = 1;
+const TEXTOS_TREINO: Record<"aceite" | "revogacao", Record<Idioma, string>> = {
+  aceite: {
+    "pt-BR":
+      "Autorizo o W2Talent a guardar, sem meu nome, contatos, links, documentos, endereço e nomes de empresas, o texto que a IA escreveu para mim e a versão que eu corrigi, para treinar e avaliar um modelo de IA aberto do próprio W2Talent. Opcional; posso desligar quando quiser e meus exemplos são apagados.",
+    en: "I allow W2Talent to keep, without my name, contact details, links, documents, address and company names, the text the AI wrote for me and the version I corrected, to train and evaluate W2Talent's own open AI model. Optional; I can turn it off at any time and my examples are deleted.",
+    es: "Autorizo a W2Talent a guardar, sin mi nombre, contactos, enlaces, documentos, dirección ni nombres de empresas, el texto que la IA escribió para mí y la versión que corregí, para entrenar y evaluar un modelo de IA abierto del propio W2Talent. Opcional; puedo desactivarlo cuando quiera y mis ejemplos se borran.",
+  },
+  revogacao: {
+    "pt-BR": "Desliguei o uso das minhas correções no treino da IA. Meus exemplos guardados foram apagados.",
+    en: "I turned off the use of my corrections to train the AI. My stored examples were deleted.",
+    es: "Desactivé el uso de mis correcciones para entrenar la IA. Mis ejemplos guardados se borraron.",
+  },
+};
+
+export function textoTreinoIa(idioma: string, revogacao = false): string {
+  const l: Idioma = idioma === "en" || idioma === "es" ? idioma : "pt-BR";
+  return TEXTOS_TREINO[revogacao ? "revogacao" : "aceite"][l];
+}

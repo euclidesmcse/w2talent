@@ -92,6 +92,11 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
     runInBackground("reindexar vaga", () => indexVacancy(updated.id));
     // 2.7a: texto mudou, a tradução antiga deixa de valer (hash); pede a nova em segundo plano.
     await pedirTraducaoDaVaga(prisma, updated.id);
+    // 3.6a: "Atualizar a existente" depois da leitura pela IA também gera exemplo (com consentimento).
+    if (body.treino) {
+      const { capturarExemploVaga } = await import("@/lib/treino-vaga");
+      await capturarExemploVaga(prisma, r.acesso, body.treino, updated.titulo);
+    }
     return NextResponse.json({ ...updated, id: updated.id }, { status: 200 });
   } catch (e: any) {
     console.error("PUT vaga", e?.code ?? e?.name ?? "erro");

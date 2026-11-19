@@ -34,6 +34,8 @@ export const NAV: Record<Area, NavLink[]> = {
     { href: "/admin/ranking", key: "ranking" },
     // 2.6b-1: conversas "Falar com uma pessoa" da Ajuda
     { href: "/admin/atendimento", key: "atendimento" },
+    // 3.6b: exemplos de treino (revisão, JSONL, prova fixa e comparação de modelos)
+    { href: "/admin/treino", key: "dadosTreino", shortKey: "dadosTreinoCurto" },
   ],
 };
 

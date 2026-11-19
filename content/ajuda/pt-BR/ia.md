@@ -24,3 +24,7 @@ O [match](/ajuda/match) é uma conta com pesos fixos. A busca usa texto e signif
 A conversa em [Falar com uma pessoa](/ajuda/conversa) é respondida por uma pessoa da equipe. Nada dela vai para IA.
 
 A lista completa, com os dados que cada tarefa usa, está em [Como usamos IA](/ia).
+
+## Um modelo próprio, no futuro
+
+Quem quiser pode deixar as próprias correções ajudarem a treinar um modelo de IA aberto do W2Talent (veja [Meus dados e privacidade](/ajuda/privacidade)). O treino só acontece com pelo menos 500 exemplos revisados por uma pessoa, e o modelo treinado entra como mais uma opção, comparado antes com o atual. Nada troca sozinho.

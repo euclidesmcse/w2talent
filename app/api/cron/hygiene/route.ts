@@ -81,8 +81,16 @@ export async function POST(req: NextRequest) {
       console.error("[whatsapp] cron falhou:", e instanceof Error ? e.name : e);
       return null;
     });
+    // 3.6b: exemplos de treino descartados há mais de 30 dias.
+    const treinoDescartadosApagados = await (async () => {
+      const { apagarDescartadosAntigos } = await import("@/lib/treino-admin");
+      return apagarDescartadosAntigos(prisma);
+    })().catch((e) => {
+      console.error("[treino] cron falhou:", e instanceof Error ? e.name : e);
+      return -1;
+    });
     return NextResponse.json(
-      { ok: true, ...summary, emailsCandidatura: candidaturas, emailsAgenda: agenda, traducoes, traducoesFichas: fichas, mercado, ranking, conversasApagadas, whatsapp },
+      { ok: true, ...summary, emailsCandidatura: candidaturas, emailsAgenda: agenda, traducoes, traducoesFichas: fichas, mercado, ranking, conversasApagadas, whatsapp, treinoDescartadosApagados },
       { status: 200 },
     );
   } catch (e) {

@@ -350,7 +350,7 @@ model ConsentLog {
   /// 1.5.5: ligado à conta (antes apontava para CandidateProfile.userId e não gravava).
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   versao    Int
-  tipo      String // tratamentoBusca | contatoProxy | nudges | iaReescrita
+  tipo      String // tratamentoBusca | contatoProxy | nudges | iaReescrita | treinoIA (3.6a; baseLegal "revogacao" = desligou)
   texto     String   @db.Text
   baseLegal String
   createdAt DateTime @default(now())
@@ -774,5 +774,49 @@ model WhatsappAviso {
 
   @@unique([candidateId, tipo, dia])
   @@index([candidateId, dia])
+  @@index([createdAt])
+}
+
+// 3.6a Ajuste fino: exemplos de treino anonimizados, só de quem aceitou o tipo "treinoIA" no ConsentLog.
+// Nunca guarda o id da conta: donoHash = HMAC-SHA256 do id (chave derivada do BETTER_AUTH_SECRET),
+// só para apagar os exemplos quando a pessoa revogar. Os textos já chegam anonimizados (lib/treino-anonimizar.ts).
+enum StatusExemploTreino {
+  pendente
+  aprovado
+  descartado
+}
+
+model ExemploTreino {
+  id           String              @id @default(cuid())
+  tarefa       String // ficha_w2 | extract_vacancy
+  donoHash     String
+  /// SHA-256 de entrada + saídas: evita repetido e decide a prova fixa (10%, lib/treino.ts).
+  conteudoHash String
+  idioma       String?
+  sistema      String              @db.Text
+  entrada      String              @db.Text
+  saidaIa      String              @db.Text
+  saidaFinal   String              @db.Text
+  /// A pessoa mudou alguma coisa depois da IA?
+  corrigido    Boolean             @default(false)
+  status       StatusExemploTreino @default(pendente)
+  /// 3.6b: fica na prova fixa (não vai na exportação de treino).
+  prova        Boolean             @default(false)
+  revisadoEm   DateTime?
+  createdAt    DateTime            @default(now())
+
+  @@unique([tarefa, conteudoHash])
+  @@index([tarefa, status])
+  @@index([donoHash])
+}
+
+// 3.6b: registro de cada exportação JSONL (quem = "admin" + hash do IP; o admin é uma senha só).
+model ExportacaoTreino {
+  id         String   @id @default(cuid())
+  tarefa     String
+  quantidade Int
+  quem       String
+  createdAt  DateTime @default(now())
+
   @@index([createdAt])
 }
