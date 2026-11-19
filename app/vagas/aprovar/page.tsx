@@ -199,7 +199,8 @@ export default function AprovarPage() {
 
   let corpo: React.ReactNode = null;
   if (fase === "carregando") corpo = <p className="text-muted" aria-busy="true">{t("loading")}</p>;
-  else if (fase === "sem_login") corpo = vazio(t("loginTitle"), t("loginBody"), { href: linkEntrar("/vagas/aprovar"), label: t("loginCta") });
+  // Mantém o ?v= do aviso do WhatsApp na volta do login.
+  else if (fase === "sem_login") corpo = vazio(t("loginTitle"), t("loginBody"), { href: linkEntrar("/vagas/aprovar" + window.location.search), label: t("loginCta") });
   else if (fase === "sem_perfil") corpo = vazio(t("noProfileTitle"), t("noProfileBody"), { href: "/minha-ficha", label: t("noProfileCta") });
   else if (fase === "sem_selecao") corpo = vazio(t("emptyTitle"), t("emptyBody"));
   else if (fase === "sem_rede") corpo = vazio(tp("needsInternet"), tp("reviewOffline"));
