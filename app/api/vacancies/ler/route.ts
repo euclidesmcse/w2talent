@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { acessoVaga } from "@/lib/empresa";
 import { NO_STORE } from "@/lib/sessao";
 import { chaveUso, consumirUso, LIMITE_LEITURAS_VAGA_DIA } from "@/lib/uso-diario";
-import { lerVaga, MAX_TEXTO_VAGA, MIN_TEXTO_VAGA, type ChatVagaFn } from "@/lib/vaga-ai";
+import { lerVaga, MAX_TEXTO_VAGA, MIN_TEXTO_VAGA, SISTEMA_VAGA, type ChatVagaFn } from "@/lib/vaga-ai";
 
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: NO_STORE });
 
@@ -36,7 +36,18 @@ export async function POST(req: NextRequest) {
     chat = null;
   }
   const r = await lerVaga(texto, chat);
-  return json({ vaga: r.vaga, origem: r.origem });
+  // 3.6a: recibo do que a IA leu (volta ao salvar; só vira exemplo de treino com o consentimento "treinoIA").
+  let recibo: string | null = null;
+  if (r.origem === "ia" && r.entrada && a.acesso.tipo === "recrutador") {
+    try {
+      const { assinarRecibo } = await import("@/lib/treino");
+      const { segredoDoLogin } = await import("@/lib/segredo-login");
+      recibo = await assinarRecibo({ tarefa: "extract_vacancy", sistema: SISTEMA_VAGA, entrada: r.entrada, saidaIa: r.vaga }, segredoDoLogin());
+    } catch {
+      recibo = null;
+    }
+  }
+  return json({ vaga: r.vaga, origem: r.origem, recibo });
 }
 
 export const dynamic = "force-dynamic";

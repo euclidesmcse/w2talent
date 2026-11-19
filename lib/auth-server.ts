@@ -20,19 +20,13 @@ import { captcha } from "better-auth/plugins/captcha";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { prisma } from "@/lib/prisma";
 import { APARELHO_COOKIE, aparelhoConfiavel, lerCookie } from "@/lib/aparelho";
+import { segredoDoLogin } from "@/lib/segredo-login";
 
 export const PERFIS = ["candidato", "recrutador"] as const;
 export type Perfil = (typeof PERFIS)[number];
 
-export function segredoDoLogin(): string {
-  const s = process.env.BETTER_AUTH_SECRET;
-  if (s && s.length >= 32) return s;
-  if (process.env.NEXT_PHASE === "phase-production-build" || process.env.CI || process.env.NODE_ENV === "test") {
-    return "build-dummy-w2talent-login-nao-usar-em-producao";
-  }
-  if (process.env.NODE_ENV === "production") throw new Error("BETTER_AUTH_SECRET ausente ou curto (mínimo 32 caracteres)");
-  return "dev-w2talent-login-segredo-local-1234567890";
-}
+// 3.6a: a regra mora em lib/segredo-login.ts (sem o Better Auth), para quem só precisa da chave.
+export { segredoDoLogin };
 
 export function provedoresConfigurados(): { google: boolean; microsoft: boolean } {
   return {

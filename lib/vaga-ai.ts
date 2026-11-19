@@ -21,7 +21,8 @@ const MAX_SKILLS = 12;
 const MAX_FAIXA = 1_000_000;
 
 export type ChatVagaFn = (task: "extract_vacancy", req: ChatRequest) => Promise<ChatResult & { model?: string }>;
-export type LeituraVaga = { vaga: RascunhoVaga; origem: "ia" | "regras" };
+/** `entrada`: o texto mandado à IA (sem e-mail e telefone), só quando foi a IA que leu (3.6a, recibo de treino). */
+export type LeituraVaga = { vaga: RascunhoVaga; origem: "ia" | "regras"; entrada?: string };
 
 // ── Limpeza do que vem da IA ou da tela ─────────────────────────────────────
 
@@ -112,7 +113,8 @@ export function sanitizarRascunho(input: unknown): RascunhoVaga {
 
 // ── Leitura pela IA ────────────────────────────────────────────────────────
 
-const SYSTEM = `You extract a job posting into JSON for a recruiting platform. Reply with one JSON object only.
+/** Instruções da leitura (3.6a: vão também para o recibo do exemplo de treino). */
+export const SISTEMA_VAGA = `You extract a job posting into JSON for a recruiting platform. Reply with one JSON object only.
 Copy facts from the posting; never invent requirements, salary or benefits. Unknown values: "" for text, null for numbers, [] for lists.
 Write text values in the language of the posting.
 Schema:
@@ -137,7 +139,7 @@ export async function lerVaga(textoBruto: string, chat: ChatVagaFn | null): Prom
         temperature: 0,
         maxTokens: 2500,
         messages: [
-          { role: "system", content: SYSTEM },
+          { role: "system", content: SISTEMA_VAGA },
           { role: "user", content: bruto },
         ],
       });
@@ -146,7 +148,7 @@ export async function lerVaga(textoBruto: string, chat: ChatVagaFn | null): Prom
         const vaga = sanitizarRascunho(obj);
         // Competência que a IA não trouxe, mas o texto cita pelo nome, entra pelas regras.
         if (!vaga.stack.length) vaga.stack = extractSkillsFromText(bruto).slice(0, MAX_SKILLS);
-        if (vaga.titulo) return { vaga, origem: "ia" };
+        if (vaga.titulo) return { vaga, origem: "ia", entrada: bruto };
       }
     } catch (e) {
       console.warn("[vaga] leitura pela IA falhou:", e instanceof Error ? e.name : e);

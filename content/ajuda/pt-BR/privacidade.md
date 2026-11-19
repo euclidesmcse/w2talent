@@ -2,7 +2,7 @@
 titulo: Meus dados e privacidade
 resumo: Contato protegido, por quanto tempo o perfil e as conversas ficam guardados e como pedir revisão.
 areas: publico, candidato, recrutador
-telas: /minha-ficha, /renovar, /ia, /mercado, /conta/seguranca
+telas: /minha-ficha, /renovar, /ia, /mercado, /conta/seguranca, /publicar
 ordem: 10
 ---
 
@@ -36,6 +36,15 @@ São opcionais e vêm desligados. Para ligar, você confirma o celular com um c�
 ## IA e revisão por uma pessoa
 
 A IA ajuda a ler textos e a escrever resumos, mas não decide por ninguém. Se uma decisão automática afetou você, peça revisão por uma pessoa em contato@w2talent.com. Veja [Como usamos IA](/ia).
+
+## Treino da IA com as suas correções
+
+É opcional e vem desligado. Se você ligar (na Ficha W2, em Publicar vaga ou em [Segurança da conta](/conta/seguranca)), quando você publicar a Ficha W2 ou salvar uma vaga que a IA leu, o W2Talent guarda um exemplo com o que a IA escreveu e o que você corrigiu, para treinar e avaliar um modelo de IA aberto do próprio W2Talent.
+
+- Antes de guardar, saem nome, e-mail, telefone, links, documentos (CPF, CNPJ, RG e outros), endereço e nomes de empresas, que viram marcadores como [NOME] e [EMPRESA]. Se sobrar qualquer coisa parecida com um contato, o exemplo não é guardado.
+- O exemplo não leva o id da sua conta, só um código que permite apagá-lo.
+- Uma pessoa da equipe revisa cada exemplo antes de ele ser usado. Nada é enviado a serviços de treino de fora sem uma nova decisão da equipe.
+- Desligar apaga na hora os seus exemplos guardados.
 
 ## Ao sair
 

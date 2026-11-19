@@ -1001,7 +1001,11 @@
     "atendimentoTarefa": "Talk to a person (Help)",
     "atendimentoFaz": "Not AI: a person on the W2Talent team answers the conversation. No reply is written or suggested by AI.",
     "atendimentoDados": "What you write in the conversation, the screen you came from and, when signed in, whether the account is a candidate or a recruiter. None of it goes to an AI model. The conversation is deleted 180 days after it is closed.",
-    "atendimentoDecide": "A person on the team reads and replies. AI takes no part."
+    "atendimentoDecide": "A person on the team reads and replies. AI takes no part.",
+    "treinoTarefa": "Training our own model (optional)",
+    "treinoFaz": "People who turn on this consent let W2Talent keep what the AI wrote on the W2 Profile or read from the job post and the version they saved, to train and evaluate an open W2Talent AI model. Off by default.",
+    "treinoDados": "Only examples anonymised before storage: names, emails, phone numbers, links, documents, addresses and companies become markers. No account id. Nothing goes to an AI provider or an outside training service.",
+    "treinoDecide": "It decides nothing. A person on the team reviews each example; training only with 500 approved examples, and the trained model is only used if the team chooses it. Turning it off deletes your examples."
   },
   "empresa": {
     "title": "My company",
@@ -1753,5 +1757,12 @@
     "errorCode": "The code does not match. Check it and try again.",
     "errorConsent": "Tick the authorization to turn on the notices.",
     "errorGeneric": "Something went wrong. Try again."
+  },
+  "treino": {
+    "saibaMais": "Learn more",
+    "ligou": "Done. Your next corrections can help train the AI.",
+    "desligou": "Turned off. {count, plural, =0 {You had no stored examples.} one {# of your examples was deleted.} other {# of your examples were deleted.}}",
+    "erro": "Could not save your choice. Try again.",
+    "titulo": "AI training"
   }
 }

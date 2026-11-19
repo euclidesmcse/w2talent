@@ -11,6 +11,7 @@ import { useOnline } from "@/lib/pwa-client";
 import Link from "next/link";
 import { linkEntrar } from "@/lib/conta-client";
 import { FichaW2Card } from "@/components/ficha-w2-card";
+import { TreinoConsentimento } from "@/components/treino-consentimento";
 import { FichaViesAviso } from "@/components/ficha-vies-aviso";
 import { revisarViesFicha, trocarViesFicha, type AvisoFichaVies } from "@/lib/ficha-vies";
 import { Button, Card, Field, Input, Select, Textarea, cn } from "@/components/ui";
@@ -40,7 +41,8 @@ import { getSkill, listSkills, normalizeSkill } from "@/lib/taxonomy";
 
 type Passo = "enviar" | "conferir" | "w2";
 type SkillRow = { texto: string; anos: number };
-type Rascunho = { passo: Passo; ficha: Ficha; skills: SkillRow[]; w2: FichaW2 | null; aceite: boolean };
+/** recibo (3.6a): o que a IA escreveu, assinado pelo servidor; volta ao publicar e só vira exemplo de treino com o consentimento. */
+type Rascunho = { passo: Passo; ficha: Ficha; skills: SkillRow[]; w2: FichaW2 | null; aceite: boolean; recibo?: string | null };
 
 const CHAVE = "w2talent:ficha";
 
@@ -87,6 +89,7 @@ export default function MinhaFichaPage() {
           skills: Array.isArray(d.skills) ? d.skills.filter((x) => x && typeof x.texto === "string").slice(0, MAX_SKILLS) : skillRows(ficha),
           w2: d.w2 ?? null,
           aceite: d.aceite === true,
+          recibo: typeof d.recibo === "string" ? d.recibo : null,
         });
       }
     } catch {
@@ -197,11 +200,11 @@ export default function MinhaFichaPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ficha: fichaAtual, idioma: locale, aceiteIa: r.aceite }),
       });
-      const j = (await res.json().catch(() => ({}))) as { fichaW2?: FichaW2; error?: string };
+      const j = (await res.json().catch(() => ({}))) as { fichaW2?: FichaW2; recibo?: string | null; error?: string };
       // O rascunho mudou (campos editados ou começou de novo) enquanto a IA escrevia: resposta velha, descarta.
       if (fichaAtualRef.current !== alvo) return;
       if (!res.ok || !j.fichaW2) return setErro(msgErro(j.error ?? "geral"));
-      setR((x) => ({ ...x, w2: j.fichaW2!, passo: "w2" }));
+      setR((x) => ({ ...x, w2: j.fichaW2!, recibo: j.recibo ?? null, passo: "w2" }));
       setEditandoW2(false);
       requestAnimationFrame(() => tituloRef.current?.focus());
     } catch {
@@ -219,7 +222,7 @@ export default function MinhaFichaPage() {
       const res = await fetch("/api/ficha/publicar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ficha: fichaAtual, fichaW2: r.w2 }),
+        body: JSON.stringify({ ficha: fichaAtual, fichaW2: r.w2, recibo: r.recibo ?? undefined }),
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) return setErro(msgErro(j.error ?? "geral"));
@@ -232,7 +235,7 @@ export default function MinhaFichaPage() {
   }
 
   function recomecar() {
-    setR({ passo: "enviar", ficha: fichaVazia(), skills: [], w2: null, aceite: r.aceite });
+    setR({ passo: "enviar", ficha: fichaVazia(), skills: [], w2: null, aceite: r.aceite, recibo: null });
     setTexto("");
     setAviso(null);
     setPublicado(false);
@@ -606,6 +609,7 @@ export default function MinhaFichaPage() {
                   </Link>
                 </p>
               ) : null}
+              {podePublicar ? <TreinoConsentimento /> : null}
               <div className="flex flex-wrap gap-3">
                 {podePublicar && !publicado ? (
                   <Button data-action="publicar" onClick={publicar} disabled={ocupado === "publicar" || editandoW2 || !online} title={semRede}>

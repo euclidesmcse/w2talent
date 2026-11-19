@@ -9,6 +9,7 @@
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
+import { TreinoConsentimento } from "@/components/treino-consentimento";
 import { Button, Card, CardBody, Field, Input, Select, Textarea, useToast } from "@/components/ui";
 import { buttonClasses } from "@/components/ui/button";
 import { contaRecusada, linkEntrar, useConta } from "@/lib/conta-client";
@@ -102,6 +103,8 @@ export default function PublicarPage() {
   const [lendo, setLendo] = React.useState(false);
   const [passo, setPasso] = React.useState<"colar" | "conferir" | "publicada">("colar");
   const [origem, setOrigem] = React.useState<"ia" | "regras" | "manual">("manual");
+  // 3.6a: recibo assinado do que a IA leu; vai junto ao salvar (só vira exemplo de treino com o consentimento).
+  const [recibo, setRecibo] = React.useState<string | null>(null);
   const [form, setForm] = React.useState<Form>(() => formDe(rascunhoVazio()));
   const [erro, setErro] = React.useState<string | null>(null);
   const [duplicadas, setDuplicadas] = React.useState<Duplicada[]>([]);
@@ -257,8 +260,11 @@ export default function PublicarPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ texto: colado }),
       });
-      const j = (await r.json().catch(() => ({}))) as { vaga?: RascunhoVaga; origem?: "ia" | "regras"; error?: string };
-      if (r.ok && j.vaga) return irParaConferir(j.vaga, j.origem ?? "regras");
+      const j = (await r.json().catch(() => ({}))) as { vaga?: RascunhoVaga; origem?: "ia" | "regras"; recibo?: string | null; error?: string };
+      if (r.ok && j.vaga) {
+        setRecibo(j.recibo ?? null);
+        return irParaConferir(j.vaga, j.origem ?? "regras");
+      }
       if (r.status === 401 || (r.status === 403 && j.error !== "empresa_rejeitada")) contaRecusada();
       setErro(t(`erros.${j.error === "texto_curto" || j.error === "limite_dia" || j.error === "sem_empresa" ? j.error : "leitura"}`));
     } catch {
@@ -290,6 +296,7 @@ export default function PublicarPage() {
       faixaMoeda: rascunho.faixaMoeda,
       descricaoBullets: rascunho.descricaoBullets,
       beneficios: rascunho.beneficios,
+      ...(recibo ? { treino: { recibo, final: rascunho } } : {}),
     };
     try {
       const r = await fetch(editando ? `/api/vacancies/${encodeURIComponent(editando.id)}` : "/api/vacancies", {
@@ -309,6 +316,7 @@ export default function PublicarPage() {
           }).catch(() => null);
           semPrazo = !rn?.ok;
         }
+        setRecibo(null);
         setPublicada({ titulo: rascunho.titulo, atualizada: !!editando, semPrazo });
         setPasso("publicada");
         show(editando ? t("atualizadaToast") : t("publicadaToast"), "success");
@@ -325,6 +333,7 @@ export default function PublicarPage() {
 
   const recomecar = () => {
     setColado("");
+    setRecibo(null);
     setPublicada(null);
     irParaConferir(rascunhoVazio(), "manual");
     setPasso("colar");
@@ -407,7 +416,7 @@ export default function PublicarPage() {
                 {erro ? <p role="alert" className="text-[13px] text-danger">{erro}</p> : null}
                 <div className="flex flex-wrap items-center gap-3">
                   <Button type="submit" disabled={lendo || colado.trim().length < 40} aria-busy={lendo}>{lendo ? t("lendo") : t("ler")}</Button>
-                  <Button type="button" variant="ghost" onClick={() => irParaConferir(rascunhoVazio(), "manual")}>{t("semColar")}</Button>
+                  <Button type="button" variant="ghost" onClick={() => { setRecibo(null); irParaConferir(rascunhoVazio(), "manual"); }}>{t("semColar")}</Button>
                 </div>
               </form>
             </CardBody>
@@ -560,6 +569,7 @@ export default function PublicarPage() {
                   </section>
                 ) : null}
 
+                {origem === "ia" ? <TreinoConsentimento /> : null}
                 {erro ? <p role="alert" className="text-[13px] text-danger">{erro}</p> : null}
                 <div className="flex flex-wrap items-center gap-3">
                   <Button type="submit" disabled={enviando || !form.titulo.trim()} aria-busy={enviando}>{editando ? t("atualizar") : t("publicar")}</Button>

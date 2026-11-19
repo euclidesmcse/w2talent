@@ -2,6 +2,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { TreinoConsentimento } from "@/components/treino-consentimento";
 import { Button, Field, Input } from "@/components/ui";
 import { QrCode } from "@/components/qr-code";
 import { TelaConta, useVolta } from "@/components/tela-conta";
@@ -26,6 +27,7 @@ async function post(caminho: string, corpo: Record<string, unknown> = {}): Promi
  */
 export default function SegurancaPage() {
   const t = useTranslations("conta");
+  const tt = useTranslations("treino");
   const router = useRouter();
   const info = useConta({ fresco: true });
   const volta = useVolta("/");
@@ -178,6 +180,12 @@ export default function SegurancaPage() {
         {erro && !config ? <p role="alert" className="text-sm text-danger">{erro}</p> : null}
       </section>
       {info.estado === "ok" && info.conta?.perfil === "candidato" ? <WhatsappConta /> : null}
+      {info.estado === "ok" ? (
+        <section className="flex flex-col gap-3 border-t border-line pt-5">
+          <h2 className="text-[15px] font-semibold">{tt("titulo")}</h2>
+          <TreinoConsentimento />
+        </section>
+      ) : null}
     </TelaConta>
   );
 }

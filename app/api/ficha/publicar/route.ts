@@ -12,7 +12,7 @@ import { runInBackground } from "@/lib/background";
 export async function POST(req: NextRequest) {
   const r = await exigirConta(req, { perfil: "candidato" });
   if ("erro" in r) return r.erro;
-  const body = (await req.json().catch(() => ({}))) as { ficha?: unknown; fichaW2?: unknown };
+  const body = (await req.json().catch(() => ({}))) as { ficha?: unknown; fichaW2?: unknown; recibo?: unknown };
   const ficha = sanitizeFicha(body.ficha);
   const falta = camposFaltando(ficha);
   if (falta.length) return NextResponse.json({ error: "ficha_incompleta", falta }, { status: 422 });
@@ -47,6 +47,24 @@ export async function POST(req: NextRequest) {
       await pedirTraducaoFichas(prisma, [p.id], 1);
     } catch (e) {
       console.warn("[ficha/publicar] tradução não pedida:", e instanceof Error ? e.name : e);
+    }
+    // 3.6a: com o consentimento "treinoIA" ligado e o recibo da IA, guarda o exemplo anonimizado.
+    // Nunca impede a publicação.
+    if (body.recibo) {
+      try {
+        const { capturarExemplo, conhecidosDoCandidato } = await import("@/lib/treino");
+        const { segredoDoLogin } = await import("@/lib/segredo-login");
+        await capturarExemplo(prisma, {
+          userId,
+          tarefa: "ficha_w2",
+          recibo: body.recibo,
+          final: { resumo: w2.resumo, destaques: w2.destaques },
+          conhecidos: await conhecidosDoCandidato(prisma, userId, ficha),
+          segredo: segredoDoLogin(),
+        });
+      } catch (e) {
+        console.warn("[ficha/publicar] exemplo de treino:", e instanceof Error ? e.name : e);
+      }
     }
     return NextResponse.json({ ok: true, id: p.id }, { headers: { "cache-control": "no-store" } });
   } catch (e) {

@@ -1001,7 +1001,11 @@
     "atendimentoTarefa": "Hablar con una persona (Ayuda)",
     "atendimentoFaz": "No es IA: quien responde la conversación es una persona del equipo de W2Talent. Ninguna respuesta la escribe ni la sugiere la IA.",
     "atendimentoDados": "Lo que escribes en la conversación, la pantalla de la que viniste y, con sesión iniciada, si la cuenta es de candidato o de reclutador. Nada de eso va a un modelo de IA. La conversación se borra 180 días después de cerrada.",
-    "atendimentoDecide": "Una persona del equipo lee y responde. La IA no participa."
+    "atendimentoDecide": "Una persona del equipo lee y responde. La IA no participa.",
+    "treinoTarefa": "Entrenamiento de un modelo propio (opcional)",
+    "treinoFaz": "Quien activa este consentimiento permite guardar lo que la IA escribió en la Ficha W2 o leyó de la vacante y la versión que la persona guardó, para entrenar y evaluar un modelo de IA abierto de W2Talent. Viene desactivado.",
+    "treinoDados": "Solo ejemplos anonimizados antes de guardarlos: nombres, correos, teléfonos, enlaces, documentos, direcciones y empresas pasan a marcadores. Sin el id de la cuenta. Nada va a un proveedor de IA ni a un servicio de entrenamiento externo.",
+    "treinoDecide": "No decide nada. Una persona del equipo revisa cada ejemplo; el entrenamiento solo con 500 ejemplos aprobados y el modelo entrenado solo entra si el equipo lo elige. Desactivarlo borra tus ejemplos."
   },
   "empresa": {
     "title": "Mi empresa",
@@ -1753,5 +1757,12 @@
     "errorCode": "El código no coincide. Revísalo e inténtalo de nuevo.",
     "errorConsent": "Marca la autorización para activar los avisos.",
     "errorGeneric": "Algo salió mal. Inténtalo de nuevo."
+  },
+  "treino": {
+    "saibaMais": "Más información",
+    "ligou": "Listo. Tus próximas correcciones pueden ayudar a entrenar la IA.",
+    "desligou": "Desactivado. {count, plural, =0 {No tenías ejemplos guardados.} one {Se borró # ejemplo tuyo.} other {Se borraron # ejemplos tuyos.}}",
+    "erro": "No se pudo guardar tu elección. Inténtalo de nuevo.",
+    "titulo": "Entrenamiento de la IA"
   }
 }

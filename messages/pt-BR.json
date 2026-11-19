@@ -1001,7 +1001,11 @@
     "atendimentoTarefa": "Falar com uma pessoa (Ajuda)",
     "atendimentoFaz": "Não é IA: quem responde a conversa é uma pessoa da equipe do W2Talent. Nenhuma resposta é escrita nem sugerida por IA.",
     "atendimentoDados": "O que você escreve na conversa, a tela de onde veio e, com login, se a conta é de candidato ou de recrutador. Nada disso vai para um modelo de IA. A conversa é apagada 180 dias depois de encerrada.",
-    "atendimentoDecide": "Uma pessoa da equipe lê e responde. A IA não participa."
+    "atendimentoDecide": "Uma pessoa da equipe lê e responde. A IA não participa.",
+    "treinoTarefa": "Treino de um modelo próprio (opcional)",
+    "treinoFaz": "Quem liga o consentimento deixa guardar o que a IA escreveu na Ficha W2 ou leu na vaga e a versão que a pessoa salvou, para treinar e avaliar um modelo de IA aberto do W2Talent. Vem desligado.",
+    "treinoDados": "Só exemplos anonimizados antes de guardar: nome, e-mail, telefone, links, documentos, endereço e empresas viram marcadores. Sem o id da conta. Nada vai a fornecedor de IA nem a serviço de treino de fora.",
+    "treinoDecide": "Não decide nada. Uma pessoa da equipe revisa cada exemplo; o treino só com 500 exemplos aprovados e o modelo treinado só entra se a equipe escolher. Desligar apaga os seus exemplos."
   },
   "empresa": {
     "title": "Minha empresa",
@@ -1753,5 +1757,12 @@
     "errorCode": "Código não confere. Confira e tente de novo.",
     "errorConsent": "Marque a autorização para ligar os avisos.",
     "errorGeneric": "Algo deu errado. Tente de novo."
+  },
+  "treino": {
+    "saibaMais": "Saiba mais",
+    "ligou": "Pronto. Suas próximas correções podem ajudar a treinar a IA.",
+    "desligou": "Desligado. {count, plural, =0 {Nenhum exemplo seu estava guardado.} one {# exemplo seu foi apagado.} other {# exemplos seus foram apagados.}}",
+    "erro": "Não deu para salvar a escolha. Tente de novo.",
+    "titulo": "Treino da IA"
   }
 }

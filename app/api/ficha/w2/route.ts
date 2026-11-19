@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { camposFaltando, sanitizeFicha } from "@/lib/ficha";
-import { gerarFichaW2 } from "@/lib/ficha-ai";
+import { gerarFichaW2, promptFichaW2 } from "@/lib/ficha-ai";
 import { chaveUso, consumirUso, ipDaRequisicao, LIMITE_FICHAS_W2_DIA } from "@/lib/uso-diario";
 import { sameOrigin } from "@/lib/admin-request";
 import { isValidLocale, defaultLocale } from "@/i18n";
@@ -26,12 +26,28 @@ export async function POST(req: NextRequest) {
   try {
     const { getAiRouter } = await import("@/lib/ai");
     const router = getAiRouter();
-    const w2 = await gerarFichaW2(ficha, idioma, (task, r) => router.chat(task, r));
-    return NextResponse.json({ fichaW2: w2 }, { headers: { "cache-control": "no-store" } });
+    const agora = new Date();
+    const w2 = await gerarFichaW2(ficha, idioma, (task, r) => router.chat(task, r), agora);
+    return NextResponse.json({ fichaW2: w2, recibo: await reciboDaFicha(ficha, idioma, agora, w2) }, { headers: { "cache-control": "no-store" } });
   } catch (e) {
     const nome = e instanceof Error ? e.name : "erro";
     console.error("[ficha/w2] IA falhou:", nome);
     return NextResponse.json({ error: nome === "AiBudgetError" ? "ia_orcamento" : "ia_indisponivel" }, { status: 503 });
+  }
+}
+
+/**
+ * 3.6a: recibo assinado do que a IA escreveu. Volta na publicação e só vira exemplo de treino se a pessoa
+ * tiver ligado o consentimento "treinoIA". Sem segredo ou com erro, segue sem recibo.
+ */
+async function reciboDaFicha(ficha: Parameters<typeof promptFichaW2>[0], idioma: string, agora: Date, w2: { resumo: string; destaques: string[]; idioma: string }) {
+  try {
+    const { assinarRecibo } = await import("@/lib/treino");
+    const { segredoDoLogin } = await import("@/lib/segredo-login");
+    const p = promptFichaW2(ficha, idioma, agora);
+    return await assinarRecibo({ tarefa: "ficha_w2", sistema: p.sistema, entrada: p.entrada, saidaIa: { resumo: w2.resumo, destaques: w2.destaques }, idioma: w2.idioma }, segredoDoLogin());
+  } catch {
+    return null;
   }
 }
 
