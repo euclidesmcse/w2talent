@@ -164,6 +164,11 @@ describe("modelos e envio", () => {
     expect(destinoPermitido(cfg, "+5511987654321")).toBe(true);
     expect(destinoPermitido(cfg, "+5521999990000")).toBe(false);
     expect(destinoPermitido({ token: "t", phoneId: "1" }, "+5521999990000")).toBe(true);
+    // Lista preenchida mas sem número válido: ninguém recebe (falha fechado).
+    const ruim = configDoAmbiente({ WHATSAPP_TOKEN: "t", WHATSAPP_PHONE_ID: "1", WHATSAPP_TEST_TO: "lixo, 123" });
+    expect(ruim.testTo).toEqual([]);
+    expect(destinoPermitido(ruim, "+5511987654321")).toBe(false);
+    expect(configDoAmbiente({ WHATSAPP_TOKEN: "t", WHATSAPP_PHONE_ID: "1", WHATSAPP_TEST_TO: "  " }).testTo).toBeUndefined();
     const f = jest.fn() as unknown as typeof fetch;
     expect(await enviarWhatsapp({}, { a: 1 }, f)).toEqual({ resultado: "ok", status: null, erro: "modo_teste" });
     expect(f).not.toHaveBeenCalled();

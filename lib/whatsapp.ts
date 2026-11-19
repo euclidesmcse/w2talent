@@ -185,7 +185,8 @@ export function configDoAmbiente(env: Record<string, string | undefined> = proce
     .map((x) => normalizarNumero(x))
     .filter((x): x is { ok: true; numero: string } => x.ok)
     .map((x) => x.numero);
-  return { token: env.WHATSAPP_TOKEN || undefined, phoneId: env.WHATSAPP_PHONE_ID || undefined, testTo: testTo.length ? testTo : undefined };
+  return { token: env.WHATSAPP_TOKEN || undefined, phoneId: env.WHATSAPP_PHONE_ID || undefined, // WHATSAPP_TEST_TO preenchido mas sem nenhum número válido: lista vazia, ninguém recebe (falha fechado).
+    testTo: (env.WHATSAPP_TEST_TO ?? "").trim() ? testTo : undefined };
 }
 
 export function modoTeste(c: ConfigWhatsapp): boolean {

@@ -96,7 +96,9 @@ export default function AprovarPage() {
     (async () => {
       if (!navigator.onLine) return setFase("sem_rede");
       if (!(await podeEnviar())) return setFase(navigator.onLine ? "sem_login" : "sem_rede");
-      const ids = [...(selectionStore.getState().selectedIds ?? [])];
+      // Link do aviso "aprovadas vão vencer" (WhatsApp, 3.5): ?v=<vaga> traz a vaga mesmo em outro aparelho.
+      const doLink = new URLSearchParams(window.location.search).get("v");
+      const ids = [...new Set([...(selectionStore.getState().selectedIds ?? []), ...(doLink ? [doLink] : [])])];
       if (!ids.length) return setFase("sem_selecao");
       await carregar(ids);
     })().catch(() => setFase(navigator.onLine ? "erro" : "sem_rede"));

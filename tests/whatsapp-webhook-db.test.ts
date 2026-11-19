@@ -107,6 +107,27 @@ describeDb("WhatsApp 3.5b: webhook da Meta", () => {
     expect(JSON.stringify(log.mock.calls)).not.toContain("87654321");
   });
 
+  it("SAIR desliga todas as contas com o mesmo número", async () => {
+    jest.spyOn(console, "log").mockImplementation(() => undefined);
+    const OUTRA = "wa35b-cand-2";
+    await db.candidateProfile.deleteMany({ where: { id: OUTRA } });
+    await db.user.deleteMany({ where: { id: OUTRA } });
+    await db.user.create({ data: { id: OUTRA, name: "Elena 2", email: "wa35b.cand2@exemplo.com", perfil: "candidato" } });
+    await db.candidateProfile.create({
+      data: { id: OUTRA, userId: OUTRA, nome: "Elena", titulo: "Dev", email: "wa35b.cand2@exemplo.com", stack: [], expiresAt: new Date(Date.now() + 30 * DIA), whatsappOpt: true, whatsappNumero: NUMERO, whatsappVerificadoEm: new Date() } as any,
+    });
+    try {
+      const cru = corpoDe("5511987654321", "SAIR");
+      expect((await post(cru, assinar(cru))).status).toBe(200);
+      for (const id of [CAND, OUTRA]) {
+        expect(await db.candidateProfile.findUniqueOrThrow({ where: { id } })).toMatchObject({ whatsappOpt: false, whatsappNumero: null });
+      }
+    } finally {
+      await db.candidateProfile.deleteMany({ where: { id: OUTRA } });
+      await db.user.deleteMany({ where: { id: OUTRA } });
+    }
+  });
+
   it("outra mensagem: uma resposta automática por dia, sem guardar o texto; status de entrega é ignorado", async () => {
     const cru = corpoDe("5511987654321", "oi, tenho uma dúvida sobre a vaga segredo-xyz");
     expect((await post(cru, assinar(cru))).status).toBe(200);

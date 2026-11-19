@@ -396,7 +396,7 @@ export async function entregarAviso(db: Db, m: MensagemWhatsapp, tentativa: numb
   const a = await db.whatsappAviso.findUnique({
     where: { id: m.avisoId },
     select: {
-      id: true, tipo: true, refId: true, status: true, candidateId: true,
+      id: true, tipo: true, refId: true, status: true, candidateId: true, dia: true,
       candidate: { select: { userId: true, idiomaOriginal: true, whatsappOpt: true, whatsappNumero: true, whatsappVerificadoEm: true } },
     },
   });
@@ -411,6 +411,25 @@ export async function entregarAviso(db: Db, m: MensagemWhatsapp, tentativa: numb
   }
   const espera = segundosAteJanela(now);
   if (espera > 0) return { resultado: "repetir", erro: "fora_do_horario", atrasoSeg: espera };
+
+  // Aviso que ficou para outro dia (falha perto das 20h, fila atrasada): passa a contar no dia de hoje,
+  // com o mesmo limite de 3 por dia e um por tipo (D5). Se hoje já tem um do mesmo tipo ou já bateu 3, desiste.
+  const hoje = diaDoAviso(now);
+  if (a.dia !== hoje) {
+    try {
+      const { count } = await db.whatsappAviso.updateMany({ where: { id: a.id, status: "fila" }, data: { dia: hoje } });
+      if (!count) return { resultado: "ok", erro: "ja_tratado" };
+    } catch (e) {
+      if (!ehUnico(e)) throw e;
+      await grava("desistiu", "junto");
+      return { resultado: "desistir", erro: "junto" };
+    }
+    const doDia = await db.whatsappAviso.count({ where: { candidateId: a.candidateId, dia: hoje, status: { not: "desligado" } } });
+    if (doDia > AVISOS_POR_DIA) {
+      await grava("desistiu", "limite");
+      return { resultado: "desistir", erro: "limite" };
+    }
+  }
 
   const tipo = a.tipo as TipoAviso;
   const textos = await textosDoAviso(db, { tipo, refId: a.refId, candidateId: a.candidateId, userId: a.candidate.userId }, now);
@@ -430,7 +449,7 @@ export async function entregarAviso(db: Db, m: MensagemWhatsapp, tentativa: numb
     modelo: MODELOS[tipo],
     idioma: idiomaWhatsapp(a.candidate.idiomaOriginal),
     textos,
-    botaoUrl: CAMINHO_AVISO[tipo],
+    botaoUrl: tipo === "aprovadas" ? `${CAMINHO_AVISO.aprovadas}?v=${encodeURIComponent(a.refId)}` : CAMINHO_AVISO[tipo],
   });
   const r = await enviarWhatsapp(cfg, corpo, opts.fetch);
   if (r.resultado === "ok") {
@@ -468,13 +487,16 @@ export async function tratarRecebidas(
       out.push("ignorada");
       continue;
     }
-    const p = await db.candidateProfile.findFirst({
+    // O mesmo número pode estar ligado em mais de uma conta: SAIR desliga todas.
+    const perfis = await db.candidateProfile.findMany({
       where: { whatsappNumero: { in: variantes } },
       select: { id: true, idiomaOriginal: true },
+      orderBy: { createdAt: "asc" },
     });
+    const p = perfis[0];
     const idioma = p ? idiomaWhatsapp(p.idiomaOriginal) : idiomaPeloNumero(variantes[0]);
     const sair = ehPedidoDeSair(r.texto);
-    if (sair && p) await desligarWhatsapp(db, { candidateId: p.id });
+    if (sair) for (const x of perfis) await desligarWhatsapp(db, { candidateId: x.id });
     // Uma resposta por dia por número (e uma confirmação de SAIR): a contagem usa só o hash do número.
     const uso = await consumirUso(db, await chaveUso(sair ? "wa-sair" : "wa-auto", r.de), 1, now);
     const resultado: ResultadoRecebida = sair ? (p ? "desligou" : "sair_sem_conta") : uso.permitido ? "respondida" : "ja_respondida";

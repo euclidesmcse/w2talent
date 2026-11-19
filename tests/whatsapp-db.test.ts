@@ -294,6 +294,32 @@ describeDb("WhatsApp 3.5a", () => {
     await w.desligarWhatsapp(db, { userId: CAND });
   });
 
+  it("entrega em outro dia: conta no limite de hoje (3 por dia, um por tipo)", async () => {
+    const w = await import("../lib/whatsapp-db");
+    await ligar();
+    const f = fila();
+    const ontem = MEIO_DIA;
+    const hoje = new Date(ontem.getTime() + DIA);
+    // Três avisos de ontem ficaram na fila (falharam perto das 20h).
+    for (const tipo of ["vista", "etapa", "entrevista"] as const) await w.avisarWhatsapp(db, { candidateId: CAND, tipo, refId: appA }, f.enviar, ontem);
+    const [vista, etapa, entrevista] = f.xs.map((x) => x.m);
+    // Hoje já saíram dois avisos novos (vista e atendimento).
+    const g = fila();
+    expect(await w.avisarWhatsapp(db, { candidateId: CAND, tipo: "vista", refId: appB }, g.enviar, hoje)).toBe("fila");
+    expect(await w.avisarWhatsapp(db, { candidateId: CAND, tipo: "atendimento", refId: "conv" }, g.enviar, hoje)).toBe("fila");
+    const ok = resp(200, { messages: [{ id: "wamid.d" }] });
+    const entrega = (m: MensagemWhatsapp) => w.entregarAviso(db, m, 2, { cfg: REAL, fetch: ok as unknown as typeof fetch, now: hoje });
+    // "vista" de ontem: hoje já tem um "vista" → junta (desiste).
+    expect(await entrega(vista)).toEqual({ resultado: "desistir", erro: "junto" });
+    // "etapa" de ontem: passa a contar hoje (3º do dia) e sai.
+    expect(await entrega(etapa)).toMatchObject({ resultado: "ok" });
+    expect(await db.whatsappAviso.findUniqueOrThrow({ where: { id: etapa.avisoId } })).toMatchObject({ dia: "2026-11-20", status: "enviado" });
+    // "entrevista" de ontem: seria o 4º de hoje → desiste.
+    expect(await entrega(entrevista)).toEqual({ resultado: "desistir", erro: "limite" });
+    expect(ok).toHaveBeenCalledTimes(1);
+    await w.desligarWhatsapp(db, { userId: CAND });
+  });
+
   it("entrega: a pessoa desligou entre a fila e a entrega; a candidatura sumiu", async () => {
     const w = await import("../lib/whatsapp-db");
     await ligar();
@@ -429,7 +455,7 @@ describeDb("WhatsApp 3.5a", () => {
     const corpo = JSON.parse(String(ok.mock.calls[0][1]?.body));
     expect(corpo.template.name).toBe("w2_aprovadas_vencer");
     expect(corpo.template.components[0].parameters.map((p: any) => p.text)).toEqual(["WA35 Vence 30h", "WA35 Teste SA"]);
-    expect(corpo.template.components[1].parameters[0].text).toBe("vagas/aprovar");
+    expect(corpo.template.components[1].parameters[0].text).toBe(`vagas/aprovar?v=${v1.id}`);
     await w.desligarWhatsapp(db, { userId: CAND2 });
   });
 });
