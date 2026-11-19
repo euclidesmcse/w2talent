@@ -124,7 +124,7 @@ export function costUsd(c: RouteCandidate, tokensIn = 0, tokensOut = 0): number 
 /** providerId do candidato padrão do Workers AI (store.ts). */
 export const RESERVE_PROVIDER_ID = "workers-ai-padrao";
 
-function orderCandidates(cfg: RouteConfig): RouteCandidate[] {
+export function orderCandidates(cfg: RouteConfig): RouteCandidate[] {
   if (cfg.mode === "fixo") return cfg.candidates.slice(0, 1);
   const price = (c: RouteCandidate) => (c.priceIn == null && c.priceOut == null ? Infinity : (c.priceIn ?? 0) + (c.priceOut ?? 0));
   // sort estável: empate mantém a ordem configurada. A reserva (padrão do Workers AI) fica sempre no fim

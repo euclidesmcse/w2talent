@@ -20,6 +20,7 @@ const TELAS: Record<string, string> = {
   "app/admin/empresas/page.tsx": "/admin/empresas",
   "app/admin/ranking/page.tsx": "/admin/ranking",
   "app/admin/atendimento/page.tsx": "/admin/atendimento",
+  "app/admin/treino/page.tsx": "/admin/treino",
   "app/ajuda/conversa/page.tsx": "/ajuda/conversa",
   "app/ajuda/minhas-conversas/page.tsx": "/ajuda/minhas-conversas",
   "app/empresa/page.tsx": "/empresa",

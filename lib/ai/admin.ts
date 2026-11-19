@@ -207,7 +207,7 @@ export async function deleteProvider(db: Db, id: string) {
   await recomputeRoutes(db);
 }
 
-async function contextFor(db: Db, providerId: string, env: AdminEnv): Promise<Omit<CallContext, "model"> & { kind: ProviderKind }> {
+export async function contextFor(db: Db, providerId: string, env: AdminEnv): Promise<Omit<CallContext, "model"> & { kind: ProviderKind }> {
   const p = await db.aiProvider.findUnique({ where: { id: providerId } });
   if (!p) throw new AdminInputError("fornecedor_nao_existe");
   return {

@@ -72,6 +72,7 @@ describe("catálogos de idioma", () => {
       "components/whatsapp-conta.tsx",
       "components/treino-consentimento.tsx",
       "app/publicar/page.tsx",
+      "app/admin/treino/page.tsx",
     ];
     // namespaces passados para useTranslations/getTranslations em cada arquivo
     const missing: string[] = [];
