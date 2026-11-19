@@ -406,6 +406,9 @@ export async function entregarAviso(db: Db, m: MensagemWhatsapp, tentativa: numb
   // "enviando" parado há mais de 2 minutos = a entrega anterior caiu no meio: pode tentar de novo.
   const limiteEnviando = new Date(now.getTime() - ENVIANDO_EXPIRA_MS);
   const enviandoParado = a.status === "enviando" && a.updatedAt < limiteEnviando;
+  // Outra entrega reservou há pouco: tenta de novo depois que a reserva vencer (se ela terminar, a próxima vê "enviado").
+  const esperaReserva = { resultado: "repetir" as const, erro: "enviando", atrasoSeg: Math.ceil(ENVIANDO_EXPIRA_MS / 1000) + 30 };
+  if (a.status === "enviando" && !enviandoParado) return esperaReserva;
   if (a.status !== "fila" && !enviandoParado) return { resultado: a.status === "desligado" ? "desistir" : "ok", erro: a.status };
   const grava = (status: string, erro: string | null, extra: Record<string, unknown> = {}) =>
     db.whatsappAviso.update({ where: { id: a.id }, data: { status, erro, tentativas: { increment: 1 }, ...extra } });
@@ -441,7 +444,7 @@ export async function entregarAviso(db: Db, m: MensagemWhatsapp, tentativa: numb
     where: { id: a.id, OR: [{ status: "fila" }, { status: "enviando", updatedAt: { lt: limiteEnviando } }] },
     data: { status: "enviando", updatedAt: now },
   });
-  if (!reservado.count) return { resultado: "ok", erro: "ja_tratado" };
+  if (!reservado.count) return esperaReserva;
 
   const tipo = a.tipo as TipoAviso;
   const textos = await textosDoAviso(db, { tipo, refId: a.refId, candidateId: a.candidateId, userId: a.candidate.userId }, now);

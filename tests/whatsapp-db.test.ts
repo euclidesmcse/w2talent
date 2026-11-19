@@ -303,10 +303,12 @@ describeDb("WhatsApp 3.5a", () => {
     const ok = resp(200, { messages: [{ id: "wamid.c" }] });
     const rs = await Promise.all([1, 2].map(() => w.entregarAviso(db, m, 1, { cfg: REAL, fetch: ok as unknown as typeof fetch, now: MEIO_DIA })));
     expect(ok).toHaveBeenCalledTimes(1);
-    expect(rs.every((r) => r.resultado === "ok")).toBe(true);
+    expect(rs.map((r) => r.resultado).sort()).toEqual(expect.arrayContaining(["ok"]));
+    // A que perdeu a corrida (se perdeu na reserva) tenta de novo depois; na próxima vê "enviado".
+    for (const r of rs) if (r.resultado !== "ok") expect(r).toMatchObject({ resultado: "repetir", erro: "enviando" });
     // Uma entrega caiu no meio (ficou "enviando"): depois de 2 minutos, outra pode mandar.
     await db.whatsappAviso.update({ where: { id: m.avisoId }, data: { status: "enviando", updatedAt: MEIO_DIA } });
-    expect(await w.entregarAviso(db, m, 2, { cfg: REAL, fetch: ok as unknown as typeof fetch, now: new Date(MEIO_DIA.getTime() + 60_000) })).toMatchObject({ resultado: "ok", erro: "enviando" });
+    expect(await w.entregarAviso(db, m, 2, { cfg: REAL, fetch: ok as unknown as typeof fetch, now: new Date(MEIO_DIA.getTime() + 60_000) })).toEqual({ resultado: "repetir", erro: "enviando", atrasoSeg: 150 });
     expect(ok).toHaveBeenCalledTimes(1);
     expect(await w.entregarAviso(db, m, 2, { cfg: REAL, fetch: ok as unknown as typeof fetch, now: new Date(MEIO_DIA.getTime() + 180_000) })).toMatchObject({ resultado: "ok", status: 200 });
     expect(ok).toHaveBeenCalledTimes(2);
