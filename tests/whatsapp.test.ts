@@ -1,9 +1,16 @@
 /**
  * 3.5a Canal WhatsApp, sem banco: número E.164, código (hash e validade), janela das 8h às 20h de Brasília,
  * corpo dos modelos, envio pela Graph API (ok, repetir, desistir), modo teste e o consumidor da fila.
+ * 3.5b: SAIR, assinatura do webhook da Meta, leitura das mensagens recebidas e a resposta automática.
  */
 import {
   CAMINHO_AVISO,
+  assinaturaMetaConfere,
+  corpoTexto,
+  ehPedidoDeSair,
+  idiomaPeloNumero,
+  mensagensRecebidas,
+  textoAutoResposta,
   MODELOS,
   codigoExpirado,
   configDoAmbiente,
@@ -227,5 +234,67 @@ describe("fila: tipo whatsapp", () => {
     await processarFila({ queue: "notificacoes", messages: [sem] }, { emailEnv, entregarWebhook: jest.fn() });
     expect(sem.ack).toHaveBeenCalled();
     jest.restoreAllMocks();
+  });
+});
+
+describe("3.5b: recebidas", () => {
+  it("SAIR, STOP, PARAR e SALIR em qualquer caixa, com acento ou pontuação; o resto não", () => {
+    for (const t of ["SAIR", "sair", " Sair! ", "SAÍR", "stop", "Parar.", "salir", "Salír"]) expect([t, ehPedidoDeSair(t)]).toEqual([t, true]);
+    for (const t of ["quero sair", "sairr", "oi", "", null, 42, "STOP STOP", "x".repeat(50)]) expect([t, ehPedidoDeSair(t)]).toEqual([t, false]);
+  });
+
+  it("assinatura X-Hub-Signature-256 (vetor conhecido) e recusas", async () => {
+    // printf '%s' '{"entry":[]}' | openssl dgst -sha256 -hmac 'app-secret-teste'
+    const ok = "sha256=e19fa53668f92a6277ece01aac58dee26be15cc717e7a034533d097021fb0c3a";
+    expect(await assinaturaMetaConfere('{"entry":[]}', ok, "app-secret-teste")).toBe(true);
+    expect(await assinaturaMetaConfere('{"entry":[]}', ok.toUpperCase().replace("SHA256=", "sha256="), "app-secret-teste")).toBe(true);
+    expect(await assinaturaMetaConfere('{"entry": []}', ok, "app-secret-teste")).toBe(false);
+    expect(await assinaturaMetaConfere('{"entry":[]}', ok, "outro")).toBe(false);
+    expect(await assinaturaMetaConfere('{"entry":[]}', ok.slice(7), "app-secret-teste")).toBe(false);
+    expect(await assinaturaMetaConfere('{"entry":[]}', null, "app-secret-teste")).toBe(false);
+    expect(await assinaturaMetaConfere('{"entry":[]}', ok, undefined)).toBe(false);
+  });
+
+  it("lê só as mensagens (texto, botão, resposta interativa); ignora status e lixo", () => {
+    const corpo = {
+      object: "whatsapp_business_account",
+      entry: [
+        {
+          changes: [
+            {
+              value: {
+                statuses: [{ id: "wamid.s", status: "delivered" }],
+                messages: [
+                  { from: "5511987654321", type: "text", text: { body: "SAIR" } },
+                  { from: "14155550123", type: "image", image: { id: "x" } },
+                  { from: "34612345678", type: "button", button: { text: "Salir" } },
+                  { from: "5521999990000", type: "interactive", interactive: { button_reply: { title: "Oi" } } },
+                  { from: "abc", type: "text", text: { body: "x" } },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    };
+    expect(mensagensRecebidas(corpo)).toEqual([
+      { de: "5511987654321", tipo: "text", texto: "SAIR" },
+      { de: "14155550123", tipo: "image", texto: null },
+      { de: "34612345678", tipo: "button", texto: "Salir" },
+      { de: "5521999990000", tipo: "interactive", texto: "Oi" },
+    ]);
+    expect(mensagensRecebidas(null)).toEqual([]);
+    expect(mensagensRecebidas({ entry: "x" })).toEqual([]);
+  });
+
+  it("idioma de quem não tem conta pelo DDI; resposta automática sem IA e com o site", () => {
+    expect(idiomaPeloNumero("+5511987654321")).toBe("pt_BR");
+    expect(idiomaPeloNumero("+34612345678")).toBe("es");
+    expect(idiomaPeloNumero("+5491112345678")).toBe("es");
+    expect(idiomaPeloNumero("+14155550123")).toBe("en");
+    expect(textoAutoResposta("pt_BR")).toContain("só envia avisos");
+    expect(textoAutoResposta("en")).toContain("only sends");
+    expect(textoAutoResposta("es")).toContain("solo envía avisos");
+    expect(corpoTexto("+5511987654321", "oi")).toEqual({ messaging_product: "whatsapp", to: "5511987654321", type: "text", text: { preview_url: false, body: "oi" } });
   });
 });

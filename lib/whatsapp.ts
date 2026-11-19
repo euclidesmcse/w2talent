@@ -8,9 +8,14 @@
  * - D7: sem WHATSAPP_TOKEN / WHATSAPP_PHONE_ID, nada sai ("modo teste"). WHATSAPP_TEST_TO limita os destinos.
  *   Número nunca vai inteiro para o log (mascararNumero), nem o token.
  *
+ * 3.5b: SAIR (STOP, PARAR, SALIR) desliga na hora; outra mensagem recebida ganha uma resposta automática
+ * por dia, sem IA, e o texto recebido nunca é guardado nem vai para o log.
+ *
  * Este arquivo não importa o Prisma (é usado pelo consumidor da fila e pela rota do webhook da Meta).
  * O que usa o banco fica em lib/whatsapp-db.ts.
  */
+import { timingSafeEqualStr } from "./secret";
+
 export type TipoAviso = "vista" | "etapa" | "entrevista" | "aprovadas" | "atendimento";
 export const TIPOS_AVISO: readonly TipoAviso[] = ["vista", "etapa", "entrevista", "aprovadas", "atendimento"];
 
@@ -215,6 +220,11 @@ export function corpoModelo(a: { numero: string; modelo: string; idioma: IdiomaW
   };
 }
 
+/** Texto livre (só as respostas do 3.5b, dentro das 24 horas depois de a pessoa escrever). */
+export function corpoTexto(numero: string, texto: string): Record<string, unknown> {
+  return { messaging_product: "whatsapp", to: numero.replace(/\D/g, ""), type: "text", text: { preview_url: false, body: texto } };
+}
+
 /** A Meta recusa quebra de linha, tab e mais de 4 espaços seguidos nos parâmetros. */
 export function limparParametro(t: string): string {
   const s = String(t ?? "").replace(/[\r\n\t]+/g, " ").replace(/ {2,}/g, " ").trim();
@@ -260,4 +270,98 @@ export async function enviarWhatsapp(c: ConfigWhatsapp, corpo: Record<string, un
   const erro = codigo != null ? `meta_${codigo}` : `http_${status}`;
   if (status === 429 || status >= 500 || (codigo != null && CODIGOS_REPETIR.has(codigo))) return { resultado: "repetir", status, erro };
   return { resultado: "desistir", status, erro };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Recebidas (3.5b)
+// ---------------------------------------------------------------------------------------------
+
+const PALAVRAS_SAIR = new Set(["SAIR", "STOP", "PARAR", "SALIR"]);
+
+/** "sair", "Sair!", " SAÍR " → true. Só a palavra sozinha (sem acento, sem pontuação, qualquer caixa). */
+export function ehPedidoDeSair(texto: unknown): boolean {
+  if (typeof texto !== "string" || texto.length > 40) return false;
+  const t = texto
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^\p{L}\p{N}\s]/gu, "")
+    .trim()
+    .toUpperCase();
+  return PALAVRAS_SAIR.has(t);
+}
+
+const AUTO_RESPOSTA: Record<IdiomaWa, string> = {
+  pt_BR: "Este número só envia avisos do W2Talent e não lê mensagens. Para falar com a gente, use o site: https://w2talent.com/ajuda. Para parar os avisos, responda SAIR.",
+  en: "This number only sends W2Talent notices and does not read messages. To talk to us, use the website: https://w2talent.com/ajuda. To stop the notices, reply STOP.",
+  es: "Este número solo envía avisos de W2Talent y no lee mensajes. Para hablar con nosotros, usa el sitio: https://w2talent.com/ajuda. Para dejar de recibir avisos, responde SALIR.",
+};
+
+const CONFIRMA_SAIR: Record<IdiomaWa, string> = {
+  pt_BR: "Pronto: você não vai mais receber avisos do W2Talent pelo WhatsApp. Os e-mails continuam. Para ligar de novo, use Minha conta no site.",
+  en: "Done: you will no longer get W2Talent notices on WhatsApp. Emails continue. To turn them on again, use My account on the website.",
+  es: "Listo: ya no recibirás avisos de W2Talent por WhatsApp. Los correos siguen. Para activarlos de nuevo, usa Mi cuenta en el sitio.",
+};
+
+export function textoAutoResposta(idioma: IdiomaWa): string {
+  return AUTO_RESPOSTA[idioma];
+}
+
+export function textoConfirmaSair(idioma: IdiomaWa): string {
+  return CONFIRMA_SAIR[idioma];
+}
+
+export type Recebida = { de: string; tipo: string; texto: string | null };
+
+/**
+ * Mensagens recebidas no corpo do webhook da Meta (entry[].changes[].value.messages[]).
+ * Status de entrega e o resto são ignorados. O texto só é lido aqui para ver se é SAIR.
+ */
+export function mensagensRecebidas(corpo: unknown): Recebida[] {
+  const out: Recebida[] = [];
+  const entries = (corpo as { entry?: unknown })?.entry;
+  if (!Array.isArray(entries)) return out;
+  for (const e of entries) {
+    const changes = (e as { changes?: unknown })?.changes;
+    if (!Array.isArray(changes)) continue;
+    for (const c of changes) {
+      const msgs = (c as { value?: { messages?: unknown } })?.value?.messages;
+      if (!Array.isArray(msgs)) continue;
+      for (const m of msgs as Record<string, any>[]) {
+        if (typeof m?.from !== "string" || !/^\d{6,15}$/.test(m.from)) continue;
+        const tipo = typeof m.type === "string" ? m.type : "desconhecido";
+        const texto =
+          tipo === "text" && typeof m.text?.body === "string"
+            ? m.text.body
+            : tipo === "button" && typeof m.button?.text === "string"
+              ? m.button.text
+              : tipo === "interactive" && typeof m.interactive?.button_reply?.title === "string"
+                ? m.interactive.button_reply.title
+                : null;
+        out.push({ de: m.from, tipo, texto });
+      }
+    }
+  }
+  return out;
+}
+
+const hex = (b: ArrayBuffer) => Array.from(new Uint8Array(b), (x) => x.toString(16).padStart(2, "0")).join("");
+
+/** X-Hub-Signature-256: "sha256=" + HMAC-SHA256 do corpo cru com o App Secret. Comparação em tempo constante. */
+export async function assinaturaMetaConfere(corpoCru: string, cabecalho: string | null, appSecret: string | undefined): Promise<boolean> {
+  if (!appSecret || !cabecalho || !cabecalho.startsWith("sha256=")) return false;
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", enc.encode(appSecret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const esperado = hex(await crypto.subtle.sign("HMAC", key, enc.encode(corpoCru)));
+  return timingSafeEqualStr(cabecalho.slice(7).trim().toLowerCase(), esperado);
+}
+
+/** DDIs de países de língua espanhola (para responder quem não tem conta, D4). */
+const DDI_ES = ["34", "52", "54", "56", "57", "51", "58", "53", "591", "593", "595", "598", "502", "503", "504", "505", "506", "507", "240"];
+
+/** Idioma de quem escreveu sem conta: Brasil e Portugal em português, países hispânicos em espanhol, o resto em inglês. */
+export function idiomaPeloNumero(numero: string): IdiomaWa {
+  const d = numero.replace(/\D/g, "");
+  if (d.startsWith("55") || d.startsWith("351") || d.startsWith("244") || d.startsWith("258")) return "pt_BR";
+  if (DDI_ES.some((x) => d.startsWith(x))) return "es";
+  return "en";
 }

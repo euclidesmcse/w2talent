@@ -2,7 +2,7 @@
 titulo: My data and privacy
 resumo: Protected contact, how long the profile and conversations are kept and how to ask for a review.
 areas: publico, candidato, recrutador
-telas: /minha-ficha, /renovar, /ia, /mercado
+telas: /minha-ficha, /renovar, /ia, /mercado, /conta/seguranca
 ordem: 10
 ---
 
@@ -28,6 +28,10 @@ The salary expectation you put in your profile shows to recruiters on your W2 Pr
 ## Conversations with the team
 
 Conversations in [Talk to a person](/ajuda/conversa) are kept until 180 days after they are closed; then they are deleted, with all their messages. Signed in, you see them in [My conversations](/ajuda/minhas-conversas). A person on the team replies, and nothing in the conversation goes to AI.
+
+## WhatsApp notices
+
+They are optional and start off. To turn them on, you confirm your mobile number with a code and accept an authorization, recorded with the date and the text. Each notice carries only the job title, the company name and a link to the website; never contacts, profile data or salary. The number is kept while notices are on and is deleted when you turn them off (with the button or by replying STOP). What you write to the W2Talent number is not stored or read by AI. Notices are sent through the official WhatsApp API, from Meta. See [WhatsApp notices](/ajuda/avisos-whatsapp).
 
 ## AI and review by a person
 

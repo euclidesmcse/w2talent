@@ -2,7 +2,7 @@
 titulo: Meus dados e privacidade
 resumo: Contato protegido, por quanto tempo o perfil e as conversas ficam guardados e como pedir revisão.
 areas: publico, candidato, recrutador
-telas: /minha-ficha, /renovar, /ia, /mercado
+telas: /minha-ficha, /renovar, /ia, /mercado, /conta/seguranca
 ordem: 10
 ---
 
@@ -28,6 +28,10 @@ A pretensão que você coloca na ficha aparece para recrutadores na sua Ficha W2
 ## Conversas com a equipe
 
 As conversas em [Falar com uma pessoa](/ajuda/conversa) ficam guardadas até 180 dias depois de encerradas; aí são apagadas, com todas as mensagens. Com login, você as vê em [Minhas conversas](/ajuda/minhas-conversas). Quem responde é uma pessoa da equipe, e nada da conversa vai para IA.
+
+## Avisos pelo WhatsApp
+
+São opcionais e vêm desligados. Para ligar, você confirma o celular com um código e aceita uma autorização, que fica registrada com a data e o texto. Cada aviso leva só o nome da vaga e da empresa e um link para o site; nunca contatos, dados da ficha ou salário. O número fica guardado enquanto os avisos estiverem ligados e é apagado ao desligar (pelo botão ou respondendo SAIR). O que você escreve para o número do W2Talent não é guardado nem lido por IA. Os avisos são enviados pela API oficial do WhatsApp, da Meta. Veja [Avisos pelo WhatsApp](/ajuda/avisos-whatsapp).
 
 ## IA e revisão por uma pessoa
 

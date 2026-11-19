@@ -8,6 +8,7 @@
  *   candidato + tipo + dia de Brasília); fora das 8h–20h o aviso espera na fila até as 8h.
  * - D6: a fila leva só o id do aviso; a entrega confere de novo se a pessoa ainda quer e monta o texto.
  *   O e-mail nunca deixa de sair: quem chama põe o e-mail primeiro e o WhatsApp nunca lança.
+ * 3.5b: `tratarRecebidas` (webhook da Meta): SAIR desliga na hora; outra mensagem ganha uma resposta automática.
  */
 import type { PrismaClient } from "@prisma/client";
 import type { MensagemWhatsapp, ResultadoEntrega } from "./fila";
@@ -25,19 +26,26 @@ import {
   codigoExpirado,
   configDoAmbiente,
   corpoModelo,
+  corpoTexto,
   destinoPermitido,
   diaDoAviso,
+  ehPedidoDeSair,
   enviarWhatsapp,
   formatoCodigo,
   gerarCodigo6,
   hashCodigoWhatsapp,
+  idiomaPeloNumero,
   idiomaWhatsapp,
   mascararNumero,
   modoTeste,
   normalizarNumero,
   segundosAteJanela,
+  textoAutoResposta,
+  textoConfirmaSair,
+  variantesDoNumero,
   type ConfigWhatsapp,
   type MotivoNumero,
+  type Recebida,
   type TipoAviso,
 } from "./whatsapp";
 
@@ -432,4 +440,54 @@ export async function entregarAviso(db: Db, m: MensagemWhatsapp, tentativa: numb
   const ultima = r.resultado === "desistir" || tentativa >= WHATSAPP_MAX_TENTATIVAS;
   await grava(ultima ? "desistiu" : "fila", r.erro ?? null);
   return { resultado: r.resultado, status: r.status, erro: r.erro ?? null };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Recebidas (3.5b, D4)
+// ---------------------------------------------------------------------------------------------
+
+export type ResultadoRecebida = "desligou" | "sair_sem_conta" | "respondida" | "ja_respondida" | "ignorada";
+
+/**
+ * Trata as mensagens que chegaram ao número do W2Talent (webhook da Meta, já com a assinatura conferida).
+ * SAIR/STOP/PARAR/SALIR desliga na hora e confirma (uma vez por dia). Qualquer outra mensagem ganha UMA
+ * resposta automática por dia por número ("este número só envia avisos; use o site"), no idioma da pessoa
+ * quando ela tem conta. Sem IA. O texto recebido não é guardado nem vai para o log.
+ */
+export async function tratarRecebidas(
+  db: Db,
+  recebidas: Recebida[],
+  opts: { cfg?: ConfigWhatsapp; fetch?: typeof fetch; now?: Date } = {},
+): Promise<ResultadoRecebida[]> {
+  const now = opts.now ?? new Date();
+  const cfg = opts.cfg ?? configDoAmbiente();
+  const out: ResultadoRecebida[] = [];
+  for (const r of recebidas) {
+    const variantes = variantesDoNumero(r.de);
+    if (!variantes.length) {
+      out.push("ignorada");
+      continue;
+    }
+    const p = await db.candidateProfile.findFirst({
+      where: { whatsappNumero: { in: variantes } },
+      select: { id: true, idiomaOriginal: true },
+    });
+    const idioma = p ? idiomaWhatsapp(p.idiomaOriginal) : idiomaPeloNumero(variantes[0]);
+    const sair = ehPedidoDeSair(r.texto);
+    if (sair && p) await desligarWhatsapp(db, { candidateId: p.id });
+    // Uma resposta por dia por número (e uma confirmação de SAIR): a contagem usa só o hash do número.
+    const uso = await consumirUso(db, await chaveUso(sair ? "wa-sair" : "wa-auto", r.de), 1, now);
+    const resultado: ResultadoRecebida = sair ? (p ? "desligou" : "sair_sem_conta") : uso.permitido ? "respondida" : "ja_respondida";
+    out.push(resultado);
+    if (!uso.permitido) continue;
+    const texto = sair ? textoConfirmaSair(idioma) : textoAutoResposta(idioma);
+    const numero = `+${r.de}`;
+    if (modoTeste(cfg) || !destinoPermitido(cfg, numero)) {
+      console.log(`[whatsapp] modo teste: resposta para ${mascararNumero(numero)} não enviada.`);
+      continue;
+    }
+    const e = await enviarWhatsapp(cfg, corpoTexto(numero, texto), opts.fetch);
+    if (e.resultado !== "ok") console.error(`[whatsapp] resposta para ${mascararNumero(numero)} não saiu (${e.status ?? e.erro}).`);
+  }
+  return out;
 }

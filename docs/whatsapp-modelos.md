@@ -84,3 +84,26 @@ O texto da resposta nunca vai no WhatsApp.
 | `WHATSAPP_TOKEN` | Token permanente do usuário do sistema (Meta Business). Sem ele, modo teste: nada sai. |
 | `WHATSAPP_PHONE_ID` | Id do número de telefone na Cloud API. Sem ele, modo teste. |
 | `WHATSAPP_TEST_TO` | Opcional. Lista separada por vírgula; quando existe, só esses números recebem. |
+| `WHATSAPP_APP_SECRET` | 3.5b. App Secret do app na Meta: confere a assinatura `X-Hub-Signature-256` do webhook. Sem ele, o webhook responde 503. |
+| `WHATSAPP_VERIFY_TOKEN` | 3.5b. Texto que você inventa e repete na Meta ao cadastrar o webhook (verificação do endereço). |
+
+## Webhook (3.5b)
+
+Em Meta for Developers > o app > WhatsApp > Configuração > Webhook:
+
+- URL de retorno: `https://<domínio>/api/whatsapp/webhook`
+- Token de verificação: o mesmo valor de `WHATSAPP_VERIFY_TOKEN`
+- Campo assinado: `messages`
+
+O que chega: **SAIR** (ou STOP, PARAR, SALIR, em qualquer caixa e com ou sem acento) desliga os avisos da
+pessoa na hora e manda uma confirmação. Qualquer outra mensagem recebe uma resposta automática por dia por
+número, em texto livre (permitido nas 24 horas depois de a pessoa escrever), no idioma da conta ou, sem conta,
+pelo código do país:
+
+| Idioma | Resposta automática |
+| --- | --- |
+| pt_BR | Este número só envia avisos do W2Talent e não lê mensagens. Para falar com a gente, use o site: https://w2talent.com/ajuda. Para parar os avisos, responda SAIR. |
+| en | This number only sends W2Talent notices and does not read messages. To talk to us, use the website: https://w2talent.com/ajuda. To stop the notices, reply STOP. |
+| es | Este número solo envía avisos de W2Talent y no lee mensajes. Para hablar con nosotros, usa el sitio: https://w2talent.com/ajuda. Para dejar de recibir avisos, responde SALIR. |
+
+O texto recebido nunca é guardado, nem vai para o log ou para IA.
