@@ -4,7 +4,7 @@
  */
 // @ts-ignore -- gerado por `opennextjs-cloudflare build`
 import { default as handler } from "./.open-next/worker.js";
-import { processarFila, type MensagemWebhook, type MessageBatch, type ResultadoEntrega } from "./lib/fila";
+import { processarFila, type MensagemWebhook, type MensagemWhatsapp, type MessageBatch, type ResultadoEntrega } from "./lib/fila";
 
 type Env = Record<string, unknown> & {
   CRON_SECRET?: string;
@@ -35,6 +35,19 @@ async function entregarWebhook(m: MensagemWebhook, tentativa: number, env: Env, 
   return (await res.json()) as ResultadoEntrega;
 }
 
+/** 3.5a: aviso de WhatsApp, entregue pela rota interna `/api/whatsapp/entregar` (mesmo caminho do webhook). */
+async function entregarWhatsapp(m: MensagemWhatsapp, tentativa: number, env: Env, ctx: Ctx): Promise<ResultadoEntrega> {
+  if (!env.CRON_SECRET) return { resultado: "repetir", erro: "sem_cron_secret" };
+  const req = new Request(`${baseInterna(env)}/api/whatsapp/entregar`, {
+    method: "POST",
+    headers: { "x-cron-secret": env.CRON_SECRET, "content-type": "application/json" },
+    body: JSON.stringify({ ...m, tentativa }),
+  });
+  const res: Response = await handler.fetch(req, env, ctx);
+  if (!res.ok) return { resultado: "repetir", erro: `rota_${res.status}` };
+  return (await res.json()) as ResultadoEntrega;
+}
+
 export default {
   fetch: handler.fetch,
 
@@ -50,9 +63,13 @@ export default {
     console.log(`[cron] higiene respondeu ${res.status}`);
   },
 
-  /** Fila `notificacoes`: e-mails pelo Resend (um por vez) e webhooks das empresas (3.4a). Ver lib/fila.ts. */
+  /** Fila `notificacoes`: e-mails pelo Resend (um por vez), webhooks das empresas (3.4a) e avisos de WhatsApp (3.5a). Ver lib/fila.ts. */
   async queue(batch: MessageBatch, env: Env, ctx: Ctx) {
     const emailEnv = { apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM, mode: env.EMAIL_MODE, testTo: env.EMAIL_TEST_TO };
-    await processarFila(batch, { emailEnv, entregarWebhook: (m, tentativa) => entregarWebhook(m, tentativa, env, ctx) });
+    await processarFila(batch, {
+      emailEnv,
+      entregarWebhook: (m, tentativa) => entregarWebhook(m, tentativa, env, ctx),
+      entregarWhatsapp: (m, tentativa) => entregarWhatsapp(m, tentativa, env, ctx),
+    });
   },
 };

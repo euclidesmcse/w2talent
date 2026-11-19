@@ -128,6 +128,16 @@ model CandidateProfile {
   telegramOpt Boolean @default(false)
   telefoneOpt String?
 
+  // 3.5a WhatsApp (lib/whatsapp.ts): número confirmado por código, separado do `celular` da ficha
+  // (editar a ficha não muda para onde vão os avisos). Avisos só com whatsappOpt e whatsappVerificadoEm.
+  whatsappNumero           String? // E.164, confirmado
+  whatsappVerificadoEm     DateTime?
+  /// Código pendente: só o SHA-256, o número que pediu, a validade (10 min) e as tentativas (máx. 5).
+  whatsappCodigoHash       String?
+  whatsappCodigoNumero     String?
+  whatsappCodigoExpira     DateTime?
+  whatsappCodigoTentativas Int       @default(0)
+
   // LGPD 4 consentimentos versionados
   tratamentoBuscaV Int  @default(1)
   contatoProxyV    Int  @default(1)
@@ -154,15 +164,17 @@ model CandidateProfile {
   embeddingHash  String?
   embeddedAt     DateTime?
 
-  applications Application[]
-  aprovacoes   ApplicationApproval[]
-  sinais       FeedbackSignal[]
-  traducoes    Traducao[]
+  applications   Application[]
+  aprovacoes     ApplicationApproval[]
+  sinais         FeedbackSignal[]
+  traducoes      Traducao[]
+  avisosWhatsapp WhatsappAviso[]
 
   @@index([status])
   @@index([expiresAt])
   @@index([userId])
   @@index([arquivadoEm])
+  @@index([whatsappNumero])
 }
 
 // ── Vacancy ──────────────────────────────────────────────────────────
@@ -741,4 +753,26 @@ model WebhookEntrega {
   createdAt  DateTime @default(now())
 
   @@index([webhookId, createdAt])
+}
+
+// 3.5a Canal WhatsApp: um aviso ao candidato (tipo + id do assunto), entregue pela fila `notificacoes`.
+// O texto é montado na hora da entrega e nunca é guardado. `dia` é a data de Brasília em que o aviso sai:
+// (candidateId, tipo, dia) único junta avisos do mesmo tipo no mesmo dia (D5).
+model WhatsappAviso {
+  id          String           @id @default(cuid())
+  candidateId String
+  candidate   CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  tipo        String // vista | etapa | entrevista | aprovadas | atendimento
+  refId       String // applicationId, vacancyId ou conversaId
+  dia         String // AAAA-MM-DD (America/Sao_Paulo)
+  status      String           @default("fila") // fila | enviado | modo_teste | desistiu | desligado
+  tentativas  Int              @default(0)
+  erro        String?
+  enviadoEm   DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([candidateId, tipo, dia])
+  @@index([candidateId, dia])
+  @@index([createdAt])
 }

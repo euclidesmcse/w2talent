@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button, Field, Input } from "@/components/ui";
 import { QrCode } from "@/components/qr-code";
 import { TelaConta, useVolta } from "@/components/tela-conta";
+import { WhatsappConta } from "@/components/whatsapp-conta";
 import { linkEntrar, recarregarConta, useConta } from "@/lib/conta-client";
 
 type Config = { uri: string; segredo: string; codigos: string[] };
@@ -21,6 +22,7 @@ async function post(caminho: string, corpo: Record<string, unknown> = {}): Promi
 /**
  * Segurança da conta (1.5.5): ligar o autenticador (QR + 10 códigos de recuperação),
  * gerar novos códigos e, só para candidato, desligar (para recrutador é obrigatório).
+ * 3.5a: candidato também liga ou desliga aqui os avisos pelo WhatsApp (components/whatsapp-conta.tsx).
  */
 export default function SegurancaPage() {
   const t = useTranslations("conta");
@@ -175,6 +177,7 @@ export default function SegurancaPage() {
         ) : null}
         {erro && !config ? <p role="alert" className="text-sm text-danger">{erro}</p> : null}
       </section>
+      {info.estado === "ok" && info.conta?.perfil === "candidato" ? <WhatsappConta /> : null}
     </TelaConta>
   );
 }

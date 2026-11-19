@@ -60,7 +60,7 @@
 | 3.2 | Inteligência de mercado (`MarketStat`: faixas, demanda por skill). Plano https://claude.ai/artifact/REZMdpPqMMgLgUvwxXYRox (D1–D7): **3.2a** tabela + Cron + página pública `/mercado`; **3.2b** números no `/painel`, `/publicar` e `/rh`. | ✅ 3.2a · ✅ 3.2b |
 | 3.3 | App nas lojas (a partir do PWA) | ⏳ |
 | 3.4 | Integração com ATS (feeder). Plano https://claude.ai/artifact/7u3uNYjxBkCxmisEdjBrAw (D1–D6): webhook genérico assinado; **3.4a** cadastro em Minha empresa + `candidatura.recebida` pela fila `notificacoes`; **3.4b** `candidatura.etapa` + pausa após 50 falhas com e-mail ao dono. | ⏳ 3.4a e 3.4b em PR |
-| 3.5 | Canal WhatsApp | ⏳ |
+| 3.5 | Canal WhatsApp. Plano https://claude.ai/artifact/B1kcRjUJ5emNK2W4Xu9WSW (D1–D7): API oficial da Meta (Cloud API) com modelos aprovados, só avisos ao candidato (vista, etapa, entrevista, aprovadas vencendo, resposta da equipe), opt-in por código em Minha conta, até 3/dia das 8h às 20h, fila `notificacoes`, modo teste sem segredos; **3.5a** ligar/desligar, avisos e entrega; **3.5b** webhook da Meta (SAIR e resposta automática), ajuda e privacidade. | ⏳ 3.5a e 3.5b em PR |
 | 3.6 | Ajuste fino de modelo aberto com dados anonimizados e consentidos | ⏳ |
 
 ---

@@ -6,12 +6,15 @@
  * Cada e-mail de resposta leva um código novo e os anteriores continuam valendo.
  * 2.6b-2: com login, "Minhas conversas" lista as conversas da conta e abre cada uma pelo id
  * (autorizado pelo userId da sessão, sem o código). Conversa encerrada é apagada 180 dias depois (Cron).
+ * 3.5a: quando a equipe responde a conversa de uma conta de candidato com o WhatsApp ligado, sai também
+ * o aviso "a equipe respondeu" (sem o texto da resposta), depois do e-mail.
  */
 import type { PrismaClient } from "@prisma/client";
 import { emailLocale, renderAtendimentoEmail } from "./email-templates";
 import { gerarCodigo, hashCodigo } from "./entrevista";
 import type { EmailMessage } from "./email";
 import { chaveUso, consumirUso } from "./uso-diario";
+import type { EnfileirarWhatsapp } from "./whatsapp-db";
 
 export { codigoValido } from "./entrevista";
 
@@ -322,7 +325,7 @@ export async function responderConversa(
   db: PrismaClient,
   id: string,
   texto: unknown,
-  opts: Omit<Opcoes, "emailEquipe">,
+  opts: Omit<Opcoes, "emailEquipe"> & { enviarWhatsapp?: EnfileirarWhatsapp },
 ): Promise<{ ok: true; emailEnviado: boolean } | { ok: false; erro: ErroAdmin }> {
   if (!textoValido(texto)) return { ok: false, erro: "texto_invalido" };
   const now = opts.now ?? new Date();
@@ -336,7 +339,7 @@ export async function responderConversa(
       const existe = await tx.conversa.findUnique({ where: { id }, select: { id: true } });
       return { erro: existe ? ("encerrada" as const) : ("nao_encontrada" as const) };
     }
-    const c = await tx.conversa.findUniqueOrThrow({ where: { id }, select: { email: true, idioma: true } });
+    const c = await tx.conversa.findUniqueOrThrow({ where: { id }, select: { email: true, idioma: true, userId: true } });
     const m = await tx.conversaMensagem.create({ data: { conversaId: id, autor: "equipe", texto: texto.trim(), createdAt: now }, select: { id: true } });
     await tx.conversaCodigo.create({ data: { tokenHash, conversaId: id, createdAt: now } });
     return { c, m };
@@ -345,6 +348,13 @@ export async function responderConversa(
   const locale = emailLocale(r.c.idioma);
   const e = renderAtendimentoEmail({ locale, url: linkDaConversa(opts.appUrl, codigo) });
   const emailEnviado = await avisar(opts.enqueue, { to: r.c.email, ...e, idempotencyKey: `atendimento:${r.m.id}` });
+  if (opts.enviarWhatsapp && r.c.userId) {
+    const enviar = opts.enviarWhatsapp;
+    const userId = r.c.userId;
+    await import("./whatsapp-db")
+      .then(({ avisarAtendimento }) => avisarAtendimento(db, userId, id, enviar, now))
+      .catch((err) => console.error("[atendimento] aviso de WhatsApp não entrou na fila:", err instanceof Error ? err.message : err));
+  }
   return { ok: true, emailEnviado };
 }
 

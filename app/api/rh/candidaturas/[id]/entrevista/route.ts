@@ -3,12 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { exigirConta, NO_STORE } from "@/lib/sessao";
 import { empresaDaConta, mesmaOrigem } from "@/lib/empresa";
 import { cancelarPeloRecrutador, enfileirarPendentes, oferecerEntrevista } from "@/lib/entrevista";
-import { enqueueEmail } from "@/lib/notifications";
+import { enqueueEmail, enqueueWhatsapp } from "@/lib/notifications";
+import { avisarPelaCandidatura } from "@/lib/whatsapp-db";
 
 /**
  * 2.5a Agenda: o recrutador oferece horários (POST) ou cancela a entrevista (DELETE) de uma
  * candidatura da própria empresa. Corpo do POST: { duracaoMin, horarios: ISO[], linkReuniao?, fuso? }.
  * Os e-mails entram na fila depois do commit; se a fila falhar, o Cron diário tenta de novo.
+ * 3.5a: depois dos e-mails, o aviso "entrevista" pelo WhatsApp (se o candidato ligou); nunca lança.
  */
 type Base = { ok: false; resp: Response } | { ok: true; contaId: string; companyId: string; appUrl: string };
 
@@ -47,6 +49,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       return NextResponse.json({ error: res.erro }, { status, headers: NO_STORE });
     }
     await enfileirarPendentes(prisma, res.ids, enqueueEmail).catch((e) => console.error("[agenda] fila:", e instanceof Error ? e.name : e));
+    await avisarPelaCandidatura(prisma, id, "entrevista", enqueueWhatsapp);
     return NextResponse.json({ ok: true, entrevista: res.entrevista }, { headers: NO_STORE });
   } catch (e) {
     console.error("[rh/entrevista] falhou:", e instanceof Error ? e.name : e);
@@ -62,6 +65,7 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
     const res = await cancelarPeloRecrutador(prisma, b.companyId, id, new Date(), { appUrl: b.appUrl });
     if (!res.ok) return NextResponse.json({ error: res.erro }, { status: 404, headers: NO_STORE });
     await enfileirarPendentes(prisma, res.ids, enqueueEmail).catch((e) => console.error("[agenda] fila:", e instanceof Error ? e.name : e));
+    await avisarPelaCandidatura(prisma, id, "entrevista", enqueueWhatsapp);
     return NextResponse.json({ ok: true, entrevista: res.entrevista }, { headers: NO_STORE });
   } catch (e) {
     console.error("[rh/entrevista] falhou:", e instanceof Error ? e.name : e);
