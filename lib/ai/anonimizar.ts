@@ -56,8 +56,9 @@ const TEL_ES = /\b\d{3}[ -]\d{3}[ -]\d{3}\b/g;
 /** "98765-4321", "3456-7890" (sem DDD); "2019-2023" é período, não telefone. */
 const TEL_LOCAL = /\b(?!(?:19|20)\d{2}-(?:19|20)\d{2}\b)9?\d{4}-\d{4}\b/g;
 
-const END_ES = /\b(?:Calle|C\/|Avenida|Avda\.?|Carrera|Cra\.?|Paseo|Plaza|Camino|Carretera)\s+[^\n,;]{2,60}?,?\s*(?:n[º°o]\.?\s*|#\s*)?\d{1,6}\b/g;
-const END_EN = /\b\d{1,6}\s+(?:[A-Z][a-z]+\s){1,4}(?:Street|St\.|Avenue|Ave\.?|Road|Rd\.|Boulevard|Blvd\.?|Lane|Ln\.|Drive|Dr\.|Way|Court|Ct\.)/g;
+const END_ES = /\b(?:Calle|C\/|Avenida|Avda\.?|Carrera|Cra\.?|Paseo|Plaza|Camino|Carretera)\s+[^\n,;]{2,60}?,?\s*(?:n[º°o]\.?\s*|#\s*)?\d{1,6}\b/gi;
+/** Sem diferença de maiúsculas: "123 main street" e "CALLE MAYOR 15" também são endereços. */
+const END_EN = /\b\d{1,6}\s+(?:[A-Za-z][A-Za-z'-]+\s){1,4}(?:Street|St\.|Avenue|Ave\.?|Road|Rd\.|Boulevard|Blvd\.?|Lane|Ln\.|Drive|Dr\.|Way|Court|Ct\.)/gi;
 const CEP_ROTULO = /\b(?:CEP|C\.P\.|ZIP)\s*:?\s*\d{5}-?\d{3}\b/gi;
 
 const RAZAO_SOCIAL =
@@ -175,7 +176,8 @@ export function anonimizar(texto: string, c: Conhecidos = {}): string {
   out = out.replace(END_ES, "[ENDERECO]").replace(END_EN, "[ENDERECO]");
 
   // 3. empresas e nomes (depois dos links, que podem levar o nome dentro)
-  for (const e of valores(c.empresas).sort((a, b) => b.length - a.length)) out = trocarConhecido(out, e, "[EMPRESA]");
+  // Empresas de 2 letras (HP, EY, GE) também contam; a troca é por palavra inteira.
+  for (const e of valores(c.empresas, 2).sort((a, b) => b.length - a.length)) out = trocarConhecido(out, e, "[EMPRESA]");
   out = out.replace(RAZAO_SOCIAL, "[EMPRESA]");
   const nomes = valores(c.nomes, 2).flatMap(partesDoNome);
   for (const n of [...new Set(nomes)].sort((a, b) => b.length - a.length)) out = trocarConhecido(out, n, "[NOME]");
@@ -218,7 +220,7 @@ export function sobras(texto: string, c: Conhecidos = {}): string[] {
     const d = dobrar(v.trim()).replace(/\s+/g, " ");
     return !!d && new RegExp(SEM_LETRA_ANTES + escapar(d).replace(/ /g, "\\s+") + SEM_LETRA_DEPOIS, "u").test(base);
   };
-  const textos = [...valores(c.emails), ...valores(c.links).map((l) => l.replace(/^https?:\/\//i, "")), ...valores(c.empresas), ...valores(c.nomes, 2).flatMap(partesDoNome)];
+  const textos = [...valores(c.emails), ...valores(c.links).map((l) => l.replace(/^https?:\/\//i, "")), ...valores(c.empresas, 2), ...valores(c.nomes, 2).flatMap(partesDoNome)];
   if (textos.some(presente)) out.add("conhecido");
   if ([...digitosConhecidos(c.telefones), ...digitosConhecidos(c.documentos)].some((d) => regexDigitos(d).test(t))) out.add("conhecido");
   return [...out];

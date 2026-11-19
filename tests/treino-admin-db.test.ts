@@ -199,6 +199,20 @@ describeDb("3.6b Admin > Dados de treino", () => {
     process.env.AI_DAILY_BUDGET_USD = "1000";
     await db.aiProvider.update({ where: { id: PROV }, data: { aceitaDadosPessoais: true } });
     expect(await (await post({ tarefa: "ficha_w2", modelo: MODELO })).json()).toEqual({ error: "prova_vazia" });
+    // A rota da Ficha W2 presa num fornecedor que deixou de aceitar dado pessoal: o modelo atual não serve.
+    await db.taskRoute.deleteMany({ where: { tarefa: "ficha_w2" } });
+    await db.aiModel.deleteMany({ where: { id: "tr36-modelo-sem" } });
+    await db.aiProvider.deleteMany({ where: { id: "tr36-prov-sem" } });
+    await db.aiProvider.create({ data: { id: "tr36-prov-sem", nome: "tr36 Sem pessoal", tipo: "WORKERS_AI", ativo: true, aceitaDadosPessoais: false } });
+    await db.aiModel.create({ data: { id: "tr36-modelo-sem", providerId: "tr36-prov-sem", modelo: "@cf/tr36/sem-pessoal", ativo: true } });
+    await db.taskRoute.create({ data: { tarefa: "ficha_w2", modo: "fixo", modelos: ["tr36-modelo-sem"] } });
+    try {
+      expect(await (await post({ tarefa: "ficha_w2", modelo: MODELO })).json()).toEqual({ error: "modelo_atual_nao_serve" });
+    } finally {
+      await db.taskRoute.deleteMany({ where: { tarefa: "ficha_w2" } });
+      await db.aiModel.deleteMany({ where: { id: "tr36-modelo-sem" } });
+      await db.aiProvider.deleteMany({ where: { id: "tr36-prov-sem" } });
+    }
   });
 
   it("Cron: descartados há mais de 30 dias saem", async () => {

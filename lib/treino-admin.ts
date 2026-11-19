@@ -114,8 +114,12 @@ export async function apagarDescartadosAntigos(db: Db, agora = new Date()): Prom
 type Modelo = { id: string; rotulo: string; candidato: RouteCandidate };
 
 /** Modelos de texto ligados que podem entrar na comparação (dado pessoal só em API marcada). */
+function tarefaPessoal(tarefa: TarefaTreino): boolean {
+  return "personalData" in TASKS[tarefa] && !!(TASKS[tarefa] as { personalData?: boolean }).personalData;
+}
+
 export async function modelosComparaveis(db: Db, tarefa: TarefaTreino) {
-  const pessoal = "personalData" in TASKS[tarefa] && !!(TASKS[tarefa] as { personalData?: boolean }).personalData;
+  const pessoal = tarefaPessoal(tarefa);
   const ms = await db.aiModel.findMany({
     where: { ativo: true, embeddingDim: null, provider: { ativo: true, ...(pessoal ? { aceitaDadosPessoais: true } : {}) } },
     include: { provider: true },
@@ -183,6 +187,9 @@ export async function compararModelos(db: Db, input: { tarefa: unknown; modelo: 
   const outro: Modelo = { id: m.id, rotulo: `${m.provider.nome} / ${m.modelo}`, candidato: candidatoDe(m) };
   const atual = await modeloAtual(db, tarefa);
   if (atual.id === outro.id) throw new AdminInputError("mesmo_modelo");
+  // O modelo atual também precisa servir para a tarefa: com dado pessoal, só fornecedor que aceita
+  // (a rota pode ter ficado presa num fornecedor que depois deixou de aceitar).
+  if (tarefaPessoal(tarefa) && !atual.candidato.acceptsPersonalData) throw new AdminInputError("modelo_atual_nao_serve");
 
   const limite = typeof input.limite === "number" ? input.limite : MAX_COMPARACAO;
   const exs = await provaFixa(db, tarefa, limite);

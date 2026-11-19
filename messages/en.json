@@ -1831,6 +1831,7 @@
       "orcamento_insuficiente": "The comparison would go over the daily AI budget. Try tomorrow.",
       "mesmo_modelo": "That is already the task's current model.",
       "modelo_nao_serve": "That model cannot be used for this task.",
+      "modelo_atual_nao_serve": "This task's current model can't receive personal data. Change the route in Admin > AI before comparing.",
       "comparar": "Could not compare. Try again."
     },
     "exportacoesTitulo": "Recent exports",

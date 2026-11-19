@@ -1831,6 +1831,7 @@
       "orcamento_insuficiente": "La comparación superaría el presupuesto diario de IA. Inténtalo mañana.",
       "mesmo_modelo": "Ese ya es el modelo actual de la tarea.",
       "modelo_nao_serve": "Ese modelo no se puede usar en esta tarea.",
+      "modelo_atual_nao_serve": "El modelo actual de esta tarea no puede recibir datos personales. Cambia la ruta en Admin > IA antes de comparar.",
       "comparar": "No se pudo comparar. Inténtalo de nuevo."
     },
     "exportacoesTitulo": "Exportaciones recientes",

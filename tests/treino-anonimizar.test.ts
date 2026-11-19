@@ -90,12 +90,22 @@ describe("anonimizar: endereços", () => {
     ["CEP 01310-100", "[ENDERECO]"],
     ["Vivo en Calle Mayor 15, Madrid", "Vivo en [ENDERECO], Madrid"],
     ["I live at 742 Evergreen Terrace Road", "I live at [ENDERECO]"],
+    ["I live at 123 main street", "I live at [ENDERECO]"],
+    ["I LIVE AT 9 ELM ROAD", "I LIVE AT [ENDERECO]"],
+    ["vivo en calle mayor 15, madrid", "vivo en [ENDERECO], madrid"],
+    ["VIVO EN CALLE MAYOR 15", "VIVO EN [ENDERECO]"],
   ])("%s", (entrada, esperado) => expect(limpo(entrada)).toBe(esperado));
 
   it("mantém a cidade", () => expect(limpo("São Paulo, SP (Híbrido)")).toBe("São Paulo, SP (Híbrido)"));
 });
 
 describe("anonimizar: valores conhecidos", () => {
+  it("empresa de 2 letras (HP, EY) também sai, só como palavra inteira", () => {
+    const c: Conhecidos = { empresas: ["HP", "EY"] };
+    expect(anonimizar("Trabalhei na HP e na EY; usei PHP e eyes.", c)).toBe("Trabalhei na [EMPRESA] e na [EMPRESA]; usei PHP e eyes.");
+    expect(sobras("Trabalhei na HP.", c)).toContain("conhecido");
+  });
+
   it("troca nome inteiro e partes, sem maiúsculas nem acentos", () => {
     const t = "MARIA DA CONCEICAO SILVA trabalhou com Maria e a sra. Silva. Conceição liderou.";
     expect(limpo(t, MARIA)).toBe("[NOME] trabalhou com [NOME] e a sra. [NOME]. [NOME] liderou.");

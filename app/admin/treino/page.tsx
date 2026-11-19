@@ -170,7 +170,7 @@ export default function AdminTreinoPage() {
       const res = await post({ acao: "comparar", tarefa: tarefaComp, modelo: modeloComp });
       const j = (await res.json().catch(() => ({}))) as Comparacao & { error?: string };
       if (!res.ok) {
-        const conhecidos = ["prova_vazia", "orcamento_insuficiente", "mesmo_modelo", "modelo_nao_serve"];
+        const conhecidos = ["prova_vazia", "orcamento_insuficiente", "mesmo_modelo", "modelo_nao_serve", "modelo_atual_nao_serve"];
         return setErroComp(t(`erros.${conhecidos.includes(j.error ?? "") ? j.error : "comparar"}`));
       }
       setComparacao(j);
