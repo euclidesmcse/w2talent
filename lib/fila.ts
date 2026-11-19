@@ -45,6 +45,8 @@ export type DepsFila = {
   entregarWebhook: (m: MensagemWebhook, tentativa: number) => Promise<ResultadoEntrega>;
   /** 3.5a: entrega um aviso de WhatsApp (no Worker: a rota interna do app). Sem ela, o aviso é descartado. */
   entregarWhatsapp?: (m: MensagemWhatsapp, tentativa: number) => Promise<ResultadoEntrega>;
+  /** 3.5: põe o aviso de volta na fila como mensagem nova (a espera até as 8h não gasta as 10 tentativas). */
+  reenfileirarWhatsapp?: (m: MensagemWhatsapp, atrasoSeg: number) => Promise<void>;
   enviarEmail?: (m: EmailMessage, env: EmailEnv) => Promise<SendResult>;
   pausa?: (ms: number) => Promise<void>;
 };
@@ -97,6 +99,16 @@ export async function processarFila(batch: MessageBatch, deps: DepsFila): Promis
         r = deps.entregarWhatsapp ? await deps.entregarWhatsapp(msg.body, tentativa) : { resultado: "desistir", erro: "sem_entrega" };
       } catch (e) {
         r = { resultado: "repetir", erro: e instanceof Error ? e.name : "erro" };
+      }
+      if (r.resultado === "repetir" && r.erro === "fora_do_horario" && deps.reenfileirarWhatsapp) {
+        const atraso = r.atrasoSeg ?? 3600;
+        try {
+          await deps.reenfileirarWhatsapp(msg.body, atraso);
+          msg.ack();
+        } catch {
+          msg.retry({ delaySeconds: atraso });
+        }
+        continue;
       }
       if (r.resultado === "repetir" && tentativa < WEBHOOK_MAX_TENTATIVAS) {
         console.warn(`[fila] whatsapp ${msg.body.aviso} não saiu (${r.status ?? r.erro ?? "?"}), nova tentativa ${tentativa + 1}`);

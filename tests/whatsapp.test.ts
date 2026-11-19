@@ -229,6 +229,20 @@ describe("fila: tipo whatsapp", () => {
     jest.restoreAllMocks();
   });
 
+  it("fora do horário volta como mensagem nova (não gasta as 10 tentativas), mesmo na 10ª", async () => {
+    const entregar = jest.fn(async (): Promise<ResultadoEntrega> => ({ resultado: "repetir", erro: "fora_do_horario", atrasoSeg: 7200 }));
+    const reenfileirar = jest.fn(async () => undefined);
+    const m = msg(wa, 10);
+    await processarFila({ queue: "notificacoes", messages: [m] }, { emailEnv, entregarWebhook: jest.fn(), entregarWhatsapp: entregar, reenfileirarWhatsapp: reenfileirar });
+    expect(reenfileirar).toHaveBeenCalledWith(wa, 7200);
+    expect(m.ack).toHaveBeenCalled();
+    expect(m.retry).not.toHaveBeenCalled();
+    // Se pôr de novo na fila falhar, usa a nova tentativa normal.
+    const n = msg(wa, 3);
+    await processarFila({ queue: "notificacoes", messages: [n] }, { emailEnv, entregarWebhook: jest.fn(), entregarWhatsapp: entregar, reenfileirarWhatsapp: async () => { throw new Error("fila"); } });
+    expect(n.retry).toHaveBeenCalledWith({ delaySeconds: 7200 });
+  });
+
   it("erro da rota interna conta como repetir; sem entrega configurada, descarta", async () => {
     jest.spyOn(console, "warn").mockImplementation(() => undefined);
     jest.spyOn(console, "error").mockImplementation(() => undefined);

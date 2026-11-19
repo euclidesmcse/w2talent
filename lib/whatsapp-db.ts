@@ -228,7 +228,7 @@ export async function desligarWhatsapp(db: Db, quem: { userId: string } | { cand
         whatsappCodigoTentativas: 0,
       },
     }),
-    db.whatsappAviso.updateMany({ where: { candidateId: p.id, status: "fila" }, data: { status: "desligado" } }),
+    db.whatsappAviso.updateMany({ where: { candidateId: p.id, status: { in: ["fila", "enviando"] } }, data: { status: "desligado" } }),
   ]);
   return p.whatsappOpt || !!p.whatsappNumero;
 }
@@ -238,6 +238,8 @@ export async function desligarWhatsapp(db: Db, quem: { userId: string } | { cand
 // ---------------------------------------------------------------------------------------------
 
 export type ResultadoAviso = "fila" | "junto" | "limite" | "desligado" | "erro";
+
+const ENVIANDO_EXPIRA_MS = 2 * 60_000;
 
 function ehUnico(e: unknown): boolean {
   return (e as { code?: string })?.code === "P2002";
@@ -396,12 +398,15 @@ export async function entregarAviso(db: Db, m: MensagemWhatsapp, tentativa: numb
   const a = await db.whatsappAviso.findUnique({
     where: { id: m.avisoId },
     select: {
-      id: true, tipo: true, refId: true, status: true, candidateId: true, dia: true,
+      id: true, tipo: true, refId: true, status: true, candidateId: true, dia: true, tentativas: true, updatedAt: true,
       candidate: { select: { userId: true, idiomaOriginal: true, whatsappOpt: true, whatsappNumero: true, whatsappVerificadoEm: true } },
     },
   });
   if (!a) return { resultado: "desistir", erro: "aviso_apagado" };
-  if (a.status !== "fila") return { resultado: a.status === "desligado" ? "desistir" : "ok", erro: a.status };
+  // "enviando" parado há mais de 2 minutos = a entrega anterior caiu no meio: pode tentar de novo.
+  const limiteEnviando = new Date(now.getTime() - ENVIANDO_EXPIRA_MS);
+  const enviandoParado = a.status === "enviando" && a.updatedAt < limiteEnviando;
+  if (a.status !== "fila" && !enviandoParado) return { resultado: a.status === "desligado" ? "desistir" : "ok", erro: a.status };
   const grava = (status: string, erro: string | null, extra: Record<string, unknown> = {}) =>
     db.whatsappAviso.update({ where: { id: a.id }, data: { status, erro, tentativas: { increment: 1 }, ...extra } });
 
@@ -417,7 +422,7 @@ export async function entregarAviso(db: Db, m: MensagemWhatsapp, tentativa: numb
   const hoje = diaDoAviso(now);
   if (a.dia !== hoje) {
     try {
-      const { count } = await db.whatsappAviso.updateMany({ where: { id: a.id, status: "fila" }, data: { dia: hoje } });
+      const { count } = await db.whatsappAviso.updateMany({ where: { id: a.id, status: { in: ["fila", "enviando"] } }, data: { dia: hoje } });
       if (!count) return { resultado: "ok", erro: "ja_tratado" };
     } catch (e) {
       if (!ehUnico(e)) throw e;
@@ -430,6 +435,13 @@ export async function entregarAviso(db: Db, m: MensagemWhatsapp, tentativa: numb
       return { resultado: "desistir", erro: "limite" };
     }
   }
+
+  // Reserva o aviso antes de enviar: duas entregas ao mesmo tempo não mandam duas vezes.
+  const reservado = await db.whatsappAviso.updateMany({
+    where: { id: a.id, OR: [{ status: "fila" }, { status: "enviando", updatedAt: { lt: limiteEnviando } }] },
+    data: { status: "enviando", updatedAt: now },
+  });
+  if (!reservado.count) return { resultado: "ok", erro: "ja_tratado" };
 
   const tipo = a.tipo as TipoAviso;
   const textos = await textosDoAviso(db, { tipo, refId: a.refId, candidateId: a.candidateId, userId: a.candidate.userId }, now);
@@ -456,7 +468,8 @@ export async function entregarAviso(db: Db, m: MensagemWhatsapp, tentativa: numb
     await grava("enviado", null, { enviadoEm: now });
     return { resultado: "ok", status: r.status };
   }
-  const ultima = r.resultado === "desistir" || tentativa >= WHATSAPP_MAX_TENTATIVAS;
+  // Conta as tentativas de envio de verdade (a.tentativas) também: a espera da noite volta à fila como mensagem nova.
+  const ultima = r.resultado === "desistir" || tentativa >= WHATSAPP_MAX_TENTATIVAS || a.tentativas + 1 >= WHATSAPP_MAX_TENTATIVAS;
   await grava(ultima ? "desistiu" : "fila", r.erro ?? null);
   return { resultado: r.resultado, status: r.status, erro: r.erro ?? null };
 }

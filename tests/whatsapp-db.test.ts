@@ -294,6 +294,25 @@ describeDb("WhatsApp 3.5a", () => {
     await w.desligarWhatsapp(db, { userId: CAND });
   });
 
+  it("entrega: duas ao mesmo tempo mandam uma vez só; reserva parada há mais de 2 minutos é retomada", async () => {
+    const w = await import("../lib/whatsapp-db");
+    await ligar();
+    const f = fila();
+    await w.avisarWhatsapp(db, { candidateId: CAND, tipo: "vista", refId: appA }, f.enviar, MEIO_DIA);
+    const m = f.xs[0].m;
+    const ok = resp(200, { messages: [{ id: "wamid.c" }] });
+    const rs = await Promise.all([1, 2].map(() => w.entregarAviso(db, m, 1, { cfg: REAL, fetch: ok as unknown as typeof fetch, now: MEIO_DIA })));
+    expect(ok).toHaveBeenCalledTimes(1);
+    expect(rs.every((r) => r.resultado === "ok")).toBe(true);
+    // Uma entrega caiu no meio (ficou "enviando"): depois de 2 minutos, outra pode mandar.
+    await db.whatsappAviso.update({ where: { id: m.avisoId }, data: { status: "enviando", updatedAt: MEIO_DIA } });
+    expect(await w.entregarAviso(db, m, 2, { cfg: REAL, fetch: ok as unknown as typeof fetch, now: new Date(MEIO_DIA.getTime() + 60_000) })).toMatchObject({ resultado: "ok", erro: "enviando" });
+    expect(ok).toHaveBeenCalledTimes(1);
+    expect(await w.entregarAviso(db, m, 2, { cfg: REAL, fetch: ok as unknown as typeof fetch, now: new Date(MEIO_DIA.getTime() + 180_000) })).toMatchObject({ resultado: "ok", status: 200 });
+    expect(ok).toHaveBeenCalledTimes(2);
+    await w.desligarWhatsapp(db, { userId: CAND });
+  });
+
   it("entrega em outro dia: conta no limite de hoje (3 por dia, um por tipo)", async () => {
     const w = await import("../lib/whatsapp-db");
     await ligar();

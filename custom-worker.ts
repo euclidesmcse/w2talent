@@ -13,6 +13,7 @@ type Env = Record<string, unknown> & {
   EMAIL_FROM?: string;
   EMAIL_MODE?: string;
   EMAIL_TEST_TO?: string;
+  NOTIFICACOES?: { send(body: unknown, opts?: { delaySeconds?: number }): Promise<void> };
 };
 type Ctx = { waitUntil(p: Promise<unknown>): void; passThroughOnException?(): void };
 
@@ -70,6 +71,7 @@ export default {
       emailEnv,
       entregarWebhook: (m, tentativa) => entregarWebhook(m, tentativa, env, ctx),
       entregarWhatsapp: (m, tentativa) => entregarWhatsapp(m, tentativa, env, ctx),
+      reenfileirarWhatsapp: env.NOTIFICACOES ? async (m, atrasoSeg) => void (await env.NOTIFICACOES!.send(m, { delaySeconds: atrasoSeg })) : undefined,
     });
   },
 };
