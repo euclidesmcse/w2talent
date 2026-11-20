@@ -169,12 +169,29 @@ model CandidateProfile {
   sinais         FeedbackSignal[]
   traducoes      Traducao[]
   avisosWhatsapp WhatsappAviso[]
+  cv             CandidateCv?
 
   @@index([status])
   @@index([expiresAt])
   @@index([userId])
   @@index([arquivadoEm])
   @@index([whatsappNumero])
+}
+
+// ── CandidateCv (linha do tempo, 2026-11-20, D3/D4) ─────────────────
+/// Texto do CV que o candidato aceitou mostrar aos recrutadores (consentimento "cvCompleto"),
+/// sem e-mail, telefone, links, documentos e endereço. Tabela à parte para nunca vir junto
+/// do perfil por engano. Sai com o perfil (cascade) ou quando o candidato desliga.
+model CandidateCv {
+  id        String           @id @default(cuid())
+  profileId String           @unique
+  profile   CandidateProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  texto     String           @db.Text
+  /// Resumos por IA guardados (D4): { hash, geral?, cargos: { [chave]: texto }, modelo, geradoEm }.
+  /// O hash é da ficha + texto; mudou, os resumos são refeitos no próximo pedido.
+  resumos   Json?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 }
 
 // ── Vacancy ──────────────────────────────────────────────────────────
@@ -350,7 +367,7 @@ model ConsentLog {
   /// 1.5.5: ligado à conta (antes apontava para CandidateProfile.userId e não gravava).
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   versao    Int
-  tipo      String // tratamentoBusca | contatoProxy | nudges | iaReescrita | treinoIA (3.6a; baseLegal "revogacao" = desligou)
+  tipo      String // tratamentoBusca | contatoProxy | nudges | iaReescrita | treinoIA (3.6a) | cvCompleto (linha do tempo); baseLegal "revogacao" = desligou
   texto     String   @db.Text
   baseLegal String
   createdAt DateTime @default(now())

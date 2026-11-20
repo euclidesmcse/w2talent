@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { docToText } from "@/lib/doc-to-text";
 import { lerCv, MAX_CV_CHARS, type ChatFn } from "@/lib/ficha-ai";
+import { limparCv } from "@/lib/cv-completo";
 import { chaveUso, consumirUso, ipDaRequisicao, LIMITE_LEITURAS_DIA } from "@/lib/uso-diario";
 import { sameOrigin } from "@/lib/admin-request";
 
 /**
  * "Minha ficha", passo 1 (1.5.10): lê um CV (PDF/DOCX/PDF do LinkedIn ou texto colado) e devolve a
  * ficha preenchida para o candidato conferir. Nada é salvo. Exige o aceite de leitura pela IA.
+ * Linha do tempo (D3): devolve também o texto do CV já limpo (sem contatos), que só é guardado
+ * ao publicar se o candidato marcar "Mostrar meu CV completo".
  */
 const MAX_ARQUIVO_BYTES = 5 * 1024 * 1024;
 
@@ -65,7 +68,7 @@ export async function POST(req: NextRequest) {
     chat = null;
   }
   const r = await lerCv(texto, chat);
-  return NextResponse.json({ ficha: r.ficha, origem: r.origem, aviso: r.aviso ?? null }, { headers: { "cache-control": "no-store" } });
+  return NextResponse.json({ ficha: r.ficha, origem: r.origem, aviso: r.aviso ?? null, cvTexto: limparCv(texto) }, { headers: { "cache-control": "no-store" } });
 }
 
 export const dynamic = "force-dynamic";

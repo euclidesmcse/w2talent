@@ -74,7 +74,7 @@ describe("formato da ficha", () => {
     expect(f.modo).toBe("hibrido");
     expect(f.regimes).toEqual(["CLT", "PJ"]);
     expect(f.stack.map((s) => s.skillId)).toEqual(["aws", "terraform"]);
-    expect(f.experiencias).toEqual([{ cargo: "Dev", empresa: "X", inicio: "2020-03", fim: "", atual: true }]);
+    expect(f.experiencias).toEqual([{ cargo: "Dev", empresa: "X", inicio: "2020-03", fim: "", atual: true, tipo: "", funcoes: [], skills: [] }]);
     expect(f.idiomas).toEqual([{ idioma: "Inglês", nivel: "fluente" }]);
     expect(f.objetivo).toBe("Liderar um time");
     // formato antigo (um valor só): o menor vira o mínimo do primeiro regime
@@ -107,10 +107,10 @@ describe("formato da ficha", () => {
   it("anos de experiência, top competências e nome curto", () => {
     const f = fichaCompleta();
     expect(anosExperiencia(f, NOW)).toBe(7);
-    expect(anosExperiencia(fichaCompleta({ experiencias: [{ cargo: "A", empresa: "B", inicio: "2018-01", fim: "2020-06", atual: false }] }), NOW)).toBe(2);
+    expect(anosExperiencia(fichaCompleta({ experiencias: [{ cargo: "A", empresa: "B", inicio: "2018-01", fim: "2020-06", atual: false, tipo: "", funcoes: [], skills: [] }] }), NOW)).toBe(2);
     expect(anosExperiencia(fichaCompleta({ experiencias: [] }), NOW)).toBe(4);
     // intervalo sem emprego não conta; sobreposição conta uma vez
-    const exp = (l: [string, string][]) => fichaCompleta({ experiencias: l.map(([inicio, fim]) => ({ cargo: "A", empresa: "B", inicio, fim, atual: false })) });
+    const exp = (l: [string, string][]) => fichaCompleta({ experiencias: l.map(([inicio, fim]) => ({ cargo: "A", empresa: "B", inicio, fim, atual: false, tipo: "" as const, funcoes: [], skills: [] })) });
     expect(anosExperiencia(exp([["2015-01", "2016-01"], ["2024-01", "2025-01"]]), NOW)).toBe(2);
     expect(anosExperiencia(exp([["2015-01", "2019-01"], ["2017-01", "2021-01"]]), NOW)).toBe(6);
     // fim em branco sem "atual": não conta até hoje e a ficha mínima pede o fim

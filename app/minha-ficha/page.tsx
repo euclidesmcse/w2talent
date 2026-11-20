@@ -14,11 +14,15 @@ import { FichaW2Card } from "@/components/ficha-w2-card";
 import { TreinoConsentimento } from "@/components/treino-consentimento";
 import { FichaViesAviso } from "@/components/ficha-vies-aviso";
 import { revisarViesFicha, trocarViesFicha, type AvisoFichaVies } from "@/lib/ficha-vies";
+import { textoCvCompleto } from "@/lib/consentimento";
 import { Button, Card, Field, Input, Select, Textarea, cn } from "@/components/ui";
 import {
   camposFaltando,
   DISPONIBILIDADES,
+  experienciaVazia,
   fichaVazia,
+  MAX_EXPERIENCIAS,
+  MAX_FUNCOES,
   MAX_SKILLS,
   MODOS,
   MOEDAS,
@@ -28,6 +32,7 @@ import {
   REGIMES_COM_UNIDADE,
   sanitizeFicha,
   SENIORIDADES,
+  TIPOS_TRABALHO,
   type CampoMinimo,
   type Ficha,
   type FichaW2,
@@ -42,7 +47,8 @@ import { getSkill, listSkills, normalizeSkill } from "@/lib/taxonomy";
 type Passo = "enviar" | "conferir" | "w2";
 type SkillRow = { texto: string; anos: number };
 /** recibo (3.6a): o que a IA escreveu, assinado pelo servidor; volta ao publicar e só vira exemplo de treino com o consentimento. */
-type Rascunho = { passo: Passo; ficha: Ficha; skills: SkillRow[]; w2: FichaW2 | null; aceite: boolean; recibo?: string | null };
+/** cvTexto (linha do tempo, D3): o CV lido, já sem contatos; só vai ao servidor se a pessoa marcar mostrarCv. */
+type Rascunho = { passo: Passo; ficha: Ficha; skills: SkillRow[]; w2: FichaW2 | null; aceite: boolean; recibo?: string | null; cvTexto?: string | null; mostrarCv?: boolean | null };
 
 const CHAVE = "w2talent:ficha";
 
@@ -71,6 +77,7 @@ export default function MinhaFichaPage() {
   const [aviso, setAviso] = React.useState<string | null>(null);
   const [mostrarFaltas, setMostrarFaltas] = React.useState(false);
   const [podePublicar, setPodePublicar] = React.useState(false);
+  const [cvGuardado, setCvGuardado] = React.useState(false);
   const [publicado, setPublicado] = React.useState(false);
   const [editandoW2, setEditandoW2] = React.useState(false);
   const arquivoRef = React.useRef<HTMLInputElement>(null);
@@ -90,6 +97,8 @@ export default function MinhaFichaPage() {
           w2: d.w2 ?? null,
           aceite: d.aceite === true,
           recibo: typeof d.recibo === "string" ? d.recibo : null,
+          cvTexto: typeof d.cvTexto === "string" ? d.cvTexto : null,
+          mostrarCv: typeof d.mostrarCv === "boolean" ? d.mostrarCv : null,
         });
       }
     } catch {
@@ -98,8 +107,9 @@ export default function MinhaFichaPage() {
     setCarregado(true);
     fetch("/api/ficha/publicar")
       .then((x) => x.json())
-      .then((j: { podePublicar?: boolean; publicado?: boolean }) => {
+      .then((j: { podePublicar?: boolean; publicado?: boolean; cvCompleto?: boolean }) => {
         setPodePublicar(j.podePublicar === true);
+        setCvGuardado(j.cvCompleto === true);
       })
       .catch(() => {});
   }, []);
@@ -159,12 +169,12 @@ export default function MinhaFichaPage() {
       if (file) fd.set("arquivo", file);
       else fd.set("texto", texto);
       const res = await fetch("/api/ficha/ler", { method: "POST", body: fd });
-      const j = (await res.json().catch(() => ({}))) as { ficha?: Ficha; origem?: string; error?: string };
+      const j = (await res.json().catch(() => ({}))) as { ficha?: Ficha; origem?: string; error?: string; cvTexto?: string };
       // Se a pessoa começou a preencher à mão enquanto a IA lia, não sobrescreve o que ela digitou.
       if (fichaAtualRef.current !== alvo) return;
       if (!res.ok || !j.ficha) return setErro(msgErro(j.error ?? "geral"));
       const ficha = sanitizeFicha(j.ficha);
-      setR((x) => ({ ...x, ficha, skills: skillRows(ficha), w2: null }));
+      setR((x) => ({ ...x, ficha, skills: skillRows(ficha), w2: null, cvTexto: typeof j.cvTexto === "string" && j.cvTexto ? j.cvTexto : null }));
       setAviso(j.origem === "ia" ? t("lidoIa") : t("lidoRegras"));
       setMostrarFaltas(false);
       irPara("conferir");
@@ -214,6 +224,10 @@ export default function MinhaFichaPage() {
     }
   }
 
+  // CV completo (D3): só oferece com um CV lido neste rascunho ou um já guardado. Sem escolha, vale o que está no servidor.
+  const ofereceCv = podePublicar && (!!r.cvTexto || cvGuardado);
+  const mostrarCv = r.mostrarCv ?? cvGuardado;
+
   async function publicar() {
     if (!r.w2) return;
     setErro(null);
@@ -222,10 +236,16 @@ export default function MinhaFichaPage() {
       const res = await fetch("/api/ficha/publicar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ficha: fichaAtual, fichaW2: r.w2, recibo: r.recibo ?? undefined }),
+        body: JSON.stringify({
+          ficha: fichaAtual,
+          fichaW2: r.w2,
+          recibo: r.recibo ?? undefined,
+          cv: ofereceCv ? { mostrar: mostrarCv, texto: mostrarCv ? r.cvTexto ?? undefined : undefined } : undefined,
+        }),
       });
-      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      const j = (await res.json().catch(() => ({}))) as { error?: string; cvCompleto?: boolean };
       if (!res.ok) return setErro(msgErro(j.error ?? "geral"));
+      if (typeof j.cvCompleto === "boolean") setCvGuardado(j.cvCompleto);
       setPublicado(true);
     } catch {
       setErro(t("erro_geral"));
@@ -235,7 +255,7 @@ export default function MinhaFichaPage() {
   }
 
   function recomecar() {
-    setR({ passo: "enviar", ficha: fichaVazia(), skills: [], w2: null, aceite: r.aceite, recibo: null });
+    setR({ passo: "enviar", ficha: fichaVazia(), skills: [], w2: null, aceite: r.aceite, recibo: null, cvTexto: null, mostrarCv: null });
     setTexto("");
     setAviso(null);
     setPublicado(false);
@@ -390,10 +410,10 @@ export default function MinhaFichaPage() {
               <fieldset className="flex flex-col gap-4">
                 <legend className="mb-1 text-[15px] font-semibold">{t("secExp")}</legend>
                 <p className="text-[13px] text-muted">{t("expAjuda")}</p>
-                {(r.ficha.experiencias.length ? r.ficha.experiencias : [{ cargo: "", empresa: "", inicio: "", fim: "", atual: false }]).map((e, i) => {
+                {(r.ficha.experiencias.length ? r.ficha.experiencias : [experienciaVazia()]).map((e, i) => {
                   const upd = (patch: Partial<typeof e>) =>
                     setR((x) => {
-                      const lista = x.ficha.experiencias.length ? [...x.ficha.experiencias] : [{ cargo: "", empresa: "", inicio: "", fim: "", atual: false }];
+                      const lista = x.ficha.experiencias.length ? [...x.ficha.experiencias] : [experienciaVazia()];
                       lista[i] = { ...lista[i], ...patch };
                       return { ...x, ficha: { ...x.ficha, experiencias: lista } };
                     });
@@ -412,6 +432,33 @@ export default function MinhaFichaPage() {
                       <Field label={`${t("fim")} (${i + 1})`}>
                         <Input type="month" value={e.fim} disabled={e.atual} onChange={(ev) => upd({ fim: ev.target.value })} />
                       </Field>
+                      <Field label={`${t("tipoTrabalho")} (${i + 1})`}>
+                        <Select value={e.tipo} onChange={(ev) => upd({ tipo: ev.target.value as typeof e.tipo })}>
+                          <option value="">{t("tipo_vazio")}</option>
+                          {TIPOS_TRABALHO.map((k) => (
+                            <option key={k} value={k}>
+                              {t(`tipo_${k}`)}
+                            </option>
+                          ))}
+                        </Select>
+                      </Field>
+                      <Field label={`${t("skillsCargo")} (${i + 1})`} hint={t("skillsCargoAjuda")}>
+                        <Input
+                          key={e.skills.join(",")}
+                          defaultValue={e.skills.map((id) => getSkill(id)?.label ?? id).join(", ")}
+                          onBlur={(ev) => {
+                            const ids: string[] = [];
+                            for (const nome of ev.target.value.split(",")) {
+                              const id = normalizeSkill(nome.trim());
+                              if (id && !ids.includes(id)) ids.push(id);
+                            }
+                            upd({ skills: ids.slice(0, 8) });
+                          }}
+                        />
+                      </Field>
+                      <Field label={`${t("funcoes")} (${i + 1})`} hint={t("funcoesAjuda")} className="md:col-span-2">
+                        <Textarea rows={3} value={e.funcoes.join("\n")} onChange={(ev) => upd({ funcoes: ev.target.value.split("\n").slice(0, MAX_FUNCOES) })} />
+                      </Field>
                       <div className="flex flex-wrap items-center justify-between gap-2 md:col-span-2">
                         <label className="flex items-center gap-2 text-sm">
                           <input type="checkbox" className="h-4 w-4 accent-brand" checked={e.atual} onChange={(ev) => upd({ atual: ev.target.checked, fim: ev.target.checked ? "" : e.fim })} />
@@ -426,12 +473,12 @@ export default function MinhaFichaPage() {
                     </div>
                   );
                 })}
-                {r.ficha.experiencias.length < 8 ? (
+                {r.ficha.experiencias.length < MAX_EXPERIENCIAS ? (
                   <Button
                     variant="secondary"
                     size="sm"
                     className="self-start"
-                    onClick={() => set("experiencias", [...(r.ficha.experiencias.length ? r.ficha.experiencias : [{ cargo: "", empresa: "", inicio: "", fim: "", atual: false }]), { cargo: "", empresa: "", inicio: "", fim: "", atual: false }])}
+                    onClick={() => set("experiencias", [...(r.ficha.experiencias.length ? r.ficha.experiencias : [experienciaVazia()]), experienciaVazia()])}
                   >
                     {t("addExp")}
                   </Button>
@@ -608,6 +655,21 @@ export default function MinhaFichaPage() {
                     {t("publicarEntrar")}
                   </Link>
                 </p>
+              ) : null}
+              {ofereceCv ? (
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    data-action="mostrar-cv"
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-brand"
+                    checked={mostrarCv}
+                    onChange={(e) => {
+                      setR((x) => ({ ...x, mostrarCv: e.target.checked }));
+                      setPublicado(false);
+                    }}
+                  />
+                  <span>{textoCvCompleto(locale)}</span>
+                </label>
               ) : null}
               {podePublicar ? <TreinoConsentimento /> : null}
               <div className="flex flex-wrap gap-3">

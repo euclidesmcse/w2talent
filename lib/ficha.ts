@@ -37,7 +37,13 @@ export function novaPretensao(regime: string, existentes: Pretensao[]): Pretensa
   return { regime, valor: null, unidade: unidadePadrao(regime), moeda: existentes[0]?.moeda ?? "BRL" };
 }
 export const MAX_SKILLS = 10;
-export const MAX_EXPERIENCIAS = 8;
+export const MAX_EXPERIENCIAS = 20;
+/** Linha do tempo (2026-11-20, D2): funções e competências de cada cargo. */
+export const MAX_FUNCOES = 5;
+export const MAX_SKILLS_CARGO = 8;
+/** Tipo de trabalho de cada cargo; "" = não informado (a linha do tempo trata como integral). */
+export const TIPOS_TRABALHO = ["integral", "meio", "projeto", "freelancer", "estagio"] as const;
+export type TipoTrabalho = (typeof TIPOS_TRABALHO)[number];
 export const MAX_DESTAQUES = 3;
 
 export type Senioridade = (typeof SENIORIDADES)[number];
@@ -53,7 +59,18 @@ export type Experiencia = {
   /** "AAAA-MM"; vazio quando é o emprego atual */
   fim: string;
   atual: boolean;
+  /** Integral, meio período, projeto, freelancer ou estágio ("" = não informado). */
+  tipo: TipoTrabalho | "";
+  /** O que a pessoa fazia, em até 5 linhas curtas. */
+  funcoes: string[];
+  /** Competências usadas no cargo (ids da taxonomia), para "bate com a vaga". */
+  skills: string[];
 };
+
+/** Cargo vazio para o formulário. */
+export function experienciaVazia(): Experiencia {
+  return { cargo: "", empresa: "", inicio: "", fim: "", atual: false, tipo: "", funcoes: [], skills: [] };
+}
 export type Idioma = { idioma: string; nivel: NivelIdioma | "" };
 export type Formacao = { curso: string; instituicao: string; ano: string };
 
@@ -142,6 +159,24 @@ const SENIOR_ALIAS: Record<string, Senioridade> = {
   especialista: "especialista", specialist: "especialista", staff: "especialista", principal: "especialista", expert: "especialista",
   lideranca: "lideranca", liderança: "lideranca", lead: "lideranca", manager: "lideranca", gerente: "lideranca", coordenador: "lideranca", head: "lideranca", director: "lideranca", diretor: "lideranca",
 };
+const TIPO_ALIAS: Record<string, TipoTrabalho> = {
+  integral: "integral", "full-time": "integral", "tempo integral": "integral", "jornada completa": "integral", clt: "integral",
+  meio: "meio", "meio período": "meio", "meio periodo": "meio", "part-time": "meio", "medio tiempo": "meio", "media jornada": "meio",
+  projeto: "projeto", project: "projeto", proyecto: "projeto", contrato: "projeto", contract: "projeto",
+  freelancer: "freelancer", freelance: "freelancer", freela: "freelancer", autonomo: "freelancer", autônomo: "freelancer",
+  estagio: "estagio", estágio: "estagio", internship: "estagio", intern: "estagio", pasantia: "estagio", pasantía: "estagio",
+};
+/** Competências de um cargo: ids da taxonomia, sem repetir. */
+function skillsDoCargo(v: unknown): string[] {
+  const out: string[] = [];
+  for (const it of Array.isArray(v) ? v : []) {
+    const raw = typeof it === "string" ? it : it?.skillId ?? it?.nome ?? it?.name;
+    const id = typeof raw === "string" ? (getSkill(raw) ? raw : normalizeSkill(raw)) : null;
+    if (id && !out.includes(id)) out.push(id);
+    if (out.length >= MAX_SKILLS_CARGO) break;
+  }
+  return out;
+}
 const REGIME_ALIAS: Record<string, string> = { clt: "CLT", pj: "PJ", contractor: "PJ", estágio: "Estágio", estagio: "Estágio", internship: "Estágio", freelancer: "Freelancer", freela: "Freelancer", freelance: "Freelancer", outro: "Outro" };
 
 /**
@@ -195,7 +230,12 @@ export function sanitizeFicha(input: unknown): Ficha {
     const empresa = str(e.empresa, 80);
     if (!cargo && !empresa) continue;
     const atual = e.atual === true || /atual|present|actual|hoje|now/i.test(String(e.fim ?? ""));
-    f.experiencias.push({ cargo, empresa, inicio: anoMes(e.inicio), fim: atual ? "" : anoMes(e.fim), atual });
+    const tipo = TIPO_ALIAS[str(e.tipo, 30).toLowerCase()] ?? "";
+    const funcoes = (Array.isArray(e.funcoes) ? e.funcoes : typeof e.funcoes === "string" ? e.funcoes.split(/\n+/) : [])
+      .map((x: unknown) => str(x, 160).replace(/^[-•*·]\s*/, ""))
+      .filter(Boolean)
+      .slice(0, MAX_FUNCOES);
+    f.experiencias.push({ cargo, empresa, inicio: anoMes(e.inicio), fim: atual ? "" : anoMes(e.fim), atual, tipo, funcoes, skills: skillsDoCargo(e.skills ?? e.competencias) });
     if (f.experiencias.length >= MAX_EXPERIENCIAS) break;
   }
   f.formacao = (Array.isArray(o.formacao) ? o.formacao : [])
