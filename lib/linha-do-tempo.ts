@@ -80,7 +80,7 @@ export type NumerosCarreira = {
   /** Meses em cargos que batem com a vaga; null sem vaga. */
   mesesNaVaga: number | null;
   empresas: number;
-  /** Meses de trabalho por empresa, em média. */
+  /** Meses em cada empresa, em média (empresas ao mesmo tempo contam cada uma inteira). */
   mediaPorEmpresa: number;
   /** Máximo de trabalhos no mesmo mês e o ano em que aconteceu pela primeira vez. */
   simultaneos: { n: number; ano: number | null };
@@ -88,7 +88,14 @@ export type NumerosCarreira = {
 
 export function numerosCarreira(cargos: CargoNaLinha[], comVaga: boolean): NumerosCarreira {
   const mesesCarreira = mesesCobertos(cargos);
-  const empresas = new Set(cargos.map((c) => c.empresa.trim().toLowerCase()).filter(Boolean)).size;
+  // Tempo em cada empresa (cargos da mesma empresa ao mesmo tempo contam uma vez), depois a média.
+  const porEmpresa = new Map<string, CargoNaLinha[]>();
+  for (const c of cargos) {
+    const k = c.empresa.trim().toLowerCase();
+    if (k) porEmpresa.set(k, [...(porEmpresa.get(k) ?? []), c]);
+  }
+  const empresas = porEmpresa.size;
+  const somaEmpresas = [...porEmpresa.values()].reduce((s, l) => s + mesesCobertos(l), 0);
   let n = 0;
   let ano: number | null = null;
   const pontos = cargos.flatMap((c) => [c.ini, c.fim]);
@@ -103,7 +110,7 @@ export function numerosCarreira(cargos: CargoNaLinha[], comVaga: boolean): Numer
     mesesCarreira,
     mesesNaVaga: comVaga ? mesesCobertos(cargos.filter((c) => c.casa)) : null,
     empresas,
-    mediaPorEmpresa: empresas ? mesesCarreira / empresas : 0,
+    mediaPorEmpresa: empresas ? somaEmpresas / empresas : 0,
     simultaneos: { n, ano },
   };
 }

@@ -53,10 +53,13 @@ describe("linha do tempo", () => {
     const n = numerosCarreira(cargos, true);
     expect(n.mesesCarreira).toBe(36);
     expect(n.empresas).toBe(2);
-    expect(n.mediaPorEmpresa).toBe(18);
+    expect(n.mediaPorEmpresa).toBe(21);
     expect(n.mesesNaVaga).toBe(24);
     expect(n.simultaneos).toEqual({ n: 2, ano: 2021 });
     expect(numerosCarreira(cargos, false).mesesNaVaga).toBeNull();
+    // Dois empregos de um ano ao mesmo tempo: um ano em cada empresa, não seis meses.
+    const juntos = montarCargos([cargo({ empresa: "A", inicio: "2020-01", fim: "2020-12" }), cargo({ empresa: "B", inicio: "2020-01", fim: "2020-12" })], [], HOJE).cargos;
+    expect(numerosCarreira(juntos, false).mediaPorEmpresa).toBe(12);
   });
 
   it("bate com a vaga vale exata, que cobre e próxima; sem vaga, nada", () => {
