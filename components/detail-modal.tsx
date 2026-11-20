@@ -81,12 +81,12 @@ export function DetailBody({ item, antes, children, langTexto, vagaSkills }: { i
         key={typeof item?.id === "string" ? item.id : undefined}
         ficha={fichaLinha}
         vagaSkills={vagaSkills}
-        acoes={comCv ? (cargo, i) => <AcoesCv key={`${item.id}:${i}`} profileId={item.id} cargo={cargo} indice={i} /> : undefined}
+        acoes={comCv ? (cargo, i) => <AcoesCv key={`${item.id}:${i}`} profileId={item.id} versao={String(item.updatedAt ?? "")} cargo={cargo} indice={i} /> : undefined}
       />
       {/* Sem cargo datado não há linha do tempo: o CV completo e o resumo da carreira ficam aqui. */}
       {comCv && !montarCargos(fichaLinha.experiencias).cargos.length ? (
         <div className="flex flex-wrap gap-2" data-cv-sem-linha>
-          <AcoesCv key={item.id} profileId={item.id} cargo={experienciaVazia()} indice={-1} />
+          <AcoesCv key={item.id} profileId={item.id} versao={String(item.updatedAt ?? "")} cargo={experienciaVazia()} indice={-1} />
         </div>
       ) : null}
       <p className="text-xs text-muted">

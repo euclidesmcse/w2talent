@@ -16,15 +16,16 @@ import type { ResumoCv } from "@/lib/cv-resumo";
 const textos = new Map<string, Promise<string | null>>();
 const resumos = new Map<string, ResumoCv>();
 
-function buscarTexto(profileId: string): Promise<string | null> {
-  let p = textos.get(profileId);
+function buscarTexto(profileId: string, versao: string): Promise<string | null> {
+  const chave = `${profileId}:${versao}`;
+  let p = textos.get(chave);
   if (!p) {
     p = fetch(`/api/candidates/${encodeURIComponent(profileId)}/cv`, { cache: "no-store" })
       .then(async (r) => (r.ok ? ((await r.json()) as { texto?: string }).texto ?? null : null))
       .catch(() => null);
     // Falhou: tenta de novo na próxima vez.
-    p.then((t) => t == null && textos.delete(profileId));
-    textos.set(profileId, p);
+    p.then((t) => t == null && textos.delete(chave));
+    textos.set(chave, p);
   }
   return p;
 }
@@ -50,10 +51,11 @@ export function linhaDoCargo(linhas: string[], cargo: Pick<Experiencia, "cargo" 
 }
 
 /** `indice` < 0: sem cargo (perfil sem cargos datados); mostra só o CV e o resumo da carreira. */
-export function AcoesCv({ profileId, cargo, indice }: { profileId: string; cargo: Experiencia; indice: number }) {
+export function AcoesCv({ profileId, versao = "", cargo, indice }: { profileId: string; versao?: string; cargo: Experiencia; indice: number }) {
   const t = useTranslations("linhaTempo");
   const locale = useLocale();
-  const chave = `${profileId}:${locale}`;
+  // A versão (updatedAt do perfil) entra na chave: CV ou cargos novos não mostram o que ficou em memória.
+  const chave = `${profileId}:${versao}:${locale}`;
   const [painel, setPainel] = React.useState(false);
   const [resumo, setResumo] = React.useState<ResumoCv | null>(() => resumos.get(chave) ?? null);
   const [estado, setEstado] = React.useState<"nada" | "carregando" | "erro" | "limite">("nada");
@@ -117,6 +119,7 @@ export function AcoesCv({ profileId, cargo, indice }: { profileId: string; cargo
       {painel ? (
         <PainelCv
           profileId={profileId}
+          versao={versao}
           cargo={cargo}
           onClose={() => {
             setPainel(false);
@@ -128,7 +131,7 @@ export function AcoesCv({ profileId, cargo, indice }: { profileId: string; cargo
   );
 }
 
-function PainelCv({ profileId, cargo, onClose }: { profileId: string; cargo: Experiencia; onClose: () => void }) {
+function PainelCv({ profileId, versao, cargo, onClose }: { profileId: string; versao: string; cargo: Experiencia; onClose: () => void }) {
   const t = useTranslations("linhaTempo");
   const [texto, setTexto] = React.useState<string | null | undefined>(undefined);
   const ref = React.useRef<HTMLDivElement>(null);
@@ -139,11 +142,11 @@ function PainelCv({ profileId, cargo, onClose }: { profileId: string; cargo: Exp
 
   React.useEffect(() => {
     let vivo = true;
-    buscarTexto(profileId).then((x) => vivo && setTexto(x));
+    buscarTexto(profileId, versao).then((x) => vivo && setTexto(x));
     return () => {
       vivo = false;
     };
-  }, [profileId]);
+  }, [profileId, versao]);
 
   React.useEffect(() => {
     titulo.current?.focus({ preventScroll: true });
