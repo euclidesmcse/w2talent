@@ -23,7 +23,7 @@ export function semDocumentosEEnderecos(t: string): string {
   return t
     .replace(/\b(?:address|home address|dirección|direccion|domicilio|endereço|endereco|morada)\s*:\s*[^\n]+/gi, "[ENDERECO]")
     .replace(/\b\d{1,5}\s+(?:[A-Z][\w'-]*\s+){1,3}(?:Street|St\.|Avenue|Ave\.|Road|Rd\.|Lane|Ln\.|Drive|Dr\.|Boulevard|Blvd\.?|Way|Court|Ct\.|Place|Square)(?![\w])[^\n]*/g, "[ENDERECO]")
-    .replace(/\b(?:Calle|C\/|Avenida|Avda\.|Av\.|Paseo|Plaza|Carrera|Carretera|Camino|Ronda|Travesía)\s+[^\n,]{2,40},?\s*(?:n[ºo°.]\s*)?\d{1,5}\b[^\n]*/g, "[ENDERECO]")
+    .replace(/\b(?:Calle|C\/|Avenida|Avda\.|Paseo|Plaza|Carretera|Ronda|Travesía)\s+[^\n,]{2,40},?\s*(?:n[ºo°.]\s*)?(?!(?:19|20)\d{2}\b)\d{1,5}\b[^\n]*/g, "[ENDERECO]")
     .replace(/\b(?:DNI|NIE|NIF|RUT|CURP|RFC|SSN|RG|CPF|CNPJ|CUIL|CUIT|passport(?: number| no\.?)?|pasaporte|passaporte)\s*(?:n[ºo°.]\s*)?[:#]?\s*[A-Z0-9][A-Z0-9.\-/]{4,}/gi, "[DOCUMENTO]")
     .replace(/\b(?:\d{8}[A-HJ-NP-TV-Z]|[XYZ]\d{7}[A-Z]|\d{3}-\d{2}-\d{4})\b/g, "[DOCUMENTO]");
 }
