@@ -214,6 +214,13 @@ describe("CV por vaga: trecho e trava por cargo", () => {
     expect(trechoDoCargo(CV, f.experiencias, 0)).not.toContain("1200");
     expect(trechoDoCargo(CV, f.experiencias, 1)).toContain("1200");
     expect(trechoDoCargo("", f.experiencias, 0)).toBe("");
+    // Dois cargos debaixo do mesmo cabeçalho de empresa: cada um fica com o seu bloco.
+    const mesma = [{ cargo: "Engenheira Cloud", empresa: "Acme" }, { cargo: "Analista de Infra", empresa: "Acme" }];
+    const cv2 = "Acme\nEngenheira Cloud\nUsou AWS\nAnalista de Infra\nUsou Docker";
+    expect(trechoDoCargo(cv2, mesma, 0)).toBe("Engenheira Cloud\nUsou AWS");
+    expect(trechoDoCargo(cv2, mesma, 1)).toBe("Analista de Infra\nUsou Docker");
+    // Sem como separar (mesma linha), nenhum trecho.
+    expect(trechoDoCargo("Acme: Engenheira Cloud e Analista de Infra", mesma, 0)).toBe("");
   });
   it("ponto com número de outro cargo sai; cargo sem ponto bom fica com as funções", () => {
     const f = fichaCv();
@@ -293,10 +300,13 @@ describe("CV por vaga: o que vem da tela (D5)", () => {
     expect(cvDoRascunho(r, base)?.cargos.map((c) => c.empresa)).toEqual(["Acme"]);
     expect(cvDoRascunho({ ...r, usarCv: false }, base)).toBeNull();
     expect(pontosDoTexto("a\nb\nc\nd\ne\nf")).toHaveLength(5);
-    // De volta do que foi aprovado: o cargo que ficou fora aparece desmarcado.
-    const de = rascunhoDe({ resumo: "", destaques: [], carta: "", ia: false, vacancyHash: "h", criadaEm: "", porQue: "", cv: cvDoRascunho(r, base) }, base);
-    expect(de?.cv?.cargos.map((c) => c.incluir)).toEqual([true, false]);
+    // De volta do que foi aprovado: vale o CV guardado, mesmo que a ficha tenha mudado de ordem depois.
+    const guardado = cvDoRascunho(r, base)!;
+    const fichaMudou = cvBaseDaFicha({ ...f, experiencias: [...f.experiencias].reverse() }, []);
+    const de = rascunhoDe({ resumo: "", destaques: [], carta: "", ia: false, vacancyHash: "h", criadaEm: "", porQue: "", cv: guardado }, fichaMudou);
+    expect(de?.cv?.cargos.map((c) => [c.empresa, c.texto])).toEqual([["Acme", "um\ndois"]]);
     expect(de?.usarCv).toBe(true);
+    expect(cvDoRascunho(de, fichaMudou)?.cargos[0]).toMatchObject({ empresa: "Acme", pontos: ["um", "dois"] });
   });
   it("período do cargo no idioma da tela", () => {
     expect(periodoCargo({ inicio: "2019-03", fim: "", atual: true }, "pt-BR")).toBe("03/2019 – atual");
@@ -316,6 +326,7 @@ describe("aviso de idioma e por que se destaca (por regra)", () => {
     expect(avisosIdioma(["Inglês avançado será um diferencial"], idiomas)).toEqual([]);
     expect(avisosIdioma(["Espanhol avançado"], idiomas)).toEqual([]);
     expect(avisosIdioma(["Inglês"], idiomas)).toEqual([]);
+    expect(avisosIdioma(["Inglês fluente obrigatório; francês desejável"], idiomas).map((x) => x.pede)).toEqual(["fluente"]);
   });
   it("cada idioma da linha fica com o seu nível", () => {
     const a = avisosIdioma(["Inglês intermediário e francês fluente"], idiomas);

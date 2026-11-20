@@ -34,6 +34,8 @@ export type RascunhoCoach = {
   cv: { titulo: string; cargos: RascunhoCargo[] } | null;
   /** Mandar o CV desta versão para a empresa. */
   usarCv: boolean;
+  /** CV já aprovado: a base é o que foi guardado, não a ficha de agora (que pode ter mudado de ordem). */
+  base?: CvVaga | null;
 };
 
 const linhas = (xs: string[]): string[] => {
@@ -66,8 +68,9 @@ export function rascunhoDe(a: Adaptacao | null | undefined, base?: CvVaga | null
     enviarCarta: !!a.carta,
     removidos: [],
     porQue: a.porQue ?? "",
-    cv: a.cv ? cargosDe(base?.cargos.length ? base : a.cv, a.cv) : cargosDe(base),
+    cv: a.cv ? cargosDe(a.cv, a.cv) : cargosDe(base),
     usarCv: !!a.cv,
+    base: a.cv ?? null,
   };
 }
 
@@ -104,7 +107,8 @@ export function pontosDoTexto(texto: string): string[] {
 }
 
 /** CV como vai sair (prévia, PDF): a base da ficha com o título e os cargos escolhidos. null sem CV marcado. */
-export function cvDoRascunho(r: RascunhoCoach | null | undefined, base: CvVaga | null | undefined): CvVaga | null {
+export function cvDoRascunho(r: RascunhoCoach | null | undefined, baseFicha: CvVaga | null | undefined): CvVaga | null {
+  const base = r?.base ?? baseFicha;
   if (!r?.cv || !r.usarCv || !base) return null;
   const cargos = r.cv.cargos.filter((c) => c.incluir).map((c) => ({ i: c.i, cargo: c.cargo, empresa: c.empresa, inicio: c.inicio, fim: c.fim, atual: c.atual, pontos: pontosDoTexto(c.texto) }));
   if (!cargos.length) return null;

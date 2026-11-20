@@ -137,7 +137,7 @@ export function CoachVaga({
     abasRef.current[prox]?.focus();
   };
 
-  const cvFinal = cvDoRascunho(rascunho, cvBase);
+  const cvFinal = cvDoRascunho(rascunho, rascunho?.base ?? cvBase);
   const resumoPdf = rascunho?.usarVersao && rascunho.resumo.trim() ? rascunho.resumo.trim() : w2.resumo;
 
   return (
@@ -230,7 +230,7 @@ export function CoachVaga({
             ))}
           </div>
 
-          <div role="tabpanel" id={id("painel-empresa")} aria-labelledby={id("aba-empresa")} hidden={aba !== "empresa"} className="flex flex-col gap-3">
+          <div role="tabpanel" id={id("painel-empresa")} aria-labelledby={id("aba-empresa")} hidden={aba !== "empresa"} className={aba === "empresa" ? "flex flex-col gap-3" : "hidden"}>
             <Field label={t("coachPorQue")} hint={contar(rascunho.porQue.length, MAX_POR_QUE_TELA)}>
               <Textarea rows={2} maxLength={MAX_POR_QUE_TELA} value={rascunho.porQue} disabled={travado} onChange={(e) => mudar({ porQue: e.target.value })} data-testid="coach-porque" />
             </Field>
@@ -253,7 +253,7 @@ export function CoachVaga({
             ))}
           </div>
 
-          <div role="tabpanel" id={id("painel-cv")} aria-labelledby={id("aba-cv")} hidden={aba !== "cv"} className="flex flex-col gap-3" data-testid="coach-cv">
+          <div role="tabpanel" id={id("painel-cv")} aria-labelledby={id("aba-cv")} hidden={aba !== "cv"} className={aba === "cv" ? "flex flex-col gap-3" : "hidden"} data-testid="coach-cv">
             {rascunho.cv ? (
               <>
                 <label className="flex items-start gap-2 text-[13px] font-medium">
@@ -308,7 +308,7 @@ export function CoachVaga({
             )}
           </div>
 
-          <div role="tabpanel" id={id("painel-mensagem")} aria-labelledby={id("aba-mensagem")} hidden={aba !== "mensagem"} className="flex flex-col gap-3">
+          <div role="tabpanel" id={id("painel-mensagem")} aria-labelledby={id("aba-mensagem")} hidden={aba !== "mensagem"} className={aba === "mensagem" ? "flex flex-col gap-3" : "hidden"}>
             <label className="flex items-start gap-2 text-[13px] font-medium">
               <input type="checkbox" className="mt-0.5 h-4 w-4" checked={rascunho.enviarCarta} disabled={travado} onChange={(e) => mudar({ enviarCarta: e.target.checked })} data-testid="coach-carta" />
               <span>{t("coachEnviarCarta")}</span>

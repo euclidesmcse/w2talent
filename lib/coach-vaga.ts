@@ -344,9 +344,11 @@ export function codigoIdioma(nome: string): string | null {
 export function avisosIdioma(textosVaga: string[], idiomas: Ficha["idiomas"]): AvisoIdioma[] {
   const pedidos = new Map<string, AvisoIdioma>();
   for (const linha of textosVaga) {
-    if (!linha || DESEJAVEL.test(linha)) continue;
+    if (!linha) continue;
     const partes = linha.replace(/[()[\]]/g, " ").split(/[,;.:]|\s(?:e|and|y|ou|or|o)\s/i);
     for (const parte of partes) {
+      // "Inglês fluente obrigatório; espanhol desejável": só a parte desejável fica de fora.
+      if (DESEJAVEL.test(parte)) continue;
       const langs = IDIOMAS.filter((x) => x.re.test(parte));
       if (langs.length !== 1) continue;
       const n = NIVEIS_PEDIDOS.find((x) => x.re.test(parte));
