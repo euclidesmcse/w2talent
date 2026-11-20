@@ -21,7 +21,7 @@ import { useOnline } from "@/lib/pwa-client";
 import type { Ficha, FichaW2 } from "@/lib/ficha";
 import type { MatchResult } from "@/lib/match";
 import type { CampoVaga } from "@/lib/envio";
-import type { Adaptacao, Lacuna } from "@/lib/coach-vaga";
+import type { Adaptacao, AvisoIdioma, CvVaga, Lacuna, PorQueRegra } from "@/lib/coach-vaga";
 import { adaptacaoDoRascunho, rascunhoDe, w2ComRascunho, type RascunhoCoach } from "@/lib/coach-rascunho";
 
 type Vaga = {
@@ -52,6 +52,10 @@ type Item = {
   /** Coach IA por vaga: o que a vaga pede e a ficha não mostra, e a versão já aprovada. */
   lacunas?: Lacuna[];
   adaptacao?: Adaptacao | null;
+  /** CV por vaga: a base da ficha, o aviso de idioma e o "por que" por regra. */
+  cvBase?: CvVaga | null;
+  idiomas?: AvisoIdioma[];
+  porQue?: PorQueRegra | null;
 };
 type Resultado = { vacancyId: string; status: string; email?: boolean };
 type Fase = "carregando" | "sem_login" | "sem_perfil" | "sem_selecao" | "sem_rede" | "erro" | "revisar" | "feito";
@@ -92,7 +96,7 @@ export default function AprovarPage() {
     // O que já foi aprovado vira o rascunho; o que a pessoa está editando nesta tela fica.
     setRascunhos((rs) => {
       const out = { ...rs };
-      for (const it of j.itens as Item[]) if (!(it.vacancyId in out) && it.adaptacao) out[it.vacancyId] = rascunhoDe(it.adaptacao);
+      for (const it of j.itens as Item[]) if (!(it.vacancyId in out) && it.adaptacao) out[it.vacancyId] = rascunhoDe(it.adaptacao, it.cvBase);
       return out;
     });
     setW2(j.perfil?.w2 ?? null);
@@ -336,6 +340,15 @@ export default function AprovarPage() {
                 {t("companyGets")}
               </h2>
               <FichaW2Card ficha={atual.paraEmpresa} w2={w2ComRascunho(w2, rascunhos[atual.vacancyId])}>
+                {adaptacaoDoRascunho(rascunhos[atual.vacancyId])?.porQue ? (
+                  <div className="mt-4 border-t border-line pt-3" data-testid="previa-porque">
+                    <p className="text-[13px] font-medium text-muted">{t("coachPorQuePrevia")}</p>
+                    <p className="mt-1 text-ink">{adaptacaoDoRascunho(rascunhos[atual.vacancyId])?.porQue}</p>
+                  </div>
+                ) : null}
+                {adaptacaoDoRascunho(rascunhos[atual.vacancyId])?.cv ? (
+                  <p className="mt-3 text-[13px] text-ink-soft" data-testid="previa-cv">{t("coachCvVai")}</p>
+                ) : null}
                 {adaptacaoDoRascunho(rascunhos[atual.vacancyId])?.carta ? (
                   <div className="mt-4 border-t border-line pt-3" data-testid="previa-carta">
                     <p className="text-[13px] font-medium text-muted">{t("coachCartaPrevia")}</p>
@@ -357,6 +370,11 @@ export default function AprovarPage() {
                 online={online}
                 onMudou={() => void carregar(itens.map((i) => i.vacancyId))}
                 onPreparando={setPreparando}
+                cvBase={atual.cvBase ?? null}
+                idiomas={atual.idiomas ?? []}
+                porQueRegra={atual.porQue ?? null}
+                nome={atual.paraEmpresa.nome}
+                vagaTitulo={v?.titulo ?? ""}
               />
             </section>
           ) : null}

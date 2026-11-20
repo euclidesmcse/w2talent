@@ -850,12 +850,12 @@
     "coachLacunasDica": "If you have any of these, add them in My profile. The AI won't write what isn't there.",
     "coachSemLacunas": "Your profile shows every skill the job asks for.",
     "coachVersaoAnterior": "This version was made for the job before it changed. Check it before approving again.",
-    "coachExplica": "The AI writes a version of your summary and highlights and a message for this job, using only what is in your profile. You check, edit and choose what goes.",
-    "coachAceite": "I agree that the AI reads my profile (without name and contacts) and this job to suggest the text.",
+    "coachExplica": "The AI builds a version of your CV, summary and highlights, a sentence on why you stand out and a message for this job, using only what is in your profile and your full CV. You check, edit and choose what goes.",
+    "coachAceite": "I agree that the AI reads my profile and my saved full CV (no name and no contacts) and this job to suggest the text.",
     "coachPreparar": "Tailor with AI",
     "coachPreparando": "Preparing…",
     "coachManual": "Write it my way",
-    "coachLimiteDica": "Up to 20 a day. Sentences that mention a skill or number not in your profile are removed before you see them.",
+    "coachLimiteDica": "Up to 20 a day. Any sentence citing a skill or number not in your profile is removed before it reaches you. In the CV, each job only uses what belongs to that job.",
     "coachFeitoIa": "Made with AI. Check every sentence before approving.",
     "coachRemovidos": "{count, plural, one {# sentence was removed because it mentioned something not in your profile} other {# sentences were removed because they mentioned something not in your profile}}",
     "coachUsarVersao": "Send this version of the summary and highlights",
@@ -870,7 +870,23 @@
     "coachLimite": "You reached 20 tailored versions today. It frees up tomorrow, or write it your way.",
     "coachSemW2": "Publish your W2 Profile in My profile before tailoring.",
     "coachIaFalhou": "The AI didn't answer right now. Try again or write it your way.",
-    "coachCartaPrevia": "Message from the candidate"
+    "coachCartaPrevia": "Message from the candidate",
+    "coachAbas": "Parts of the version for this job",
+    "coachAbaEmpresa": "For the company",
+    "coachAbaCv": "CV",
+    "coachAbaMensagem": "Message",
+    "coachPorQue": "Why you stand out (goes at the top of the application)",
+    "coachPorQuePrevia": "Why they stand out",
+    "coachUsarCv": "Send this CV to the company (without your contacts)",
+    "coachTituloCv": "Headline",
+    "coachCargoIncluir": "Include this job",
+    "coachPontos": "What to show for this job (one per line, up to 5)",
+    "coachCompetenciasCv": "Skills (from your profile, the ones the job asks for first)",
+    "coachBaixarPdf": "Download PDF",
+    "coachArquivo": "CV",
+    "coachPdfDica": "Opens the browser's print dialog: choose \"Save as PDF\". The PDF carries your name, e-mail, phone and city, for you to use outside W2Talent. The company gets the CV without contacts.",
+    "coachSemCargos": "Your profile has no jobs. Add them in My profile to build the CV.",
+    "coachCvVai": "The CV prepared for this job goes too, without your contacts."
   },
   "pwa": {
     "offlineTitle": "No connection.",
@@ -1194,8 +1210,8 @@
     "resumoCvDados": "The résumé text without email, phone, links and documents, and the jobs on the profile. Only for candidates who ticked \"Show my full résumé\".",
     "resumoCvDecide": "Nothing. It's a reading shortcut: it scores no one and the full résumé is one click away to check.",
     "coachTarefa": "Tailor for this job (candidate)",
-    "coachFaz": "Writes a version of the W2 Profile summary and highlights and a short message for one job, using only facts from the profile. Sentences that mention a skill or number not in the profile, the W2 Profile or the full CV are removed before the candidate sees them.",
-    "coachDados": "Profile without name and contacts, W2 Profile and the job. The full CV is not sent to the AI: it is only used by the check. Only when the candidate asks and ticks the consent box.",
+    "coachFaz": "Writes a version of the CV (headline and up to 5 points per job), of the W2 Profile summary and highlights, a sentence on why the person stands out and a short message for one job, using only facts from the profile and the full CV. Any sentence citing a skill or number not in the profile is removed before the candidate sees it; in the CV, each point can only use what belongs to that job.",
+    "coachDados": "Profile without name or contacts, W2 Profile, each job's part of the full CV (already stored without contacts) and the job. Only when the candidate asks and ticks the consent. The language notice and the \"why\" in the job details are rule-based, with no AI.",
     "coachDecide": "Nothing. The candidate checks, edits and chooses whether to send it. The company sees it was made with AI help."
   },
   "empresa": {
@@ -1765,7 +1781,11 @@
     "adaptacaoIa": "made with AI help and checked by the candidate",
     "adaptacaoCandidato": "written by the candidate",
     "adaptacaoCarta": "Message",
-    "adaptacaoResumo": "Summary and highlights for this job"
+    "adaptacaoResumo": "Summary and highlights for this job",
+    "adaptacaoComCv": "CV and version for this job",
+    "adaptacaoPorQue": "Why they stand out",
+    "adaptacaoCv": "CV prepared for this job",
+    "adaptacaoImprimir": "Print or save PDF"
   },
   "agenda": {
     "semEntrevista": "No interview booked yet.",
@@ -2032,5 +2052,26 @@
     "exportacoesTitulo": "Recent exports",
     "exportacaoItem": "{data} · {tarefa} · {count, plural, one {# example} other {# examples}} · {quem}",
     "semExportacoes": "No exports yet."
+  },
+  "vagaAvisos": {
+    "titulo": "You and this job",
+    "bate": "Your profile shows {bate} of the {total} skills the job asks for.",
+    "cargo": "Job closest to what this one asks: {onde}.",
+    "cargoAnos": "Job closest to what this one asks: {onde}, {anos, plural, =0 {under 1 year} one {# year} other {# years}}.",
+    "cargoEmpresa": "{cargo} at {empresa}",
+    "idioma": "The job asks for {nivel} {idioma}; your profile says {tem}.",
+    "idiomaSem": "The job asks for {nivel} {idioma}; your profile does not list this language.",
+    "idiomaSemNivel": "The job asks for {nivel} {idioma}; your profile does not give the level.",
+    "idiomaTrecho": "In the job post: \"{trecho}\"",
+    "idiomaDica": "This is only a notice: you can still apply. If the level in your profile is out of date, update it in My profile."
+  },
+  "cvDoc": {
+    "porQue": "Why they stand out",
+    "resumo": "Summary",
+    "experiencia": "Experience",
+    "competencias": "Skills",
+    "formacao": "Education",
+    "idiomas": "Languages",
+    "anos": "{n, plural, one {# year} other {# years}}"
   }
 }

@@ -23,7 +23,8 @@ import type { MensagemWebhook } from "./fila";
 import { entrevistasDasCandidaturas } from "./entrevista";
 import { gravarSinais, registrarSinal, type Sinal } from "./sinais";
 import { partesParaSinal } from "./ranking";
-import { lacunasDaVaga, lerAdaptacao, sanitizarAdaptacao, type Adaptacao, type Lacuna } from "./coach-vaga";
+import { periodoCargo } from "./coach-rascunho";
+import { avisosIdioma, cvBaseDaFicha, lacunasDaVaga, lerAdaptacao, porQueRegra, sanitizarAdaptacao, type Adaptacao, type AvisoIdioma, type CvVaga, type Lacuna, type PorQueRegra } from "./coach-vaga";
 
 export const ENVIO_LIMITE_LOTE = 10;
 export const ENVIO_LIMITE_24H = 30;
@@ -198,7 +199,23 @@ export function limparIds(ids: unknown, max = 50): string[] {
  * Coach IA por vaga: `lacunas` (o que a vaga pede e falta na ficha, por regra) e `adaptacao` (o que
  * o candidato conferiu ao aprovar; na vaga que mudou, a da versão anterior, para ele rever).
  */
-export type ItemEstado = { vacancyId: string; vaga: VagaRow | null; match: MatchResult | null; hash: string | null; lacunas: Lacuna[]; adaptacao: Adaptacao | null } & EstadoVaga;
+export type ItemEstado = {
+  vacancyId: string;
+  vaga: VagaRow | null;
+  match: MatchResult | null;
+  hash: string | null;
+  lacunas: Lacuna[];
+  adaptacao: Adaptacao | null;
+  /** CV por vaga: a base da ficha (para "fazer eu mesmo"), o aviso de idioma e o "por que se destaca" por regra. */
+  cvBase: CvVaga | null;
+  idiomas: AvisoIdioma[];
+  porQue: PorQueRegra | null;
+} & EstadoVaga;
+
+/** Textos da vaga onde a regra procura o idioma pedido (D6). */
+export function textosDaVaga(s: SnapshotVaga): string[] {
+  return [s.titulo, ...s.descricao];
+}
 
 export async function estadoDasVagas(db: PrismaClient, perfil: PerfilEnvio, vacancyIds: string[], now = new Date()): Promise<ItemEstado[]> {
   const [vagas, aprovacoes, enviadas] = await Promise.all([
@@ -210,13 +227,17 @@ export async function estadoDasVagas(db: PrismaClient, perfil: PerfilEnvio, vaca
   for (const id of vacancyIds) {
     const v = vagas.get(id) ?? null;
     const ap0 = aprovacoes.find((a) => a.vacancyId === id);
+    const snap0 = v ? snapshotVaga(v) : null;
     const base = {
       vacancyId: id,
       vaga: v,
       match: v ? matchDoPerfil(perfil.ficha, v, now) : null,
       hash: v ? await hashVaga(snapshotVaga(v)) : null,
-      lacunas: v ? lacunasDaVaga(perfil.ficha, snapshotVaga(v).competencias) : [],
+      lacunas: snap0 ? lacunasDaVaga(perfil.ficha, snap0.competencias) : [],
       adaptacao: ap0 ? lerAdaptacao(ap0.adaptacao) : null,
+      cvBase: snap0 ? cvBaseDaFicha(perfil.ficha, snap0.competencias) : null,
+      idiomas: snap0 ? avisosIdioma(textosDaVaga(snap0), perfil.ficha.idiomas) : [],
+      porQue: snap0 ? porQueRegra(perfil.ficha, snap0.competencias, now) : null,
     };
     const env = enviadas.find((a) => a.vacancyId === id);
     if (env) {
@@ -246,7 +267,10 @@ export async function estadoDasVagas(db: PrismaClient, perfil: PerfilEnvio, vaca
 export type ResultadoAprovar = { ok: true; aprovadaEm: string } | { ok: false; motivo: "nao_encontrada" | "indisponivel" | "ja_enviada" | "mudou" };
 
 /** `hashLido`: o hash que a tela mostrou. Se a vaga mudou depois disso, não aprova (a tela recarrega). */
-/** `adaptacao` (coach IA por vaga, D6): resumo, destaques e carta que o candidato conferiu; sem ela, vai a Ficha W2 de sempre. */
+/**
+ * `adaptacao` (coach IA por vaga, D6): resumo, destaques e carta que o candidato conferiu; sem ela, vai a Ficha W2 de sempre.
+ * `ficha` (CV por vaga, D5): o CV da tela só é aceito com ela; cargos, datas e competências saem dela.
+ */
 export async function aprovarVaga(
   db: PrismaClient,
   candidateId: string,
@@ -254,6 +278,7 @@ export async function aprovarVaga(
   hashLido: string,
   now = new Date(),
   adaptacaoBruta?: unknown,
+  ficha?: Ficha,
 ): Promise<ResultadoAprovar> {
   const v = (await carregarVagas(db, [vacancyId])).get(vacancyId);
   if (!v) return { ok: false, motivo: "nao_encontrada" };
@@ -262,7 +287,7 @@ export async function aprovarVaga(
   const snap = snapshotVaga(v);
   const hash = await hashVaga(snap);
   if (hash !== hashLido) return { ok: false, motivo: "mudou" };
-  const adaptacao = adaptacaoBruta == null ? null : sanitizarAdaptacao(adaptacaoBruta, hash, now);
+  const adaptacao = adaptacaoBruta == null ? null : sanitizarAdaptacao(adaptacaoBruta, hash, now, ficha ? { ficha, competenciasVaga: snap.competencias } : undefined);
   const dados = {
     vacancyHash: hash,
     snapshot: snap as unknown as Prisma.InputJsonValue,
@@ -276,7 +301,7 @@ export async function aprovarVaga(
   });
   await registrarSinal(db, { tipo: "vaga_aprovada", ator: "candidato", candidateId, vacancyId, createdAt: now });
   // D8: só o fato (usou a versão para a vaga, com IA ou não, com carta ou não), sem o texto.
-  if (adaptacao) await registrarSinal(db, { tipo: "coach_usado", ator: "candidato", candidateId, vacancyId, dados: { ia: adaptacao.ia ? "1" : "0", carta: adaptacao.carta ? "1" : "0" }, createdAt: now });
+  if (adaptacao) await registrarSinal(db, { tipo: "coach_usado", ator: "candidato", candidateId, vacancyId, dados: { ia: adaptacao.ia ? "1" : "0", carta: adaptacao.carta ? "1" : "0", cv: adaptacao.cv ? "1" : "0" }, createdAt: now });
   return { ok: true, aprovadaEm: now.toISOString() };
 }
 
@@ -484,6 +509,11 @@ export function mensagemCandidatura(perfil: PerfilEnvio, e: EmailCandidatura): E
     competencias: topSkills(f).map((s) => `${getSkill(s.skillId)?.label ?? s.skillId}${s.anos > 0 ? ` (${s.anos}a)` : ""}`),
     destaques: e.adaptacao?.resumo && e.adaptacao.destaques.length ? e.adaptacao.destaques : perfil.w2?.destaques ?? [],
     carta: e.adaptacao?.carta ?? "",
+    porQue: e.adaptacao?.porQue ?? "",
+    experiencia: (e.adaptacao?.cv?.cargos ?? []).map((c) => ({
+      titulo: [c.cargo, c.empresa, periodoCargo(c, locale)].filter(Boolean).join(" · "),
+      pontos: c.pontos,
+    })),
     adaptada: e.adaptacao ? (e.adaptacao.ia ? "ia" : "candidato") : null,
     idiomas: f.idiomas.filter((i) => i.idioma).map((i) => i.idioma),
     matchPct: e.match.pct,

@@ -1,22 +1,31 @@
 "use client";
 /**
- * Coach IA por vaga (plano 2026-11-20, D1–D5): dentro de "O que a empresa recebe" na tela Aprovar.
- * Mostra o que a vaga pede e a ficha não mostra (por regra), e prepara uma versão do resumo,
- * dos destaques e uma mensagem para esta vaga. A IA só usa o que está na ficha; a pessoa confere,
- * edita e escolhe o que vai. Nada sai daqui sem aprovar a vaga.
+ * Coach IA por vaga (plano 2026-11-20, D1–D5) e CV por vaga (plano 2026-11-20 "CV por vaga", D1–D8):
+ * dentro de "O que a empresa recebe" na tela Aprovar. Mostra o que a vaga pede e a ficha não mostra
+ * (por regra), o aviso de idioma e o "por que você se destaca", e prepara uma versão do CV, do resumo,
+ * dos destaques e uma mensagem para esta vaga, em abas. A IA só usa o que está na ficha e no CV
+ * completo; a pessoa confere, edita e escolhe o que vai. Nada sai daqui sem aprovar a vaga.
  */
 import * as React from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button, Field, Input, Textarea } from "@/components/ui";
 import { IaLink } from "@/components/ia-link";
-import type { Adaptacao, Lacuna } from "@/lib/coach-vaga";
+import { AvisosVaga } from "@/components/avisos-vaga";
+import { BotaoPdf, CvDocumento, type ContatoCv } from "@/components/cv-documento";
+import { postEnvio } from "@/lib/envio-client";
+import type { Adaptacao, AvisoIdioma, CvVaga, Lacuna, PorQueRegra } from "@/lib/coach-vaga";
 import {
   MAX_CARTA_TELA,
   MAX_DESTAQUE_TELA,
+  MAX_POR_QUE_TELA,
   MAX_RESUMO_TELA,
+  MAX_TITULO_TELA,
+  cvDoRascunho,
+  periodoCargo,
   rascunhoDaProposta,
   rascunhoManual,
+  type RascunhoCargo,
   type RascunhoCoach,
 } from "@/lib/coach-rascunho";
 
@@ -36,16 +45,49 @@ type Props = {
   onMudou: () => void;
   /** Avisa a tela enquanto a IA prepara (Aprovar fica desligado nesse meio-tempo). */
   onPreparando?: (sim: boolean) => void;
+  /** CV por vaga: base da ficha, aviso de idioma, "por que" por regra e os dados do PDF. */
+  cvBase?: CvVaga | null;
+  idiomas?: AvisoIdioma[];
+  porQueRegra?: PorQueRegra | null;
+  nome?: string;
+  vagaTitulo?: string;
 };
 
-export function CoachVaga({ vacancyId, hash, estado, lacunas, adaptacao, w2, rascunho, onRascunho, travado, online, onMudou, onPreparando }: Props) {
+type Aba = "empresa" | "cv" | "mensagem";
+const ABAS: Aba[] = ["empresa", "cv", "mensagem"];
+
+export function CoachVaga({
+  vacancyId,
+  hash,
+  estado,
+  lacunas,
+  adaptacao,
+  w2,
+  rascunho,
+  onRascunho,
+  travado,
+  online,
+  onMudou,
+  onPreparando,
+  cvBase = null,
+  idiomas = [],
+  porQueRegra = null,
+  nome = "",
+  vagaTitulo = "",
+}: Props) {
   const t = useTranslations("aprovar");
+  const locale = useLocale();
   const [aceite, setAceite] = React.useState(false);
   const [ocupado, setOcupado] = React.useState(false);
   const [erro, setErro] = React.useState<string | null>(null);
+  const [aba, setAba] = React.useState<Aba>("empresa");
+  const abasRef = React.useRef<Record<Aba, HTMLButtonElement | null>>({ empresa: null, cv: null, mensagem: null });
   const id = (s: string) => `coach-${s}-${vacancyId}`;
 
-  React.useEffect(() => setErro(null), [vacancyId]);
+  React.useEffect(() => {
+    setErro(null);
+    setAba("empresa");
+  }, [vacancyId]);
   // Resposta que chega depois de a vaga ser aprovada (ou de trocar de vaga) é descartada:
   // o que a tela mostra tem de ser o que foi gravado.
   const atual = React.useRef({ vacancyId, travado });
@@ -65,7 +107,10 @@ export function CoachVaga({ vacancyId, hash, estado, lacunas, adaptacao, w2, ras
       });
       const j = await r.json().catch(() => ({}));
       if (!valeAinda()) return;
-      if (r.ok && j.proposta) return onRascunho(rascunhoDaProposta(j.proposta));
+      if (r.ok && j.proposta) {
+        setAba("empresa");
+        return onRascunho(rascunhoDaProposta(j.proposta));
+      }
       if (r.status === 429) return setErro(t("coachLimite"));
       if (j.error === "sem_ficha_w2") return setErro(t("coachSemW2"));
       if (j.error === "mudou") return onMudou();
@@ -79,11 +124,27 @@ export function CoachVaga({ vacancyId, hash, estado, lacunas, adaptacao, w2, ras
   };
 
   const mudar = (p: Partial<RascunhoCoach>) => rascunho && onRascunho({ ...rascunho, ...p });
+  const mudarCargo = (i: number, p: Partial<RascunhoCargo>) =>
+    rascunho?.cv && mudar({ cv: { ...rascunho.cv, cargos: rascunho.cv.cargos.map((c) => (c.i === i ? { ...c, ...p } : c)) } });
   const contar = (n: number, max: number) => t("coachContador", { n, max });
+
+  const teclaAba = (e: React.KeyboardEvent) => {
+    const k = ABAS.indexOf(aba);
+    const prox = e.key === "ArrowRight" ? ABAS[(k + 1) % ABAS.length] : e.key === "ArrowLeft" ? ABAS[(k + ABAS.length - 1) % ABAS.length] : null;
+    if (!prox) return;
+    e.preventDefault();
+    setAba(prox);
+    abasRef.current[prox]?.focus();
+  };
+
+  const cvFinal = cvDoRascunho(rascunho, cvBase);
+  const resumoPdf = rascunho?.usarVersao && rascunho.resumo.trim() ? rascunho.resumo.trim() : w2.resumo;
 
   return (
     <section aria-labelledby={id("titulo")} data-coach={vacancyId} className="rounded-card border border-line bg-surface p-5 text-sm">
       <h3 id={id("titulo")} className="font-semibold">{t("coachTitulo")}</h3>
+
+      <AvisosVaga porQue={porQueRegra} idiomas={idiomas} className="mt-3" />
 
       <div className="mt-3">
         <p className="text-[13px] font-medium text-muted">{t("coachLacunasTitulo")}</p>
@@ -126,7 +187,7 @@ export function CoachVaga({ vacancyId, hash, estado, lacunas, adaptacao, w2, ras
               <Button variant="primary" size="md" data-action="coach-preparar" disabled={!aceite || ocupado || !online} onClick={preparar}>
                 {ocupado ? t("coachPreparando") : t("coachPreparar")}
               </Button>
-              <Button variant="ghost" size="md" data-action="coach-manual" disabled={ocupado} onClick={() => onRascunho(rascunhoManual(w2))}>
+              <Button variant="ghost" size="md" data-action="coach-manual" disabled={ocupado} onClick={() => onRascunho(rascunhoManual(w2, cvBase))}>
                 {t("coachManual")}
               </Button>
             </div>
@@ -147,31 +208,115 @@ export function CoachVaga({ vacancyId, hash, estado, lacunas, adaptacao, w2, ras
             </details>
           ) : null}
 
-          <label className="flex items-start gap-2 text-[13px] font-medium">
-            <input type="checkbox" className="mt-0.5 h-4 w-4" checked={rascunho.usarVersao} disabled={travado} onChange={(e) => mudar({ usarVersao: e.target.checked })} data-testid="coach-usar" />
-            <span>{t("coachUsarVersao")}</span>
-          </label>
-          <Field label={t("coachResumo")} hint={contar(rascunho.resumo.length, MAX_RESUMO_TELA)}>
-            <Textarea rows={4} maxLength={MAX_RESUMO_TELA} value={rascunho.resumo} disabled={travado || !rascunho.usarVersao} onChange={(e) => mudar({ resumo: e.target.value })} />
-          </Field>
-          {rascunho.destaques.map((d, k) => (
-            <Field key={k} label={t("coachDestaque", { n: k + 1 })}>
-              <Input
-                maxLength={MAX_DESTAQUE_TELA}
-                value={d}
-                disabled={travado || !rascunho.usarVersao}
-                onChange={(e) => mudar({ destaques: rascunho.destaques.map((x, i) => (i === k ? e.target.value : x)) })}
-              />
-            </Field>
-          ))}
+          <div role="tablist" aria-label={t("coachAbas")} className="flex flex-wrap gap-1 border-b border-line" onKeyDown={teclaAba}>
+            {ABAS.map((a) => (
+              <button
+                key={a}
+                ref={(el) => {
+                  abasRef.current[a] = el;
+                }}
+                type="button"
+                role="tab"
+                id={id(`aba-${a}`)}
+                aria-selected={aba === a}
+                aria-controls={id(`painel-${a}`)}
+                tabIndex={aba === a ? 0 : -1}
+                data-aba={a}
+                onClick={() => setAba(a)}
+                className={`-mb-px rounded-t-control border-b-2 px-3 py-2 text-[13px] font-medium ${aba === a ? "border-brand text-ink" : "border-transparent text-muted hover:text-ink"}`}
+              >
+                {t(a === "empresa" ? "coachAbaEmpresa" : a === "cv" ? "coachAbaCv" : "coachAbaMensagem")}
+              </button>
+            ))}
+          </div>
 
-          <label className="mt-1 flex items-start gap-2 text-[13px] font-medium">
-            <input type="checkbox" className="mt-0.5 h-4 w-4" checked={rascunho.enviarCarta} disabled={travado} onChange={(e) => mudar({ enviarCarta: e.target.checked })} data-testid="coach-carta" />
-            <span>{t("coachEnviarCarta")}</span>
-          </label>
-          <Field label={t("coachCarta")} hint={`${contar(rascunho.carta.length, MAX_CARTA_TELA)} · ${t("coachCartaDica")}`}>
-            <Textarea rows={6} maxLength={MAX_CARTA_TELA} value={rascunho.carta} disabled={travado || !rascunho.enviarCarta} onChange={(e) => mudar({ carta: e.target.value })} />
-          </Field>
+          <div role="tabpanel" id={id("painel-empresa")} aria-labelledby={id("aba-empresa")} hidden={aba !== "empresa"} className="flex flex-col gap-3">
+            <Field label={t("coachPorQue")} hint={contar(rascunho.porQue.length, MAX_POR_QUE_TELA)}>
+              <Textarea rows={2} maxLength={MAX_POR_QUE_TELA} value={rascunho.porQue} disabled={travado} onChange={(e) => mudar({ porQue: e.target.value })} data-testid="coach-porque" />
+            </Field>
+            <label className="flex items-start gap-2 text-[13px] font-medium">
+              <input type="checkbox" className="mt-0.5 h-4 w-4" checked={rascunho.usarVersao} disabled={travado} onChange={(e) => mudar({ usarVersao: e.target.checked })} data-testid="coach-usar" />
+              <span>{t("coachUsarVersao")}</span>
+            </label>
+            <Field label={t("coachResumo")} hint={contar(rascunho.resumo.length, MAX_RESUMO_TELA)}>
+              <Textarea rows={4} maxLength={MAX_RESUMO_TELA} value={rascunho.resumo} disabled={travado || !rascunho.usarVersao} onChange={(e) => mudar({ resumo: e.target.value })} />
+            </Field>
+            {rascunho.destaques.map((d, k) => (
+              <Field key={k} label={t("coachDestaque", { n: k + 1 })}>
+                <Input
+                  maxLength={MAX_DESTAQUE_TELA}
+                  value={d}
+                  disabled={travado || !rascunho.usarVersao}
+                  onChange={(e) => mudar({ destaques: rascunho.destaques.map((x, i) => (i === k ? e.target.value : x)) })}
+                />
+              </Field>
+            ))}
+          </div>
+
+          <div role="tabpanel" id={id("painel-cv")} aria-labelledby={id("aba-cv")} hidden={aba !== "cv"} className="flex flex-col gap-3" data-testid="coach-cv">
+            {rascunho.cv ? (
+              <>
+                <label className="flex items-start gap-2 text-[13px] font-medium">
+                  <input type="checkbox" className="mt-0.5 h-4 w-4" checked={rascunho.usarCv} disabled={travado} onChange={(e) => mudar({ usarCv: e.target.checked })} data-testid="coach-usar-cv" />
+                  <span>{t("coachUsarCv")}</span>
+                </label>
+                <Field label={t("coachTituloCv")}>
+                  <Input maxLength={MAX_TITULO_TELA} value={rascunho.cv.titulo} disabled={travado || !rascunho.usarCv} onChange={(e) => mudar({ cv: { ...rascunho.cv!, titulo: e.target.value } })} />
+                </Field>
+                {rascunho.cv.cargos.map((c) => (
+                  <fieldset key={c.i} className="rounded-card border border-line-soft p-3" data-cargo={c.i}>
+                    <legend className="px-1 text-[13px] font-medium">
+                      {[c.cargo, c.empresa].filter(Boolean).join(" · ")}
+                      <span className="ml-2 font-normal text-muted">{periodoCargo(c, locale)}</span>
+                    </legend>
+                    <label className="flex items-start gap-2 text-[13px]">
+                      <input type="checkbox" className="mt-0.5 h-4 w-4" checked={c.incluir} disabled={travado || !rascunho.usarCv} onChange={(e) => mudarCargo(c.i, { incluir: e.target.checked })} />
+                      <span>{t("coachCargoIncluir")}</span>
+                    </label>
+                    <Field label={t("coachPontos")} className="mt-2">
+                      <Textarea rows={5} value={c.texto} disabled={travado || !rascunho.usarCv || !c.incluir} onChange={(e) => mudarCargo(c.i, { texto: e.target.value })} />
+                    </Field>
+                  </fieldset>
+                ))}
+                {cvBase?.competencias.length ? (
+                  <div className="text-[13px]">
+                    <p className="font-medium text-muted">{t("coachCompetenciasCv")}</p>
+                    <p className="mt-1 text-ink-soft">{cvBase.competencias.map((s) => s.nome).join(" · ")}</p>
+                  </div>
+                ) : null}
+                {cvFinal ? (
+                  <div className="flex flex-col gap-1">
+                    <div>
+                      <BotaoPdf
+                        label={t("coachBaixarPdf")}
+                        arquivo={[t("coachArquivo"), nome, vagaTitulo].filter(Boolean).join(" - ")}
+                        documento={async () => {
+                          // Contatos da própria pessoa: buscados só agora, para o PDF dela (a empresa recebe sem).
+                          const c = await postEnvio("contato", {})
+                            .then((r) => (r.ok ? (r.json() as Promise<ContatoCv & { nome?: string }>) : null))
+                            .catch(() => null);
+                          return <CvDocumento cv={cvFinal} nome={c?.nome || nome} contato={c} resumo={resumoPdf} />;
+                        }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted">{t("coachPdfDica")}</p>
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <p className="text-ink-soft">{t("coachSemCargos")}</p>
+            )}
+          </div>
+
+          <div role="tabpanel" id={id("painel-mensagem")} aria-labelledby={id("aba-mensagem")} hidden={aba !== "mensagem"} className="flex flex-col gap-3">
+            <label className="flex items-start gap-2 text-[13px] font-medium">
+              <input type="checkbox" className="mt-0.5 h-4 w-4" checked={rascunho.enviarCarta} disabled={travado} onChange={(e) => mudar({ enviarCarta: e.target.checked })} data-testid="coach-carta" />
+              <span>{t("coachEnviarCarta")}</span>
+            </label>
+            <Field label={t("coachCarta")} hint={`${contar(rascunho.carta.length, MAX_CARTA_TELA)} · ${t("coachCartaDica")}`}>
+              <Textarea rows={6} maxLength={MAX_CARTA_TELA} value={rascunho.carta} disabled={travado || !rascunho.enviarCarta} onChange={(e) => mudar({ carta: e.target.value })} />
+            </Field>
+          </div>
 
           {travado ? (
             <p className="text-xs text-muted">{t("coachTravado")}</p>

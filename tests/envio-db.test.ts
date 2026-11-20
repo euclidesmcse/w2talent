@@ -228,7 +228,39 @@ describeDb("Aprovar antes de enviar", () => {
     expect(emails[0].text).toContain("com ajuda de IA");
     const sinais = await db.feedbackSignal.findMany({ where: { candidateId: perfil.id, vacancyId: v.id, tipo: "coach_usado" } });
     expect(sinais).toHaveLength(1);
-    expect(sinais[0].dados).toEqual({ ia: "1", carta: "1" });
+    expect(sinais[0].dados).toEqual({ ia: "1", carta: "1", cv: "0" });
+  });
+
+  it("CV por vaga: cargos e datas vêm da ficha, o e-mail leva a experiência e nada de contato", async () => {
+    const v = await vaga("Analista Cloud CV");
+    const fichaComCargo = {
+      ...perfil.ficha,
+      experiencias: [{ cargo: "Analista Cloud", empresa: "Nuvem SA", inicio: "2020-01", fim: "", atual: true, tipo: "" as const, funcoes: ["Cuidou da AWS"], skills: ["aws"] }],
+    };
+    const comCargo = { ...perfil, ficha: fichaComCargo };
+    const [it] = await estadoDasVagas(db, comCargo, [v.id], NOW);
+    expect(it.cvBase?.cargos[0]).toMatchObject({ i: 0, cargo: "Analista Cloud", pontos: ["Cuidou da AWS"] });
+    const r = await aprovarVaga(
+      db,
+      perfil.id,
+      v.id,
+      it.hash!,
+      NOW,
+      { porQue: "Cuida da AWS desde 2020.", cv: { titulo: "Analista Cloud AWS", cargos: [{ i: 0, cargo: "Diretora", empresa: "Outra", pontos: ["Automatizou a AWS com Terraform", "Fale comigo: bia@x.com"] }] } },
+      fichaComCargo,
+    );
+    expect(r).toMatchObject({ ok: true });
+    const [depois] = await estadoDasVagas(db, comCargo, [v.id], NOW);
+    expect(depois.adaptacao?.cv?.cargos[0]).toMatchObject({ cargo: "Analista Cloud", empresa: "Nuvem SA", inicio: "2020-01" });
+    expect(JSON.stringify(depois.adaptacao)).not.toContain("bia@x.com");
+    const emails: EmailMessage[] = [];
+    await enviarCandidaturas(db, comCargo, [v.id], { now: NOW, enviarEmail: async (m) => { emails.push(m); } });
+    expect(emails[0].text).toContain("Cuida da AWS desde 2020.");
+    expect(emails[0].text).toContain("Analista Cloud · Nuvem SA · 01/2020 – atual");
+    expect(emails[0].text).toContain("- Automatizou a AWS com Terraform");
+    expect(emails[0].text).not.toContain(EMAIL);
+    const sinal = await db.feedbackSignal.findFirst({ where: { candidateId: perfil.id, vacancyId: v.id, tipo: "coach_usado" } });
+    expect(sinal?.dados).toMatchObject({ cv: "1" });
   });
 
   it("não aprova uma versão da vaga diferente da que a tela mostrou", async () => {
@@ -325,6 +357,13 @@ describeDb("Aprovar antes de enviar", () => {
     expect((await estado(post("/api/envio/estado", { vacancyIds: [v.id] }, { cookie: cookieDeTeste({ id: "conta-sem-perfil" }) }))).status).toBe(404);
     expect((await estado(post("/api/envio/estado", { vacancyIds: [v.id] }, { cookie: cookieDeTeste({ id: CONTA, perfil: "recrutador", mfaLigado: true }) }))).status).toBe(403);
     expect((await estado(post("/api/envio/estado", { vacancyIds: [v.id] }, { cookie: cookieDeTeste({ id: CONTA, mfaPendente: true }) }))).status).toBe(401);
+
+    // CV por vaga (D4): os contatos só pela rota própria, para o PDF da pessoa.
+    const contato = (await import("../app/api/envio/contato/route")).POST;
+    expect((await contato(post("/api/envio/contato", {}, {}))).status).toBe(401);
+    expect((await contato(post("/api/envio/contato", {}, { cookie, origin: "https://outro.site" }))).status).toBe(403);
+    const rc = await contato(post("/api/envio/contato", {}));
+    expect(await rc.json()).toMatchObject({ email: EMAIL, localidade: "Recife" });
 
     const r1 = await estado(post("/api/envio/estado", { email: EMAIL, vacancyIds: [v.id] }));
     const j1 = await r1.json();

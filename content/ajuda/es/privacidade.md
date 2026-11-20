@@ -16,7 +16,7 @@ Algunas empresas activan la integración con su sistema de selección (ATS). En 
 
 ## Versión y mensaje para una vacante
 
-En la pantalla Revisar y aprobar puedes enviar una versión del resumen y los destacados y un mensaje para una vacante. Va solo a esa empresa (e-mail, la pantalla de la vacante y, si está activada, la integración con ATS), junto con la postulación, y se borra con ella. Si usas la IA para prepararla, la IA recibe tu ficha sin nombre ni contactos y la vacante; tu CV completo no va a la IA, solo sirve para comprobar que nada se inventó.
+En la pantalla Revisar y aprobar puedes enviar una versión del resumen y los destacados, un CV preparado para la vacante y un mensaje. Van solo a esa empresa (e-mail, la pantalla de la vacante y, si está activada, la integración con ATS), junto con la postulación, sin tus contactos, y se borran con ella. Si usas la IA para prepararlos, la IA recibe tu ficha sin nombre ni contactos, la vacante y, si guardaste el CV completo, el tramo de cada puesto en él (ya guardado sin contactos). El PDF que descargas lleva tus contactos y se queda contigo: se hace en tu navegador.
 
 ## Pretensión salarial
 

@@ -12,6 +12,7 @@ import { buttonClasses, cn } from "@/components/ui";
 import { IaLink } from "@/components/ia-link";
 import type { Experiencia } from "@/lib/ficha";
 import type { ResumoCv } from "@/lib/cv-resumo";
+import { linhaDoCargo } from "@/lib/cv-cargo";
 
 const textos = new Map<string, Promise<string | null>>();
 const resumos = new Map<string, ResumoCv>();
@@ -30,25 +31,8 @@ function buscarTexto(profileId: string, versao: string): Promise<string | null> 
   return p;
 }
 
-/**
- * Linha do CV onde o cargo começa. Primeiro, uma linha da empresa com o título do cargo nela ou nas
- * 3 linhas seguintes (vários cargos na mesma empresa); depois a primeira linha da empresa; por fim,
- * a primeira com o título. Sem acento e sem diferença de maiúscula.
- */
-export function linhaDoCargo(linhas: string[], cargo: Pick<Experiencia, "cargo" | "empresa">): number {
-  const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-  const ls = linhas.map(norm);
-  const empresa = norm(cargo.empresa);
-  const titulo = norm(cargo.cargo);
-  const temEmpresa = empresa.length >= 2 ? ls.flatMap((l, i) => (l.includes(empresa) ? [i] : [])) : [];
-  if (titulo.length >= 2) {
-    for (const i of temEmpresa) {
-      for (let j = Math.max(0, i - 3); j <= Math.min(ls.length - 1, i + 3); j++) if (ls[j].includes(titulo)) return Math.min(i, j);
-    }
-  }
-  if (temEmpresa.length) return temEmpresa[0];
-  return titulo.length >= 2 ? ls.findIndex((l) => l.includes(titulo)) : -1;
-}
+/** Mantido aqui para quem já importava deste arquivo. */
+export { linhaDoCargo };
 
 /** `indice` < 0: sem cargo (perfil sem cargos datados); mostra só o CV e o resumo da carreira. */
 export function AcoesCv({ profileId, versao = "", cargo, indice }: { profileId: string; versao?: string; cargo: Experiencia; indice: number }) {

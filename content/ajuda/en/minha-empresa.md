@@ -33,7 +33,7 @@ If the company uses a hiring system (ATS), applications can arrive there too. In
 
 - For each application received, W2Talent sends a JSON `POST` to that address (event `candidatura.recebida`).
 - For each stage change made on the job screen, it sends the `candidatura.etapa` event.
-- If the candidate prepared a version for the job, `data.candidatura.adaptacao` carries `resumo`, `destaques`, `carta` (their message) and `feita_com_ia`. Without one, it is `null`.
+- If the candidate prepared a version for the job, `data.candidatura.adaptacao` carries `resumo`, `destaques`, `carta` (their message), `por_que` (the sentence on why they stand out), `cv` (headline, jobs with `pontos`, skills, education and languages, no contacts; `null` without a CV) and `feita_com_ia`. Without one, it is `null`.
 - The notice carries the job, the application (date, stage, match and gaps) and the W2 Profile as the candidate approved it: **no e-mail, phone or links**. E-mail and phone are only sent after the application reaches the Interview, as on the screen.
 - Public https addresses only. Internal networks and localhost do not work.
 - "Send test" sends the `teste` event right away. The screen shows the latest 20 deliveries.

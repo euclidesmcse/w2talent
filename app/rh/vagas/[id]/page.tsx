@@ -26,6 +26,7 @@ import { ETAPAS, type Etapa } from "@/lib/painel-rh";
 import type { CandidaturaRh, VagaDaPagina } from "@/lib/rh-candidaturas";
 import type { OrdemInfo } from "@/lib/ranking";
 import { OrdemRanking } from "@/components/ordem-ranking";
+import { BotaoPdf, CvDocumento } from "@/components/cv-documento";
 
 type Estado =
   | { t: "carregando" }
@@ -327,9 +328,15 @@ export default function CandidaturasDaVagaPage() {
                         {it.adaptacao ? (
                           <details className="basis-full rounded-card border border-line-soft bg-canvas px-3.5 py-2.5 text-sm" data-testid="rh-adaptacao">
                             <summary className="cursor-pointer text-[13px] font-medium">
-                              {it.adaptacao.carta ? t("adaptacaoComCarta") : t("adaptacaoTitulo")}
+                              {it.adaptacao.cv ? t("adaptacaoComCv") : it.adaptacao.carta ? t("adaptacaoComCarta") : t("adaptacaoTitulo")}
                               <span className="ml-2 font-normal text-muted">{it.adaptacao.ia ? t("adaptacaoIa") : t("adaptacaoCandidato")}</span>
                             </summary>
+                            {it.adaptacao.porQue ? (
+                              <div className="mt-2">
+                                <p className="text-[13px] font-medium text-muted">{t("adaptacaoPorQue")}</p>
+                                <p className="mt-1">{it.adaptacao.porQue}</p>
+                              </div>
+                            ) : null}
                             {it.adaptacao.carta ? (
                               <div className="mt-2">
                                 <p className="text-[13px] font-medium text-muted">{t("adaptacaoCarta")}</p>
@@ -345,6 +352,21 @@ export default function CandidaturasDaVagaPage() {
                                     {it.adaptacao.destaques.map((d, k) => <li key={k}>{d}</li>)}
                                   </ul>
                                 ) : null}
+                              </div>
+                            ) : null}
+                            {it.adaptacao.cv ? (
+                              <div className="mt-3 border-t border-line-soft pt-3" data-testid="rh-adaptacao-cv">
+                                <p className="text-[13px] font-medium text-muted">{t("adaptacaoCv")}</p>
+                                <div className="mt-2 rounded-card border border-line bg-white p-4">
+                                  <CvDocumento cv={it.adaptacao.cv} nome={nomeDe(it)} resumo={it.adaptacao.resumo} porQue={it.adaptacao.porQue} />
+                                </div>
+                                <div className="mt-2">
+                                  <BotaoPdf
+                                    label={t("adaptacaoImprimir")}
+                                    arquivo={[nomeDe(it), estado.t === "ok" ? estado.vaga.titulo : ""].filter(Boolean).join(" - ")}
+                                    documento={<CvDocumento cv={it.adaptacao.cv} nome={nomeDe(it)} resumo={it.adaptacao.resumo} porQue={it.adaptacao.porQue} />}
+                                  />
+                                </div>
                               </div>
                             ) : null}
                           </details>

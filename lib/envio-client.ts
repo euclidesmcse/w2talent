@@ -9,7 +9,7 @@ export async function podeEnviar(): Promise<boolean> {
   return ehCandidato(await lerConta());
 }
 
-export function postEnvio(path: "estado" | "aprovar" | "enviar" | "enviadas", body: Record<string, unknown>): Promise<Response> {
+export function postEnvio(path: "estado" | "aprovar" | "enviar" | "enviadas" | "contato", body: Record<string, unknown>): Promise<Response> {
   return fetch(`/api/envio/${path}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 }
 

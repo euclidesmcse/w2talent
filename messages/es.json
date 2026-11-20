@@ -850,12 +850,12 @@
     "coachLacunasDica": "Si tienes alguna, inclúyela en Mi ficha. La IA no escribe lo que no está ahí.",
     "coachSemLacunas": "Tu ficha muestra todas las competencias que pide la vacante.",
     "coachVersaoAnterior": "Esta versión se hizo para la vacante antes del cambio. Revísala antes de aprobar de nuevo.",
-    "coachExplica": "La IA escribe una versión de tu resumen y tus destacados y un mensaje para esta vacante, solo con lo que está en tu ficha. Tú revisas, editas y eliges qué se envía.",
-    "coachAceite": "Acepto que la IA lea mi ficha (sin nombre ni contactos) y esta vacante para sugerir el texto.",
+    "coachExplica": "La IA arma una versión de tu CV, del resumen y de los destacados, una frase de por qué destacas y un mensaje para esta vacante, solo con lo que está en tu ficha y en tu CV completo. Tú revisas, editas y eliges qué va.",
+    "coachAceite": "Acepto que la IA lea mi ficha y el CV completo guardado (sin nombre ni contactos) y esta vacante para sugerir el texto.",
     "coachPreparar": "Preparar con IA",
     "coachPreparando": "Preparando…",
     "coachManual": "Escribirlo a mi manera",
-    "coachLimiteDica": "Hasta 20 por día. Las frases que citan una competencia o un número fuera de tu ficha se quitan antes de llegar a ti.",
+    "coachLimiteDica": "Hasta 20 por día. La frase que cita una habilidad o un número fuera de tu ficha sale antes de llegar a ti. En el CV, cada puesto solo usa lo que es de ese puesto.",
     "coachFeitoIa": "Hecho con IA. Revisa cada frase antes de aprobar.",
     "coachRemovidos": "{count, plural, one {Se quitó # frase porque citaba algo fuera de tu ficha} other {Se quitaron # frases porque citaban algo fuera de tu ficha}}",
     "coachUsarVersao": "Enviar esta versión del resumen y los destacados",
@@ -870,7 +870,23 @@
     "coachLimite": "Llegaste a 20 preparaciones hoy. Mañana se libera de nuevo, o escríbelo a tu manera.",
     "coachSemW2": "Publica tu Ficha W2 en Mi ficha antes de preparar.",
     "coachIaFalhou": "La IA no respondió ahora. Inténtalo de nuevo o escríbelo a tu manera.",
-    "coachCartaPrevia": "Mensaje del candidato"
+    "coachCartaPrevia": "Mensaje del candidato",
+    "coachAbas": "Partes de la versión para esta vacante",
+    "coachAbaEmpresa": "Para la empresa",
+    "coachAbaCv": "CV",
+    "coachAbaMensagem": "Mensaje",
+    "coachPorQue": "Por qué destacas (va arriba de la postulación)",
+    "coachPorQuePrevia": "Por qué destaca",
+    "coachUsarCv": "Enviar este CV a la empresa (sin tus contactos)",
+    "coachTituloCv": "Título",
+    "coachCargoIncluir": "Incluir este puesto",
+    "coachPontos": "Qué mostrar de este puesto (uno por línea, hasta 5)",
+    "coachCompetenciasCv": "Habilidades (de tu ficha, primero las que pide la vacante)",
+    "coachBaixarPdf": "Descargar PDF",
+    "coachArquivo": "CV",
+    "coachPdfDica": "Abre la impresión del navegador: elige \"Guardar como PDF\". El PDF lleva tu nombre, e-mail, teléfono y ciudad, para usarlo fuera de W2Talent. La empresa recibe el CV sin contactos.",
+    "coachSemCargos": "Tu ficha no tiene puestos. Agrégalos en Mi ficha para armar el CV.",
+    "coachCvVai": "También va el CV preparado para esta vacante, sin tus contactos."
   },
   "pwa": {
     "offlineTitle": "Sin conexión.",
@@ -1194,8 +1210,8 @@
     "resumoCvDados": "El texto del CV sin correo, teléfono, enlaces ni documentos, y los cargos de la ficha. Solo de quien marcó \"Mostrar mi CV completo\".",
     "resumoCvDecide": "Nada. Es un atajo de lectura: no califica a nadie y el CV completo está a un clic para comprobar.",
     "coachTarefa": "Preparar para esta vacante (candidato)",
-    "coachFaz": "Escribe una versión del resumen y los destacados de la Ficha W2 y un mensaje corto para una vacante, solo con hechos de la ficha. Las frases que citan una competencia o un número que no está en la ficha, en la Ficha W2 ni en el CV completo se quitan antes de que el candidato las vea.",
-    "coachDados": "Ficha sin nombre ni contactos, Ficha W2 y la vacante. El CV completo no va a la IA: solo lo usa el control. Solo cuando el candidato lo pide y marca la aceptación.",
+    "coachFaz": "Escribe una versión del CV (título y hasta 5 puntos por puesto), del resumen y los destacados de la Ficha W2, una frase de por qué la persona destaca y un mensaje corto para una vacante, solo con hechos de la ficha y del CV completo. La frase que cita una habilidad o un número que no está en la ficha sale antes de que el candidato la vea; en el CV, cada punto solo puede usar lo que es de ese puesto.",
+    "coachDados": "Ficha sin nombre ni contactos, Ficha W2, el tramo de cada puesto en el CV completo (ya guardado sin contactos) y la vacante. Solo cuando el candidato lo pide y marca la aceptación. El aviso de idioma y el \"por qué\" del detalle de la vacante son por regla, sin IA.",
     "coachDecide": "Nada. El candidato revisa, edita y elige si lo envía. La empresa ve que se hizo con ayuda de IA."
   },
   "empresa": {
@@ -1765,7 +1781,11 @@
     "adaptacaoIa": "hecha con ayuda de IA y revisada por el candidato",
     "adaptacaoCandidato": "escrita por el candidato",
     "adaptacaoCarta": "Mensaje",
-    "adaptacaoResumo": "Resumen y destacados para esta vacante"
+    "adaptacaoResumo": "Resumen y destacados para esta vacante",
+    "adaptacaoComCv": "CV y versión para esta vacante",
+    "adaptacaoPorQue": "Por qué destaca",
+    "adaptacaoCv": "CV preparado para esta vacante",
+    "adaptacaoImprimir": "Imprimir o guardar PDF"
   },
   "agenda": {
     "semEntrevista": "Entrevista aún no agendada.",
@@ -2032,5 +2052,26 @@
     "exportacoesTitulo": "Exportaciones recientes",
     "exportacaoItem": "{data} · {tarefa} · {count, plural, one {# ejemplo} other {# ejemplos}} · {quem}",
     "semExportacoes": "Aún no hay exportaciones."
+  },
+  "vagaAvisos": {
+    "titulo": "Tú y esta vacante",
+    "bate": "Tu ficha muestra {bate} de las {total} habilidades que pide la vacante.",
+    "cargo": "Puesto más cercano a lo que pide la vacante: {onde}.",
+    "cargoAnos": "Puesto más cercano a lo que pide la vacante: {onde}, {anos, plural, =0 {menos de 1 año} one {# año} other {# años}}.",
+    "cargoEmpresa": "{cargo} en {empresa}",
+    "idioma": "La vacante pide {idioma} {nivel}; tu ficha dice {tem}.",
+    "idiomaSem": "La vacante pide {idioma} {nivel}; tu ficha no incluye ese idioma.",
+    "idiomaSemNivel": "La vacante pide {idioma} {nivel}; tu ficha no indica el nivel.",
+    "idiomaTrecho": "En la vacante: \"{trecho}\"",
+    "idiomaDica": "Es solo un aviso: puedes postularte igual. Si el nivel de tu ficha está desactualizado, ajústalo en Mi ficha."
+  },
+  "cvDoc": {
+    "porQue": "Por qué destaca",
+    "resumo": "Resumen",
+    "experiencia": "Experiencia",
+    "competencias": "Habilidades",
+    "formacao": "Formación",
+    "idiomas": "Idiomas",
+    "anos": "{n, plural, one {# año} other {# años}}"
   }
 }
