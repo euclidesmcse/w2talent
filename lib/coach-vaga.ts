@@ -345,7 +345,8 @@ export function avisosIdioma(textosVaga: string[], idiomas: Ficha["idiomas"]): A
   const pedidos = new Map<string, AvisoIdioma>();
   for (const linha of textosVaga) {
     if (!linha) continue;
-    const partes = linha.replace(/[()[\]]/g, " ").split(/[,;.:]|\s(?:e|and|y|ou|or|o)\s/i);
+    // Dois-pontos fica ("Inglês: fluente"): ligam o idioma ao nível, não separam pedidos.
+    const partes = linha.replace(/[()[\]]/g, " ").split(/[,;.]|\s(?:e|and|y|ou|or|o)\s/i);
     for (const parte of partes) {
       // "Inglês fluente obrigatório; espanhol desejável": só a parte desejável fica de fora.
       if (DESEJAVEL.test(parte)) continue;
@@ -401,6 +402,15 @@ export function porQueRegra(f: Ficha, competenciasVaga: string[], now: Date = ne
   return { bate, total, cargo: melhor?.e.cargo || null, empresa: melhor?.e.empresa || null, anos: melhor ? anosNoCargo(melhor.e, now) : null };
 }
 
+const semAcento = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+
+/** O título da IA só vale se contiver o título da ficha ou o de um cargo dela (um cargo que a pessoa nunca teve não entra). */
+export function tituloDaFicha(titulo: string, f: Ficha | undefined): boolean {
+  if (!f) return false;
+  const t = semAcento(titulo);
+  return [f.titulo, ...f.experiencias.map((e) => e.cargo)].map(semAcento).some((c) => c.length >= 3 && t.includes(c));
+}
+
 /** Resposta da IA → proposta já travada. Sem resumo que sobreviva, fica o resumo atual. */
 export function sanitizarProposta(
   obj: Record<string, unknown> | null,
@@ -423,7 +433,7 @@ export function sanitizarProposta(
   const q = travarTexto(limpar(obj?.porQue, MAX_POR_QUE), p);
   removidos.push(...q.removidas);
   const tituloIa = limpar(obj?.titulo, MAX_TITULO_CV);
-  const tituloOk = tituloIa && !motivoInvencao(tituloIa, p) ? tituloIa : "";
+  const tituloOk = tituloIa && !motivoInvencao(tituloIa, p) && tituloDaFicha(tituloIa, ctx?.ficha) ? tituloIa : "";
   if (tituloIa && !tituloOk) removidos.push(tituloIa);
   const base = ctx ? cvBaseDaFicha(ctx.ficha, ctx.competenciasVaga) : { titulo: "", cargos: [], competencias: [], formacao: [], idiomas: [] };
   const cargos = ctx ? sanitizarCargos(obj?.cargos, ctx.ficha, ctx.cvTexto, removidos) : [];

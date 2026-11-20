@@ -250,6 +250,10 @@ describe("CV por vaga: trecho e trava por cargo", () => {
     const r = sanitizarProposta({ titulo: "Especialista Kubernetes" }, w2, permitidosDaFicha(f, w2, null, NOW), { ficha: f, competenciasVaga: [], cvTexto: null });
     expect(r.cv.titulo).toBe("Engenheira Cloud");
     expect(r.removidos).toContain("Especialista Kubernetes");
+    // Cargo que a pessoa nunca teve, mesmo sem competência nem número.
+    const r2 = sanitizarProposta({ titulo: "CEO e fundadora" }, w2, permitidosDaFicha(f, w2, null, NOW), { ficha: f, competenciasVaga: [], cvTexto: null });
+    expect(r2.cv.titulo).toBe("Engenheira Cloud");
+    expect(r2.removidos).toContain("CEO e fundadora");
   });
   it("prompt leva o trecho de cada cargo sem contatos", () => {
     const f = fichaCv();
@@ -327,6 +331,8 @@ describe("aviso de idioma e por que se destaca (por regra)", () => {
     expect(avisosIdioma(["Espanhol avançado"], idiomas)).toEqual([]);
     expect(avisosIdioma(["Inglês"], idiomas)).toEqual([]);
     expect(avisosIdioma(["Inglês fluente obrigatório; francês desejável"], idiomas).map((x) => x.pede)).toEqual(["fluente"]);
+    expect(avisosIdioma(["Inglês: fluente obrigatório"], idiomas)[0]?.pede).toBe("fluente");
+    expect(avisosIdioma(["English: C1 required"], idiomas)[0]?.pede).toBe("fluente");
   });
   it("cada idioma da linha fica com o seu nível", () => {
     const a = avisosIdioma(["Inglês intermediário e francês fluente"], idiomas);
