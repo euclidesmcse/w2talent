@@ -10,6 +10,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/app-header";
 import { Button, Chip, MatchBar, buttonClasses } from "@/components/ui";
 import { FichaW2Card } from "@/components/ficha-w2-card";
+import { CoachVaga } from "@/components/coach-vaga";
 import { skillName } from "@/components/skill-chips";
 import { useGapText } from "@/components/vacancy-match";
 import { formatFaixa } from "@/lib/format";
@@ -20,6 +21,8 @@ import { useOnline } from "@/lib/pwa-client";
 import type { Ficha, FichaW2 } from "@/lib/ficha";
 import type { MatchResult } from "@/lib/match";
 import type { CampoVaga } from "@/lib/envio";
+import type { Adaptacao, Lacuna } from "@/lib/coach-vaga";
+import { adaptacaoDoRascunho, rascunhoDe, w2ComRascunho, type RascunhoCoach } from "@/lib/coach-rascunho";
 
 type Vaga = {
   id: string;
@@ -46,6 +49,9 @@ type Item = {
   vaga: Vaga | null;
   match: MatchResult | null;
   paraEmpresa: Ficha | null;
+  /** Coach IA por vaga: o que a vaga pede e a ficha não mostra, e a versão já aprovada. */
+  lacunas?: Lacuna[];
+  adaptacao?: Adaptacao | null;
 };
 type Resultado = { vacancyId: string; status: string; email?: boolean };
 type Fase = "carregando" | "sem_login" | "sem_perfil" | "sem_selecao" | "sem_rede" | "erro" | "revisar" | "feito";
@@ -68,6 +74,8 @@ export default function AprovarPage() {
   const [ocupado, setOcupado] = React.useState(false);
   const [erro, setErro] = React.useState<string | null>(null);
   const [resultado, setResultado] = React.useState<Resultado[]>([]);
+  // Versão para cada vaga (coach IA ou do jeito da pessoa); só sai ao aprovar.
+  const [rascunhos, setRascunhos] = React.useState<Record<string, RascunhoCoach | null>>({});
   const tituloRef = React.useRef<HTMLHeadingElement>(null);
 
   const carregar = React.useCallback(async (ids: string[]) => {
@@ -80,6 +88,12 @@ export default function AprovarPage() {
     if (!r.ok) return setFase("erro");
     const j = await r.json();
     setItens(j.itens);
+    // O que já foi aprovado vira o rascunho; o que a pessoa está editando nesta tela fica.
+    setRascunhos((rs) => {
+      const out = { ...rs };
+      for (const it of j.itens as Item[]) if (!(it.vacancyId in out) && it.adaptacao) out[it.vacancyId] = rascunhoDe(it.adaptacao);
+      return out;
+    });
     setW2(j.perfil?.w2 ?? null);
     setLimites(j.limites);
     setFase("revisar");
@@ -122,7 +136,8 @@ export default function AprovarPage() {
     setOcupado(true);
     setErro(null);
     try {
-      const r = await postEnvio("aprovar", { vacancyId: atual.vacancyId, aprovar, hash: atual.hash });
+      const adaptacao = aprovar ? adaptacaoDoRascunho(rascunhos[atual.vacancyId]) : null;
+      const r = await postEnvio("aprovar", { vacancyId: atual.vacancyId, aprovar, hash: atual.hash, ...(adaptacao ? { adaptacao } : {}) });
       if (r.ok) {
         setItens((xs) => xs.map((x) => (x.vacancyId === atual.vacancyId ? { ...x, estado: aprovar ? "aprovada" : "nova", campos: undefined } : x)));
         if (aprovar && idx < itens.length - 1) proxima();
@@ -319,8 +334,28 @@ export default function AprovarPage() {
               <h2 id="empresa-recebe" className="text-[13px] font-medium text-muted">
                 {t("companyGets")}
               </h2>
-              <FichaW2Card ficha={atual.paraEmpresa} w2={w2} />
+              <FichaW2Card ficha={atual.paraEmpresa} w2={w2ComRascunho(w2, rascunhos[atual.vacancyId])}>
+                {adaptacaoDoRascunho(rascunhos[atual.vacancyId])?.carta ? (
+                  <div className="mt-4 border-t border-line pt-3" data-testid="previa-carta">
+                    <p className="text-[13px] font-medium text-muted">{t("coachCartaPrevia")}</p>
+                    <p className="mt-1 whitespace-pre-line text-ink">{adaptacaoDoRascunho(rascunhos[atual.vacancyId])?.carta}</p>
+                  </div>
+                ) : null}
+              </FichaW2Card>
               <p className="text-xs text-muted">{t("companyGetsHint")}</p>
+              <CoachVaga
+                vacancyId={atual.vacancyId}
+                hash={atual.hash}
+                estado={atual.estado}
+                lacunas={atual.lacunas ?? []}
+                adaptacao={atual.adaptacao ?? null}
+                w2={w2}
+                rascunho={rascunhos[atual.vacancyId] ?? null}
+                onRascunho={(r) => setRascunhos((rs) => ({ ...rs, [atual.vacancyId]: r }))}
+                travado={atual.estado === "aprovada" || bloqueada}
+                online={online}
+                onMudou={() => void carregar(itens.map((i) => i.vacancyId))}
+              />
             </section>
           ) : null}
         </div>

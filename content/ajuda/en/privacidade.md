@@ -14,6 +14,10 @@ In candidate search, email and phone are masked (for example, a***@e***.com). Th
 
 Some companies turn on the integration with their hiring system (ATS). In that case, the application you send also goes to that system, with the same content you approved: the W2 Profile, without e-mail, phone or links. The system is also told when the company changes your application's stage, and your e-mail and phone only go there after the company invites you to an interview. There, the application follows the company's privacy rules.
 
+## Version and message for one job
+
+On the Review and approve screen you can send a version of the summary and highlights and a message for one job. It goes only to that company (e-mail, the job screen and, if enabled, the ATS integration), together with the application, and is deleted with it. If you use AI to prepare it, the AI receives your profile without name and contacts and the job; your full CV is not sent to the AI, it is only used to check that nothing was made up.
+
 ## Salary expectation
 
 The salary expectation you put in your profile shows to recruiters on your W2 Profile and in candidate search. In the market numbers ([Tech job market](/mercado) and Post a job), recruiters only see aggregated ranges from **10 or more profiles**, never anyone's own expectation, and never the minimum or the maximum.

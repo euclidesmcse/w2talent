@@ -14,6 +14,10 @@ Na busca de candidatos, e-mail e telefone aparecem mascarados (por exemplo, a***
 
 Algumas empresas ligam a integração com o sistema de seleção delas (ATS). Nesse caso, a candidatura que você enviar também vai para esse sistema, com o mesmo conteúdo que você aprovou: a Ficha W2, sem e-mail, telefone nem links. O sistema também fica sabendo quando a empresa muda a etapa da sua candidatura, e o seu e-mail e telefone só vão para lá depois que ela chama você para entrevista. Lá, a candidatura segue as regras de privacidade da empresa.
 
+## Versão e mensagem para uma vaga
+
+Na tela Revisar e aprovar você pode mandar uma versão do resumo e dos destaques e uma mensagem para uma vaga. Ela vai só para aquela empresa (e-mail, tela da vaga e, se ligada, a integração com ATS), junto da candidatura, e some com ela. Se você usar a IA para preparar, a IA recebe a sua ficha sem nome e sem contatos e a vaga; o seu CV completo não vai para a IA, só serve para conferir que nada foi inventado.
+
 ## Pretensão salarial
 
 A pretensão que você coloca na ficha aparece para recrutadores na sua Ficha W2 e na busca de candidatos. Nos números de mercado ([Mercado de TI](/mercado) e Publicar vaga), recrutadores veem só faixas agregadas de **10 ou mais fichas**, nunca a pretensão de alguém, e nunca o mínimo nem o máximo.

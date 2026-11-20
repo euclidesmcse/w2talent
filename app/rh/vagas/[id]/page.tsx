@@ -324,6 +324,31 @@ export default function CandidaturasDaVagaPage() {
                             }
                           />
                         ) : null}
+                        {it.adaptacao ? (
+                          <details className="basis-full rounded-card border border-line-soft bg-canvas px-3.5 py-2.5 text-sm" data-testid="rh-adaptacao">
+                            <summary className="cursor-pointer text-[13px] font-medium">
+                              {it.adaptacao.carta ? t("adaptacaoComCarta") : t("adaptacaoTitulo")}
+                              <span className="ml-2 font-normal text-muted">{it.adaptacao.ia ? t("adaptacaoIa") : t("adaptacaoCandidato")}</span>
+                            </summary>
+                            {it.adaptacao.carta ? (
+                              <div className="mt-2">
+                                <p className="text-[13px] font-medium text-muted">{t("adaptacaoCarta")}</p>
+                                <p className="mt-1 whitespace-pre-line">{it.adaptacao.carta}</p>
+                              </div>
+                            ) : null}
+                            {it.adaptacao.resumo ? (
+                              <div className="mt-2">
+                                <p className="text-[13px] font-medium text-muted">{t("adaptacaoResumo")}</p>
+                                <p className="mt-1">{it.adaptacao.resumo}</p>
+                                {it.adaptacao.destaques.length ? (
+                                  <ul className="mt-1 list-disc pl-5">
+                                    {it.adaptacao.destaques.map((d, k) => <li key={k}>{d}</li>)}
+                                  </ul>
+                                ) : null}
+                              </div>
+                            ) : null}
+                          </details>
+                        ) : null}
                       </li>
                     );
                   })}

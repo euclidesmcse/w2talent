@@ -118,6 +118,10 @@ type CandidaturaCopy = {
   idiomas: string;
   referencia: string;
   rodape: string;
+  /** Coach IA por vaga: carta do candidato e aviso de que resumo e destaques foram feitos para esta vaga. */
+  carta: string;
+  adaptadaIa: string;
+  adaptada: string;
 };
 
 const CANDIDATURA: Record<EmailLocale, CandidaturaCopy> = {
@@ -133,6 +137,9 @@ const CANDIDATURA: Record<EmailLocale, CandidaturaCopy> = {
     idiomas: "Idiomas",
     referencia: "Referência da candidatura",
     rodape: "O e-mail e o telefone do candidato ficam protegidos. Responder pelo W2Talent chega em breve; guarde a referência acima.",
+    carta: "Mensagem do candidato",
+    adaptadaIa: "Resumo, destaques e mensagem adaptados a esta vaga pelo candidato, com ajuda de IA.",
+    adaptada: "Resumo, destaques e mensagem adaptados a esta vaga pelo candidato.",
   },
   en: {
     assunto: (t, n) => `Application for ${t}: ${n}`,
@@ -146,6 +153,9 @@ const CANDIDATURA: Record<EmailLocale, CandidaturaCopy> = {
     idiomas: "Languages",
     referencia: "Application reference",
     rodape: "The candidate's e-mail and phone stay protected. Replying through W2Talent is coming soon; keep the reference above.",
+    carta: "Message from the candidate",
+    adaptadaIa: "Summary, highlights and message adapted to this job by the candidate, with AI help.",
+    adaptada: "Summary, highlights and message adapted to this job by the candidate.",
   },
   es: {
     assunto: (t, n) => `Postulación para ${t}: ${n}`,
@@ -159,6 +169,9 @@ const CANDIDATURA: Record<EmailLocale, CandidaturaCopy> = {
     idiomas: "Idiomas",
     referencia: "Referencia de la postulación",
     rodape: "El e-mail y el teléfono del candidato están protegidos. Responder por W2Talent llegará pronto; guarda la referencia de arriba.",
+    carta: "Mensaje del candidato",
+    adaptadaIa: "Resumen, destacados y mensaje adaptados a esta vacante por el candidato, con ayuda de IA.",
+    adaptada: "Resumen, destacados y mensaje adaptados a esta vacante por el candidato.",
   },
 };
 
@@ -177,6 +190,10 @@ export type CandidaturaEmailInput = {
   idiomas: string[];
   matchPct: number;
   referencia: string;
+  /** Coach IA por vaga: carta do candidato (vazio = sem carta). */
+  carta?: string;
+  /** "ia" ou "candidato" quando resumo e destaques foram adaptados para esta vaga. */
+  adaptada?: "ia" | "candidato" | null;
 };
 
 export function renderCandidaturaEmail(i: CandidaturaEmailInput): { subject: string; html: string; text: string } {
@@ -184,6 +201,7 @@ export function renderCandidaturaEmail(i: CandidaturaEmailInput): { subject: str
   const subject = c.assunto(i.vagaTitulo, i.nomeCurto);
   const linhaCargo = [i.cargo, i.anos > 0 ? c.anos(i.anos) : ""].filter(Boolean).join(" · ");
   const blocos: [string, string | string[]][] = [
+    [c.carta, i.carta ?? ""],
     [c.pretensao, i.pretensao],
     [c.resumo, i.resumo],
     [c.competencias, i.competencias.join(" · ")],
@@ -191,6 +209,7 @@ export function renderCandidaturaEmail(i: CandidaturaEmailInput): { subject: str
     [c.idiomas, i.idiomas.join(" · ")],
   ];
   const cheios = blocos.filter(([, v]) => (Array.isArray(v) ? v.length > 0 : !!v));
+  const aviso = i.adaptada === "ia" ? c.adaptadaIa : i.adaptada === "candidato" ? c.adaptada : "";
 
   const text = [
     c.intro(i.nomeCurto, i.vagaTitulo),
@@ -198,6 +217,7 @@ export function renderCandidaturaEmail(i: CandidaturaEmailInput): { subject: str
     "",
     `${i.nomeCurto}${linhaCargo ? ` · ${linhaCargo}` : ""}`,
     ...cheios.flatMap(([k, v]) => ["", `${k}:`, ...(Array.isArray(v) ? v.map((x) => `- ${x}`) : [v])]),
+    ...(aviso ? ["", aviso] : []),
     "",
     `${c.referencia}: ${i.referencia}`,
     "",
@@ -217,7 +237,7 @@ export function renderCandidaturaEmail(i: CandidaturaEmailInput): { subject: str
 <tr><td style="padding:24px 24px 0;font:700 18px 'Space Grotesk',Inter,Arial,sans-serif">W2<span style="color:#1F4FD8">Talent</span></td></tr>
 <tr><td style="padding:16px 24px 0;font-size:15px;line-height:22px"><p style="margin:0 0 8px">${esc(c.intro(i.nomeCurto, i.vagaTitulo))}</p><p style="margin:0;font-weight:600;color:#1F4FD8">${esc(c.match(i.matchPct))}</p></td></tr>
 <tr><td style="padding:16px 24px 0"><div style="border:1px solid #E5E7EB;border-radius:8px;padding:16px;font-size:14px;line-height:21px">
-<p style="margin:0;font-weight:600">${esc([i.nomeCurto, linhaCargo].filter(Boolean).join(" · "))}</p>${cheios.map(secao).join("")}
+<p style="margin:0;font-weight:600">${esc([i.nomeCurto, linhaCargo].filter(Boolean).join(" · "))}</p>${cheios.map(secao).join("")}${aviso ? `<p style="margin:16px 0 0;font-size:12px;color:#4B5563">${esc(aviso)}</p>` : ""}
 </div></td></tr>
 <tr><td style="padding:16px 24px 0;font-size:13px;color:#4B5563">${esc(c.referencia)}: <span style="font-family:monospace">${esc(i.referencia)}</span></td></tr>
 <tr><td style="padding:16px 24px 24px;font-size:13px;line-height:20px;color:#4B5563">${esc(c.rodape)}</td></tr>

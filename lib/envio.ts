@@ -23,6 +23,7 @@ import type { MensagemWebhook } from "./fila";
 import { entrevistasDasCandidaturas } from "./entrevista";
 import { gravarSinais, registrarSinal, type Sinal } from "./sinais";
 import { partesParaSinal } from "./ranking";
+import { lacunasDaVaga, lerAdaptacao, sanitizarAdaptacao, type Adaptacao, type Lacuna } from "./coach-vaga";
 
 export const ENVIO_LIMITE_LOTE = 10;
 export const ENVIO_LIMITE_24H = 30;
@@ -193,7 +194,11 @@ export function limparIds(ids: unknown, max = 50): string[] {
 }
 
 /** `hash`: versão da vaga mostrada na tela; a aprovação só vale para essa versão. */
-export type ItemEstado = { vacancyId: string; vaga: VagaRow | null; match: MatchResult | null; hash: string | null } & EstadoVaga;
+/**
+ * Coach IA por vaga: `lacunas` (o que a vaga pede e falta na ficha, por regra) e `adaptacao` (o que
+ * o candidato conferiu ao aprovar; na vaga que mudou, a da versão anterior, para ele rever).
+ */
+export type ItemEstado = { vacancyId: string; vaga: VagaRow | null; match: MatchResult | null; hash: string | null; lacunas: Lacuna[]; adaptacao: Adaptacao | null } & EstadoVaga;
 
 export async function estadoDasVagas(db: PrismaClient, perfil: PerfilEnvio, vacancyIds: string[], now = new Date()): Promise<ItemEstado[]> {
   const [vagas, aprovacoes, enviadas] = await Promise.all([
@@ -204,7 +209,15 @@ export async function estadoDasVagas(db: PrismaClient, perfil: PerfilEnvio, vaca
   const out: ItemEstado[] = [];
   for (const id of vacancyIds) {
     const v = vagas.get(id) ?? null;
-    const base = { vacancyId: id, vaga: v, match: v ? matchDoPerfil(perfil.ficha, v, now) : null, hash: v ? await hashVaga(snapshotVaga(v)) : null };
+    const ap0 = aprovacoes.find((a) => a.vacancyId === id);
+    const base = {
+      vacancyId: id,
+      vaga: v,
+      match: v ? matchDoPerfil(perfil.ficha, v, now) : null,
+      hash: v ? await hashVaga(snapshotVaga(v)) : null,
+      lacunas: v ? lacunasDaVaga(perfil.ficha, snapshotVaga(v).competencias) : [],
+      adaptacao: ap0 ? lerAdaptacao(ap0.adaptacao) : null,
+    };
     const env = enviadas.find((a) => a.vacancyId === id);
     if (env) {
       out.push({ ...base, estado: "enviada", enviadaEm: env.createdAt.toISOString() });
@@ -233,7 +246,15 @@ export async function estadoDasVagas(db: PrismaClient, perfil: PerfilEnvio, vaca
 export type ResultadoAprovar = { ok: true; aprovadaEm: string } | { ok: false; motivo: "nao_encontrada" | "indisponivel" | "ja_enviada" | "mudou" };
 
 /** `hashLido`: o hash que a tela mostrou. Se a vaga mudou depois disso, não aprova (a tela recarrega). */
-export async function aprovarVaga(db: PrismaClient, candidateId: string, vacancyId: string, hashLido: string, now = new Date()): Promise<ResultadoAprovar> {
+/** `adaptacao` (coach IA por vaga, D6): resumo, destaques e carta que o candidato conferiu; sem ela, vai a Ficha W2 de sempre. */
+export async function aprovarVaga(
+  db: PrismaClient,
+  candidateId: string,
+  vacancyId: string,
+  hashLido: string,
+  now = new Date(),
+  adaptacaoBruta?: unknown,
+): Promise<ResultadoAprovar> {
   const v = (await carregarVagas(db, [vacancyId])).get(vacancyId);
   if (!v) return { ok: false, motivo: "nao_encontrada" };
   if (await db.application.findFirst({ where: { candidateId, vacancyId }, select: { id: true } })) return { ok: false, motivo: "ja_enviada" };
@@ -241,13 +262,21 @@ export async function aprovarVaga(db: PrismaClient, candidateId: string, vacancy
   const snap = snapshotVaga(v);
   const hash = await hashVaga(snap);
   if (hash !== hashLido) return { ok: false, motivo: "mudou" };
-  const dados = { vacancyHash: hash, snapshot: snap as unknown as Prisma.InputJsonValue, aprovadaEm: now };
+  const adaptacao = adaptacaoBruta == null ? null : sanitizarAdaptacao(adaptacaoBruta, hash, now);
+  const dados = {
+    vacancyHash: hash,
+    snapshot: snap as unknown as Prisma.InputJsonValue,
+    adaptacao: adaptacao ? (adaptacao as unknown as Prisma.InputJsonValue) : Prisma.DbNull,
+    aprovadaEm: now,
+  };
   await db.applicationApproval.upsert({
     where: { candidateId_vacancyId: { candidateId, vacancyId } },
     create: { candidateId, vacancyId, ...dados },
     update: dados,
   });
   await registrarSinal(db, { tipo: "vaga_aprovada", ator: "candidato", candidateId, vacancyId, createdAt: now });
+  // D8: só o fato (usou a versão para a vaga, com IA ou não, com carta ou não), sem o texto.
+  if (adaptacao) await registrarSinal(db, { tipo: "coach_usado", ator: "candidato", candidateId, vacancyId, dados: { ia: adaptacao.ia ? "1" : "0", carta: adaptacao.carta ? "1" : "0" }, createdAt: now });
   return { ok: true, aprovadaEm: now.toISOString() };
 }
 
@@ -270,7 +299,7 @@ export type ResultadoEnvio =
   | { ok: false; erro: "nada_para_enviar" };
 
 /** Entrada do e-mail: `referencia` é o proxyThreadId da candidatura (também a chave de idempotência). */
-export type EmailCandidatura = { referencia: string; vaga: VagaRow; match: MatchResult };
+export type EmailCandidatura = { referencia: string; vaga: VagaRow; match: MatchResult; adaptacao?: Adaptacao | null };
 
 export async function usadasNas24h(db: Db, candidateId: string, now: Date): Promise<number> {
   // Só o que o candidato enviou; contatos de recrutadores não contam.
@@ -313,7 +342,7 @@ export async function enviarCandidaturas(
       usadasNas24h(tx, perfil.id, now),
     ]);
     const itens: ResultadoItem[] = [];
-    const prontas: VagaRow[] = [];
+    const prontas: { v: VagaRow; adaptacao: Adaptacao | null }[] = [];
     const sinais: Sinal[] = [];
     for (const id of todos) {
       const v = vagas.get(id);
@@ -330,7 +359,7 @@ export async function enviarCandidaturas(
           const campos = camposMudados(ap.snapshot, snap);
           itens.push({ vacancyId: id, status: "mudou", campos });
           sinais.push({ tipo: "aprovacao_caiu", ator: "sistema", candidateId: perfil.id, vacancyId: id, dados: { campos: campos.join(",") }, createdAt: now });
-        } else prontas.push(v);
+        } else prontas.push({ v, adaptacao: lerAdaptacao(ap.adaptacao) });
       }
     }
     if (prontas.length && usadas + prontas.length > ENVIO_LIMITE_24H) {
@@ -339,12 +368,12 @@ export async function enviarCandidaturas(
     }
     const emails: { applicationId: string; mensagem: EmailMessage }[] = [];
     const criadas: { applicationId: string; companyId: string }[] = [];
-    for (const v of prontas) {
+    for (const { v, adaptacao } of prontas) {
       const proxyThreadId = novoProxyThreadId();
       // O e-mail é montado agora, com o perfil e a vaga que a pessoa aprovou, e guardado com a
       // candidatura até entrar na fila: uma nova tentativa manda exatamente o mesmo conteúdo.
       const match = matchDoPerfil(perfil.ficha, v, now);
-      const mensagem = mensagemCandidatura(perfil, { referencia: proxyThreadId, vaga: v, match });
+      const mensagem = mensagemCandidatura(perfil, { referencia: proxyThreadId, vaga: v, match, adaptacao });
       const app = await tx.application.create({
         data: {
           vacancyId: v.id,
@@ -355,6 +384,7 @@ export async function enviarCandidaturas(
           loteId,
           createdAt: now,
           ...(mensagem ? { emailPendente: mensagem as unknown as Prisma.InputJsonValue } : {}),
+          ...(adaptacao ? { adaptacao: adaptacao as unknown as Prisma.InputJsonValue } : {}),
         },
         select: { id: true },
       });
@@ -449,9 +479,12 @@ export function mensagemCandidatura(perfil: PerfilEnvio, e: EmailCandidatura): E
     cargo: [f.titulo, f.localidade].filter(Boolean).join(" · "),
     anos: anosExperiencia(f),
     pretensao: formatPretensoes(f.pretensoes, locale) || f.regimes.map((r) => nomeRegime(r, locale)).join("/"),
-    resumo: perfil.w2?.resumo ?? "",
+    // Coach IA por vaga: com a versão que o candidato conferiu, ela vai no lugar do resumo e dos destaques.
+    resumo: e.adaptacao?.resumo || perfil.w2?.resumo || "",
     competencias: topSkills(f).map((s) => `${getSkill(s.skillId)?.label ?? s.skillId}${s.anos > 0 ? ` (${s.anos}a)` : ""}`),
-    destaques: perfil.w2?.destaques ?? [],
+    destaques: e.adaptacao?.resumo && e.adaptacao.destaques.length ? e.adaptacao.destaques : perfil.w2?.destaques ?? [],
+    carta: e.adaptacao?.carta ?? "",
+    adaptada: e.adaptacao ? (e.adaptacao.ia ? "ia" : "candidato") : null,
     idiomas: f.idiomas.filter((i) => i.idioma).map((i) => i.idioma),
     matchPct: e.match.pct,
     referencia: e.referencia,

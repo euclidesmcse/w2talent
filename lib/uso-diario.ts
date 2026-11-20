@@ -20,6 +20,8 @@ export const LIMITE_RESUMOS_CV_DIA = 40;
 export const LIMITE_PERGUNTAS_AJUDA_DIA = 20;
 /** 2.6b-1: conversas novas com a equipe (Falar com uma pessoa), por IP (D4). */
 export const LIMITE_CONVERSAS_DIA = 3;
+/** Coach IA por vaga (D7): versões da Ficha W2 e cartas para uma vaga, por candidato. */
+export const LIMITE_COACH_VAGA_DIA = 20;
 
 export function ipDaRequisicao(req: NextRequest | Request): string {
   return req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "sem-ip";

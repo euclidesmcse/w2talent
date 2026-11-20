@@ -16,6 +16,8 @@ export const TIPOS_SINAL = [
   "entrevista_marcada", // 2.5a: o candidato escolheu ou trocou o horário
   "entrevista_cancelada", // 2.5a: entrevista cancelada (por quem, em que status estava)
   "ficha_vista", // 2.8: o recrutador abriu a ficha da candidatura pela primeira vez
+  "coach_preparado", // coach IA por vaga: o candidato pediu a versão para a vaga
+  "coach_usado", // coach IA por vaga: aprovou com a versão para a vaga (ia, carta em dados)
 ] as const;
 export type TipoSinal = (typeof TIPOS_SINAL)[number];
 

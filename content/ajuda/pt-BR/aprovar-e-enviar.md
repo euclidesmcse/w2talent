@@ -17,6 +17,18 @@ No W2Talent nada é enviado sem a sua aprovação, vaga por vaga.
 
 Para enviar você precisa entrar como candidato e ter a ficha publicada.
 
+## Preparar para esta vaga
+
+Ao lado de "O que a empresa vai receber", cada vaga mostra o que ela pede e a sua ficha não mostra, com link para ver essa competência no [Mercado](/mercado). Se você tem, inclua na [Minha ficha](/minha-ficha).
+
+Você também pode preparar uma versão para a vaga:
+
+- **Preparar com IA:** marque o aceite e a IA escreve uma versão do seu resumo e dos destaques e uma mensagem curta para a empresa, só com o que está na sua ficha. Frase que cita competência ou número que não está na ficha, na Ficha W2 ou no seu CV completo sai antes de chegar a você, e a tela mostra o que saiu. Até 20 por dia.
+- **Escrever do meu jeito:** começa da sua Ficha W2, sem IA.
+- Você edita tudo e escolhe o que vai: a versão do resumo, a mensagem, as duas ou nenhuma. A prévia ao lado mostra como a empresa vai ver.
+- A empresa vê se a versão foi feita com ajuda de IA. A mensagem não leva e-mail, telefone nem links.
+- Para mudar depois de aprovar, desfaça a aprovação. Se a vaga mudar, a versão fica marcada como feita para a versão anterior, para você conferir.
+
 ## Regras do envio
 
 - Até 10 vagas por envio e 30 candidaturas em 24 horas.

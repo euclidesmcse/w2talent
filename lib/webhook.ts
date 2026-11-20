@@ -24,6 +24,7 @@ import { matchCandidato } from "./match-candidato";
 import type { EventoWebhook, MensagemWebhook, ResultadoEntrega } from "./fila";
 import type { EmailMessage } from "./email";
 import { emailLocale, renderWebhookPausadoEmail } from "./email-templates";
+import { lerAdaptacao } from "./coach-vaga";
 
 type Db = PrismaClient;
 
@@ -162,9 +163,17 @@ type LinhaCandidatura = {
   createdAt: Date;
   etapa: string;
   contatoLiberadoEm: Date | null;
+  /** Coach IA por vaga: versão da Ficha W2 e carta que o candidato conferiu para esta vaga. */
+  adaptacao?: unknown;
   vacancy: { id: string; titulo: string; nivel: string | null; regime: string | null; localidade: string | null; faixaDe: number | null; faixaAte: number | null; faixaMoeda: string | null; stack: unknown; updatedAt: Date } | null;
   candidate: Record<string, unknown> & { id: string; email: string; celular: string | null };
 };
+
+/** O que a empresa vê da adaptação (sem o hash da vaga). */
+function adaptacaoParaEmpresa(v: unknown) {
+  const a = lerAdaptacao(v);
+  return a ? { resumo: a.resumo, destaques: a.destaques, carta: a.carta, feita_com_ia: a.ia } : null;
+}
 
 /** Monta o `data` de um evento de candidatura. Contato só com `contatoLiberadoEm` (2.4c). */
 export function dadosDaCandidatura(a: LinhaCandidatura, now: number): Record<string, unknown> {
@@ -191,6 +200,7 @@ export function dadosDaCandidatura(a: LinhaCandidatura, now: number): Record<str
       enviada_em: a.createdAt.toISOString(),
       etapa: a.etapa,
       match: m ? { pct: m.pct, gaps: m.gaps } : null,
+      adaptacao: adaptacaoParaEmpresa(a.adaptacao),
     },
     candidato: {
       id: a.candidate.id,
@@ -213,7 +223,7 @@ export async function corpoDaMensagem(db: Db, m: MensagemWebhook, now = new Date
   if (!m.applicationId) return null;
   const a = await db.application.findFirst({
     where: { id: m.applicationId, companyId: m.companyId, origem: "candidaturaLote" },
-    select: { id: true, proxyThreadId: true, createdAt: true, etapa: true, contatoLiberadoEm: true, vacancy: { select: VAGA }, candidate: true },
+    select: { id: true, proxyThreadId: true, createdAt: true, etapa: true, contatoLiberadoEm: true, adaptacao: true, vacancy: { select: VAGA }, candidate: true },
   });
   if (!a) return null;
   const data = dadosDaCandidatura(a as unknown as LinhaCandidatura, now.getTime());
