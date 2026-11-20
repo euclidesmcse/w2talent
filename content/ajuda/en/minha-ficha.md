@@ -1,6 +1,6 @@
 ---
 titulo: Building my profile from my CV
-resumo: The three steps of My profile: CV, check the fields and create the W2 Profile.
+resumo: How to import your CV, check your profile in short steps and create the W2 Profile.
 areas: candidato
 telas: /minha-ficha, /painel
 ordem: 4
@@ -8,11 +8,12 @@ ordem: 4
 
 In [My profile](/minha-ficha) you turn your CV into a profile companies read in seconds.
 
-## The three steps
+## How it works
 
-1. **Send your CV** as PDF or Word (.docx), up to 5 MB, or paste the text. AI reads the text and fills in the fields. Your email and phone are read by rules and removed from the text before it goes to AI.
-2. **Check the fields.** Fix what the reading got wrong. The profile needs the required fields; the [dashboard](/painel) shows what is missing.
-3. **Create the W2 Profile.** AI writes a short summary and up to 3 highlights. Then you publish the profile with your candidate account.
+1. **Choose how to start.** "I have a CV" reads a PDF or Word (.docx) file up to 5 MB, your LinkedIn PDF (on your profile, More or Resources, then Save to PDF) or pasted text. "Start from scratch" opens an empty profile. You don't need to sign in to read and check; sign-in is only needed to publish.
+2. **Follow the reading.** The screen shows each stage (opening the file, removing contacts and IDs, AI reading, organizing) and only checks it when it is really done. Your email and phone are read by rules and removed from the text before it goes to AI. The AI does not rewrite what you wrote.
+3. **Check it in 4 short steps:** personal details and what you are looking for, experience, education and languages, skills. You can go back to any step from the bar at the top, and everything stays in this browser's draft. Each step says what it is missing and shows **professional tips**, which only warn (for example, two full-time jobs at the same time, a job without dates or a skill without years of use).
+4. **Create the W2 Profile.** AI writes a short summary and up to 3 highlights. Then you publish the profile with your candidate account. If a required field is missing, the screen opens its step; the [dashboard](/painel) also shows what is missing.
 
 ## Jobs: type, duties and skills
 
