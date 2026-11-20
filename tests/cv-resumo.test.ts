@@ -12,7 +12,14 @@ const TEXTO = "Bia\n[EMAIL]\n\nArquiteta Cloud — Nuvia (2022–hoje)\nMigrou 1
 
 function fakeDb() {
   const gravados: unknown[] = [];
-  return { gravados, db: { candidateCv: { updateMany: async ({ data }: { data: { resumos: unknown } }) => (gravados.push(data.resumos), { count: 1 }) } } as never };
+  const db = {
+    atual: null as unknown,
+    candidateCv: {
+      findUnique: async () => (db.atual == null ? null : { resumos: db.atual }),
+      updateMany: async ({ data }: { data: { resumos: unknown } }) => (gravados.push(data.resumos), (db.atual = data.resumos), { count: 1 }),
+    },
+  };
+  return { gravados, db: db as never, estado: db };
 }
 
 describe("resumo do CV completo", () => {
@@ -57,6 +64,16 @@ describe("resumo do CV completo", () => {
     expect((await resumoDoCv(db, { ...base, texto: `${TEXTO}\nAZ-305`, resumos: gravados[1], chat })).novo).toBe(true);
     expect(pedidos).toHaveLength(3);
     expect(await hashResumo(TEXTO, CARGOS)).not.toBe(await hashResumo(TEXTO, [CARGOS[0]]));
+  });
+
+  it("dois idiomas ao mesmo tempo: um não apaga o outro", async () => {
+    const chat = async () => ({ text: JSON.stringify({ geral: "Carreira em infraestrutura e nuvem, com migrações grandes.", cargos: [] }), inputTokens: 0, outputTokens: 0 }) as never;
+    const { db, estado } = fakeDb();
+    const base = { profileId: "p1", texto: TEXTO, cargos: CARGOS, resumos: null, chat };
+    // Os dois leram o CV antes de qualquer um guardar.
+    await resumoDoCv(db, { ...base, idioma: "es" });
+    await resumoDoCv(db, { ...base, idioma: "en" });
+    expect(Object.keys((estado.atual as { porIdioma: object }).porIdioma).sort()).toEqual(["en", "es"]);
   });
 
   it("a IA sem resumo lança (a rota responde erro)", async () => {

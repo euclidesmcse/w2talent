@@ -91,8 +91,11 @@ export async function resumoDoCv(
   const s = sanitizarResumo(parseJsonObject(r.text), opts.cargos.length);
   if (!s) throw new Error("resposta da IA sem resumo");
   const resumo: ResumoCv = { ...s, geradoEm: (opts.now ?? new Date()).toISOString(), ...(r.model ? { modelo: r.model } : {}) };
-  guardados.porIdioma[idioma] = resumo;
+  // Relê o que está guardado agora: outro recrutador pode ter gerado outro idioma enquanto a IA respondia.
+  const agora = await db.candidateCv.findUnique({ where: { profileId: opts.profileId }, select: { resumos: true } });
+  const atuais = guardadosDe(agora?.resumos ?? guardados, hash);
+  atuais.porIdioma[idioma] = resumo;
   // updateMany: se o candidato apagou o CV enquanto a IA respondia, não recria nada.
-  await db.candidateCv.updateMany({ where: { profileId: opts.profileId }, data: { resumos: guardados } });
+  await db.candidateCv.updateMany({ where: { profileId: opts.profileId }, data: { resumos: atuais } });
   return { resumo, novo: true };
 }
