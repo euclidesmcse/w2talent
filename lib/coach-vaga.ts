@@ -79,7 +79,9 @@ function lerSkills(texto: string): { ids: string[]; resto: string } {
   for (let n = 3; n >= 1; n--) {
     for (let i = 0; i + n <= toks.length; i++) {
       if (usados.slice(i, i + n).some(Boolean)) continue;
-      const fonte = toks.slice(i, i + n).map((x) => x.t).join(" ");
+      // "PL/SQL", "Pub/Sub": tokens grudados por barra contam como um nome só antes de separar.
+      const colado = fonteTexto.slice(toks[i].ini, toks[i + n - 1].fim).replace(/[.!?]+$/, "");
+      const fonte = n > 1 && /^[^\s]+$/.test(colado) && colado.includes("/") && normalizeSkill(colado) ? colado : toks.slice(i, i + n).map((x) => x.t).join(" ");
       const id = normalizeSkill(fonte);
       if (!id) continue;
       const rotulo = getSkill(id)?.label ?? "";

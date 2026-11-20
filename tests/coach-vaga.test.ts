@@ -84,6 +84,13 @@ describe("trava (D3)", () => {
     expect(motivoInvencao("Reduziu custos com EC2 em 10,5%.", com10e5)).toBe("10.5");
     expect(motivoInvencao("Reduziu custos com EC2 em 10,5%.", { skills: q.skills, numeros: new Set(["10.5"]) })).toBeNull();
   });
+  it("nome com barra conta inteiro (PL/SQL não passa por SQL)", () => {
+    const f = ficha();
+    f.stack.push({ skillId: id("SQL"), anos: 4 });
+    const q = permitidosDaFicha(f, w2, null, NOW);
+    expect(motivoInvencao("Domina SQL.", q)).toBeNull();
+    expect(motivoInvencao("Domina PL/SQL.", q)).toBe("PL/SQL");
+  });
   it("tira competência ou número que não aparecem", () => {
     expect(motivoInvencao("Domina Python.", p)).toBe("Python");
     expect(motivoInvencao("Liderou 12 pessoas.", p)).toBe("12");
