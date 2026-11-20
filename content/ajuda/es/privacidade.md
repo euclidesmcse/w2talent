@@ -14,6 +14,10 @@ En la búsqueda de candidatos, el correo y el teléfono aparecen enmascarados (p
 
 Algunas empresas activan la integración con su sistema de selección (ATS). En ese caso, la postulación que envíes también va a ese sistema, con el mismo contenido que aprobaste: la Ficha W2, sin e-mail, teléfono ni enlaces. El sistema también se entera cuando la empresa cambia la etapa de tu postulación, y tu e-mail y teléfono solo van allí después de que te llama a entrevista. Allí, la postulación sigue las reglas de privacidad de la empresa.
 
+## Versión y mensaje para una vacante
+
+En la pantalla Revisar y aprobar puedes enviar una versión del resumen y los destacados y un mensaje para una vacante. Va solo a esa empresa (e-mail, la pantalla de la vacante y, si está activada, la integración con ATS), junto con la postulación, y se borra con ella. Si usas la IA para prepararla, la IA recibe tu ficha sin nombre ni contactos y la vacante; tu CV completo no va a la IA, solo sirve para comprobar que nada se inventó.
+
 ## Pretensión salarial
 
 La pretensión que pones en tu ficha aparece para los reclutadores en tu Ficha W2 y en la búsqueda de candidatos. En los números de mercado ([Mercado de TI](/mercado) y Publicar vacante), los reclutadores ven solo rangos agregados de **10 o más fichas**, nunca la pretensión de alguien, y nunca el mínimo ni el máximo.

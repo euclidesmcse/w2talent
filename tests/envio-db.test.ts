@@ -209,6 +209,28 @@ describeDb("Aprovar antes de enviar", () => {
     expect(JSON.stringify(sinais)).not.toContain(EMAIL);
   });
 
+  it("coach IA por vaga: a versão aprovada vai na candidatura, no e-mail e nos sinais", async () => {
+    const v = await vaga("Analista Cloud Coach");
+    const [it] = await estadoDasVagas(db, perfil, [v.id], NOW);
+    expect(it.lacunas).toEqual([]);
+    const r = await aprovarVaga(db, perfil.id, v.id, it.hash!, NOW, { resumo: "Analista com AWS e Terraform.", destaques: ["Migrou 30 servidores"], carta: "Quero cuidar da AWS de vocês. Escreva para bia@x.com", ia: true });
+    expect(r).toMatchObject({ ok: true });
+    const [depois] = await estadoDasVagas(db, perfil, [v.id], NOW);
+    expect(depois.adaptacao).toMatchObject({ resumo: "Analista com AWS e Terraform.", ia: true, vacancyHash: it.hash });
+    expect(depois.adaptacao!.carta).not.toContain("bia@x.com");
+    const emails: EmailMessage[] = [];
+    const env = await enviarCandidaturas(db, perfil, [v.id], { now: NOW, enviarEmail: async (m) => { emails.push(m); } });
+    expect(env).toMatchObject({ ok: true, itens: [{ status: "enviada" }] });
+    const app = await db.application.findFirst({ where: { candidateId: perfil.id, vacancyId: v.id } });
+    expect(app!.adaptacao).toMatchObject({ resumo: "Analista com AWS e Terraform.", ia: true });
+    expect(emails[0].text).toContain("Quero cuidar da AWS de vocês.");
+    expect(emails[0].text).toContain("Analista com AWS e Terraform.");
+    expect(emails[0].text).toContain("com ajuda de IA");
+    const sinais = await db.feedbackSignal.findMany({ where: { candidateId: perfil.id, vacancyId: v.id, tipo: "coach_usado" } });
+    expect(sinais).toHaveLength(1);
+    expect(sinais[0].dados).toEqual({ ia: "1", carta: "1" });
+  });
+
   it("não aprova uma versão da vaga diferente da que a tela mostrou", async () => {
     const v = await vaga("Muda com a tela aberta");
     const [antes] = await estadoDasVagas(db, perfil, [v.id], NOW);

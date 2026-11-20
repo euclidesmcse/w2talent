@@ -32,7 +32,7 @@ export const TASKS = {
   interview_questions: { kind: "chat", json: true, minContext: 8_000, defaultWorkersModel: TEXT_MODEL },
   ficha_w2: { kind: "chat", json: true, minContext: 32_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
   match_explain: { kind: "chat", json: true, minContext: 16_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
-  coach_candidate: { kind: "chat", minContext: 32_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
+  coach_candidate: { kind: "chat", json: true, minContext: 32_000, personalData: true, defaultWorkersModel: TEXT_MODEL },
   coach_recruiter: { kind: "chat", minContext: 32_000, defaultWorkersModel: TEXT_MODEL },
   // 2.6a-2: a Ajuda lê a resposta em JSON ({respondido, resposta, fontes}).
   support_chat: { kind: "chat", json: true, minContext: 32_000, defaultWorkersModel: TEXT_MODEL },

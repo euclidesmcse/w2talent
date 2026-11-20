@@ -15,7 +15,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, estado: "nova" }, { headers: NO_STORE });
     }
     const hash = typeof body.hash === "string" ? body.hash.slice(0, 128) : "";
-    const r = await aprovarVaga(db, perfil.id, vacancyId, hash);
+    // Coach IA por vaga (D6): a versão para a vaga e a carta que a pessoa conferiu vão junto.
+    const r = await aprovarVaga(db, perfil.id, vacancyId, hash, new Date(), body.adaptacao);
     if (!r.ok) return NextResponse.json({ error: r.motivo }, { status: r.motivo === "nao_encontrada" ? 404 : 409, headers: NO_STORE });
     return NextResponse.json({ ok: true, estado: "aprovada", aprovadaEm: r.aprovadaEm }, { headers: NO_STORE });
   } catch (e) {

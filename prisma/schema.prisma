@@ -264,6 +264,9 @@ model Application {
   etapaEm           DateTime?
   respondidaEm      DateTime?
   contatoLiberadoEm DateTime?
+  /// Coach IA por vaga (plano 2026-11-20, D6): resumo, destaques e carta que o candidato conferiu
+  /// para esta vaga, copiados da aprovação no envio. null quando enviou a Ficha W2 de sempre.
+  adaptacao         Json?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   entrevistas       Entrevista[]
@@ -331,6 +334,8 @@ model ApplicationApproval {
   vacancy     Vacancy          @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
   vacancyHash String
   snapshot    Json
+  /// Coach IA por vaga (D6): versão da Ficha W2 e carta para esta vaga, guardadas ao aprovar.
+  adaptacao   Json?
   aprovadaEm  DateTime         @default(now())
 
   @@unique([candidateId, vacancyId])

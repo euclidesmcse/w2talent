@@ -8,7 +8,7 @@ import type { TaskName } from "@/lib/ai/tasks";
 
 export type LinhaIa = {
   /** Prefixo das chaves em messages ("cv" → ia.cvTarefa, ia.cvFaz, ia.cvDados, ia.cvDecide) e âncora na página. */
-  id: "cv" | "w2" | "vaga" | "vies" | "perguntas" | "busca" | "parecidas" | "match" | "ajuda" | "traducao" | "mercado" | "ranking" | "atendimento" | "treino" | "resumoCv";
+  id: "cv" | "w2" | "vaga" | "vies" | "perguntas" | "busca" | "parecidas" | "match" | "ajuda" | "traducao" | "mercado" | "ranking" | "atendimento" | "treino" | "resumoCv" | "coach";
   ancora: string;
   /** Tarefas do roteador de IA usadas. Vazio = não é IA (o match é uma conta com pesos fixos). */
   tarefas: TaskName[];
@@ -17,6 +17,8 @@ export type LinhaIa = {
 export const LINHAS_IA: LinhaIa[] = [
   { id: "cv", ancora: "leitura-cv", tarefas: ["extract_cv"] },
   { id: "w2", ancora: "ficha-w2", tarefas: ["ficha_w2"] },
+  // Coach IA por vaga: versão da Ficha W2 e mensagem para uma vaga, com trava contra invenção.
+  { id: "coach", ancora: "coach-vaga", tarefas: ["coach_candidate"] },
   // 2.1b: Publicar vaga (leitura do texto colado; o vetor confere duplicada e faixa).
   { id: "vaga", ancora: "leitura-vaga", tarefas: ["extract_vacancy", "embed"] },
   // 2.1c: revisor de viés (regras fixas; a IA só reescreve quando o recrutador pede) e perguntas de entrevista.

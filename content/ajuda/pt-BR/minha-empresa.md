@@ -33,6 +33,7 @@ Se a empresa usa um sistema de seleção (ATS), as candidaturas podem chegar lá
 
 - A cada candidatura recebida, o W2Talent manda um `POST` com JSON para esse endereço (evento `candidatura.recebida`).
 - A cada mudança de etapa feita na tela da vaga, manda o evento `candidatura.etapa`.
+- Se o candidato preparou uma versão para a vaga, `data.candidatura.adaptacao` traz `resumo`, `destaques`, `carta` (a mensagem dele) e `feita_com_ia`. Sem versão, vem `null`.
 - O aviso leva a vaga, a candidatura (data, etapa, match e lacunas) e a Ficha W2 como o candidato aprovou: **sem e-mail, telefone nem links**. O e-mail e o telefone só vão depois que a candidatura passa pela Entrevista, como na tela.
 - Só endereço https público. Rede interna e localhost não funcionam.
 - "Enviar teste" manda o evento `teste` na hora. A tela mostra as últimas 20 entregas.

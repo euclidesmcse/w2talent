@@ -28,6 +28,8 @@ import { entrevistasDasCandidaturas, type ResumoEntrevista } from "./entrevista"
 import type { EmailMessage } from "./email";
 import type { MensagemWebhook } from "./fila";
 import type { EnfileirarWhatsapp } from "./whatsapp-db";
+import { lerAdaptacao } from "./coach-vaga";
+
 
 /** Etapas que liberam o contato (D4): a partir da Entrevista. */
 export const ETAPAS_COM_CONTATO: readonly Etapa[] = ["entrevista", "proposta", "contratada"];
@@ -76,6 +78,8 @@ export type CandidaturaRh = {
   candidato: Record<string, unknown>;
   /** 2.5a: a entrevista mais recente (oferta, marcada ou cancelada); null se nunca houve. */
   entrevista: ResumoEntrevista | null;
+  /** Coach IA por vaga: resumo, destaques e carta que o candidato conferiu para esta vaga (sem o hash). */
+  adaptacao: { resumo: string; destaques: string[]; carta: string; ia: boolean } | null;
 };
 
 /** `skills`: ids das competências da vaga (linha do tempo, D5). */
@@ -107,7 +111,7 @@ export async function candidaturasDaVaga(
   const [apps, total] = await Promise.all([
     db.application.findMany({
       where,
-      select: { id: true, etapa: true, etapaEm: true, createdAt: true, contatoLiberadoEm: true, candidate: { select: PERFIL } },
+      select: { id: true, etapa: true, etapaEm: true, createdAt: true, contatoLiberadoEm: true, adaptacao: true, candidate: { select: PERFIL } },
       orderBy: { createdAt: "asc" },
       take: RH_MAX_CANDIDATURAS,
     }),
@@ -135,6 +139,10 @@ export async function candidaturasDaVaga(
       contato: a.contatoLiberadoEm ? { email: perfil.email, celular: perfil.celular ?? null } : null,
       candidato: { ...withoutContacts(perfil), temCv: comCv.has(perfil.id) },
       entrevista: entrevistas.get(a.id) ?? null,
+      adaptacao: (() => {
+        const ad = lerAdaptacao(a.adaptacao);
+        return ad ? { resumo: ad.resumo, destaques: ad.destaques, carta: ad.carta, ia: ad.ia } : null;
+      })(),
     };
   });
   // Melhor nota primeiro (ajustada ou padrão); empate, a % mostrada e depois quem chegou antes.
