@@ -79,6 +79,10 @@ describe("trava (D3)", () => {
     const sem2 = { skills: q.skills, numeros: new Set([...q.numeros].filter((n) => n !== "2")) };
     expect(motivoInvencao("Administra EC2.", sem2)).toBeNull();
     expect(motivoInvencao("Administra EC2 há 2 anos.", sem2)).toBe("2");
+    // decimal com vírgula é um número só
+    const com10e5 = { skills: q.skills, numeros: new Set(["10", "5"]) };
+    expect(motivoInvencao("Reduziu custos com EC2 em 10,5%.", com10e5)).toBe("10.5");
+    expect(motivoInvencao("Reduziu custos com EC2 em 10,5%.", { skills: q.skills, numeros: new Set(["10.5"]) })).toBeNull();
   });
   it("tira competência ou número que não aparecem", () => {
     expect(motivoInvencao("Domina Python.", p)).toBe("Python");

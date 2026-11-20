@@ -69,16 +69,17 @@ export function skillsNoTexto(texto: string): string[] {
 
 /** Competências do texto e o texto sem os nomes delas (para conferir só os números de fato). */
 function lerSkills(texto: string): { ids: string[]; resto: string } {
-  const toks = (texto ?? "")
-    .split(/[\s,;:()"“”/|]+/)
-    .map((t) => t.replace(/[.!?]+$/, ""))
-    .filter(Boolean);
+  const fonteTexto = texto ?? "";
+  // Palavras com a posição no texto; vírgula entre dígitos fica dentro ("10,5").
+  const toks = [...fonteTexto.matchAll(/(?:[^\s,;:()"“”/|]|(?<=\d),(?=\d))+/g)]
+    .map((m) => ({ t: m[0].replace(/[.!?]+$/, ""), ini: m.index ?? 0, fim: (m.index ?? 0) + m[0].length }))
+    .filter((x) => x.t);
   const usados = new Array(toks.length).fill(false);
   const out: string[] = [];
   for (let n = 3; n >= 1; n--) {
     for (let i = 0; i + n <= toks.length; i++) {
       if (usados.slice(i, i + n).some(Boolean)) continue;
-      const fonte = toks.slice(i, i + n).join(" ");
+      const fonte = toks.slice(i, i + n).map((x) => x.t).join(" ");
       const id = normalizeSkill(fonte);
       if (!id) continue;
       const rotulo = getSkill(id)?.label ?? "";
@@ -88,7 +89,10 @@ function lerSkills(texto: string): { ids: string[]; resto: string } {
       if (!out.includes(id)) out.push(id);
     }
   }
-  return { ids: out, resto: toks.filter((_, k) => !usados[k]).join(" ") };
+  // O resto é o texto original com os nomes das competências trocados por espaço (números ficam como estão).
+  let resto = fonteTexto;
+  for (let k = toks.length - 1; k >= 0; k--) if (usados[k]) resto = resto.slice(0, toks[k].ini) + " ".repeat(toks[k].fim - toks[k].ini) + resto.slice(toks[k].fim);
+  return { ids: out, resto };
 }
 
 /** Números do texto sem separador de milhar ("1.500" → "1500"); anos e porcentagens também contam. */
