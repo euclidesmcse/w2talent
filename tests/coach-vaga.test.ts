@@ -219,6 +219,9 @@ describe("CV por vaga: trecho e trava por cargo", () => {
     const cv2 = "Acme\nEngenheira Cloud\nUsou AWS\nAnalista de Infra\nUsou Docker";
     expect(trechoDoCargo(cv2, mesma, 0)).toBe("Engenheira Cloud\nUsou AWS");
     expect(trechoDoCargo(cv2, mesma, 1)).toBe("Analista de Infra\nUsou Docker");
+    // O último cargo para na seção seguinte (formação, certificações, competências).
+    const comSecoes = "Acme - Engenheira Cloud\nUsou AWS\nBeta - Analista de Infra\nUsou Docker\n\nCERTIFICAÇÕES\nAWS Solutions Architect 2023\nCompetências:\nAWS";
+    expect(trechoDoCargo(comSecoes, f.experiencias, 1)).toBe("Beta - Analista de Infra\nUsou Docker");
     // Sem como separar (mesma linha), nenhum trecho.
     expect(trechoDoCargo("Acme: Engenheira Cloud e Analista de Infra", mesma, 0)).toBe("");
   });

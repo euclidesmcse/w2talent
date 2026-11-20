@@ -37,9 +37,13 @@ function inicioDoCargo(linhas: string[], cargo: CargoRef): number {
   return l;
 }
 
+/** Títulos de seção que não são de experiência (o trecho do último cargo para neles). */
+const SECAO =
+  /^(?:educa[cç][aã]o|educaci[oó]n|education|forma[cç][aã]o(?: acad[eê]mica)?|formaci[oó]n|certifica[cç](?:[oõ]es|ao|ão)|certificaciones|certifications?|cursos?|courses|compet[eê]ncias|competencias|skills|technical skills|habilidades|conhecimentos|idiomas|languages|l[ií]nguas|projetos|proyectos|projects|pr[eê]mios|awards|publica[cç][oõ]es|publications|refer[eê]ncias|references|interesses|interests|voluntariado|volunteering|resumo|summary|perfil|profile|objetivo|objective|informa[cç][oõ]es adicionais|additional information)\s*:?$/i;
+
 /**
  * Trecho do CV de um cargo: da linha dele até a linha do próximo cargo achado depois dela
- * (no máximo `maxLinhas` linhas e `maxChars` caracteres). "" quando o cargo não aparece no CV ou
+ * ou até a próxima seção que não é de experiência (no máximo `maxLinhas` linhas e `maxChars` caracteres). "" quando o cargo não aparece no CV ou
  * quando outro cargo começa na mesma linha (não dá para separar: melhor nada do que misturar cargos).
  */
 export function trechoDoCargo(texto: string, cargos: CargoRef[], i: number, maxLinhas = 30, maxChars = 900): string {
@@ -53,6 +57,13 @@ export function trechoDoCargo(texto: string, cargos: CargoRef[], i: number, maxL
     const l = inicioDoCargo(linhas, cargos[k]);
     if (l === ini) return "";
     if (l > ini && l < fim) fim = l;
+  }
+  // Seção seguinte que não é de experiência (formação, certificações, competências...): o cargo acaba antes.
+  for (let j = ini + 1; j < fim; j++) {
+    if (SECAO.test(norm(linhas[j]).replace(/[^\p{L}\s:]/gu, "").trim()) || SECAO.test(linhas[j].trim().toLowerCase())) {
+      fim = j;
+      break;
+    }
   }
   return linhas.slice(ini, fim).join("\n").trim().slice(0, maxChars);
 }
