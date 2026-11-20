@@ -16,7 +16,7 @@ Algumas empresas ligam a integração com o sistema de seleção delas (ATS). Ne
 
 ## Versão e mensagem para uma vaga
 
-Na tela Revisar e aprovar você pode mandar uma versão do resumo e dos destaques e uma mensagem para uma vaga. Ela vai só para aquela empresa (e-mail, tela da vaga e, se ligada, a integração com ATS), junto da candidatura, e some com ela. Se você usar a IA para preparar, a IA recebe a sua ficha sem nome e sem contatos e a vaga; o seu CV completo não vai para a IA, só serve para conferir que nada foi inventado.
+Na tela Revisar e aprovar você pode mandar uma versão do resumo e dos destaques, um CV preparado para a vaga e uma mensagem. Eles vão só para aquela empresa (e-mail, tela da vaga e, se ligada, a integração com ATS), junto da candidatura, sem os seus contatos, e somem com ela. Se você usar a IA para preparar, a IA recebe a sua ficha sem nome e sem contatos, a vaga e, se você guardou o CV completo, o trecho de cada cargo nele (que já fica guardado sem contatos). O PDF que você baixa leva os seus contatos e fica só com você: ele é feito no seu navegador.
 
 ## Pretensão salarial
 

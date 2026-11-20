@@ -172,7 +172,7 @@ type LinhaCandidatura = {
 /** O que a empresa vê da adaptação (sem o hash da vaga). */
 function adaptacaoParaEmpresa(v: unknown) {
   const a = lerAdaptacao(v);
-  return a ? { resumo: a.resumo, destaques: a.destaques, carta: a.carta, feita_com_ia: a.ia } : null;
+  return a ? { resumo: a.resumo, destaques: a.destaques, carta: a.carta, por_que: a.porQue, cv: a.cv, feita_com_ia: a.ia } : null;
 }
 
 /** Monta o `data` de um evento de candidatura. Contato só com `contatoLiberadoEm` (2.4c). */

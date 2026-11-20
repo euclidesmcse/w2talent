@@ -130,3 +130,12 @@
   from { opacity: 0; transform: perspective(700px) rotateX(-14deg) translateY(-4px) scale(0.97); }
   to { opacity: 1; transform: none; }
 }
+
+/* CV por vaga (D4): "Baixar PDF" imprime só o documento montado no <body>, em A4. */
+.cv-impressao { display: none; }
+@media print {
+  body.imprimindo-cv { background: #fff !important; }
+  body.imprimindo-cv > *:not(.cv-impressao) { display: none !important; }
+  body.imprimindo-cv > .cv-impressao { display: block !important; }
+  @page { size: A4; margin: 16mm; }
+}

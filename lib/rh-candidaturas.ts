@@ -28,7 +28,7 @@ import { entrevistasDasCandidaturas, type ResumoEntrevista } from "./entrevista"
 import type { EmailMessage } from "./email";
 import type { MensagemWebhook } from "./fila";
 import type { EnfileirarWhatsapp } from "./whatsapp-db";
-import { lerAdaptacao } from "./coach-vaga";
+import { lerAdaptacao, type CvVaga } from "./coach-vaga";
 
 
 /** Etapas que liberam o contato (D4): a partir da Entrevista. */
@@ -79,7 +79,7 @@ export type CandidaturaRh = {
   /** 2.5a: a entrevista mais recente (oferta, marcada ou cancelada); null se nunca houve. */
   entrevista: ResumoEntrevista | null;
   /** Coach IA por vaga: resumo, destaques e carta que o candidato conferiu para esta vaga (sem o hash). */
-  adaptacao: { resumo: string; destaques: string[]; carta: string; ia: boolean } | null;
+  adaptacao: { resumo: string; destaques: string[]; carta: string; ia: boolean; porQue: string; cv: CvVaga | null } | null;
 };
 
 /** `skills`: ids das competências da vaga (linha do tempo, D5). */
@@ -141,7 +141,7 @@ export async function candidaturasDaVaga(
       entrevista: entrevistas.get(a.id) ?? null,
       adaptacao: (() => {
         const ad = lerAdaptacao(a.adaptacao);
-        return ad ? { resumo: ad.resumo, destaques: ad.destaques, carta: ad.carta, ia: ad.ia } : null;
+        return ad ? { resumo: ad.resumo, destaques: ad.destaques, carta: ad.carta, ia: ad.ia, porQue: ad.porQue, cv: ad.cv } : null;
       })(),
     };
   });

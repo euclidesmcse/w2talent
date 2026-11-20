@@ -1,7 +1,8 @@
 /**
  * Coach IA por vaga (plano 2026-11-20, D1–D8): "Preparar para esta vaga" na tela Aprovar.
  * Candidato logado com Ficha W2 publicada; vaga que ainda pode ser aprovada. Devolve a sugestão
- * (resumo, destaques e carta já passados pela trava contra invenção) e as lacunas por regra.
+ * (resumo, destaques, carta, "por que se destaca" e o CV inteiro para a vaga, já passados pela trava
+ * contra invenção) e as lacunas por regra.
  * Nada é guardado aqui: o que a pessoa aceitar vai junto ao aprovar.
  */
 import { NextRequest, NextResponse } from "next/server";
@@ -42,8 +43,12 @@ export async function POST(req: NextRequest) {
       (task, q) => router.chat(task, q),
     );
     const { registrarSinal } = await import("@/lib/sinais");
-    await registrarSinal(db, { tipo: "coach_preparado", ator: "candidato", candidateId: perfil.id, vacancyId, dados: { removidos: proposta.removidos.length } }).catch(() => {});
-    return json({ proposta: { resumo: proposta.resumo, destaques: proposta.destaques, carta: proposta.carta, removidos: proposta.removidos }, lacunas: item.lacunas, hash: item.hash });
+    await registrarSinal(db, { tipo: "coach_preparado", ator: "candidato", candidateId: perfil.id, vacancyId, dados: { removidos: proposta.removidos.length, cv: "1" } }).catch(() => {});
+    return json({
+      proposta: { resumo: proposta.resumo, destaques: proposta.destaques, carta: proposta.carta, porQue: proposta.porQue, cv: proposta.cv, removidos: proposta.removidos },
+      lacunas: item.lacunas,
+      hash: item.hash,
+    });
   } catch (e) {
     console.warn("[envio/preparar] IA falhou:", e instanceof Error ? e.name : e);
     return json({ error: "ia" }, 502);

@@ -21,12 +21,19 @@ To send, you need to sign in as a candidate and have your profile published.
 
 Next to "What the company will get", each job shows what it asks for and your profile doesn't show, with a link to see that skill in the [Market](/mercado). If you have it, add it in [My profile](/minha-ficha).
 
+The screen also shows, by rule and with no AI, how many of the job's skills your profile covers and your job closest to what it asks for. If the job asks for a language at a level your profile doesn't show (for example, fluent English while your profile says basic), a notice appears with the part of the job post. It is only a notice: you can still apply. The same notices show in the job details, in [Jobs](/vagas), when you are signed in.
+
 You can also prepare a version for the job:
 
-- **Tailor with AI:** tick the consent box and the AI writes a version of your summary and highlights and a short message to the company, using only what is in your profile. Sentences that mention a skill or number not in your profile, your W2 Profile or your full CV are removed before you see them, and the screen shows what was removed. Up to 20 a day.
-- **Write it my way:** starts from your W2 Profile, without AI.
-- You edit everything and choose what goes: the summary version, the message, both or neither. The preview next to it shows how the company will see it.
-- The company sees whether the version was made with AI help. The message carries no e-mail, phone or links.
+- **Tailor with AI:** tick the consent box and the AI builds a version of your CV for the job, of your summary and highlights, a sentence on why you stand out and a short message to the company, using only what is in your profile and your full CV. Sentences that mention a skill or number not in your profile are removed before you see them, and the screen shows what was removed. In the CV, each job can only use what belongs to that job: a number from one job never ends up in another. Up to 20 a day.
+- **Write it my way:** starts from your W2 Profile and the jobs in your profile, without AI.
+- The version has three tabs:
+  - **For the company:** the sentence on why you stand out, the summary and the highlights.
+  - **CV:** the headline and, for each job, up to 5 points (one per line), in the order of what the job asks for. Job title, company and dates come from your profile and don't change here. Untick a job to leave it out. Skills come from your profile, the ones the job asks for first.
+  - **Message:** the message to the company.
+- You edit everything and choose what goes: the summary version, the CV, the message, all or nothing. The preview next to it shows how the company will see it.
+- **Download PDF** (in the CV tab) opens the browser's print dialog; choose "Save as PDF". Your PDF carries your name, e-mail, phone and city, for you to use outside W2Talent. It has no photo, address or date of birth.
+- The company gets the same CV **without your contacts**, which are only released at the Interview stage. It sees whether the version was made with AI help. The message carries no e-mail, phone or links.
 - To change it after approving, undo the approval. If the job changes, the version is marked as made for the previous version, so you can check it.
 
 ## Sending rules

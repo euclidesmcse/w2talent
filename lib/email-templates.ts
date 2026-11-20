@@ -122,6 +122,9 @@ type CandidaturaCopy = {
   carta: string;
   adaptadaIa: string;
   adaptada: string;
+  /** CV por vaga: frase "por que se destaca" e os cargos com os pontos escolhidos para a vaga. */
+  porQue: string;
+  experiencia: string;
 };
 
 const CANDIDATURA: Record<EmailLocale, CandidaturaCopy> = {
@@ -138,8 +141,10 @@ const CANDIDATURA: Record<EmailLocale, CandidaturaCopy> = {
     referencia: "Referência da candidatura",
     rodape: "O e-mail e o telefone do candidato ficam protegidos. Responder pelo W2Talent chega em breve; guarde a referência acima.",
     carta: "Mensagem do candidato",
-    adaptadaIa: "Resumo, destaques e mensagem adaptados a esta vaga pelo candidato, com ajuda de IA.",
-    adaptada: "Resumo, destaques e mensagem adaptados a esta vaga pelo candidato.",
+    adaptadaIa: "Resumo, destaques, experiência e mensagem adaptados a esta vaga pelo candidato, com ajuda de IA. Tudo vem da ficha dele.",
+    adaptada: "Resumo, destaques, experiência e mensagem adaptados a esta vaga pelo candidato.",
+    porQue: "Por que se destaca",
+    experiencia: "Experiência (versão para esta vaga)",
   },
   en: {
     assunto: (t, n) => `Application for ${t}: ${n}`,
@@ -154,8 +159,10 @@ const CANDIDATURA: Record<EmailLocale, CandidaturaCopy> = {
     referencia: "Application reference",
     rodape: "The candidate's e-mail and phone stay protected. Replying through W2Talent is coming soon; keep the reference above.",
     carta: "Message from the candidate",
-    adaptadaIa: "Summary, highlights and message adapted to this job by the candidate, with AI help.",
-    adaptada: "Summary, highlights and message adapted to this job by the candidate.",
+    adaptadaIa: "Summary, highlights, experience and message adapted to this job by the candidate, with AI help. Everything comes from their profile.",
+    adaptada: "Summary, highlights, experience and message adapted to this job by the candidate.",
+    porQue: "Why they stand out",
+    experiencia: "Experience (version for this job)",
   },
   es: {
     assunto: (t, n) => `Postulación para ${t}: ${n}`,
@@ -170,8 +177,10 @@ const CANDIDATURA: Record<EmailLocale, CandidaturaCopy> = {
     referencia: "Referencia de la postulación",
     rodape: "El e-mail y el teléfono del candidato están protegidos. Responder por W2Talent llegará pronto; guarda la referencia de arriba.",
     carta: "Mensaje del candidato",
-    adaptadaIa: "Resumen, destacados y mensaje adaptados a esta vacante por el candidato, con ayuda de IA.",
-    adaptada: "Resumen, destacados y mensaje adaptados a esta vacante por el candidato.",
+    adaptadaIa: "Resumen, destacados, experiencia y mensaje adaptados a esta vacante por el candidato, con ayuda de IA. Todo viene de su ficha.",
+    adaptada: "Resumen, destacados, experiencia y mensaje adaptados a esta vacante por el candidato.",
+    porQue: "Por qué destaca",
+    experiencia: "Experiencia (versión para esta vacante)",
   },
 };
 
@@ -194,6 +203,9 @@ export type CandidaturaEmailInput = {
   carta?: string;
   /** "ia" ou "candidato" quando resumo e destaques foram adaptados para esta vaga. */
   adaptada?: "ia" | "candidato" | null;
+  /** CV por vaga: "por que se destaca" e cargos (título já montado) com os pontos. */
+  porQue?: string;
+  experiencia?: { titulo: string; pontos: string[] }[];
 };
 
 export function renderCandidaturaEmail(i: CandidaturaEmailInput): { subject: string; html: string; text: string } {
@@ -201,6 +213,7 @@ export function renderCandidaturaEmail(i: CandidaturaEmailInput): { subject: str
   const subject = c.assunto(i.vagaTitulo, i.nomeCurto);
   const linhaCargo = [i.cargo, i.anos > 0 ? c.anos(i.anos) : ""].filter(Boolean).join(" · ");
   const blocos: [string, string | string[]][] = [
+    [c.porQue, i.porQue ?? ""],
     [c.carta, i.carta ?? ""],
     [c.pretensao, i.pretensao],
     [c.resumo, i.resumo],
@@ -208,6 +221,7 @@ export function renderCandidaturaEmail(i: CandidaturaEmailInput): { subject: str
     [c.destaques, i.destaques],
     [c.idiomas, i.idiomas.join(" · ")],
   ];
+  const exp = (i.experiencia ?? []).filter((x) => x.titulo);
   const cheios = blocos.filter(([, v]) => (Array.isArray(v) ? v.length > 0 : !!v));
   const aviso = i.adaptada === "ia" ? c.adaptadaIa : i.adaptada === "candidato" ? c.adaptada : "";
 
@@ -217,6 +231,7 @@ export function renderCandidaturaEmail(i: CandidaturaEmailInput): { subject: str
     "",
     `${i.nomeCurto}${linhaCargo ? ` · ${linhaCargo}` : ""}`,
     ...cheios.flatMap(([k, v]) => ["", `${k}:`, ...(Array.isArray(v) ? v.map((x) => `- ${x}`) : [v])]),
+    ...(exp.length ? ["", `${c.experiencia}:`, ...exp.flatMap((x) => ["", x.titulo, ...x.pontos.map((p) => `- ${p}`)])] : []),
     ...(aviso ? ["", aviso] : []),
     "",
     `${c.referencia}: ${i.referencia}`,
@@ -237,7 +252,18 @@ export function renderCandidaturaEmail(i: CandidaturaEmailInput): { subject: str
 <tr><td style="padding:24px 24px 0;font:700 18px 'Space Grotesk',Inter,Arial,sans-serif">W2<span style="color:#1F4FD8">Talent</span></td></tr>
 <tr><td style="padding:16px 24px 0;font-size:15px;line-height:22px"><p style="margin:0 0 8px">${esc(c.intro(i.nomeCurto, i.vagaTitulo))}</p><p style="margin:0;font-weight:600;color:#1F4FD8">${esc(c.match(i.matchPct))}</p></td></tr>
 <tr><td style="padding:16px 24px 0"><div style="border:1px solid #E5E7EB;border-radius:8px;padding:16px;font-size:14px;line-height:21px">
-<p style="margin:0;font-weight:600">${esc([i.nomeCurto, linhaCargo].filter(Boolean).join(" · "))}</p>${cheios.map(secao).join("")}${aviso ? `<p style="margin:16px 0 0;font-size:12px;color:#4B5563">${esc(aviso)}</p>` : ""}
+<p style="margin:0;font-weight:600">${esc([i.nomeCurto, linhaCargo].filter(Boolean).join(" · "))}</p>${cheios.map(secao).join("")}${
+    exp.length
+      ? `<p style="margin:16px 0 4px;font-size:13px;color:#4B5563;font-weight:600">${esc(c.experiencia)}</p>` +
+        exp
+          .map(
+            (x) =>
+              `<p style="margin:8px 0 2px;font-weight:600">${esc(x.titulo)}</p>` +
+              (x.pontos.length ? `<ul style="margin:0;padding-left:20px">${x.pontos.map((p) => `<li style="margin:0 0 4px">${esc(p)}</li>`).join("")}</ul>` : ""),
+          )
+          .join("")
+      : ""
+  }${aviso ? `<p style="margin:16px 0 0;font-size:12px;color:#4B5563">${esc(aviso)}</p>` : ""}
 </div></td></tr>
 <tr><td style="padding:16px 24px 0;font-size:13px;color:#4B5563">${esc(c.referencia)}: <span style="font-family:monospace">${esc(i.referencia)}</span></td></tr>
 <tr><td style="padding:16px 24px 24px;font-size:13px;line-height:20px;color:#4B5563">${esc(c.rodape)}</td></tr>

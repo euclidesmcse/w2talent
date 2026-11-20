@@ -16,7 +16,7 @@ Some companies turn on the integration with their hiring system (ATS). In that c
 
 ## Version and message for one job
 
-On the Review and approve screen you can send a version of the summary and highlights and a message for one job. It goes only to that company (e-mail, the job screen and, if enabled, the ATS integration), together with the application, and is deleted with it. If you use AI to prepare it, the AI receives your profile without name and contacts and the job; your full CV is not sent to the AI, it is only used to check that nothing was made up.
+On the Review and approve screen you can send a version of the summary and highlights, a CV prepared for the job and a message. They go only to that company (e-mail, the job screen and, if enabled, the ATS integration), together with the application, without your contacts, and are deleted with it. If you use AI to prepare them, the AI receives your profile without name and contacts, the job and, if you saved your full CV, each job's part of it (already stored without contacts). The PDF you download carries your contacts and stays with you: it is made in your browser.
 
 ## Salary expectation
 

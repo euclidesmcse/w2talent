@@ -7,6 +7,7 @@ import { VacancyTable } from "@/components/vacancy-table";
 import { VacancyCards } from "@/components/vacancy-cards";
 import { DetailModal } from "@/components/detail-modal";
 import { AvisoEnviada, VagasParecidas } from "@/components/vagas-parecidas";
+import { AvisosDoDetalhe } from "@/components/avisos-vaga";
 import { BatchBar } from "@/components/batch-bar";
 import { EmptyState } from "@/components/empty-state";
 import { selectionStore } from "@/lib/selection-store";
@@ -248,6 +249,7 @@ export default function VagasPage() {
           {modalItem?.id ? (
             <>
               <AvisoEnviada em={enviadas[modalItem.id]} />
+              <AvisosDoDetalhe vacancyId={modalItem.id} ligado={envioLigado} />
               {/* Abrir uma parecida troca o conteúdo do detalhe; usa a vaga completa quando ela está na lista */}
               <VagasParecidas id={modalItem.id} sentAt={enviadas} onAbrir={(v) => setModalItem(items.find((x) => x.id === v.id) ?? v)} />
             </>
