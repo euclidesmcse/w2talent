@@ -71,14 +71,15 @@ describe("texto do CV", () => {
 
   it("tira endereços e documentos em inglês e espanhol", () => {
     const t = limparCv(
-      "Address: 123 Main Street, London\nLives at 45 Baker Street\nDirección: Calle Mayor 12, Madrid\nCalle de Alcalá 200, 3º\nDNI: 12345678Z\nNIE X1234567L\nSSN 123-45-6789\nPassport number: AB1234567\n\nExperience\nSenior Engineer at Acme since 2020. Led 12 people on 3 streets of work.\nCarrera de Ingeniería Informática, 2014\nPlaza de la Universidad, 2016",
+      "Address: 123 Main Street, London\nLives at 45 Baker Street\nDirección: Calle Mayor 12, Madrid\nCalle de Alcalá 200, 3º\nDNI: 12345678Z\nNIE X1234567L\nSSN 123-45-6789\nPassport number: AB1234567\nTel. +34 612 345 678 / 612 345 678\nMobile: +44 7700 900123 or 07700 900123\nPhone +1 (415) 555-0100\n\nExperience\nSenior Engineer at Acme since 2020. Led 12 people on 3 streets of work.\nCarrera de Ingeniería Informática, 2014\nPlaza de la Universidad, 2016",
     );
-    expect(t).not.toMatch(/Main Street|Baker Street|Calle Mayor|Alcalá 200|12345678Z|X1234567L|123-45-6789|AB1234567/);
+    expect(t).not.toMatch(/Main Street|Baker Street|Calle Mayor|Alcalá 200|12345678Z|X1234567L|123-45-6789|AB1234567|612 345|7700|555-0100/);
     expect(t).toContain("[ENDERECO]");
     expect(t).toContain("[DOCUMENTO]");
     expect(t).toContain("Senior Engineer at Acme since 2020. Led 12 people on 3 streets of work.");
     expect(t).toContain("Carrera de Ingeniería Informática, 2014");
     expect(t).toContain("Plaza de la Universidad, 2016");
+    expect(limparCv("Migrou 140 sistemas e 1.200 servidores em 2021 (3 anos).")).toBe("Migrou 140 sistemas e 1.200 servidores em 2021 (3 anos).");
   });
 
   it("tira links sem http nem www, sem pegar nomes de tecnologia", () => {
