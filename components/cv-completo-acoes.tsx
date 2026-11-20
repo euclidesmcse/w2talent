@@ -61,8 +61,20 @@ export function AcoesCv({ profileId, versao = "", cargo, indice }: { profileId: 
   const [estado, setEstado] = React.useState<"nada" | "carregando" | "erro" | "limite">("nada");
   const botaoCv = React.useRef<HTMLButtonElement>(null);
   const idResumo = React.useId();
+  // Troca de idioma (ou de versão) com o painel aberto: mostra o resumo guardado da nova chave, ou o botão de novo.
+  const chaveAtual = React.useRef(chave);
+  const [chaveVista, setChaveVista] = React.useState(chave);
+  if (chaveVista !== chave) {
+    setChaveVista(chave);
+    setResumo(resumos.get(chave) ?? null);
+    setEstado("nada");
+  }
+  React.useEffect(() => {
+    chaveAtual.current = chave;
+  }, [chave]);
 
   async function pedirResumo() {
+    const pedida = chave;
     setEstado("carregando");
     try {
       const r = await fetch(`/api/candidates/${encodeURIComponent(profileId)}/cv`, {
@@ -71,12 +83,14 @@ export function AcoesCv({ profileId, versao = "", cargo, indice }: { profileId: 
         body: JSON.stringify({ idioma: locale }),
       });
       const j = (await r.json().catch(() => ({}))) as { resumo?: ResumoCv; error?: string };
+      if (r.ok && j.resumo) resumos.set(pedida, j.resumo);
+      // Resposta de um idioma que já não está na tela: só guarda.
+      if (chaveAtual.current !== pedida) return;
       if (!r.ok || !j.resumo) return setEstado(j.error === "limite_dia" ? "limite" : "erro");
-      resumos.set(chave, j.resumo);
       setResumo(j.resumo);
       setEstado("nada");
     } catch {
-      setEstado("erro");
+      if (chaveAtual.current === pedida) setEstado("erro");
     }
   }
 
