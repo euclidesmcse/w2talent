@@ -27,8 +27,11 @@ export function semDocumentosEEnderecos(t: string): string {
     .replace(/\b(?:DNI|NIE|NIF|RUT|CURP|RFC|SSN|RG|CPF|CNPJ|CUIL|CUIT|passport(?: number| no\.?)?|pasaporte|passaporte)\s*(?:n[ºo°.]\s*)?[:#]?\s*[A-Z0-9][A-Z0-9.\-/]{4,}/gi, "[DOCUMENTO]")
     .replace(/\b(?:\d{8}[A-HJ-NP-TV-Z]|[XYZ]\d{7}[A-Z]|\d{3}-\d{2}-\d{4})\b/g, "[DOCUMENTO]")
     // Telefones internacionais em grupos (+34 612 345 678, +44 7700 900123, +1 (415) 555-0100) e locais da Espanha e do Reino Unido.
-    .replace(/\+\d{1,3}(?:[\s.-]?\(?\d{1,5}\)?){2,6}/g, (m) => (m.replace(/\D/g, "").length >= 8 ? "[TELEFONE]" : m))
-    .replace(/(?<![\d.,])(?:[6789]\d{2}[\s.-]\d{3}[\s.-]\d{3}|[6789]\d{2}[\s.-]\d{2}[\s.-]\d{2}[\s.-]\d{2}|0\d{4}[\s-]?\d{6})(?![\d.,])/g, "[TELEFONE]");
+    // Números de resultado (+12.000.000, +10 000 000) ficam: milhar com ponto ou vírgula, ou menos de 10 dígitos.
+    .replace(/\+\d{1,3}(?:[\s.-]?\(?\d{1,5}\)?){2,6}/g, (m) =>
+      m.replace(/\D/g, "").length >= 10 && !/^\+\d{1,3}(?:[.,]\d{3})+$/.test(m) ? "[TELEFONE]" : m,
+    )
+    .replace(/(?<![\d.,])(?:[6789]\d{2}[\s-]\d{3}[\s-]\d{3}|[6789]\d{2}[\s-]\d{2}[\s-]\d{2}[\s-]\d{2}|0\d{4}[\s-]?\d{6})(?![\d.,])/g, "[TELEFONE]");
 }
 
 /** Texto do CV pronto para guardar: contatos e qualquer link trocados por marcadores, espaços arrumados. */

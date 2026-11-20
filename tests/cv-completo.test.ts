@@ -80,6 +80,8 @@ describe("texto do CV", () => {
     expect(t).toContain("Carrera de Ingeniería Informática, 2014");
     expect(t).toContain("Plaza de la Universidad, 2016");
     expect(limparCv("Migrou 140 sistemas e 1.200 servidores em 2021 (3 anos).")).toBe("Migrou 140 sistemas e 1.200 servidores em 2021 (3 anos).");
+    const metricas = "Receita de +12.000.000 e +10 000 000 usuários; 800.000.000 de registros; +1,500,000 views.";
+    expect(limparCv(metricas)).toBe(metricas);
   });
 
   it("tira links sem http nem www, sem pegar nomes de tecnologia", () => {
