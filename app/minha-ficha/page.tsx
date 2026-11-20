@@ -210,9 +210,9 @@ export default function MinhaFichaPage() {
     setErro(null);
     setMostrarFaltas(true);
     if (faltas.length) {
-      setErro(t("erro_ficha_incompleta"));
-      // Abre o passo do primeiro campo que falta (D3).
+      // Abre o passo do primeiro campo que falta (D3); irPara limpa o erro, então ele vem depois.
       irPara(passoDoCampo(faltas[0]));
+      setErro(t("erro_ficha_incompleta"));
       requestAnimationFrame(() => document.getElementById("faltas")?.focus());
       return;
     }
@@ -317,6 +317,8 @@ export default function MinhaFichaPage() {
       const j = i + d;
       if (j < 0 || j >= lista.length) return x;
       [lista[i], lista[j]] = [lista[j], lista[i]];
+      // O card aberto acompanha o cargo que mudou de lugar.
+      setAberto((a) => (a === i ? j : a === j ? i : a));
       return { ...x, ficha: { ...x.ficha, experiencias: lista } };
     });
 
