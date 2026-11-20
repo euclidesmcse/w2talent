@@ -70,5 +70,9 @@ describe("resumo do CV completo", () => {
     expect(linhaDoCargo(linhas, CARGOS[1])).toBe(6);
     expect(linhaDoCargo(["ANALISTA DE INFRA na empresa", "x"], { cargo: "Análista de infra", empresa: "Outra" })).toBe(0);
     expect(linhaDoCargo(linhas, { cargo: "", empresa: "" })).toBe(-1);
+    // dois cargos na mesma empresa: acha o certo
+    const acme = ["Acme Corp", "Senior Engineer (2022–hoje)", "Liderou o time.", "", "Acme Corp", "Junior Engineer (2019–2022)", "Fez APIs."];
+    expect(linhaDoCargo(acme, { cargo: "Junior Engineer", empresa: "Acme" })).toBe(4);
+    expect(linhaDoCargo(acme, { cargo: "Senior Engineer", empresa: "Acme" })).toBe(0);
   });
 });

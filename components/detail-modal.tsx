@@ -9,7 +9,8 @@ import { FichaW2Card } from "@/components/ficha-w2-card";
 import { LinhaDoTempo } from "@/components/linha-do-tempo";
 import { AcoesCv } from "@/components/cv-completo-acoes";
 import { NaoVerificada } from "@/components/empresa-etiqueta";
-import { sanitizeFicha, sanitizeFichaW2 } from "@/lib/ficha";
+import { experienciaVazia, sanitizeFicha, sanitizeFichaW2 } from "@/lib/ficha";
+import { montarCargos } from "@/lib/linha-do-tempo";
 import { TraducaoAviso, VerOriginalContext, textoExibido } from "@/components/traducao-aviso";
 
 /**
@@ -46,6 +47,9 @@ function getFocusable(container: HTMLElement): HTMLElement[] {
 export function DetailBody({ item, antes, children, langTexto, vagaSkills }: { item: any; antes?: React.ReactNode; children?: React.ReactNode; langTexto?: string; vagaSkills?: string[] }) {
   const t = useTranslations("detail");
   const locale = useLocale();
+  const fichaLinha = sanitizeFicha(item);
+  // Linha do tempo PR c: o candidato liberou o CV completo (a busca e o Painel RH marcam temCv).
+  const comCv = !!item?.temCv && typeof item?.id === "string";
   const skills: string[] = item?.stack && Array.isArray(item.stack) ? item.stack.map((x: any) => x?.skillId ?? x).filter(Boolean) : [];
   const faixa = item
     ? item.nome
@@ -74,10 +78,17 @@ export function DetailBody({ item, antes, children, langTexto, vagaSkills }: { i
       {antes}
       <FichaW2Card ficha={sanitizeFicha(item)} w2={w2} />
       <LinhaDoTempo
-        ficha={sanitizeFicha(item)}
+        key={typeof item?.id === "string" ? item.id : undefined}
+        ficha={fichaLinha}
         vagaSkills={vagaSkills}
-        acoes={item?.temCv && typeof item?.id === "string" ? (cargo, i) => <AcoesCv profileId={item.id} cargo={cargo} indice={i} /> : undefined}
+        acoes={comCv ? (cargo, i) => <AcoesCv key={`${item.id}:${i}`} profileId={item.id} cargo={cargo} indice={i} /> : undefined}
       />
+      {/* Sem cargo datado não há linha do tempo: o CV completo e o resumo da carreira ficam aqui. */}
+      {comCv && !montarCargos(fichaLinha.experiencias).cargos.length ? (
+        <div className="flex flex-wrap gap-2" data-cv-sem-linha>
+          <AcoesCv key={item.id} profileId={item.id} cargo={experienciaVazia()} indice={-1} />
+        </div>
+      ) : null}
       <p className="text-xs text-muted">
         {t("atualizada")}: {formatTempo((item.updatedAt ?? item.createdAt) as any, locale)}
       </p>

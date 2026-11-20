@@ -29,17 +29,27 @@ function buscarTexto(profileId: string): Promise<string | null> {
   return p;
 }
 
-/** Linha do CV onde o cargo aparece: a primeira com a empresa; sem ela, a primeira com o nome do cargo. */
+/**
+ * Linha do CV onde o cargo começa. Primeiro, uma linha da empresa com o título do cargo nela ou nas
+ * 3 linhas seguintes (vários cargos na mesma empresa); depois a primeira linha da empresa; por fim,
+ * a primeira com o título. Sem acento e sem diferença de maiúscula.
+ */
 export function linhaDoCargo(linhas: string[], cargo: Pick<Experiencia, "cargo" | "empresa">): number {
-  const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
-  for (const alvo of [cargo.empresa, cargo.cargo].map(norm)) {
-    if (alvo.length < 2) continue;
-    const i = linhas.findIndex((l) => norm(l).includes(alvo));
-    if (i >= 0) return i;
+  const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const ls = linhas.map(norm);
+  const empresa = norm(cargo.empresa);
+  const titulo = norm(cargo.cargo);
+  const temEmpresa = empresa.length >= 2 ? ls.flatMap((l, i) => (l.includes(empresa) ? [i] : [])) : [];
+  if (titulo.length >= 2) {
+    for (const i of temEmpresa) {
+      for (let j = Math.max(0, i - 3); j <= Math.min(ls.length - 1, i + 3); j++) if (ls[j].includes(titulo)) return Math.min(i, j);
+    }
   }
-  return -1;
+  if (temEmpresa.length) return temEmpresa[0];
+  return titulo.length >= 2 ? ls.findIndex((l) => l.includes(titulo)) : -1;
 }
 
+/** `indice` < 0: sem cargo (perfil sem cargos datados); mostra só o CV e o resumo da carreira. */
 export function AcoesCv({ profileId, cargo, indice }: { profileId: string; cargo: Experiencia; indice: number }) {
   const t = useTranslations("linhaTempo");
   const locale = useLocale();
@@ -68,7 +78,7 @@ export function AcoesCv({ profileId, cargo, indice }: { profileId: string; cargo
     }
   }
 
-  const doCargo = resumo?.cargos[indice] ?? "";
+  const doCargo = indice >= 0 ? resumo?.cargos[indice] ?? "" : "";
   return (
     <>
       <button ref={botaoCv} type="button" data-action="cv-completo" className={buttonClasses("secondary", "sm")} onClick={() => setPainel(true)}>
@@ -83,12 +93,21 @@ export function AcoesCv({ profileId, cargo, indice }: { profileId: string; cargo
         {estado === "erro" || estado === "limite" ? <p className="text-[13px] text-danger">{t(estado === "limite" ? "resumoLimite" : "resumoErro")}</p> : null}
         {resumo ? (
           <div data-resumo-cv className="mt-1 rounded-control border border-line bg-canvas p-3">
-            <p className="text-[13px] font-semibold text-ink-soft">{t("resumoCargo")}</p>
-            <p className="mt-1 text-ink">{doCargo || <span className="text-muted">{t("resumoSemCargo")}</span>}</p>
-            <details className="mt-2">
-              <summary className="cursor-pointer text-[13px] font-medium text-ink-soft hover:text-ink">{t("resumoCarreira")}</summary>
-              <p className="mt-1 text-ink">{resumo.geral}</p>
-            </details>
+            {indice >= 0 ? (
+              <>
+                <p className="text-[13px] font-semibold text-ink-soft">{t("resumoCargo")}</p>
+                <p className="mt-1 text-ink">{doCargo || <span className="text-muted">{t("resumoSemCargo")}</span>}</p>
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-[13px] font-medium text-ink-soft hover:text-ink">{t("resumoCarreira")}</summary>
+                  <p className="mt-1 text-ink">{resumo.geral}</p>
+                </details>
+              </>
+            ) : (
+              <>
+                <p className="text-[13px] font-semibold text-ink-soft">{t("resumoCarreira")}</p>
+                <p className="mt-1 text-ink">{resumo.geral}</p>
+              </>
+            )}
             <p className="mt-2 text-[12px] text-muted">
               {t("resumoAviso")} · <IaLink ancora="resumo-cv" />
             </p>

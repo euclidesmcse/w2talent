@@ -69,6 +69,16 @@ describe("texto do CV", () => {
     expect(limparCv(123)).toBe("");
   });
 
+  it("tira endereços e documentos em inglês e espanhol", () => {
+    const t = limparCv(
+      "Address: 123 Main Street, London\nLives at 45 Baker Street\nDirección: Calle Mayor 12, Madrid\nCalle de Alcalá 200, 3º\nDNI: 12345678Z\nNIE X1234567L\nSSN 123-45-6789\nPassport number: AB1234567\n\nExperience\nSenior Engineer at Acme since 2020. Led 12 people on 3 streets of work.",
+    );
+    expect(t).not.toMatch(/Main Street|Baker Street|Calle Mayor|Alcalá 200|12345678Z|X1234567L|123-45-6789|AB1234567/);
+    expect(t).toContain("[ENDERECO]");
+    expect(t).toContain("[DOCUMENTO]");
+    expect(t).toContain("Senior Engineer at Acme since 2020. Led 12 people on 3 streets of work.");
+  });
+
   it("tira links sem http nem www, sem pegar nomes de tecnologia", () => {
     const t = limparCv("Portfólio: ana.dev/portfolio e blog.ana.com.\nNode.js, Vue.js, ASP.NET, asp.net, socket.io e Next.js. E-mail ana@x.io");
     expect(t).not.toMatch(/ana\.dev|blog\.ana/);
