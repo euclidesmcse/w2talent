@@ -355,12 +355,16 @@ export function avisosIdioma(textosVaga: string[], idiomas: Ficha["idiomas"]): A
     if (!linha) continue;
     // Dois-pontos fica ("Inglês: fluente"): ligam o idioma ao nível, não separam pedidos.
     const partes = linha.replace(/[()[\]]/g, " ").split(/[,;.]|\s(?:e|and|y|ou|or|o)\s/i);
-    for (const parte of partes) {
+    const nivelDe = (p: string | undefined) => (p && !DESEJAVEL.test(p) ? NIVEIS_PEDIDOS.find((x) => x.re.test(p)) : undefined);
+    const temIdioma = (p: string | undefined) => !!p && IDIOMAS.some((x) => x.re.test(p));
+    for (let k = 0; k < partes.length; k++) {
+      const parte = partes[k];
       // "Inglês fluente obrigatório; espanhol desejável": só a parte desejável fica de fora.
       if (DESEJAVEL.test(parte)) continue;
       const langs = IDIOMAS.filter((x) => x.re.test(parte));
       if (langs.length !== 1) continue;
-      const n = NIVEIS_PEDIDOS.find((x) => x.re.test(parte));
+      // "Inglês e espanhol B2": idioma sem nível pega o nível do idioma logo depois.
+      const n = nivelDe(parte) ?? (temIdioma(partes[k + 1]) ? nivelDe(partes[k + 1]) : undefined);
       if (!n) continue;
       const id = langs[0].id;
       const antes = pedidos.get(id);

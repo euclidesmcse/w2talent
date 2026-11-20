@@ -336,6 +336,8 @@ describe("aviso de idioma e por que se destaca (por regra)", () => {
     // Nível explícito vence a palavra: B2 pedido, espanhol avançado atende.
     expect(avisosIdioma(["Spanish proficiency: B2 required"], idiomas)).toEqual([]);
     expect(avisosIdioma(["English proficiency: B2 required"], idiomas)[0]?.pede).toBe("avancado");
+    // Nível dividido entre dois idiomas.
+    expect(avisosIdioma(["Inglês e espanhol B2 obrigatórios"], idiomas).map((x) => [x.pede, x.tem])).toEqual([["avancado", "basico"]]);
   });
   it("cada idioma da linha fica com o seu nível", () => {
     const a = avisosIdioma(["Inglês intermediário e francês fluente"], idiomas);
