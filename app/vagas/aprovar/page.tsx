@@ -353,7 +353,7 @@ export default function AprovarPage() {
                 w2={w2}
                 rascunho={rascunhos[atual.vacancyId] ?? null}
                 onRascunho={(r) => setRascunhos((rs) => ({ ...rs, [atual.vacancyId]: r }))}
-                travado={atual.estado === "aprovada" || bloqueada}
+                travado={atual.estado === "aprovada" || bloqueada || ocupado}
                 online={online}
                 onMudou={() => void carregar(itens.map((i) => i.vacancyId))}
                 onPreparando={setPreparando}

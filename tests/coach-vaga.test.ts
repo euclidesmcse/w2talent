@@ -75,6 +75,10 @@ describe("trava (D3)", () => {
     const q = permitidosDaFicha(f, w2, null, NOW);
     expect(motivoInvencao("Administra EC2 e Route 53.", q)).toBeNull();
     expect(motivoInvencao("Administra EC2 há 9 anos.", q)).toBe("9");
+    // o 2 de EC2 não libera outro 2 na frase
+    const sem2 = { skills: q.skills, numeros: new Set([...q.numeros].filter((n) => n !== "2")) };
+    expect(motivoInvencao("Administra EC2.", sem2)).toBeNull();
+    expect(motivoInvencao("Administra EC2 há 2 anos.", sem2)).toBe("2");
   });
   it("tira competência ou número que não aparecem", () => {
     expect(motivoInvencao("Domina Python.", p)).toBe("Python");

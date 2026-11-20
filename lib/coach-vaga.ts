@@ -64,6 +64,11 @@ const CURTO = 2;
  * ("AWS", "Terraform"), para "go", "rest" ou "express" do texto comum não virarem competência.
  */
 export function skillsNoTexto(texto: string): string[] {
+  return lerSkills(texto).ids;
+}
+
+/** Competências do texto e o texto sem os nomes delas (para conferir só os números de fato). */
+function lerSkills(texto: string): { ids: string[]; resto: string } {
   const toks = (texto ?? "")
     .split(/[\s,;:()"“”/|]+/)
     .map((t) => t.replace(/[.!?]+$/, ""))
@@ -83,7 +88,7 @@ export function skillsNoTexto(texto: string): string[] {
       if (!out.includes(id)) out.push(id);
     }
   }
-  return out;
+  return { ids: out, resto: toks.filter((_, k) => !usados[k]).join(" ") };
 }
 
 /** Números do texto sem separador de milhar ("1.500" → "1500"); anos e porcentagens também contam. */
@@ -120,12 +125,11 @@ function temSkill(p: Permitidos, id: string): boolean {
 
 /** Por que a frase não pode sair (null quando pode). */
 export function motivoInvencao(frase: string, p: Permitidos): string | null {
-  const citadas = skillsNoTexto(frase);
-  const skill = citadas.find((id) => !temSkill(p, id));
+  const { ids, resto } = lerSkills(frase);
+  const skill = ids.find((id) => !temSkill(p, id));
   if (skill) return getSkill(skill)?.label ?? skill;
-  // Dígitos do nome de uma competência aceita (EC2, n8n, Office 365) não são números a conferir.
-  const doNome = new Set(citadas.flatMap((id) => [...numerosNoTexto(getSkill(id)?.label ?? ""), ...numerosNoTexto(id)]));
-  const numero = numerosNoTexto(frase).find((n) => !p.numeros.has(n) && !doNome.has(n));
+  // O nome de uma competência (EC2, n8n, Route 53) sai antes: só os outros números são conferidos.
+  const numero = numerosNoTexto(resto).find((n) => !p.numeros.has(n));
   return numero ?? null;
 }
 
