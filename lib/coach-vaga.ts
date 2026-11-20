@@ -322,10 +322,18 @@ const IDIOMAS: { id: string; re: RegExp }[] = [
   { id: "pt", re: /\b(?:portugu[eê]s|portuguese|portugu[eé]s)\b/i },
 ];
 
+/** Nível explícito (B1, B2, C1, C2) vem antes das palavras ("English proficiency: B2" pede B2, não fluência). */
+const NIVEIS_CEFR: { nivel: "fluente" | "avancado" | "intermediario"; re: RegExp }[] = [
+  { nivel: "fluente", re: /\b(?:c1|c2)\b/i },
+  { nivel: "avancado", re: /\bb2\b/i },
+  { nivel: "intermediario", re: /\bb1\b/i },
+];
+
 const NIVEIS_PEDIDOS: { nivel: "fluente" | "avancado" | "intermediario"; re: RegExp }[] = [
-  { nivel: "fluente", re: /\b(?:fluente|flu[eê]ncia|fluent|fluency|fluido|fluidez|nativ[oa]|native|bil[ií]ng[uü]e|bilingual|c1|c2|proficien\w*)\b/i },
-  { nivel: "avancado", re: /\b(?:avan[cç]ad[oa]|advanced|avanzad[oa]|b2|upper[- ]intermediate)\b/i },
-  { nivel: "intermediario", re: /\b(?:intermedi[aá]ri[oa]|intermediate|intermedi[oa]|b1)\b/i },
+  ...NIVEIS_CEFR,
+  { nivel: "fluente", re: /\b(?:fluente|flu[eê]ncia|fluent|fluency|fluido|fluidez|nativ[oa]|native|bil[ií]ng[uü]e|bilingual|proficient)\b/i },
+  { nivel: "avancado", re: /\b(?:avan[cç]ad[oa]|advanced|avanzad[oa]|upper[- ]intermediate)\b/i },
+  { nivel: "intermediario", re: /\b(?:intermedi[aá]ri[oa]|intermediate|intermedi[oa])\b/i },
 ];
 
 const DESEJAVEL = /\b(?:desej[aá]vel|diferencial|nice to have|a plus|bonus|deseable|valorad[oa]|plus)\b/i;
