@@ -14,6 +14,8 @@ export const LIMITE_LEITURAS_VAGA_DIA = 30;
 /** 2.1c: reescritas sem viés e listas de perguntas de entrevista pela IA, por conta. */
 export const LIMITE_REVISOES_VAGA_DIA = 30;
 export const LIMITE_PERGUNTAS_VAGA_DIA = 30;
+/** Linha do tempo (PR c): resumos novos do CV completo por recrutador e dia (o que já está guardado não conta). */
+export const LIMITE_RESUMOS_CV_DIA = 40;
 /** 2.6a: perguntas na Ajuda (sem login), por IP. */
 export const LIMITE_PERGUNTAS_AJUDA_DIA = 20;
 /** 2.6b-1: conversas novas com a equipe (Falar com uma pessoa), por IP (D4). */

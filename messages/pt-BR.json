@@ -270,7 +270,20 @@
     "semCargo": "Cargo sem nome",
     "semFuncoes": "O candidato não descreveu as funções deste cargo.",
     "competencias": "Competências",
-    "fechar": "Fechar"
+    "fechar": "Fechar",
+    "cvCompleto": "CV completo",
+    "cvTitulo": "CV completo",
+    "cvAviso": "Texto enviado pelo candidato, guardado sem e-mail, telefone, links e documentos.",
+    "cvCarregando": "Carregando o CV...",
+    "cvIndisponivel": "O CV completo não está mais disponível.",
+    "resumoIa": "Resumo por IA",
+    "resumoCarregando": "Resumindo...",
+    "resumoCargo": "Neste cargo",
+    "resumoSemCargo": "O CV não traz detalhes deste cargo.",
+    "resumoCarreira": "Resumo da carreira",
+    "resumoAviso": "Feito com IA, confira no CV",
+    "resumoErro": "Não deu para resumir agora. Tente de novo em alguns minutos.",
+    "resumoLimite": "Você chegou ao limite de resumos de hoje. O CV completo continua aberto."
   },
   "detail": {
     "cargo": "Cargo",
@@ -492,7 +505,8 @@
         "translate_ui": "Traduzir a interface",
         "translate_content": "Traduzir conteúdo",
         "translate_profile": "Traduzir a Ficha W2",
-        "embed": "Busca por significado (embeddings)"
+        "embed": "Busca por significado (embeddings)",
+        "summarize_cv": "Resumir o CV completo"
       }
     },
     "reasons": {
@@ -1098,7 +1112,11 @@
     "treinoTarefa": "Treino de um modelo próprio (opcional)",
     "treinoFaz": "Quem liga o consentimento deixa guardar o que a IA escreveu na Ficha W2 ou leu na vaga e a versão que a pessoa salvou, para treinar e avaliar um modelo de IA aberto do W2Talent. Vem desligado.",
     "treinoDados": "Só exemplos anonimizados antes de guardar: nome, e-mail, telefone, links, documentos, endereço e empresas viram marcadores. Sem o id da conta. Nada vai a fornecedor de IA nem a serviço de treino de fora.",
-    "treinoDecide": "Não decide nada. Uma pessoa da equipe revisa cada exemplo; o treino só com 500 exemplos aprovados e o modelo treinado só entra se a equipe escolher. Desligar apaga os seus exemplos."
+    "treinoDecide": "Não decide nada. Uma pessoa da equipe revisa cada exemplo; o treino só com 500 exemplos aprovados e o modelo treinado só entra se a equipe escolher. Desligar apaga os seus exemplos.",
+    "resumoCvTarefa": "Resumo do CV completo (recrutador)",
+    "resumoCvFaz": "Resume o CV que o candidato liberou: um resumo da carreira e um de cada cargo, só com o que está escrito no CV.",
+    "resumoCvDados": "Texto do CV sem e-mail, telefone, links e documentos, e os cargos da ficha. Só de quem marcou \"Mostrar meu CV completo\".",
+    "resumoCvDecide": "Nada. É um atalho de leitura: não dá nota e o CV completo fica a um clique para conferir."
   },
   "empresa": {
     "title": "Minha empresa",

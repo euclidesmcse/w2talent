@@ -7,6 +7,7 @@ import { Chip } from "@/components/ui/chip";
 import { formatFaixa, formatPretensaoCandidato, formatTempo } from "@/lib/format";
 import { FichaW2Card } from "@/components/ficha-w2-card";
 import { LinhaDoTempo } from "@/components/linha-do-tempo";
+import { AcoesCv } from "@/components/cv-completo-acoes";
 import { NaoVerificada } from "@/components/empresa-etiqueta";
 import { sanitizeFicha, sanitizeFichaW2 } from "@/lib/ficha";
 import { TraducaoAviso, VerOriginalContext, textoExibido } from "@/components/traducao-aviso";
@@ -72,7 +73,11 @@ export function DetailBody({ item, antes, children, langTexto, vagaSkills }: { i
     <div className="detail-content flex flex-col gap-5 text-sm">
       {antes}
       <FichaW2Card ficha={sanitizeFicha(item)} w2={w2} />
-      <LinhaDoTempo ficha={sanitizeFicha(item)} vagaSkills={vagaSkills} />
+      <LinhaDoTempo
+        ficha={sanitizeFicha(item)}
+        vagaSkills={vagaSkills}
+        acoes={item?.temCv && typeof item?.id === "string" ? (cargo, i) => <AcoesCv profileId={item.id} cargo={cargo} indice={i} /> : undefined}
+      />
       <p className="text-xs text-muted">
         {t("atualizada")}: {formatTempo((item.updatedAt ?? item.createdAt) as any, locale)}
       </p>

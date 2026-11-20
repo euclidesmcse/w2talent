@@ -40,13 +40,17 @@ export function LinhaDoTempo({ ficha, vagaSkills = [], acoes, now }: { ficha: Pi
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  React.useEffect(() => setAberto(null), [modo, ficha.experiencias]);
+  // Fecha o cartão quando os cargos mudam de verdade (quem chama costuma criar a lista de novo a cada render).
+  const chaveCargos = ficha.experiencias.map((e) => `${e.cargo}|${e.empresa}|${e.inicio}`).join("\n");
+  React.useEffect(() => setAberto(null), [modo, chaveCargos]);
   React.useEffect(() => {
     if (aberto == null) return;
     cartaoRef.current?.focus({ preventScroll: true });
     // Esc fecha só o cartão (na janela do detalhe, não fecha a janela junto).
     const esc = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
+      // Com o painel do CV completo aberto, o Esc é dele.
+      if (document.querySelector("[data-cv-painel]")) return;
       e.stopImmediatePropagation();
       e.preventDefault();
       fechar();
@@ -78,6 +82,8 @@ export function LinhaDoTempo({ ficha, vagaSkills = [], acoes, now }: { ficha: Pi
     const m = meses % 12;
     return [a ? t("anos", { n: a }) : "", m ? t("meses", { n: m }) : ""].filter(Boolean).join(t("e"));
   };
+  // Menos de um ano: em meses, para não mostrar "0 anos".
+  const anosOuMeses = (meses: number) => (meses >= 12 || meses === 0 ? t("anos", { n: Math.floor(meses / 12) }) : t("meses", { n: meses }));
   const anosDecimal = (meses: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(meses / 12);
   const periodo = (c: CargoNaLinha) => `${fmtMes(c.ini)} – ${c.atual ? t("hoje") : fmtMes(c.fim)} · ${duracao(duracaoMeses(c))}`;
   const rotulo = (c: CargoNaLinha) => [c.cargo || t("semCargo"), c.empresa, c.tipo && c.tipo !== "integral" ? tf(`tipo_${c.tipo}`) : "", periodo(c)].filter(Boolean).join(", ");
@@ -160,8 +166,8 @@ export function LinhaDoTempo({ ficha, vagaSkills = [], acoes, now }: { ficha: Pi
   ) : null;
 
   const numerosLista: [string, string][] = [
-    [t("anos", { n: Math.floor(numeros.mesesCarreira / 12) }), t("deCarreira")],
-    ...(numeros.mesesNaVaga != null ? ([[t("anos", { n: Math.floor(numeros.mesesNaVaga / 12) }), t("ligadosVaga")]] as [string, string][]) : []),
+    [anosOuMeses(numeros.mesesCarreira), t("deCarreira")],
+    ...(numeros.mesesNaVaga != null ? ([[anosOuMeses(numeros.mesesNaVaga), t("ligadosVaga")]] as [string, string][]) : []),
     [String(numeros.empresas), t("empresas", { n: numeros.empresas }).trim()],
     ...(numeros.empresas > 1 ? ([[t("anosCurto", { n: anosDecimal(numeros.mediaPorEmpresa) }), t("mediaEmpresa")]] as [string, string][]) : []),
     ...(numeros.simultaneos.n > 1 ? ([[String(numeros.simultaneos.n), t("simultaneos", { ano: String(numeros.simultaneos.ano) })]] as [string, string][]) : []),

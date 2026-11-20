@@ -39,7 +39,7 @@ export function parseJsonObject(text: string): Record<string, unknown> | null {
   }
 }
 
-const ETICA =
+export const ETICA =
   "Never use, infer or mention age, date of birth, gender, race, ethnicity, religion, marital status, children, disability, health, photo, nationality or street address.";
 
 const EXTRACT_SYSTEM = `You extract a résumé into JSON for a recruiting platform. Reply with one JSON object only.
@@ -124,7 +124,7 @@ async function lerPorRegras(texto: string, contatos: ReturnType<typeof contatosD
   return sanitizeFicha({ ...base, ...contatos });
 }
 
-const W2_LANG: Record<string, string> = { "pt-BR": "Brazilian Portuguese", en: "English", es: "Spanish" };
+export const W2_LANG: Record<string, string> = { "pt-BR": "Brazilian Portuguese", en: "English", es: "Spanish" };
 
 /** Instruções e entrada da Ficha W2 (3.6a: o mesmo texto vai para o recibo do exemplo de treino). */
 export function promptFichaW2(ficha: Ficha, idioma: string, now: Date = new Date()): { lang: string; sistema: string; entrada: string } {

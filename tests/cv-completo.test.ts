@@ -9,6 +9,15 @@ import { DEMO_FICHAS } from "../lib/demo-data";
 
 jest.mock("../lib/sessao", () => require("./helpers/sessao-mock").sessaoMock());
 jest.mock("../lib/background", () => ({ runInBackground: () => {} }));
+const chamadasIa: string[] = [];
+jest.mock("../lib/ai", () => ({
+  getAiRouter: () => ({
+    chat: async (task: string) => {
+      chamadasIa.push(task);
+      return { text: JSON.stringify({ geral: "Carreira em nuvem com migrações grandes para o Azure.", cargos: ["Migrou 140 sistemas para o Azure."] }), model: "fake" };
+    },
+  }),
+}));
 import { experienciaVazia, MAX_EXPERIENCIAS, sanitizeFicha } from "../lib/ficha";
 import { limparCv } from "../lib/cv-completo";
 import { CV_COMPLETO_TIPO, textoCvCompleto } from "../lib/consentimento";
@@ -61,9 +70,9 @@ describe("texto do CV", () => {
   });
 
   it("tira links sem http nem www, sem pegar nomes de tecnologia", () => {
-    const t = limparCv("Portfólio: ana.dev/portfolio e blog.ana.com.\nNode.js, Vue.js, ASP.NET e Next.js. E-mail ana@x.io");
+    const t = limparCv("Portfólio: ana.dev/portfolio e blog.ana.com.\nNode.js, Vue.js, ASP.NET, asp.net, socket.io e Next.js. E-mail ana@x.io");
     expect(t).not.toMatch(/ana\.dev|blog\.ana/);
-    expect(t).toContain("Node.js, Vue.js, ASP.NET e Next.js");
+    expect(t).toContain("Node.js, Vue.js, ASP.NET, asp.net, socket.io e Next.js");
     expect(t.match(/\[LINK\]/g)).toHaveLength(2);
     expect(t).toContain("[EMAIL]");
   });
@@ -155,6 +164,32 @@ describeDb("CV completo no banco", () => {
     const { GET } = await import("../app/api/ficha/publicar/route");
     const j = await (await GET(new NextRequest("http://w2.test/api/ficha/publicar", { headers: { cookie } }))).json();
     expect(j).toMatchObject({ podePublicar: true, cvCompleto: false });
+  });
+
+  it("recrutador lê o CV e o resumo; revogado, some", async () => {
+    await publicar({ mostrar: true, texto: CV });
+    const { id } = await perfil();
+    const { GET, POST } = await import("../app/api/candidates/[id]/cv/route");
+    const ctx = { params: Promise.resolve({ id }) };
+    const rec = cookieDeTeste({ id: `${USER}-rec`, perfil: "recrutador", mfaLigado: true });
+    const pedir = (metodo: "GET" | "POST", c = rec) =>
+      (metodo === "GET" ? GET : POST)(
+        new NextRequest(`http://w2.test/api/candidates/${id}/cv`, { method: metodo, headers: { cookie: c, "content-type": "application/json" }, ...(metodo === "POST" ? { body: JSON.stringify({ idioma: "pt-BR" }) } : {}) }),
+        ctx,
+      );
+    // candidato não lê CV de ninguém por aqui
+    expect((await pedir("GET", cookie)).status).toBe(403);
+    const g = await pedir("GET");
+    expect(g.status).toBe(200);
+    expect((await g.json()).texto).toContain("Migrou 140 sistemas");
+    const r1 = await (await pedir("POST")).json();
+    expect(r1.resumo.cargos[0]).toBe("Migrou 140 sistemas para o Azure.");
+    await pedir("POST");
+    expect(chamadasIa).toEqual(["summarize_cv"]);
+    const { perfisComCv } = await import("../lib/cv-completo");
+    expect([...(await perfisComCv(db, [id, "outro"]))]).toEqual([id]);
+    await publicar({ mostrar: false });
+    expect((await pedir("GET")).status).toBe(404);
   });
 
   it("o texto sai junto com o perfil", async () => {

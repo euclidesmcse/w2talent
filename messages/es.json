@@ -270,7 +270,20 @@
     "semCargo": "Cargo sin nombre",
     "semFuncoes": "El candidato no describió las funciones de este cargo.",
     "competencias": "Competencias",
-    "fechar": "Cerrar"
+    "fechar": "Cerrar",
+    "cvCompleto": "CV completo",
+    "cvTitulo": "CV completo",
+    "cvAviso": "Texto enviado por el candidato, guardado sin correo, teléfono, enlaces ni documentos.",
+    "cvCarregando": "Cargando el CV...",
+    "cvIndisponivel": "El CV completo ya no está disponible.",
+    "resumoIa": "Resumen con IA",
+    "resumoCarregando": "Resumiendo...",
+    "resumoCargo": "En este cargo",
+    "resumoSemCargo": "El CV no trae detalles de este cargo.",
+    "resumoCarreira": "Resumen de la carrera",
+    "resumoAviso": "Hecho con IA, compruébalo en el CV",
+    "resumoErro": "No se pudo resumir ahora. Inténtalo de nuevo en unos minutos.",
+    "resumoLimite": "Llegaste al límite de resúmenes de hoy. El CV completo sigue disponible."
   },
   "detail": {
     "cargo": "Cargo",
@@ -492,7 +505,8 @@
         "translate_ui": "Traducir la interfaz",
         "translate_content": "Traducir contenido",
         "translate_profile": "Traducir la Ficha W2",
-        "embed": "Búsqueda por significado (embeddings)"
+        "embed": "Búsqueda por significado (embeddings)",
+        "summarize_cv": "Resumir el CV completo"
       }
     },
     "reasons": {
@@ -1098,7 +1112,11 @@
     "treinoTarefa": "Entrenamiento de un modelo propio (opcional)",
     "treinoFaz": "Quien activa este consentimiento permite guardar lo que la IA escribió en la Ficha W2 o leyó de la vacante y la versión que la persona guardó, para entrenar y evaluar un modelo de IA abierto de W2Talent. Viene desactivado.",
     "treinoDados": "Solo ejemplos anonimizados antes de guardarlos: nombres, correos, teléfonos, enlaces, documentos, direcciones y empresas pasan a marcadores. Sin el id de la cuenta. Nada va a un proveedor de IA ni a un servicio de entrenamiento externo.",
-    "treinoDecide": "No decide nada. Una persona del equipo revisa cada ejemplo; el entrenamiento solo con 500 ejemplos aprobados y el modelo entrenado solo entra si el equipo lo elige. Desactivarlo borra tus ejemplos."
+    "treinoDecide": "No decide nada. Una persona del equipo revisa cada ejemplo; el entrenamiento solo con 500 ejemplos aprobados y el modelo entrenado solo entra si el equipo lo elige. Desactivarlo borra tus ejemplos.",
+    "resumoCvTarefa": "Resumen del CV completo (reclutador)",
+    "resumoCvFaz": "Resume el CV que el candidato compartió: un resumen de la carrera y uno por cargo, solo con lo que dice el CV.",
+    "resumoCvDados": "El texto del CV sin correo, teléfono, enlaces ni documentos, y los cargos de la ficha. Solo de quien marcó \"Mostrar mi CV completo\".",
+    "resumoCvDecide": "Nada. Es un atajo de lectura: no califica a nadie y el CV completo está a un clic para comprobar."
   },
   "empresa": {
     "title": "Mi empresa",

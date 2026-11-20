@@ -9,6 +9,9 @@ import { CV_COMPLETO_TIPO, CV_COMPLETO_VERSAO, textoCvCompleto } from "./consent
 
 export const MAX_CV_TEXTO = 60_000;
 
+/** Nomes de tecnologia que parecem endereço (asp.net, socket.io): ficam no texto. */
+const TECNOLOGIAS_COM_PONTO = new Set(["asp.net", "vb.net", "ado.net", "socket.io", "fly.io", "engine.io", "chart.io", "ionic.io", "render.com", "heroku.com", "netlify.app", "vercel.app", "auth0.com", "segment.io", "mixpanel.com", "github.io", "readme.io"]);
+
 type Db = Pick<PrismaClient, "candidateCv" | "consentLog" | "$transaction">;
 
 /** Texto do CV pronto para guardar: contatos e qualquer link trocados por marcadores, espaços arrumados. */
@@ -20,7 +23,9 @@ export function limparCv(texto: unknown): string {
     // Sem http nem www: domínio com caminho (ana.dev/portfolio) ou com terminação comum (blog.ana.com).
     // Só minúsculas na terminação, para não pegar ASP.NET; Node.js e Vue.js não estão na lista.
     .replace(/(?<![\w@.[-])(?:[a-z0-9-]+\.)+[a-z]{2,}\/\S*/gi, "[LINK]")
-    .replace(/(?<![\w@.[-])(?:[a-z0-9-]+\.)+(?:com|net|org|dev|io|me|app|br|pt|es|co|ai|xyz|tech|site|info|page|link|online|blog|cloud)\b(?![\w-]|\.\w)/g, "[LINK]");
+    .replace(/(?<![\w@.[-])(?:[a-z0-9-]+\.)+(?:com|net|org|dev|io|me|app|br|pt|es|co|ai|xyz|tech|site|info|page|link|online|blog|cloud)\b(?![\w-]|\.\w)/g, (m) =>
+      TECNOLOGIAS_COM_PONTO.has(m) ? m : "[LINK]",
+    );
   return semContatos
     .replace(/\r\n?/g, "\n")
     .replace(/[ \t]+\n/g, "\n")
@@ -63,4 +68,34 @@ export async function aplicarCvCompleto(
     await db.consentLog.create({ data: { userId, tipo: CV_COMPLETO_TIPO, versao: CV_COMPLETO_VERSAO, texto: textoCvCompleto(idioma), baseLegal: "consentimento" } });
   }
   return !!(await db.candidateCv.findUnique({ where: { profileId }, select: { id: true } }));
+}
+
+// ── Para o recrutador (PR c) ───────────────────────────────────────────────
+
+/** Ids dos perfis (entre os pedidos) que têm CV completo guardado. */
+export async function perfisComCv(db: Pick<PrismaClient, "candidateCv">, ids: string[]): Promise<Set<string>> {
+  const unicos = [...new Set(ids.filter((x) => typeof x === "string" && x))];
+  if (!unicos.length) return new Set();
+  const rows = await db.candidateCv.findMany({ where: { profileId: { in: unicos } }, select: { profileId: true } });
+  return new Set(rows.map((r) => r.profileId));
+}
+
+type DbLeitura = Pick<PrismaClient, "candidateCv" | "candidateProfile" | "consentLog">;
+
+/**
+ * CV completo de um perfil ativo, só enquanto o consentimento continua ligado. Null em qualquer outro caso
+ * (sem texto, perfil fora do ar ou consentimento revogado): a tela diz só que não está disponível.
+ */
+export async function cvDoPerfil(
+  db: DbLeitura,
+  profileId: string,
+  now: Date = new Date(),
+): Promise<{ texto: string; resumos: unknown; experiencias: unknown; userId: string } | null> {
+  const p = await db.candidateProfile.findFirst({
+    where: { id: profileId, status: "ativo", expiresAt: { gt: now } },
+    select: { userId: true, experiencias: true, cv: { select: { texto: true, resumos: true } } },
+  });
+  if (!p?.cv) return null;
+  if (!(await cvCompletoLigado(db, p.userId))) return null;
+  return { texto: p.cv.texto, resumos: p.cv.resumos, experiencias: p.experiencias, userId: p.userId };
 }

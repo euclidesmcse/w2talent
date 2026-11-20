@@ -8,7 +8,7 @@ import type { TaskName } from "@/lib/ai/tasks";
 
 export type LinhaIa = {
   /** Prefixo das chaves em messages ("cv" → ia.cvTarefa, ia.cvFaz, ia.cvDados, ia.cvDecide) e âncora na página. */
-  id: "cv" | "w2" | "vaga" | "vies" | "perguntas" | "busca" | "parecidas" | "match" | "ajuda" | "traducao" | "mercado" | "ranking" | "atendimento" | "treino";
+  id: "cv" | "w2" | "vaga" | "vies" | "perguntas" | "busca" | "parecidas" | "match" | "ajuda" | "traducao" | "mercado" | "ranking" | "atendimento" | "treino" | "resumoCv";
   ancora: string;
   /** Tarefas do roteador de IA usadas. Vazio = não é IA (o match é uma conta com pesos fixos). */
   tarefas: TaskName[];
@@ -30,6 +30,8 @@ export const LINHAS_IA: LinhaIa[] = [
   // 2.6b: "Falar com uma pessoa" (não é IA: só a equipe responde; apagada 180 dias depois de encerrada).
   { id: "atendimento", ancora: "falar-com-pessoa", tarefas: [] },
   // 2.7a: tradução automática das vagas para o idioma de quem vê (o original fica a um clique).
+  // Linha do tempo (PR c): resumo do CV completo que o candidato liberou, para o recrutador.
+  { id: "resumoCv", ancora: "resumo-cv", tarefas: ["summarize_cv"] },
   { id: "traducao", ancora: "traducao", tarefas: ["translate_content", "translate_profile"] },
   // 3.2: números do mercado (não é IA; mostra o que a pretensão agregada revela ao recrutador).
   { id: "mercado", ancora: "mercado", tarefas: [] },

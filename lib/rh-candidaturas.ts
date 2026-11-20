@@ -14,6 +14,7 @@
  * - 3.5a: com o WhatsApp ligado, o candidato também recebe "a empresa viu" (primeira vez que a ficha vira
  *   "Vista") e "mudou de etapa". Depois do commit; o aviso nunca lança nem atrapalha o e-mail.
  */
+import { perfisComCv } from "./cv-completo";
 import { skillsDaVaga } from "./linha-do-tempo";
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { withoutContacts } from "./search";
@@ -116,6 +117,8 @@ export async function candidaturasDaVaga(
   const entrevistas = await entrevistasDasCandidaturas(db, apps.map((a) => a.id), now);
   // 3.1b (D5): a ordem usa os pesos que a empresa sustenta; a % mostrada continua a conta fixa.
   const ordem = await ordemDaEmpresa(db, companyId, opts.ordem);
+  // Linha do tempo (PR c): quem tem CV completo liberado ganha o botão "CV completo" no cartão do cargo.
+  const comCv = await perfisComCv(db, apps.map((a) => a.candidate.id)).catch(() => new Set<string>());
   const nota = new Map<string, number>();
   const itens = apps.map((a): CandidaturaRh => {
     const { expiresAt, ...perfil } = a.candidate;
@@ -130,7 +133,7 @@ export async function candidaturasDaVaga(
       match: m.pct,
       gaps: m.gaps,
       contato: a.contatoLiberadoEm ? { email: perfil.email, celular: perfil.celular ?? null } : null,
-      candidato: withoutContacts(perfil),
+      candidato: { ...withoutContacts(perfil), temCv: comCv.has(perfil.id) },
       entrevista: entrevistas.get(a.id) ?? null,
     };
   });
