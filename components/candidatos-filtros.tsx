@@ -7,7 +7,7 @@ import { DISPONIBILIDADES, MODOS, NIVEIS_IDIOMA, SENIORIDADES } from "@/lib/fich
 import { ATUALIZADA_DIAS, contarFiltros, IDIOMAS_FILTRO, MAX_SKILLS_FILTRO, REGIMES_FILTRO, type FiltrosCandidatos } from "@/lib/candidatos-filtros";
 import { getSkill, normalizeSkill } from "@/lib/taxonomy";
 
-export type VagaOpcao = { id: string; titulo: string; nivel?: string | null; regime?: string | null };
+export type VagaOpcao = { id: string; titulo: string; nivel?: string | null; regime?: string | null; stack?: unknown };
 
 const textoSkills = (ids: string[]) => ids.map((id) => getSkill(id)?.label ?? id).join(", ");
 

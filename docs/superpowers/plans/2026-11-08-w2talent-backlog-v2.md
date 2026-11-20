@@ -66,6 +66,7 @@
 ---
 
 ## Pendências fora do backlog
+- Linha do tempo da carreira (pedido do Euclides em 2026-11-20, plano https://claude.ai/artifact/HpNnNpstLDHiBC59b3x1Qi aprovado): PR a dados + CV completo com consentimento 🔄; PR b componente 🔄; PR c CV completo na lateral + resumos por IA 🔄 (os três juntos no PR #66).
 - Tema escuro (spec v2, item 5 "Modo claro e escuro"; aprovado em 2026-11-18): segue o sistema, botão Seguir o sistema/Claro/Escuro no topo, axe do CI nos dois temas. 🔄 em PR (branch `at-dark`).
 - Preview de PR na Cloudflare falha (comando de não-produção no painel). Aguardando log ou print do Euclides.
 - Trocar o token de API da Cloudflare emprestado de outro projeto (opcional).

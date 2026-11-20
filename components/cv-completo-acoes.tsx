@@ -1,0 +1,260 @@
+"use client";
+/**
+ * Linha do tempo, PR c (plano 2026-11-20, D3 e D4): botões do cartão do cargo para o recrutador.
+ * - "CV completo": painel à direita com o texto do CV (guardado sem contatos), rolado e marcado no cargo.
+ * - "Resumo por IA": resumo deste cargo e da carreira, gerado uma vez e guardado; avisa que é feito por IA.
+ * Texto e resumo ficam em memória por candidato, então trocar de cargo não busca de novo.
+ */
+import * as React from "react";
+import { createPortal } from "react-dom";
+import { useLocale, useTranslations } from "next-intl";
+import { buttonClasses, cn } from "@/components/ui";
+import { IaLink } from "@/components/ia-link";
+import type { Experiencia } from "@/lib/ficha";
+import type { ResumoCv } from "@/lib/cv-resumo";
+
+const textos = new Map<string, Promise<string | null>>();
+const resumos = new Map<string, ResumoCv>();
+
+function buscarTexto(profileId: string, versao: string): Promise<string | null> {
+  const chave = `${profileId}:${versao}`;
+  let p = textos.get(chave);
+  if (!p) {
+    p = fetch(`/api/candidates/${encodeURIComponent(profileId)}/cv`, { cache: "no-store" })
+      .then(async (r) => (r.ok ? ((await r.json()) as { texto?: string }).texto ?? null : null))
+      .catch(() => null);
+    // Falhou: tenta de novo na próxima vez.
+    p.then((t) => t == null && textos.delete(chave));
+    textos.set(chave, p);
+  }
+  return p;
+}
+
+/**
+ * Linha do CV onde o cargo começa. Primeiro, uma linha da empresa com o título do cargo nela ou nas
+ * 3 linhas seguintes (vários cargos na mesma empresa); depois a primeira linha da empresa; por fim,
+ * a primeira com o título. Sem acento e sem diferença de maiúscula.
+ */
+export function linhaDoCargo(linhas: string[], cargo: Pick<Experiencia, "cargo" | "empresa">): number {
+  const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const ls = linhas.map(norm);
+  const empresa = norm(cargo.empresa);
+  const titulo = norm(cargo.cargo);
+  const temEmpresa = empresa.length >= 2 ? ls.flatMap((l, i) => (l.includes(empresa) ? [i] : [])) : [];
+  if (titulo.length >= 2) {
+    for (const i of temEmpresa) {
+      for (let j = Math.max(0, i - 3); j <= Math.min(ls.length - 1, i + 3); j++) if (ls[j].includes(titulo)) return Math.min(i, j);
+    }
+  }
+  if (temEmpresa.length) return temEmpresa[0];
+  return titulo.length >= 2 ? ls.findIndex((l) => l.includes(titulo)) : -1;
+}
+
+/** `indice` < 0: sem cargo (perfil sem cargos datados); mostra só o CV e o resumo da carreira. */
+export function AcoesCv({ profileId, versao = "", cargo, indice }: { profileId: string; versao?: string; cargo: Experiencia; indice: number }) {
+  const t = useTranslations("linhaTempo");
+  const locale = useLocale();
+  // A versão (updatedAt do perfil) entra na chave: CV ou cargos novos não mostram o que ficou em memória.
+  const chave = `${profileId}:${versao}:${locale}`;
+  const [painel, setPainel] = React.useState(false);
+  const [resumo, setResumo] = React.useState<ResumoCv | null>(() => resumos.get(chave) ?? null);
+  const [estado, setEstado] = React.useState<"nada" | "carregando" | "erro" | "limite">("nada");
+  const botaoCv = React.useRef<HTMLButtonElement>(null);
+  const idResumo = React.useId();
+  // Troca de idioma (ou de versão) com o painel aberto: mostra o resumo guardado da nova chave, ou o botão de novo.
+  const chaveAtual = React.useRef(chave);
+  const [chaveVista, setChaveVista] = React.useState(chave);
+  if (chaveVista !== chave) {
+    setChaveVista(chave);
+    setResumo(resumos.get(chave) ?? null);
+    setEstado("nada");
+  }
+  React.useEffect(() => {
+    chaveAtual.current = chave;
+  }, [chave]);
+
+  async function pedirResumo() {
+    const pedida = chave;
+    setEstado("carregando");
+    try {
+      const r = await fetch(`/api/candidates/${encodeURIComponent(profileId)}/cv`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idioma: locale }),
+      });
+      const j = (await r.json().catch(() => ({}))) as { resumo?: ResumoCv; error?: string };
+      if (r.ok && j.resumo) resumos.set(pedida, j.resumo);
+      // Resposta de um idioma que já não está na tela: só guarda.
+      if (chaveAtual.current !== pedida) return;
+      if (!r.ok || !j.resumo) return setEstado(j.error === "limite_dia" ? "limite" : "erro");
+      setResumo(j.resumo);
+      setEstado("nada");
+    } catch {
+      if (chaveAtual.current === pedida) setEstado("erro");
+    }
+  }
+
+  const doCargo = indice >= 0 ? resumo?.cargos[indice] ?? "" : "";
+  return (
+    <>
+      <button ref={botaoCv} type="button" data-action="cv-completo" className={buttonClasses("secondary", "sm")} onClick={() => setPainel(true)}>
+        {t("cvCompleto")}
+      </button>
+      {!resumo ? (
+        <button type="button" data-action="resumo-ia" className={buttonClasses("ghost", "sm")} onClick={pedirResumo} disabled={estado === "carregando"} aria-describedby={idResumo}>
+          {estado === "carregando" ? t("resumoCarregando") : t("resumoIa")}
+        </button>
+      ) : null}
+      <div id={idResumo} className="basis-full" aria-live="polite">
+        {estado === "erro" || estado === "limite" ? <p className="text-[13px] text-danger">{t(estado === "limite" ? "resumoLimite" : "resumoErro")}</p> : null}
+        {resumo ? (
+          <div data-resumo-cv className="mt-1 rounded-control border border-line bg-canvas p-3">
+            {indice >= 0 ? (
+              <>
+                <p className="text-[13px] font-semibold text-ink-soft">{t("resumoCargo")}</p>
+                <p className="mt-1 text-ink">{doCargo || <span className="text-muted">{t("resumoSemCargo")}</span>}</p>
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-[13px] font-medium text-ink-soft hover:text-ink">{t("resumoCarreira")}</summary>
+                  <p className="mt-1 text-ink">{resumo.geral}</p>
+                </details>
+              </>
+            ) : (
+              <>
+                <p className="text-[13px] font-semibold text-ink-soft">{t("resumoCarreira")}</p>
+                <p className="mt-1 text-ink">{resumo.geral}</p>
+              </>
+            )}
+            <p className="mt-2 text-[12px] text-muted">
+              {t("resumoAviso")} · <IaLink ancora="resumo-cv" />
+            </p>
+          </div>
+        ) : null}
+      </div>
+      {painel ? (
+        <PainelCv
+          profileId={profileId}
+          versao={versao}
+          cargo={cargo}
+          onClose={() => {
+            setPainel(false);
+            requestAnimationFrame(() => botaoCv.current?.focus({ preventScroll: true }));
+          }}
+        />
+      ) : null}
+    </>
+  );
+}
+
+function PainelCv({ profileId, versao, cargo, onClose }: { profileId: string; versao: string; cargo: Experiencia; onClose: () => void }) {
+  const t = useTranslations("linhaTempo");
+  const [texto, setTexto] = React.useState<string | null | undefined>(undefined);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const titulo = React.useRef<HTMLHeadingElement>(null);
+  const idTitulo = React.useId();
+  const fechar = React.useRef(onClose);
+  fechar.current = onClose;
+
+  React.useEffect(() => {
+    let vivo = true;
+    buscarTexto(profileId, versao).then((x) => vivo && setTexto(x));
+    return () => {
+      vivo = false;
+    };
+  }, [profileId, versao]);
+
+  React.useEffect(() => {
+    titulo.current?.focus({ preventScroll: true });
+    // Esc fecha só o painel; Tab fica dentro dele (a janela do detalhe tem a própria trava de foco).
+    const tecla = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        fechar.current();
+        return;
+      }
+      if (e.key !== "Tab" || !ref.current) return;
+      e.stopImmediatePropagation();
+      const foco = [...ref.current.querySelectorAll<HTMLElement>("button, [href], [tabindex]:not([tabindex='-1'])")];
+      if (!foco.length) return;
+      const [primeiro, ultimo] = [foco[0], foco[foco.length - 1]];
+      const dentro = ref.current.contains(document.activeElement);
+      if (e.shiftKey && (!dentro || document.activeElement === primeiro || document.activeElement === titulo.current)) {
+        e.preventDefault();
+        ultimo.focus();
+      } else if (!e.shiftKey && (!dentro || document.activeElement === ultimo)) {
+        e.preventDefault();
+        primeiro.focus();
+      }
+    };
+    window.addEventListener("keydown", tecla, true);
+    return () => window.removeEventListener("keydown", tecla, true);
+  }, []);
+
+  const linhas = React.useMemo(() => (texto ?? "").split("\n"), [texto]);
+  const marcada = React.useMemo(() => (texto ? linhaDoCargo(linhas, cargo) : -1), [texto, linhas, cargo]);
+  // O bloco do cargo: da linha achada até a próxima linha em branco (no máximo 15 linhas).
+  const fimMarca = React.useMemo(() => {
+    if (marcada < 0) return -1;
+    let f = marcada + 1;
+    while (f < linhas.length && f - marcada < 15 && linhas[f].trim()) f++;
+    return f;
+  }, [marcada, linhas]);
+  React.useEffect(() => {
+    if (marcada < 0) return;
+    ref.current?.querySelector("[data-marcada]")?.scrollIntoView({ block: "center" });
+  }, [marcada]);
+
+  if (typeof document === "undefined") return null;
+  return createPortal(
+    <>
+      <div aria-hidden className="fixed inset-0 z-[60] bg-[rgba(17,24,39,0.35)]" onClick={onClose} />
+      <div
+        ref={ref}
+        data-cv-painel
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={idTitulo}
+        className="fixed inset-y-0 right-0 z-[61] flex w-full max-w-[560px] flex-col border-l border-line bg-surface shadow-[-18px_0_40px_-12px_rgba(17,24,39,0.35)]"
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
+          <div>
+            <h2 ref={titulo} id={idTitulo} tabIndex={-1} className="font-display text-lg font-semibold text-ink outline-none">
+              {t("cvTitulo")}
+            </h2>
+            <p className="mt-0.5 text-[13px] text-muted">{t("cvAviso")}</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label={t("fechar")} className="-mr-2 rounded-control px-2 py-1 text-lg text-muted hover:bg-canvas hover:text-ink">
+            ×
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-5 py-4 text-sm leading-relaxed text-ink" tabIndex={0} aria-label={t("cvTitulo")}>
+          {texto === undefined ? (
+            <p className="text-muted">{t("cvCarregando")}</p>
+          ) : texto === null ? (
+            <p className="text-muted">{t("cvIndisponivel")}</p>
+          ) : (
+            linhas.map((l, i) =>
+              l.trim() ? (
+                <p
+                  key={i}
+                  {...(i === marcada ? { "data-marcada": "" } : {})}
+                  className={cn(
+                    "whitespace-pre-wrap",
+                    i >= marcada && i < fimMarca && "-mx-2 bg-brand-soft px-2 text-brand-ink",
+                    i === marcada && "rounded-t-control pt-1 font-semibold",
+                    i === fimMarca - 1 && "rounded-b-control pb-1",
+                  )}
+                >
+                  {l}
+                </p>
+              ) : (
+                <div key={i} className="h-3" />
+              ),
+            )
+          )}
+        </div>
+      </div>
+    </>,
+    document.body,
+  );
+}

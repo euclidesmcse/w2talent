@@ -14,6 +14,8 @@
  * - 3.5a: com o WhatsApp ligado, o candidato também recebe "a empresa viu" (primeira vez que a ficha vira
  *   "Vista") e "mudou de etapa". Depois do commit; o aviso nunca lança nem atrapalha o e-mail.
  */
+import { perfisComCv } from "./cv-completo";
+import { skillsDaVaga } from "./linha-do-tempo";
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { withoutContacts } from "./search";
 import { matchCandidato, type GapCandidato } from "./match-candidato";
@@ -76,7 +78,8 @@ export type CandidaturaRh = {
   entrevista: ResumoEntrevista | null;
 };
 
-export type VagaDaPagina = { id: string; titulo: string; status: "ativa" | "arquivada"; expiresAt: string };
+/** `skills`: ids das competências da vaga (linha do tempo, D5). */
+export type VagaDaPagina = { id: string; titulo: string; status: "ativa" | "arquivada"; expiresAt: string; skills: string[] };
 
 const PERFIL = {
   id: true, userId: true, nome: true, titulo: true, resumo3linhas: true, localidade: true, modo: true, regimePreferido: true,
@@ -114,6 +117,8 @@ export async function candidaturasDaVaga(
   const entrevistas = await entrevistasDasCandidaturas(db, apps.map((a) => a.id), now);
   // 3.1b (D5): a ordem usa os pesos que a empresa sustenta; a % mostrada continua a conta fixa.
   const ordem = await ordemDaEmpresa(db, companyId, opts.ordem);
+  // Linha do tempo (PR c): quem tem CV completo liberado ganha o botão "CV completo" no cartão do cargo.
+  const comCv = await perfisComCv(db, apps.map((a) => a.candidate.id)).catch(() => new Set<string>());
   const nota = new Map<string, number>();
   const itens = apps.map((a): CandidaturaRh => {
     const { expiresAt, ...perfil } = a.candidate;
@@ -128,13 +133,13 @@ export async function candidaturasDaVaga(
       match: m.pct,
       gaps: m.gaps,
       contato: a.contatoLiberadoEm ? { email: perfil.email, celular: perfil.celular ?? null } : null,
-      candidato: withoutContacts(perfil),
+      candidato: { ...withoutContacts(perfil), temCv: comCv.has(perfil.id) },
       entrevista: entrevistas.get(a.id) ?? null,
     };
   });
   // Melhor nota primeiro (ajustada ou padrão); empate, a % mostrada e depois quem chegou antes.
   itens.sort((a, b) => nota.get(b.applicationId)! - nota.get(a.applicationId)! || b.match - a.match || a.enviadaEm.localeCompare(b.enviadaEm));
-  return { vaga: { id: vaga.id, titulo: vaga.titulo, status: vaga.status, expiresAt: vaga.expiresAt.toISOString() }, itens, total, ordem: ordem.info };
+  return { vaga: { id: vaga.id, titulo: vaga.titulo, status: vaga.status, expiresAt: vaga.expiresAt.toISOString(), skills: skillsDaVaga(vaga.stack) }, itens, total, ordem: ordem.info };
 }
 
 export type ResultadoEtapa =

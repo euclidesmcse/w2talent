@@ -49,7 +49,11 @@ export async function GET(req: NextRequest) {
   const result = await searchCandidates(params, undefined, vaga, ordem?.pesos);
   // 2.7b: título, resumo e experiências da ficha no idioma de quem vê, quando a tradução está pronta.
   const { prisma } = await import("@/lib/prisma");
-  const items = await comTraducaoDasFichas(prisma, result.items, lang);
+  const traduzidos = await comTraducaoDasFichas(prisma, result.items, lang);
+  // Linha do tempo (PR c): marca quem liberou o CV completo (botão no cartão do cargo).
+  const { perfisComCv } = await import("@/lib/cv-completo");
+  const comCv = await perfisComCv(prisma, traduzidos.map((i: any) => i.id)).catch(() => new Set<string>());
+  const items = traduzidos.map((i: any) => ({ ...i, temCv: comCv.has(i.id) }));
   const tookMs = Date.now() - start;
 
   return NextResponse.json(

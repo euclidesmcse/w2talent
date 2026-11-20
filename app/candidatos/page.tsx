@@ -15,6 +15,7 @@ import { selectionStore } from "@/lib/selection-store";
 import { buttonClasses } from "@/components/ui/button";
 import { linkEntrar, useConta } from "@/lib/conta-client";
 import { CandidatosFiltros, type VagaOpcao } from "@/components/candidatos-filtros";
+import { skillsDaVaga } from "@/lib/linha-do-tempo";
 import { filtrosParaUrl, lerFiltros, type FiltrosCandidatos } from "@/lib/candidatos-filtros";
 import { OrdemRanking } from "@/components/ordem-ranking";
 import type { OrdemInfo } from "@/lib/ranking";
@@ -157,6 +158,8 @@ export default function CandidatosPage() {
   };
   const closeModal = React.useCallback(() => setModalOpen(false), []);
   const vagaTitulo = filtros.vaga ? vagas?.find((v) => v.id === filtros.vaga)?.titulo ?? null : null;
+  // Linha do tempo (D5): competências da vaga escolhida marcam os cargos que batem.
+  const vagaSkills = React.useMemo(() => skillsDaVaga(filtros.vaga ? vagas?.find((v) => v.id === filtros.vaga)?.stack : null), [filtros.vaga, vagas]);
   // O detalhe aberto acompanha a lista atual: trocar a vaga atualiza o match do mesmo candidato,
   // e enquanto a nova busca não chega (ou se ele saiu da lista) a linha do match some.
   const idDetalhe = modalItem ? String(modalItem.id ?? modalItem.userId) : null;
@@ -281,9 +284,9 @@ export default function CandidatosPage() {
           </nav>
         ) : null}
         </div>
-        {painelAberto ? <FichaPainel item={traducao.item} titulo={tituloDetalhe} antes={antesDetalhe} onClose={closeModal} triggerRef={activeTrigger} focoVolta={focoVolta} /> : null}
+        {painelAberto ? <FichaPainel item={traducao.item} titulo={tituloDetalhe} antes={antesDetalhe} onClose={closeModal} triggerRef={activeTrigger} focoVolta={focoVolta} vagaSkills={vagaSkills} /> : null}
         </div>
-        {!painelLado ? <DetailModal open={modalOpen} onClose={closeModal} item={traducao.item} triggerRef={activeTrigger} title={tituloDetalhe} antes={antesDetalhe} /> : null}
+        {!painelLado ? <DetailModal open={modalOpen} onClose={closeModal} item={traducao.item} triggerRef={activeTrigger} title={tituloDetalhe} antes={antesDetalhe} vagaSkills={vagaSkills} /> : null}
         <BatchBar variant="candidatos" onAction={(ids) => { void ids; }} compararHref={`/candidatos/comparar${filtros.vaga ? `?vaga=${encodeURIComponent(filtros.vaga)}` : ""}`} />
       </div>
       </main>

@@ -6,8 +6,11 @@ import { buttonClasses } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { formatFaixa, formatPretensaoCandidato, formatTempo } from "@/lib/format";
 import { FichaW2Card } from "@/components/ficha-w2-card";
+import { LinhaDoTempo } from "@/components/linha-do-tempo";
+import { AcoesCv } from "@/components/cv-completo-acoes";
 import { NaoVerificada } from "@/components/empresa-etiqueta";
-import { sanitizeFicha, sanitizeFichaW2 } from "@/lib/ficha";
+import { experienciaVazia, sanitizeFicha, sanitizeFichaW2 } from "@/lib/ficha";
+import { montarCargos } from "@/lib/linha-do-tempo";
 import { TraducaoAviso, VerOriginalContext, textoExibido } from "@/components/traducao-aviso";
 
 /**
@@ -29,6 +32,8 @@ export type DetailModalProps = {
   triggerRef?: React.RefObject<HTMLElement | null>;
   /** aparece no topo do corpo (ex.: o match com a vaga escolhida) */
   antes?: React.ReactNode;
+  /** Competências da vaga escolhida: marcam na linha do tempo os cargos que batem (D5). */
+  vagaSkills?: string[];
 };
 
 function getFocusable(container: HTMLElement): HTMLElement[] {
@@ -39,9 +44,12 @@ function getFocusable(container: HTMLElement): HTMLElement[] {
 }
 
 /** Corpo do detalhe (Ficha W2 do candidato ou campos da vaga), usado na janela e no painel ao lado (2.2c). */
-export function DetailBody({ item, antes, children, langTexto }: { item: any; antes?: React.ReactNode; children?: React.ReactNode; langTexto?: string }) {
+export function DetailBody({ item, antes, children, langTexto, vagaSkills }: { item: any; antes?: React.ReactNode; children?: React.ReactNode; langTexto?: string; vagaSkills?: string[] }) {
   const t = useTranslations("detail");
   const locale = useLocale();
+  const fichaLinha = sanitizeFicha(item);
+  // Linha do tempo PR c: o candidato liberou o CV completo (a busca e o Painel RH marcam temCv).
+  const comCv = !!item?.temCv && typeof item?.id === "string";
   const skills: string[] = item?.stack && Array.isArray(item.stack) ? item.stack.map((x: any) => x?.skillId ?? x).filter(Boolean) : [];
   const faixa = item
     ? item.nome
@@ -69,6 +77,18 @@ export function DetailBody({ item, antes, children, langTexto }: { item: any; an
     <div className="detail-content flex flex-col gap-5 text-sm">
       {antes}
       <FichaW2Card ficha={sanitizeFicha(item)} w2={w2} />
+      <LinhaDoTempo
+        key={typeof item?.id === "string" ? item.id : undefined}
+        ficha={fichaLinha}
+        vagaSkills={vagaSkills}
+        acoes={comCv ? (cargo, i) => <AcoesCv key={`${item.id}:${i}`} profileId={item.id} versao={String(item.updatedAt ?? "")} cargo={cargo} indice={i} /> : undefined}
+      />
+      {/* Sem cargo datado não há linha do tempo: o CV completo e o resumo da carreira ficam aqui. */}
+      {comCv && !montarCargos(fichaLinha.experiencias).cargos.length ? (
+        <div className="flex flex-wrap gap-2" data-cv-sem-linha>
+          <AcoesCv key={item.id} profileId={item.id} versao={String(item.updatedAt ?? "")} cargo={experienciaVazia()} indice={-1} />
+        </div>
+      ) : null}
       <p className="text-xs text-muted">
         {t("atualizada")}: {formatTempo((item.updatedAt ?? item.createdAt) as any, locale)}
       </p>
@@ -110,7 +130,7 @@ export function DetailBody({ item, antes, children, langTexto }: { item: any; an
 
 }
 
-export function DetailModal({ open, onClose, title, children, item, triggerRef, antes }: DetailModalProps) {
+export function DetailModal({ open, onClose, title, children, item, triggerRef, antes, vagaSkills }: DetailModalProps) {
   const t = useTranslations("detail");
   const tc = useTranslations("common");
   const overlayRef = React.useRef<HTMLDivElement | null>(null);
@@ -232,7 +252,7 @@ export function DetailModal({ open, onClose, title, children, item, triggerRef, 
   // Vaga com tradução automática: título e descrição no idioma de quem vê, o original a um clique.
   const texto = item && !item.nome ? textoExibido(item, verOriginal) : null;
   const vaga = texto?.traduzida ? { ...item, titulo: texto.titulo, descricaoBullets: texto.descricaoBullets } : item;
-  const content = item ? <DetailBody item={vaga} antes={antes} langTexto={texto?.lang}>{children}</DetailBody> : children ?? <div>{title ?? t("title")}</div>;
+  const content = item ? <DetailBody item={vaga} antes={antes} langTexto={texto?.lang} vagaSkills={vagaSkills}>{children}</DetailBody> : children ?? <div>{title ?? t("title")}</div>;
 
   // bottom sheet mobile vs modal desktop — same component, CSS switches position
   // media: @media (max-width: 768px) -> bottom sheet

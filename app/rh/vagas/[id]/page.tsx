@@ -338,13 +338,14 @@ export default function CandidaturasDaVagaPage() {
                 onClose={fechar}
                 triggerRef={gatilho}
                 focoVolta={() => document.querySelector<HTMLElement>(`[data-detail-id="${CSS.escape(itemAberto.applicationId)}"]`)}
+                vagaSkills={estado.t === "ok" ? estado.vaga.skills : undefined}
               />
             ) : null}
           </div>
         ) : null}
 
         {!painelLado ? (
-          <DetailModal open={!!itemAberto} onClose={fechar} item={traducao.item} triggerRef={gatilho} title={itemAberto ? nomeDe(itemAberto) : ""} antes={antes} />
+          <DetailModal open={!!itemAberto} onClose={fechar} item={traducao.item} triggerRef={gatilho} title={itemAberto ? nomeDe(itemAberto) : ""} antes={antes} vagaSkills={estado.t === "ok" ? estado.vaga.skills : undefined} />
         ) : null}
 
         {selecionados.length > 0 ? (

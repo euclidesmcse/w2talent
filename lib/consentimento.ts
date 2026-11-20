@@ -65,3 +65,29 @@ export function textoTreinoIa(idioma: string, revogacao = false): string {
   const l: Idioma = idioma === "en" || idioma === "es" ? idioma : "pt-BR";
   return TEXTOS_TREINO[revogacao ? "revogacao" : "aceite"][l];
 }
+
+/**
+ * Linha do tempo (2026-11-20, D3): consentimento separado, opcional e desligado por padrão para mostrar
+ * o texto do CV aos recrutadores. Fica no ConsentLog com tipo "cvCompleto"; desligar grava outra linha
+ * com baseLegal "revogacao" e apaga o texto. Mudou o texto: suba a versão.
+ */
+export const CV_COMPLETO_TIPO = "cvCompleto";
+export const CV_COMPLETO_VERSAO = 1;
+const TEXTOS_CV: Record<"aceite" | "revogacao", Record<Idioma, string>> = {
+  aceite: {
+    "pt-BR":
+      "Autorizo o W2Talent a guardar o texto do meu CV, sem e-mail, telefone, links, documentos e endereço, e mostrá-lo aos recrutadores logados que abrirem minha ficha, junto com um resumo feito por IA. Opcional; posso desligar quando quiser e o texto é apagado.",
+    en: "I allow W2Talent to keep the text of my résumé, without email, phone, links, documents and address, and show it to signed-in recruiters who open my profile, along with an AI-written summary. Optional; I can turn it off at any time and the text is deleted.",
+    es: "Autorizo a W2Talent a guardar el texto de mi CV, sin correo, teléfono, enlaces, documentos ni dirección, y mostrarlo a los reclutadores con sesión iniciada que abran mi ficha, junto con un resumen hecho por IA. Opcional; puedo desactivarlo cuando quiera y el texto se borra.",
+  },
+  revogacao: {
+    "pt-BR": "Desliguei a exibição do meu CV completo. O texto guardado foi apagado.",
+    en: "I turned off showing my full résumé. The stored text was deleted.",
+    es: "Desactivé la visualización de mi CV completo. El texto guardado se borró.",
+  },
+};
+
+export function textoCvCompleto(idioma: string, revogacao = false): string {
+  const l: Idioma = idioma === "en" || idioma === "es" ? idioma : "pt-BR";
+  return TEXTOS_CV[revogacao ? "revogacao" : "aceite"][l];
+}

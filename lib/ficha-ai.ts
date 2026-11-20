@@ -39,7 +39,7 @@ export function parseJsonObject(text: string): Record<string, unknown> | null {
   }
 }
 
-const ETICA =
+export const ETICA =
   "Never use, infer or mention age, date of birth, gender, race, ethnicity, religion, marital status, children, disability, health, photo, nationality or street address.";
 
 const EXTRACT_SYSTEM = `You extract a résumé into JSON for a recruiting platform. Reply with one JSON object only.
@@ -51,7 +51,7 @@ Schema:
  "titulo": string (desired or current job title),
  "senioridade": "estagio"|"junior"|"pleno"|"senior"|"especialista"|"lideranca"|"",
  "stack": [{"nome": string (technical skill or tool), "anos": number (years of use, estimated from the experience dates)}] (at most 10, most relevant first),
- "experiencias": [{"cargo": string, "empresa": string, "inicio": "YYYY-MM", "fim": "YYYY-MM" or "", "atual": boolean}] (most recent first, at most 8),
+ "experiencias": [{"cargo": string, "empresa": string, "inicio": "YYYY-MM", "fim": "YYYY-MM" or "", "atual": boolean, "tipo": "integral"|"meio"|"projeto"|"freelancer"|"estagio"|"" (full-time, part-time, project/contract, freelance or internship; "" when the résumé does not say), "funcoes": [string] (what the person did in this job, at most 5 short lines under 120 characters, keeping numbers and scope from the résumé), "competencias": [string] (technical skills or tools used in this job, at most 8)}] (every job in the résumé, most recent first, at most 20; jobs held at the same time are separate entries),
  "formacao": [{"curso": string, "instituicao": string, "ano": "YYYY"}],
  "localidade": string ("City, State" or "City, Country"; never the street),
  "modo": "remoto"|"hibrido"|"presencial"|"",
@@ -73,7 +73,7 @@ export async function lerCv(texto: string, chat: ChatFn | null): Promise<Leitura
       const r = await chat("extract_cv", {
         json: true,
         temperature: 0,
-        maxTokens: 4000,
+        maxTokens: 6000,
         messages: [
           { role: "system", content: EXTRACT_SYSTEM },
           { role: "user", content: redactContacts(bruto) },
@@ -124,7 +124,7 @@ async function lerPorRegras(texto: string, contatos: ReturnType<typeof contatosD
   return sanitizeFicha({ ...base, ...contatos });
 }
 
-const W2_LANG: Record<string, string> = { "pt-BR": "Brazilian Portuguese", en: "English", es: "Spanish" };
+export const W2_LANG: Record<string, string> = { "pt-BR": "Brazilian Portuguese", en: "English", es: "Spanish" };
 
 /** Instruções e entrada da Ficha W2 (3.6a: o mesmo texto vai para o recibo do exemplo de treino). */
 export function promptFichaW2(ficha: Ficha, idioma: string, now: Date = new Date()): { lang: string; sistema: string; entrada: string } {

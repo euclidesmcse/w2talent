@@ -12,7 +12,7 @@ import { runInBackground } from "@/lib/background";
 export async function POST(req: NextRequest) {
   const r = await exigirConta(req, { perfil: "candidato" });
   if ("erro" in r) return r.erro;
-  const body = (await req.json().catch(() => ({}))) as { ficha?: unknown; fichaW2?: unknown; recibo?: unknown };
+  const body = (await req.json().catch(() => ({}))) as { ficha?: unknown; fichaW2?: unknown; recibo?: unknown; cv?: { mostrar?: unknown; texto?: unknown } };
   const ficha = sanitizeFicha(body.ficha);
   const falta = camposFaltando(ficha);
   if (falta.length) return NextResponse.json({ error: "ficha_incompleta", falta }, { status: 422 });
@@ -48,6 +48,19 @@ export async function POST(req: NextRequest) {
     } catch (e) {
       console.warn("[ficha/publicar] tradução não pedida:", e instanceof Error ? e.name : e);
     }
+    // Linha do tempo (D3): liga, troca ou desliga o CV completo. Nunca impede a publicação.
+    let cvCompleto: boolean | undefined;
+    let cvErro = false;
+    if (body.cv && typeof body.cv.mostrar === "boolean") {
+      try {
+        const { aplicarCvCompleto } = await import("@/lib/cv-completo");
+        cvCompleto = await aplicarCvCompleto(prisma, { userId, profileId: p.id, mostrar: body.cv.mostrar, texto: body.cv.texto, idioma: w2.idioma });
+      } catch (e) {
+        console.warn("[ficha/publicar] CV completo:", e instanceof Error ? e.name : e);
+        // A ficha foi publicada, mas o pedido do CV (ligar ou apagar) não: a tela avisa e deixa tentar de novo.
+        cvErro = true;
+      }
+    }
     // 3.6a: com o consentimento "treinoIA" ligado e o recibo da IA, guarda o exemplo anonimizado.
     // Nunca impede a publicação.
     if (body.recibo) {
@@ -66,7 +79,7 @@ export async function POST(req: NextRequest) {
         console.warn("[ficha/publicar] exemplo de treino:", e instanceof Error ? e.name : e);
       }
     }
-    return NextResponse.json({ ok: true, id: p.id }, { headers: { "cache-control": "no-store" } });
+    return NextResponse.json({ ok: true, id: p.id, cvCompleto, ...(cvErro ? { cvErro: true } : {}) }, { headers: { "cache-control": "no-store" } });
   } catch (e) {
     console.error("[ficha/publicar] falhou:", e instanceof Error ? e.name : e);
     return NextResponse.json({ error: "erro" }, { status: 500 });
@@ -77,8 +90,10 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const r = await exigirConta(req, { perfil: "candidato" });
   if ("erro" in r) return NextResponse.json({ podePublicar: false }, { headers: NO_STORE });
-  const p = await prisma.candidateProfile.findUnique({ where: { userId: r.conta.id }, select: { id: true, status: true } }).catch(() => null);
-  return NextResponse.json({ podePublicar: true, publicado: !!p && p.status === "ativo" }, { headers: NO_STORE });
+  const p = await prisma.candidateProfile
+    .findUnique({ where: { userId: r.conta.id }, select: { id: true, status: true, cv: { select: { id: true } } } })
+    .catch(() => null);
+  return NextResponse.json({ podePublicar: true, publicado: !!p && p.status === "ativo", cvCompleto: !!p?.cv }, { headers: NO_STORE });
 }
 
 export const dynamic = "force-dynamic";
