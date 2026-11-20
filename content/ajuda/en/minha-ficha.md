@@ -22,6 +22,10 @@ Each job can have its **type** (full-time, part-time, project, freelance or inte
 
 In the last step, you can tick **Show my full résumé to recruiters**. W2Talent keeps the text of your résumé **without email, phone, links, documents and address** and shows it to signed-in recruiters who open your profile, with an AI-written summary. If you untick it and publish again, the text is deleted.
 
+## Timeline
+
+Your W2 Profile shows your **career timeline**: each job is a bar with its period, and jobs held at the same time sit on separate rows. Part-time, project, freelance and internship jobs have a dashed border. Periods without work are not counted or highlighted. Recruiters see the same timeline and, when looking at a job, the jobs with that job's skills are highlighted.
+
 ## Expected pay
 
 Mark the contract types you accept (employee, contractor, internship...) and give the **minimum** you accept for each one.

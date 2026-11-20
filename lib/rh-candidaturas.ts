@@ -14,6 +14,7 @@
  * - 3.5a: com o WhatsApp ligado, o candidato também recebe "a empresa viu" (primeira vez que a ficha vira
  *   "Vista") e "mudou de etapa". Depois do commit; o aviso nunca lança nem atrapalha o e-mail.
  */
+import { skillsDaVaga } from "./linha-do-tempo";
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { withoutContacts } from "./search";
 import { matchCandidato, type GapCandidato } from "./match-candidato";
@@ -76,7 +77,8 @@ export type CandidaturaRh = {
   entrevista: ResumoEntrevista | null;
 };
 
-export type VagaDaPagina = { id: string; titulo: string; status: "ativa" | "arquivada"; expiresAt: string };
+/** `skills`: ids das competências da vaga (linha do tempo, D5). */
+export type VagaDaPagina = { id: string; titulo: string; status: "ativa" | "arquivada"; expiresAt: string; skills: string[] };
 
 const PERFIL = {
   id: true, userId: true, nome: true, titulo: true, resumo3linhas: true, localidade: true, modo: true, regimePreferido: true,
@@ -134,7 +136,7 @@ export async function candidaturasDaVaga(
   });
   // Melhor nota primeiro (ajustada ou padrão); empate, a % mostrada e depois quem chegou antes.
   itens.sort((a, b) => nota.get(b.applicationId)! - nota.get(a.applicationId)! || b.match - a.match || a.enviadaEm.localeCompare(b.enviadaEm));
-  return { vaga: { id: vaga.id, titulo: vaga.titulo, status: vaga.status, expiresAt: vaga.expiresAt.toISOString() }, itens, total, ordem: ordem.info };
+  return { vaga: { id: vaga.id, titulo: vaga.titulo, status: vaga.status, expiresAt: vaga.expiresAt.toISOString(), skills: skillsDaVaga(vaga.stack) }, itens, total, ordem: ordem.info };
 }
 
 export type ResultadoEtapa =

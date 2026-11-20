@@ -22,6 +22,10 @@ Cada cargo pode ter o **tipo** (tempo integral, meio período, projeto, freelanc
 
 No último passo, você pode marcar **Mostrar meu CV completo aos recrutadores**. O W2Talent guarda o texto do CV **sem e-mail, telefone, links, documentos e endereço** e mostra aos recrutadores logados que abrirem sua ficha, com um resumo feito por IA. Se desmarcar e publicar de novo, o texto é apagado.
 
+## Linha do tempo
+
+Na Ficha W2 aparece a sua **linha do tempo**: cada cargo vira uma barra com o período, e trabalhos ao mesmo tempo ficam em linhas separadas. Meio período, projeto, freelancer e estágio têm borda tracejada. Períodos sem trabalho não são contados nem destacados. O recrutador vê a mesma linha e, quando está olhando uma vaga, os cargos com competências dessa vaga ficam em destaque.
+
 ## Pretensão salarial
 
 Marque os regimes que aceita (CLT, PJ, estágio...) e informe o **mínimo** aceito em cada um. Exemplo: CLT a partir de R$ 12.000 e PJ a partir de R$ 18.000.

@@ -15,6 +15,7 @@ export function FichaPainel({
   onClose,
   triggerRef,
   focoVolta,
+  vagaSkills,
 }: {
   item: any;
   titulo: string;
@@ -23,6 +24,8 @@ export function FichaPainel({
   triggerRef?: React.RefObject<HTMLElement | null>;
   /** acha o elemento que recebe o foco ao fechar (o "Ver" visível da linha, ou a busca se a linha saiu) */
   focoVolta?: () => HTMLElement | null;
+  /** competências da vaga escolhida, para a linha do tempo */
+  vagaSkills?: string[];
 }) {
   const t = useTranslations("detail");
   const tituloRef = React.useRef<HTMLHeadingElement | null>(null);
@@ -69,7 +72,7 @@ export function FichaPainel({
         </button>
       </div>
       <div className="mt-4">
-        <DetailBody item={item} antes={antes} />
+        <DetailBody item={item} antes={antes} vagaSkills={vagaSkills} />
       </div>
     </aside>
   );

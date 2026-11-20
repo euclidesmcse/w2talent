@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   if (!empresa) return NextResponse.json({ vagas: [] }, { headers: NO_STORE });
   const vagas = await prisma.vacancy.findMany({
     where: { companyId: empresa.id, status: "ativa", expiresAt: { gt: new Date() } },
-    select: { id: true, titulo: true, nivel: true, regime: true },
+    select: { id: true, titulo: true, nivel: true, regime: true, stack: true },
     orderBy: { updatedAt: "desc" },
     take: 100,
   });

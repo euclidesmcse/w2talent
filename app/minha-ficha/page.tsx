@@ -11,6 +11,7 @@ import { useOnline } from "@/lib/pwa-client";
 import Link from "next/link";
 import { linkEntrar } from "@/lib/conta-client";
 import { FichaW2Card } from "@/components/ficha-w2-card";
+import { LinhaDoTempo } from "@/components/linha-do-tempo";
 import { TreinoConsentimento } from "@/components/treino-consentimento";
 import { FichaViesAviso } from "@/components/ficha-vies-aviso";
 import { revisarViesFicha, trocarViesFicha, type AvisoFichaVies } from "@/lib/ficha-vies";
@@ -638,6 +639,7 @@ export default function MinhaFichaPage() {
               ) : (
                 <>
                   <FichaW2Card ficha={fichaAtual} w2={r.w2} />
+                  <LinhaDoTempo ficha={fichaAtual} />
                   <FichaViesAviso
                     avisos={revisarViesFicha({ titulo: r.ficha.titulo, objetivo: r.ficha.objetivo, resumo: r.w2.resumo, destaques: r.w2.destaques })}
                     onTrocar={trocarVies}

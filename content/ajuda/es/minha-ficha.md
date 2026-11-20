@@ -22,6 +22,10 @@ Cada cargo puede tener el **tipo** (jornada completa, medio tiempo, proyecto, fr
 
 En el último paso, puedes marcar **Mostrar mi CV completo a los reclutadores**. W2Talent guarda el texto del CV **sin correo, teléfono, enlaces, documentos ni dirección** y lo muestra a los reclutadores con sesión iniciada que abran tu ficha, con un resumen hecho por IA. Si lo desmarcas y publicas de nuevo, el texto se borra.
 
+## Línea de tiempo
+
+En tu Ficha W2 aparece tu **línea de tiempo**: cada cargo es una barra con su período, y los trabajos al mismo tiempo quedan en filas separadas. Medio tiempo, proyecto, freelance y prácticas tienen borde punteado. Los períodos sin trabajo no se cuentan ni se destacan. El reclutador ve la misma línea y, cuando mira una vacante, se destacan los cargos con habilidades de esa vacante.
+
 ## Pretensión salarial
 
 Marca los regímenes que aceptas (empleado, contratista, pasantía...) e informa el **mínimo** que aceptas en cada uno.
