@@ -1,6 +1,6 @@
 ---
 titulo: Montar minha ficha a partir do CV
-resumo: Os três passos de Minha ficha: CV, conferir os campos e gerar a Ficha W2.
+resumo: Como importar o CV, conferir a ficha em passos curtos e gerar a Ficha W2.
 areas: candidato
 telas: /minha-ficha, /painel
 ordem: 4
@@ -8,11 +8,12 @@ ordem: 4
 
 Em [Minha ficha](/minha-ficha) você transforma o CV numa ficha que as empresas leem em segundos.
 
-## Os três passos
+## Como funciona
 
-1. **Enviar o CV** em PDF ou Word (.docx), até 5 MB, ou colar o texto. A IA lê o texto e preenche os campos. Seu e-mail e telefone são lidos por regras e tirados do texto antes de ir para a IA.
-2. **Conferir os campos.** Corrija o que a leitura errou. A ficha precisa dos campos obrigatórios marcados; o [painel](/painel) mostra o que falta.
-3. **Gerar a Ficha W2.** A IA escreve um resumo curto e até 3 destaques. Depois você publica a ficha com sua conta de candidato.
+1. **Escolha como começar.** "Tenho um CV" lê um PDF ou Word (.docx) de até 5 MB, o PDF do LinkedIn (no seu perfil, Mais ou Recursos, depois Salvar como PDF) ou o texto colado. "Começar do zero" abre a ficha vazia. Você não precisa estar logado para ler e conferir; o login só é pedido para publicar.
+2. **Acompanhe a leitura.** A tela mostra cada etapa (abrir o arquivo, tirar contatos e documentos, IA lendo, organizar) e só marca quando ela termina de verdade. Seu e-mail e telefone são lidos por regras e tirados do texto antes de ir para a IA. A IA não reescreve o que você escreveu.
+3. **Confira em 4 passos curtos:** dados pessoais e o que você procura, experiência, formação e idiomas, competências. Dá para voltar a qualquer passo pela barra no topo, e tudo fica no rascunho deste navegador. Cada passo diz o que falta nele e traz **dicas profissionais**, que só avisam (por exemplo, dois empregos integrais ao mesmo tempo, cargo sem data ou competência sem anos de uso).
+4. **Gere a Ficha W2.** A IA escreve um resumo curto e até 3 destaques. Depois você publica a ficha com sua conta de candidato. Se faltar algum campo obrigatório, a tela abre o passo dele; o [painel](/painel) também mostra o que falta.
 
 ## Cargos: tipo, funções e competências
 
