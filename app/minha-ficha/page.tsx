@@ -51,7 +51,7 @@ const PASSOS_VALIDOS: readonly string[] = ["enviar", ...PASSOS_CONFERIR, "w2"];
 type SkillRow = { texto: string; anos: number };
 /** recibo (3.6a): o que a IA escreveu, assinado pelo servidor; volta ao publicar e só vira exemplo de treino com o consentimento. */
 /** cvTexto (linha do tempo, D3): o CV lido, já sem contatos; só vai ao servidor se a pessoa marcar mostrarCv. */
-type Rascunho = { passo: Passo; ficha: Ficha; skills: SkillRow[]; w2: FichaW2 | null; aceite: boolean; recibo?: string | null; cvTexto?: string | null; mostrarCv?: boolean | null };
+type Rascunho = { passo: Passo; ficha: Ficha; skills: SkillRow[]; w2: FichaW2 | null; aceite: boolean; recibo?: string | null; cvTexto?: string | null; mostrarCv?: boolean | null; w2De?: string | null };
 
 const CHAVE = "w2talent:ficha";
 
@@ -108,6 +108,7 @@ export default function MinhaFichaPage() {
           recibo: typeof d.recibo === "string" ? d.recibo : null,
           cvTexto: typeof d.cvTexto === "string" ? d.cvTexto : null,
           mostrarCv: typeof d.mostrarCv === "boolean" ? d.mostrarCv : null,
+          w2De: typeof d.w2De === "string" ? d.w2De : null,
         });
       }
     } catch {
@@ -229,7 +230,7 @@ export default function MinhaFichaPage() {
       // O rascunho mudou (campos editados ou começou de novo) enquanto a IA escrevia: resposta velha, descarta.
       if (fichaAtualRef.current !== alvo) return;
       if (!res.ok || !j.fichaW2) return setErro(msgErro(j.error ?? "geral"));
-      setR((x) => ({ ...x, w2: j.fichaW2!, recibo: j.recibo ?? null, passo: "w2" }));
+      setR((x) => ({ ...x, w2: j.fichaW2!, recibo: j.recibo ?? null, w2De: alvo, passo: "w2" }));
       setEditandoW2(false);
       requestAnimationFrame(() => tituloRef.current?.focus());
     } catch {
@@ -291,6 +292,7 @@ export default function MinhaFichaPage() {
     ["competencias", t("passo_competencias")],
     ["w2", t("passoW2")],
   ];
+  const w2EmDia = !!r.w2 && (r.w2.editada || r.w2De === JSON.stringify(fichaAtual));
   const nPasso = passos.findIndex(([p]) => p === r.passo) + 1;
   const passoConferir = (PASSOS_CONFERIR as readonly string[]).includes(r.passo) ? (r.passo as PassoConferir) : null;
   const tituloPasso = r.passo === "enviar" ? t("enviarTitulo") : r.passo === "w2" ? t("w2Titulo") : t(`titulo_${r.passo}`);
@@ -328,7 +330,8 @@ export default function MinhaFichaPage() {
         <ol className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-[13px]" aria-label={t("passo", { n: nPasso })}>
           {passos.map(([p, rot], i) => {
             const atual = p === r.passo;
-            const podeIr = !atual && ocupado !== "ler" && (p !== "w2" || !!r.w2);
+            // A Ficha W2 só abre direto se foi gerada destes campos (ou editada à mão); senão, "Gerar" faz uma nova.
+            const podeIr = !atual && ocupado !== "ler" && (p !== "w2" || w2EmDia);
             return (
               <li key={p} aria-current={atual ? "step" : undefined}>
                 <button
@@ -429,8 +432,9 @@ export default function MinhaFichaPage() {
             </div>
           ) : null}
 
-          {r.passo === "enviar" && ocupado !== "ler" && entrada === "cv" ? (
-            <div className="mt-2 flex flex-col gap-4">
+          {/* Fica montado (só escondido) durante a leitura: o arquivo escolhido mora no input e precisa sobreviver a uma falha. */}
+          {r.passo === "enviar" && entrada === "cv" ? (
+            <div className={cn("mt-2 flex-col gap-4", ocupado === "ler" ? "hidden" : "flex")}>
               <p className="text-sm text-muted">{t("enviarLead")}</p>
               <Field label={t("arquivo")} hint={t("arquivoAjuda")}>
                 <input
