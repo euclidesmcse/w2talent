@@ -50,12 +50,15 @@ export async function POST(req: NextRequest) {
     }
     // Linha do tempo (D3): liga, troca ou desliga o CV completo. Nunca impede a publicação.
     let cvCompleto: boolean | undefined;
+    let cvErro = false;
     if (body.cv && typeof body.cv.mostrar === "boolean") {
       try {
         const { aplicarCvCompleto } = await import("@/lib/cv-completo");
         cvCompleto = await aplicarCvCompleto(prisma, { userId, profileId: p.id, mostrar: body.cv.mostrar, texto: body.cv.texto, idioma: w2.idioma });
       } catch (e) {
         console.warn("[ficha/publicar] CV completo:", e instanceof Error ? e.name : e);
+        // A ficha foi publicada, mas o pedido do CV (ligar ou apagar) não: a tela avisa e deixa tentar de novo.
+        cvErro = true;
       }
     }
     // 3.6a: com o consentimento "treinoIA" ligado e o recibo da IA, guarda o exemplo anonimizado.
@@ -76,7 +79,7 @@ export async function POST(req: NextRequest) {
         console.warn("[ficha/publicar] exemplo de treino:", e instanceof Error ? e.name : e);
       }
     }
-    return NextResponse.json({ ok: true, id: p.id, cvCompleto }, { headers: { "cache-control": "no-store" } });
+    return NextResponse.json({ ok: true, id: p.id, cvCompleto, ...(cvErro ? { cvErro: true } : {}) }, { headers: { "cache-control": "no-store" } });
   } catch (e) {
     console.error("[ficha/publicar] falhou:", e instanceof Error ? e.name : e);
     return NextResponse.json({ error: "erro" }, { status: 500 });

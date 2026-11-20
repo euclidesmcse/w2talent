@@ -60,6 +60,14 @@ describe("texto do CV", () => {
     expect(limparCv(123)).toBe("");
   });
 
+  it("tira links sem http nem www, sem pegar nomes de tecnologia", () => {
+    const t = limparCv("Portfólio: ana.dev/portfolio e blog.ana.com.\nNode.js, Vue.js, ASP.NET e Next.js. E-mail ana@x.io");
+    expect(t).not.toMatch(/ana\.dev|blog\.ana/);
+    expect(t).toContain("Node.js, Vue.js, ASP.NET e Next.js");
+    expect(t.match(/\[LINK\]/g)).toHaveLength(2);
+    expect(t).toContain("[EMAIL]");
+  });
+
   it("o texto do consentimento existe nos três idiomas", () => {
     for (const l of ["pt-BR", "en", "es"]) {
       expect(textoCvCompleto(l).length).toBeGreaterThan(80);
@@ -124,6 +132,9 @@ describeDb("CV completo no banco", () => {
     // ligado de novo sem texto novo: mantém o texto e não grava outro consentimento
     await db.candidateCv.update({ where: { profileId: p.id }, data: { resumos: { hash: "x", geral: "resumo velho" } } });
     expect((await publicar({ mostrar: true })).cvCompleto).toBe(true);
+    expect((await perfil()).cv?.resumos).toEqual({ hash: "x", geral: "resumo velho" });
+    // o mesmo texto de novo (republicar a ficha): mantém os resumos
+    await publicar({ mostrar: true, texto: CV });
     expect((await perfil()).cv?.resumos).toEqual({ hash: "x", geral: "resumo velho" });
     // texto novo: troca e esquece os resumos
     await publicar({ mostrar: true, texto: `${CV}\nCertificação AZ-305.` });

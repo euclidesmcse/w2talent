@@ -645,6 +645,7 @@
     "publicarDepois": "Para publicar en la búsqueda, inicia sesión como candidato. Tu ficha queda guardada en este navegador.",
     "recomecar": "Empezar de nuevo",
     "erro_aceite_ia_obrigatorio": "Marca la autorización para que la IA lea el CV.",
+    "erro_cv_completo": "La ficha se publicó, pero no pudimos actualizar el CV completo. Haz clic en publicar de nuevo.",
     "erro_texto_curto": "No encontramos suficiente texto. Prueba otro archivo o pega el texto.",
     "erro_arquivo_grande": "El archivo supera 5 MB.",
     "erro_arquivo_ilegivel": "No pudimos leer este archivo. Prueba PDF o DOCX, o pega el texto.",

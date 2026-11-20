@@ -16,7 +16,11 @@ export function limparCv(texto: unknown): string {
   if (typeof texto !== "string") return "";
   const semContatos = redactContacts(texto.slice(0, MAX_CV_TEXTO * 2))
     .replace(/\bhttps?:\/\/\S+/gi, "[LINK]")
-    .replace(/\bwww\.\S+/gi, "[LINK]");
+    .replace(/\bwww\.\S+/gi, "[LINK]")
+    // Sem http nem www: domínio com caminho (ana.dev/portfolio) ou com terminação comum (blog.ana.com).
+    // Só minúsculas na terminação, para não pegar ASP.NET; Node.js e Vue.js não estão na lista.
+    .replace(/(?<![\w@.[-])(?:[a-z0-9-]+\.)+[a-z]{2,}\/\S*/gi, "[LINK]")
+    .replace(/(?<![\w@.[-])(?:[a-z0-9-]+\.)+(?:com|net|org|dev|io|me|app|br|pt|es|co|ai|xyz|tech|site|info|page|link|online|blog|cloud)\b(?![\w-]|\.\w)/g, "[LINK]");
   return semContatos
     .replace(/\r\n?/g, "\n")
     .replace(/[ \t]+\n/g, "\n")
@@ -50,8 +54,9 @@ export async function aplicarCvCompleto(
     return false;
   }
   const texto = limparCv(opts.texto);
-  if (texto.length >= 30) {
-    // Texto novo: os resumos antigos não valem mais.
+  const guardado = texto.length >= 30 ? await db.candidateCv.findUnique({ where: { profileId }, select: { texto: true } }) : null;
+  if (texto.length >= 30 && guardado?.texto !== texto) {
+    // Texto novo: os resumos antigos não valem mais. O mesmo texto de novo mantém os resumos.
     await db.candidateCv.upsert({ where: { profileId }, create: { profileId, texto }, update: { texto, resumos: Prisma.DbNull } });
   }
   if (!ligadoAntes) {

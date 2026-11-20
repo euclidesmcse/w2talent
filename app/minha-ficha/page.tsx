@@ -244,8 +244,10 @@ export default function MinhaFichaPage() {
           cv: ofereceCv ? { mostrar: mostrarCv, texto: mostrarCv ? r.cvTexto ?? undefined : undefined } : undefined,
         }),
       });
-      const j = (await res.json().catch(() => ({}))) as { error?: string; cvCompleto?: boolean };
+      const j = (await res.json().catch(() => ({}))) as { error?: string; cvCompleto?: boolean; cvErro?: boolean };
       if (!res.ok) return setErro(msgErro(j.error ?? "geral"));
+      // A ficha saiu, mas o CV completo (ligar ou apagar) não: avisa e deixa publicar de novo.
+      if (j.cvErro) return setErro(t("erro_cv_completo"));
       if (typeof j.cvCompleto === "boolean") setCvGuardado(j.cvCompleto);
       setPublicado(true);
     } catch {

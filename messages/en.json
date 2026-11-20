@@ -645,6 +645,7 @@
     "publicarDepois": "To publish to search, sign in as a candidate. Your profile is saved in this browser.",
     "recomecar": "Start over",
     "erro_aceite_ia_obrigatorio": "Tick the box allowing the AI to read your résumé.",
+    "erro_cv_completo": "Your profile was published, but we couldn't update the full résumé. Click publish again.",
     "erro_texto_curto": "We couldn't find enough text. Try another file or paste the text.",
     "erro_arquivo_grande": "The file is larger than 5 MB.",
     "erro_arquivo_ilegivel": "We couldn't read this file. Try PDF or DOCX, or paste the text.",
