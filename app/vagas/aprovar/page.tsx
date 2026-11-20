@@ -76,6 +76,7 @@ export default function AprovarPage() {
   const [resultado, setResultado] = React.useState<Resultado[]>([]);
   // Versão para cada vaga (coach IA ou do jeito da pessoa); só sai ao aprovar.
   const [rascunhos, setRascunhos] = React.useState<Record<string, RascunhoCoach | null>>({});
+  const [preparando, setPreparando] = React.useState(false);
   const tituloRef = React.useRef<HTMLHeadingElement>(null);
 
   const carregar = React.useCallback(async (ids: string[]) => {
@@ -355,6 +356,7 @@ export default function AprovarPage() {
                 travado={atual.estado === "aprovada" || bloqueada}
                 online={online}
                 onMudou={() => void carregar(itens.map((i) => i.vacancyId))}
+                onPreparando={setPreparando}
               />
             </section>
           ) : null}
@@ -371,7 +373,7 @@ export default function AprovarPage() {
               </Button>
             </>
           ) : (
-            <Button variant="primary" size="md" disabled={ocupado || bloqueada || !online} title={online ? undefined : tp("needsInternet")} onClick={() => marcar(true)}>
+            <Button variant="primary" size="md" disabled={ocupado || preparando || bloqueada || !online} title={online ? undefined : tp("needsInternet")} onClick={() => marcar(true)}>
               {atual.estado === "mudou" ? t("approveAgain") : t("approve")}
             </Button>
           )}

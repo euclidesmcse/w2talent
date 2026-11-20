@@ -11,6 +11,7 @@
  */
 import type { ChatRequest, ChatResult } from "./ai/types";
 import { redactContacts } from "./ai/redact";
+import { limparCv } from "./cv-completo";
 import { ETICA, parseJsonObject, W2_LANG } from "./ficha-ai";
 import { anosExperiencia, MAX_DESTAQUES, topSkills, type Ficha, type FichaW2 } from "./ficha";
 import { getSkill, normalizeSkill } from "./taxonomy";
@@ -41,8 +42,17 @@ export type Lacuna = { skillId: string; nome: string; proxima: string | null };
 
 export type ChatCoachFn = (task: "coach_candidate", req: ChatRequest) => Promise<ChatResult & { model?: string }>;
 
+/** Texto que vai para a empresa: sem contatos, documentos nem links (qualquer site, como no CV completo). */
 const limpar = (v: unknown, max: number): string =>
-  typeof v === "string" ? redactContacts(v.replace(/\s+/g, " ").trim()).slice(0, max).trim() : "";
+  typeof v === "string"
+    ? limparCv(v)
+        .replace(/\[LINK\]/g, "")
+        .replace(/\s+/g, " ")
+        .replace(/\s+([.,;:!?])/g, "$1")
+        .trim()
+        .slice(0, max)
+        .trim()
+    : "";
 
 // ── competências e números citados num texto ─────────────────────────────
 
@@ -110,9 +120,12 @@ function temSkill(p: Permitidos, id: string): boolean {
 
 /** Por que a frase não pode sair (null quando pode). */
 export function motivoInvencao(frase: string, p: Permitidos): string | null {
-  const skill = skillsNoTexto(frase).find((id) => !temSkill(p, id));
+  const citadas = skillsNoTexto(frase);
+  const skill = citadas.find((id) => !temSkill(p, id));
   if (skill) return getSkill(skill)?.label ?? skill;
-  const numero = numerosNoTexto(frase).find((n) => !p.numeros.has(n));
+  // Dígitos do nome de uma competência aceita (EC2, n8n, Office 365) não são números a conferir.
+  const doNome = new Set(citadas.flatMap((id) => [...numerosNoTexto(getSkill(id)?.label ?? ""), ...numerosNoTexto(id)]));
+  const numero = numerosNoTexto(frase).find((n) => !p.numeros.has(n) && !doNome.has(n));
   return numero ?? null;
 }
 

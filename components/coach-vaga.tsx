@@ -34,9 +34,11 @@ type Props = {
   online: boolean;
   /** A vaga mudou entre mostrar e preparar: a tela recarrega. */
   onMudou: () => void;
+  /** Avisa a tela enquanto a IA prepara (Aprovar fica desligado nesse meio-tempo). */
+  onPreparando?: (sim: boolean) => void;
 };
 
-export function CoachVaga({ vacancyId, hash, estado, lacunas, adaptacao, w2, rascunho, onRascunho, travado, online, onMudou }: Props) {
+export function CoachVaga({ vacancyId, hash, estado, lacunas, adaptacao, w2, rascunho, onRascunho, travado, online, onMudou, onPreparando }: Props) {
   const t = useTranslations("aprovar");
   const [aceite, setAceite] = React.useState(false);
   const [ocupado, setOcupado] = React.useState(false);
@@ -44,10 +46,17 @@ export function CoachVaga({ vacancyId, hash, estado, lacunas, adaptacao, w2, ras
   const id = (s: string) => `coach-${s}-${vacancyId}`;
 
   React.useEffect(() => setErro(null), [vacancyId]);
+  // Resposta que chega depois de a vaga ser aprovada (ou de trocar de vaga) é descartada:
+  // o que a tela mostra tem de ser o que foi gravado.
+  const atual = React.useRef({ vacancyId, travado });
+  atual.current = { vacancyId, travado };
 
   const preparar = async () => {
     setOcupado(true);
+    onPreparando?.(true);
     setErro(null);
+    const pedida = vacancyId;
+    const valeAinda = () => atual.current.vacancyId === pedida && !atual.current.travado;
     try {
       const r = await fetch("/api/envio/preparar", {
         method: "POST",
@@ -55,15 +64,17 @@ export function CoachVaga({ vacancyId, hash, estado, lacunas, adaptacao, w2, ras
         body: JSON.stringify({ vacancyId, hash, aceiteIa: true }),
       });
       const j = await r.json().catch(() => ({}));
+      if (!valeAinda()) return;
       if (r.ok && j.proposta) return onRascunho(rascunhoDaProposta(j.proposta));
       if (r.status === 429) return setErro(t("coachLimite"));
       if (j.error === "sem_ficha_w2") return setErro(t("coachSemW2"));
       if (j.error === "mudou") return onMudou();
       setErro(r.status === 502 ? t("coachIaFalhou") : t("error"));
     } catch {
-      setErro(t("error"));
+      if (valeAinda()) setErro(t("error"));
     } finally {
       setOcupado(false);
+      onPreparando?.(false);
     }
   };
 

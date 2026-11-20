@@ -69,6 +69,13 @@ describe("trava (D3)", () => {
     // TypeScript cobre JavaScript por inteiro (2.2)
     expect(motivoInvencao("Escreve JavaScript.", p)).toBeNull();
   });
+  it("dígitos do nome de uma competência aceita não contam como número (EC2, Route 53)", () => {
+    const f = ficha();
+    f.stack.push({ skillId: "ec2", anos: 4 }, { skillId: "route53", anos: 2 });
+    const q = permitidosDaFicha(f, w2, null, NOW);
+    expect(motivoInvencao("Administra EC2 e Route 53.", q)).toBeNull();
+    expect(motivoInvencao("Administra EC2 há 9 anos.", q)).toBe("9");
+  });
   it("tira competência ou número que não aparecem", () => {
     expect(motivoInvencao("Domina Python.", p)).toBe("Python");
     expect(motivoInvencao("Liderou 12 pessoas.", p)).toBe("12");
@@ -97,6 +104,12 @@ describe("proposta", () => {
   it("tira contatos da carta", () => {
     const r = sanitizarProposta({ resumo: "Trabalha com AWS.", destaques: [], carta: "Quero a vaga com AWS. Escreva para maria@exemplo.com." }, w2, p);
     expect(r.carta).not.toContain("maria@exemplo.com");
+  });
+  it("tira qualquer link da carta e do resumo", () => {
+    const a = sanitizarAdaptacao({ resumo: "Portfólio em ana.dev/projetos.", destaques: [], carta: "Veja meu portfólio em https://ana.dev/contato e www.ana.com.br, com ASP.NET.", ia: false }, "h", NOW)!;
+    expect(a.carta).not.toMatch(/ana\.dev|ana\.com|https?:|LINK/);
+    expect(a.carta).toContain("ASP.NET");
+    expect(a.resumo).not.toContain("ana.dev");
   });
   it("prompt sem nome nem e-mail e com a regra ética", () => {
     const { sistema, entrada } = promptCoach(ficha(), w2, vaga, "en", NOW);
